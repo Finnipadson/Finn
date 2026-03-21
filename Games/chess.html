@@ -261,6 +261,7 @@
   #board-grid {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
     width: min(80vmin, 560px);
     height: min(80vmin, 560px);
     border: 2px solid var(--panel-border);
@@ -316,8 +317,17 @@
     pointer-events: none;
     position: relative;
     z-index: 1;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.35);
     transition: transform 0.08s;
+  }
+
+  .piece.white {
+    color: #ffffff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.7);
+  }
+
+  .piece.black {
+    color: #1a1a1a;
+    text-shadow: 0 0 4px rgba(255,255,255,0.7), 0 1px 3px rgba(255,255,255,0.5);
   }
 
   .square:hover .piece { transform: scale(1.08); }
@@ -1244,7 +1254,9 @@ function renderBoard() {
     const dc = parseInt(sq.dataset.col);
     const { r, c } = boardRowCol(dr, dc);
     const piece = STATE.board[r][c];
-    sq.querySelector('.piece').textContent = piece ? CONFIG.UNICODE[piece.color][piece.type] : '';
+    const pieceEl = sq.querySelector('.piece');
+    pieceEl.textContent = piece ? CONFIG.UNICODE[piece.color][piece.type] : '';
+    pieceEl.className = piece ? `piece ${piece.color}` : 'piece';
   });
 }
 
