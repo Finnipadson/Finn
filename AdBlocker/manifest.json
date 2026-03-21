@@ -1,0 +1,47 @@
+{
+  "manifest_version": 2,
+  "name": "YT AdBlocker",
+  "version": "1.0",
+  "description": "Blockiert Video-Ads und Banner-Ads auf YouTube automatisch.",
+
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "storage",
+    "tabs",
+    "*://www.youtube.com/*",
+    "*://*.googlevideo.com/*",
+    "*://*.doubleclick.net/*",
+    "*://*.googleadservices.com/*",
+    "*://*.googlesyndication.com/*",
+    "*://*.google-analytics.com/*",
+    "*://*.ytimg.com/*"
+  ],
+
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://www.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icon48.png",
+      "96": "icon96.png"
+    },
+    "default_title": "YT AdBlocker"
+  },
+
+  "icons": {
+    "48": "icon48.png",
+    "96": "icon96.png"
+  }
+}
