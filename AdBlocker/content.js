@@ -11,8 +11,8 @@ let domBlockedCount = 0;
 // ============================================================
 const AD_SELECTORS = [
   // Video-Ad Overlay & Player
-  '.ad-showing',
-  '.ad-interrupting',
+  // NOTE: .ad-showing / .ad-interrupting sind Klassen auf dem Player-Container
+  // — diese NICHT entfernen, nur zur Erkennung verwenden (s. handleVideoAd)
   '#player-ads',
   '.ytp-ad-module',
   '.ytp-ad-overlay-container',
@@ -66,13 +66,18 @@ function handleVideoAd() {
   const video = document.querySelector('video');
   if (!video) return;
 
-  // Prüfen ob gerade eine Ad läuft
-  const adBadge = document.querySelector('.ytp-ad-simple-ad-badge, .ytp-ad-preview-container');
-  const adShowing = document.querySelector('.ad-showing');
+  // Ad-Erkennung: Klassen auf dem Player-Container (NICHT entfernen)
+  const adShowing = document.querySelector('.ad-showing, .ad-interrupting');
+  const adBadge   = document.querySelector('.ytp-ad-simple-ad-badge, .ytp-ad-preview-container');
 
   if (adShowing || adBadge) {
+    // Sofort stummschalten — Ad ist nicht hörbar während Skip ausgeführt wird
+    if (!video.muted) video.muted = true;
+
     // 1. Versuch: Skip-Button klicken
-    const skipBtn = document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, [class*="skip-button"]');
+    const skipBtn = document.querySelector(
+      '.ytp-ad-skip-button, .ytp-ad-skip-button-modern, [class*="skip-button"]'
+    );
     if (skipBtn) {
       skipBtn.click();
       return;
@@ -81,14 +86,12 @@ function handleVideoAd() {
     // 2. Versuch: Video ans Ende spulen
     if (video.duration && isFinite(video.duration) && video.duration > 0) {
       video.currentTime = video.duration;
-      // Playback-Rate erhöhen damit die Ad schneller vorbei ist
       video.playbackRate = 16;
     }
   } else {
-    // Normale Playback-Rate wiederherstellen
-    if (video.playbackRate !== 1) {
-      video.playbackRate = 1;
-    }
+    // Kein Ad aktiv — Mute und Playback-Rate zurücksetzen
+    if (video.muted) video.muted = false;
+    if (video.playbackRate !== 1) video.playbackRate = 1;
   }
 }
 
@@ -110,11 +113,22 @@ function startObserver() {
 
 // Video-Ad Polling (alle 300ms) weil YouTube den DOM oft nicht ändert
 let adCheckInterval = null;
+let videoListenerAttached = false;
+
+function attachVideoListener() {
+  const video = document.querySelector('video');
+  if (!video || videoListenerAttached) return;
+  // timeupdate feuert mehrmals pro Sekunde während das Video läuft
+  // → sofortige Ad-Erkennung ohne auf den 300ms-Interval warten zu müssen
+  video.addEventListener('timeupdate', handleVideoAd, { passive: true });
+  videoListenerAttached = true;
+}
 
 function startAdCheck() {
   if (adCheckInterval) return;
   adCheckInterval = setInterval(() => {
     if (!enabled) return;
+    attachVideoListener();
     handleVideoAd();
     removeAdElements();
   }, 300);
