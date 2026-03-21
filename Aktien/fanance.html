@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>fanance — Finanz-Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --card:      #161b22;
+      --card-h:    #1c2128;
+      --accent:    #58a6ff;
+      --purple:    #a78bfa;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --green:     #3fb950;
+      --red:       #f85149;
+      --border:    #30363d;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(88,166,255,0.07) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 56px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: linear-gradient(to right, rgba(13,17,23,0.92), rgba(22,27,34,0.92));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #58a6ff, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    #searchBtn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    #searchBtn:hover { border-color: var(--accent); color: var(--accent); }
+    #searchBtn svg { width: 14px; height: 14px; }
+
+    /* ── MAIN CONTENT ── */
+    main { max-width: 1200px; margin: 0 auto; padding: 40px 24px; position: relative; z-index: 1; }
+
+    /* ── MAIN TABS ── */
+    .main-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 28px;
+      padding: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: fit-content;
+    }
+
+    .main-tab {
+      background: none;
+      border: none;
+      border-radius: 16px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 7px 22px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .main-tab.active {
+      background: linear-gradient(135deg, #58a6ff, #a78bfa);
+      color: #0d1117;
+      font-weight: 700;
+    }
+
+    .main-tab:hover:not(.active) {
+      color: var(--text);
+      background: var(--card-h);
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #58a6ff, #a78bfa);
+      flex-shrink: 0;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── ASSET GRID ── */
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+
+    @media (max-width: 1000px) {
+      .asset-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .asset-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .asset-card {
+      background: linear-gradient(145deg, #161b22, #0f1419);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 14px 10px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      animation: fadeInUp 0.45s ease both;
+    }
+
+    .asset-card:nth-child(1) { animation-delay: 0.04s; }
+    .asset-card:nth-child(2) { animation-delay: 0.08s; }
+    .asset-card:nth-child(3) { animation-delay: 0.12s; }
+    .asset-card:nth-child(4) { animation-delay: 0.16s; }
+    .asset-card:nth-child(5) { animation-delay: 0.20s; }
+
+    .asset-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(to bottom, #58a6ff, #a78bfa);
+      border-radius: 3px 0 0 3px;
+    }
+
+    .asset-card:hover {
+      background: linear-gradient(145deg, #1c2128, #161b22);
+      border-color: rgba(88,166,255,0.45);
+      box-shadow: 0 8px 32px rgba(88,166,255,0.15), 0 4px 16px rgba(0,0,0,0.4);
+      transform: translateY(-2px);
+    }
+
+    .card-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 10px;
+      padding-left: 8px;
+    }
+
+    .widget-wrapper {
+      flex: 1;
+      min-height: 150px;
+      pointer-events: none;
+    }
+
+    .widget-wrapper iframe {
+      width: 100%;
+      height: 150px;
+      border: none;
+      display: block;
+    }
+
+    /* ── DETAIL VIEW ── */
+    #detail { display: none; }
+
+    .back-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 7px 14px;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+      transition: border-color 0.2s, color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    #detail-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #58a6ff, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    #chart-container {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--card);
+      margin-bottom: 16px;
+      box-shadow: 0 6px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(88,166,255,0.05);
+    }
+
+    .timeframe-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tf-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 8px 18px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .tf-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .tf-btn.active {
+      background: linear-gradient(135deg, #58a6ff, #a78bfa);
+      border-color: transparent;
+      color: #0d1117;
+      font-weight: 700;
+    }
+
+    /* ── NEWS VIEW ── */
+    #tab-news {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    /* ── SEARCH MODAL ── */
+    #searchModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 500;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 80px;
+    }
+
+    #searchModal.open { display: flex; }
+
+    @keyframes slideDown {
+      from { transform: translateY(-16px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-box {
+      background: rgba(22,27,34,0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(48,54,61,0.8);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(88,166,255,0.05);
+      overflow: hidden;
+      animation: slideDown 0.2s ease;
+    }
+
+    .modal-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-input-wrap svg { color: var(--muted); flex-shrink: 0; width: 16px; height: 16px; }
+
+    #searchInput {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    #searchInput::placeholder { color: var(--muted); }
+
+    #searchResults { max-height: 360px; overflow-y: auto; }
+
+    .search-label {
+      padding: 8px 16px 6px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover { background: var(--card-h); }
+
+    .search-item-name { font-weight: 500; font-size: 0.9rem; }
+    .search-item-sym  { font-size: 0.75rem; color: var(--muted); }
+
+    .search-free {
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    .search-free kbd {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.75rem;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">fanance</div>
+  <button id="searchBtn" onclick="openSearch()">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+      <circle cx="6.5" cy="6.5" r="4.5"/>
+      <line x1="10" y1="10" x2="14" y2="14"/>
+    </svg>
+    Suchen
+  </button>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- OVERVIEW (with tabs) -->
+  <div id="overview">
+    <div class="main-tabs">
+      <button class="main-tab active" id="tab-btn-uebersicht" onclick="switchTab('uebersicht')">Übersicht</button>
+      <button class="main-tab" id="tab-btn-news" onclick="switchTab('news')">News</button>
+    </div>
+
+    <!-- Übersicht Content -->
+    <div id="tab-uebersicht">
+      <p class="section-title">Indizes</p>
+      <div class="asset-grid" id="grid-indices"></div>
+
+      <p class="section-title">Rohstoffe &amp; Krypto</p>
+      <div class="asset-grid" id="grid-commodities"></div>
+    </div>
+
+    <!-- News Content -->
+    <div id="tab-news" style="display:none"></div>
+  </div>
+
+  <!-- DETAIL -->
+  <div id="detail">
+    <button class="back-btn" onclick="showOverview()">
+      &#8592; Übersicht
+    </button>
+    <div id="detail-title"></div>
+    <div id="chart-container"></div>
+    <div class="timeframe-bar" id="tfBar"></div>
+  </div>
+
+</main>
+
+<!-- SEARCH MODAL -->
+<div id="searchModal" onclick="handleModalClick(event)">
+  <div class="modal-box">
+    <div class="modal-input-wrap">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="6.5" cy="6.5" r="4.5"/>
+        <line x1="10" y1="10" x2="14" y2="14"/>
+      </svg>
+      <input id="searchInput" type="text" placeholder="Symbol oder Name suchen…" autocomplete="off" oninput="filterSearch()" onkeydown="handleSearchKey(event)">
+    </div>
+    <div id="searchResults"></div>
+    <div class="search-free">Freie Eingabe: Symbol eingeben und <kbd>Enter</kbd> drücken</div>
+  </div>
+</div>
+
+<script>
+// ── ASSETS ──────────────────────────────────────────────────────────────────
+const INDICES = [
+  { name: "DAX",        symbol: "XETR:DAX",    widgetSymbol: "XETR:EXS1",  noIntraday: true },
+  { name: "S&P 500",    symbol: "SP:SPX",       widgetSymbol: "AMEX:SPY",   noIntraday: true },
+  { name: "MSCI World", symbol: "AMEX:URTH",                                noIntraday: true },
+  { name: "Nasdaq",     symbol: "NASDAQ:IXIC",  widgetSymbol: "NASDAQ:QQQ", noIntraday: true },
+  { name: "Dow Jones",  symbol: "DJ:DJI",       widgetSymbol: "AMEX:DIA",   noIntraday: true },
+];
+
+const COMMODITIES = [
+  { name: "Gold",     symbol: "TVC:GOLD"        },
+  { name: "Silber",   symbol: "TVC:SILVER"      },
+  { name: "Öl",       symbol: "TVC:USOIL"       },
+  { name: "Bitcoin",  symbol: "COINBASE:BTCUSD" },
+  { name: "Ethereum", symbol: "COINBASE:ETHUSD" },
+];
+
+const SEARCH_ONLY_ASSETS = [
+  // US Mega-Caps
+  { name: "Nvidia",             symbol: "NASDAQ:NVDA"   },
+  { name: "Apple",              symbol: "NASDAQ:AAPL"   },
+  { name: "Microsoft",          symbol: "NASDAQ:MSFT"   },
+  { name: "Alphabet",           symbol: "NASDAQ:GOOGL"  },
+  { name: "Amazon",             symbol: "NASDAQ:AMZN"   },
+  { name: "Meta",               symbol: "NASDAQ:META"   },
+  { name: "Tesla",              symbol: "NASDAQ:TSLA"   },
+  { name: "Netflix",            symbol: "NASDAQ:NFLX"   },
+  { name: "AMD",                symbol: "NASDAQ:AMD"    },
+  { name: "Intel",              symbol: "NASDAQ:INTC"   },
+  { name: "Oracle",             symbol: "NYSE:ORCL"     },
+  { name: "IBM",                symbol: "NYSE:IBM"      },
+  { name: "Cisco",              symbol: "NASDAQ:CSCO"   },
+  { name: "Adobe",              symbol: "NASDAQ:ADBE"   },
+  { name: "Salesforce",         symbol: "NYSE:CRM"      },
+  { name: "PayPal",             symbol: "NASDAQ:PYPL"   },
+  { name: "Uber",               symbol: "NYSE:UBER"     },
+  { name: "Berkshire",          symbol: "NYSE:BRK.B"    },
+  { name: "JPMorgan",           symbol: "NYSE:JPM"      },
+  { name: "Bank of America",    symbol: "NYSE:BAC"      },
+  { name: "Goldman Sachs",      symbol: "NYSE:GS"       },
+  { name: "Johnson & Johnson",  symbol: "NYSE:JNJ"      },
+  { name: "Pfizer",             symbol: "NYSE:PFE"      },
+  { name: "Walmart",            symbol: "NYSE:WMT"      },
+  { name: "Coca-Cola",          symbol: "NYSE:KO"       },
+  { name: "McDonald's",         symbol: "NYSE:MCD"      },
+  { name: "Nike",               symbol: "NYSE:NKE"      },
+  { name: "ExxonMobil",         symbol: "NYSE:XOM"      },
+  { name: "Chevron",            symbol: "NYSE:CVX"      },
+  { name: "Visa",               symbol: "NYSE:V"        },
+  { name: "Mastercard",         symbol: "NYSE:MA"       },
+  // Deutsche Aktien
+  { name: "SAP",                symbol: "XETR:SAP"      },
+  { name: "Siemens",            symbol: "XETR:SIE"      },
+  { name: "BASF",               symbol: "XETR:BAS"      },
+  { name: "BMW",                symbol: "XETR:BMW"      },
+  { name: "Mercedes",           symbol: "XETR:MBG"      },
+  { name: "Volkswagen",         symbol: "XETR:VOW3"     },
+  { name: "Allianz",            symbol: "XETR:ALV"      },
+  { name: "Adidas",             symbol: "XETR:ADS"      },
+  { name: "Deutsche Telekom",   symbol: "XETR:DTE"      },
+  { name: "Deutsche Bank",      symbol: "XETR:DBK"      },
+  { name: "Munich Re",          symbol: "XETR:MUV2"     },
+  { name: "RWE",                symbol: "XETR:RWE"      },
+  { name: "E.ON",               symbol: "XETR:EOAN"     },
+  { name: "Bayer",              symbol: "XETR:BAYN"     },
+  { name: "Airbus",             symbol: "XETR:AIR"      },
+  { name: "Infineon",           symbol: "XETR:IFX"      },
+  { name: "Linde",              symbol: "XETR:LIN"      },
+  { name: "DHL",                symbol: "XETR:DHL"      },
+  { name: "Henkel",             symbol: "XETR:HEN3"     },
+  { name: "Fresenius",          symbol: "XETR:FRE"      },
+  // Weitere Indizes
+  { name: "Nikkei 225",         symbol: "TVC:NI225",  noIntraday: true },
+  { name: "FTSE 100",           symbol: "TVC:UKX",    noIntraday: true },
+  { name: "CAC 40",             symbol: "TVC:CAC40",  noIntraday: true },
+  { name: "Euro Stoxx 50",      symbol: "TVC:SX5E",   noIntraday: true },
+  { name: "Hang Seng",          symbol: "TVC:HSI",    noIntraday: true },
+  // Mehr Krypto
+  { name: "Solana",             symbol: "COINBASE:SOLUSD"  },
+  { name: "XRP",                symbol: "COINBASE:XRPUSD"  },
+  { name: "BNB",                symbol: "BINANCE:BNBUSDT"  },
+  { name: "Cardano",            symbol: "COINBASE:ADAUSD"  },
+  { name: "Dogecoin",           symbol: "COINBASE:DOGEUSD" },
+  // ETFs
+  { name: "SPY ETF",            symbol: "AMEX:SPY"    },
+  { name: "QQQ ETF",            symbol: "NASDAQ:QQQ"  },
+  { name: "GLD ETF",            symbol: "AMEX:GLD"    },
+  { name: "IWM ETF",            symbol: "AMEX:IWM"    },
+  { name: "VTI ETF",            symbol: "AMEX:VTI"    },
+];
+
+const ALL_ASSETS = [...INDICES, ...COMMODITIES, ...SEARCH_ONLY_ASSETS];
+
+// ── TIMEFRAMES ───────────────────────────────────────────────────────────────
+const TIMEFRAMES = [
+  { label: "1T",  range: "1D"  },
+  { label: "1W",  range: "5D"  },
+  { label: "1M",  range: "1M"  },
+  { label: "1J",  range: "12M" },
+  { label: "5J",  range: "60M" },
+  { label: "Max", range: "ALL" },
+];
+
+let currentAsset = null;
+let currentRange = "1M";
+
+// ── BUILD OVERVIEW ───────────────────────────────────────────────────────────
+function buildGrid(containerId, assets) {
+  const grid = document.getElementById(containerId);
+  assets.forEach(asset => {
+    const card = document.createElement("div");
+    card.className = "asset-card";
+    card.innerHTML = `
+      <div class="card-name">${asset.name}</div>
+      <div class="widget-wrapper">
+        ${quoteWidgetHTML(asset)}
+      </div>`;
+    card.addEventListener("click", () => openDetail(asset));
+    grid.appendChild(card);
+  });
+}
+
+function quoteWidgetHTML(asset) {
+  const sym = asset.widgetSymbol || asset.symbol;
+  const params = {
+    symbol: sym,
+    width: "100%",
+    height: 150,
+    dateRange: "1D",
+    colorTheme: "dark",
+    isTransparent: true,
+    autosize: false,
+  };
+  const src = `https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=de_DE#${encodeURIComponent(JSON.stringify(params))}`;
+  return `<iframe src="${src}" scrolling="no" allowtransparency="true"></iframe>`;
+}
+
+// ── MAIN TABS ─────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById("tab-uebersicht").style.display = tab === "uebersicht" ? "block" : "none";
+  document.getElementById("tab-news").style.display       = tab === "news"       ? "block" : "none";
+  document.getElementById("tab-btn-uebersicht").classList.toggle("active", tab === "uebersicht");
+  document.getElementById("tab-btn-news").classList.toggle("active",       tab === "news");
+}
+
+// ── CHART PARAMS (Fix: noIntraday Intervall-Mapping) ─────────────────────────
+function resolveChartParams(range, noIntraday) {
+  if (noIntraday) {
+    const remap = {
+      "1D": { range: "5D",  interval: "D" },
+      "5D": { range: "1M",  interval: "D" },
+    };
+    if (remap[range]) return remap[range];
+  }
+  const intervals = { "1D": "5", "5D": "30", "1M": "D", "12M": "W", "60M": "W", "ALL": "M" };
+  return { range, interval: intervals[range] || "D" };
+}
+
+// ── DETAIL VIEW ──────────────────────────────────────────────────────────────
+function openDetail(asset) {
+  currentAsset = asset;
+  currentRange = "1M";
+  document.getElementById("overview").style.display = "none";
+  document.getElementById("detail").style.display   = "block";
+  document.getElementById("detail-title").textContent = asset.name;
+  buildTFBar();
+  renderChart(currentRange);
+}
+
+function showOverview() {
+  document.getElementById("detail").style.display   = "none";
+  document.getElementById("overview").style.display = "block";
+  document.getElementById("chart-container").innerHTML = "";
+}
+
+function buildTFBar() {
+  const bar = document.getElementById("tfBar");
+  bar.innerHTML = "";
+  TIMEFRAMES.forEach(tf => {
+    const btn = document.createElement("button");
+    btn.className = "tf-btn" + (tf.range === currentRange ? " active" : "");
+    btn.textContent = tf.label;
+    btn.addEventListener("click", () => {
+      currentRange = tf.range;
+      document.querySelectorAll(".tf-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderChart(tf.range);
+    });
+    bar.appendChild(btn);
+  });
+}
+
+// ── TV.JS CHART ───────────────────────────────────────────────────────────────
+function loadTVScript(cb) {
+  if (window.TradingView) { cb(); return; }
+  const s = document.createElement("script");
+  s.src = "https://s3.tradingview.com/tv.js";
+  s.onload = cb;
+  document.head.appendChild(s);
+}
+
+function renderChart(range) {
+  const container = document.getElementById("chart-container");
+  container.innerHTML = '<div id="tv_chart_div" style="height:500px"></div>';
+  const noIntraday = currentAsset && currentAsset.noIntraday;
+  const { range: resolvedRange, interval } = resolveChartParams(range, noIntraday);
+  loadTVScript(() => {
+    new TradingView.widget({
+      container_id:        "tv_chart_div",
+      symbol:              currentAsset.symbol,
+      interval:            interval,
+      range:               resolvedRange,
+      width:               "100%",
+      height:              500,
+      theme:               "dark",
+      style:               "1",
+      locale:              "de",
+      timezone:            "Europe/Berlin",
+      toolbar_bg:          "#161b22",
+      enable_publishing:   false,
+      allow_symbol_change: false,
+      save_image:          false,
+    });
+  });
+}
+
+// ── SEARCH ───────────────────────────────────────────────────────────────────
+function openSearch() {
+  document.getElementById("searchModal").classList.add("open");
+  const inp = document.getElementById("searchInput");
+  inp.value = "";
+  filterSearch();
+  setTimeout(() => inp.focus(), 50);
+}
+
+function closeSearch() {
+  document.getElementById("searchModal").classList.remove("open");
+}
+
+function handleModalClick(e) {
+  if (e.target === document.getElementById("searchModal")) closeSearch();
+}
+
+function filterSearch() {
+  const q       = document.getElementById("searchInput").value.trim().toLowerCase();
+  const results = document.getElementById("searchResults");
+  const isEmpty = q === "";
+
+  const matches = ALL_ASSETS.filter(a =>
+    a.name.toLowerCase().includes(q) || a.symbol.toLowerCase().includes(q)
+  );
+
+  results.innerHTML = "";
+
+  if (matches.length > 0) {
+    const label = document.createElement("div");
+    label.className   = "search-label";
+    label.textContent = isEmpty ? "Vorschläge" : "Ergebnisse";
+    results.appendChild(label);
+  }
+
+  matches.forEach(a => {
+    const item = document.createElement("div");
+    item.className = "search-item";
+    item.innerHTML = `<span class="search-item-name">${a.name}</span><span class="search-item-sym">${a.symbol}</span>`;
+    item.addEventListener("click", () => {
+      closeSearch();
+      openDetail(a);
+    });
+    results.appendChild(item);
+  });
+}
+
+function handleSearchKey(e) {
+  if (e.key === "Escape") {
+    closeSearch();
+  } else if (e.key === "Enter") {
+    const q = document.getElementById("searchInput").value.trim();
+    if (!q) return;
+    const match = ALL_ASSETS.find(a =>
+      a.name.toLowerCase() === q.toLowerCase() || a.symbol.toLowerCase() === q.toLowerCase()
+    );
+    if (match) {
+      closeSearch();
+      openDetail(match);
+    } else {
+      closeSearch();
+      openDetail({ name: q.toUpperCase(), symbol: q.toUpperCase() });
+    }
+  }
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeSearch();
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+buildGrid("grid-indices",     INDICES);
+buildGrid("grid-commodities", COMMODITIES);
+
+// Build news iframe
+const newsParams = {
+  feedMode: "market", market: "stock", isTransparent: true,
+  displayMode: "adaptive", width: "100%", height: 700,
+  colorTheme: "dark", locale: "de_DE",
+};
+const newsIframe = document.createElement("iframe");
+newsIframe.src = `https://s.tradingview.com/embed-widget/timeline/?locale=de_DE#${encodeURIComponent(JSON.stringify(newsParams))}`;
+newsIframe.scrolling = "no";
+newsIframe.setAttribute("allowtransparency", "true");
+Object.assign(newsIframe.style, { width: "100%", height: "700px", border: "none", display: "block" });
+document.getElementById("tab-news").appendChild(newsIframe);
+</script>
+</body>
+</html>
