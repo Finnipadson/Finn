@@ -100,7 +100,7 @@ def query_audd(wav_bytes: bytes) -> dict | None:
     try:
         resp = requests.post(
             AUDD_ENDPOINT,
-            data={"return": "spotify,apple_music"},
+            data={"return": "spotify,apple_music", "api_token": "f270b9cb50c74583398864227f393086"},
             files={"audio": ("audio.wav", wav_bytes, "audio/wav")},
             timeout=15,
         )
