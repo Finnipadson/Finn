@@ -141,6 +141,10 @@ class SongFinder(ctk.CTk):
         self._stop_evt  = threading.Event()
         self._history   = load_history()
 
+        icon_path = Path(__file__).parent / "icon.ico"
+        if icon_path.exists():
+            self.iconbitmap(str(icon_path))
+
         self._build_ui()
         self._render_history()
 
