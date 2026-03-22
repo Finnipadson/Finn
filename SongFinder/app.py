@@ -80,8 +80,12 @@ def record_loopback(duration: float, stop_event: threading.Event):
 
     raw   = b"".join(frames)
     audio = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
-    if channels == 2:
-        audio = audio.reshape(-1, 2)
+    audio = audio.reshape(-1, channels)
+    # AudD erwartet Stereo — erste 2 Kanäle nehmen (oder mono duplizieren)
+    if channels >= 2:
+        audio = audio[:, :2]
+    else:
+        audio = np.column_stack([audio, audio])
     return audio, sample_rate
 
 
