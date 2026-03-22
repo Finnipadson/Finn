@@ -89,26 +89,32 @@ def record_loopback(duration: float, stop_event: threading.Event):
     return audio, sample_rate
 
 
-def audio_to_wav_bytes(audio: np.ndarray, sample_rate: int) -> bytes:
-    buf = io.BytesIO()
-    sf.write(buf, audio, sample_rate, format="WAV", subtype="PCM_16")
-    buf.seek(0)
-    return buf.read()
-
-
-def query_audd(wav_bytes: bytes) -> dict | None:
+def query_audd(audio: np.ndarray, sample_rate: int) -> dict | None:
+    import tempfile, os, wave
+    # Write to a real temp file — most reliable way to send to requests
+    audio_int16 = (np.clip(audio, -1.0, 1.0) * 32767).astype(np.int16)
+    tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+    tmp.close()
     try:
-        resp = requests.post(
-            AUDD_ENDPOINT,
-            data={"return": "spotify,apple_music", "api_token": "f270b9cb50c74583398864227f393086"},
-            files={"audio": ("audio.wav", wav_bytes, "audio/wav")},
-            timeout=15,
-        )
+        with wave.open(tmp.name, "wb") as wf:
+            wf.setnchannels(2)
+            wf.setsampwidth(2)
+            wf.setframerate(sample_rate)
+            wf.writeframes(audio_int16.tobytes())
+        with open(tmp.name, "rb") as f:
+            resp = requests.post(
+                AUDD_ENDPOINT,
+                data={"return": "spotify,apple_music", "api_token": "f270b9cb50c74583398864227f393086"},
+                files={"file": ("audio.wav", f, "audio/wav")},
+                timeout=15,
+            )
         data = resp.json()
         if data.get("status") == "success" and data.get("result"):
             return data["result"]
     except Exception:
         pass
+    finally:
+        os.unlink(tmp.name)
     return None
 
 
@@ -247,8 +253,7 @@ class SongFinder(ctk.CTk):
                 return
 
             self._set_status("Erkenne...", "white")
-            wav = audio_to_wav_bytes(audio, sr)
-            result = query_audd(wav)
+            result = query_audd(audio, sr)
 
             if result:
                 self._on_found(result)
