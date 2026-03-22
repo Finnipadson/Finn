@@ -1,3 +1,6 @@
+import ctypes
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("SongFinder")
+
 import customtkinter as ctk
 import pyaudiowpatch as pyaudio
 import numpy as np
