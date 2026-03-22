@@ -1,5 +1,5 @@
 import customtkinter as ctk
-import sounddevice as sd
+import pyaudiowpatch as pyaudio
 import numpy as np
 import soundfile as sf
 import requests
@@ -35,37 +35,59 @@ def save_history(history: list) -> None:
     )
 
 
-def record_loopback(duration: float, stop_event: threading.Event) -> np.ndarray | None:
-    """Record system audio via WASAPI loopback (what the PC is playing)."""
-    # sd.default.device[1] is the default output device index
-    device_idx = sd.default.device[1]
-    frames = int(duration * SAMPLE_RATE)
-    wasapi = sd.WasapiSettings(loopback=True)
+def record_loopback(duration: float, stop_event: threading.Event):
+    """Record system audio via WASAPI loopback (what the PC is playing).
+    Returns (audio_array, sample_rate) or (None, None) if stopped."""
+    p = pyaudio.PyAudio()
+    try:
+        wasapi_info  = p.get_host_api_info_by_type(pyaudio.paWASAPI)
+        default_out  = p.get_device_info_by_index(wasapi_info["defaultOutputDevice"])
 
-    recording = sd.rec(
-        frames,
-        samplerate=SAMPLE_RATE,
-        channels=2,
-        dtype="float32",
-        device=device_idx,
-        extra_settings=wasapi,
-        blocking=False,
-    )
+        # Find the loopback device matching the default output
+        loopback_dev = None
+        for dev in p.get_loopback_device_info_generator():
+            if default_out["name"] in dev["name"]:
+                loopback_dev = dev
+                break
+        if loopback_dev is None:
+            raise RuntimeError("Kein WASAPI-Loopback-Device gefunden")
 
-    deadline = time.monotonic() + duration
-    while time.monotonic() < deadline:
-        if stop_event.is_set():
-            sd.stop()
-            return None
-        time.sleep(0.05)
+        sample_rate = int(loopback_dev["defaultSampleRate"])
+        channels    = loopback_dev["maxInputChannels"]
+        chunk_size  = 1024
+        n_chunks    = int(sample_rate / chunk_size * duration)
 
-    sd.wait()
-    return recording
+        stream = p.open(
+            format=pyaudio.paInt16,
+            channels=channels,
+            rate=sample_rate,
+            input=True,
+            input_device_index=loopback_dev["index"],
+        )
+
+        frames = []
+        for _ in range(n_chunks):
+            if stop_event.is_set():
+                stream.stop_stream()
+                stream.close()
+                return None, None
+            frames.append(stream.read(chunk_size, exception_on_overflow=False))
+
+        stream.stop_stream()
+        stream.close()
+    finally:
+        p.terminate()
+
+    raw   = b"".join(frames)
+    audio = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+    if channels == 2:
+        audio = audio.reshape(-1, 2)
+    return audio, sample_rate
 
 
-def audio_to_wav_bytes(audio: np.ndarray) -> bytes:
+def audio_to_wav_bytes(audio: np.ndarray, sample_rate: int) -> bytes:
     buf = io.BytesIO()
-    sf.write(buf, audio, SAMPLE_RATE, format="WAV", subtype="PCM_16")
+    sf.write(buf, audio, sample_rate, format="WAV", subtype="PCM_16")
     buf.seek(0)
     return buf.read()
 
@@ -102,7 +124,7 @@ class SongFinder(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("SongFinder")
-        self.geometry("440x600")
+        self.geometry("440x660")
         self.resizable(False, False)
 
         self._running   = False
@@ -178,7 +200,7 @@ class SongFinder(ctk.CTk):
             font=ctk.CTkFont(size=14, weight="bold"), anchor="w"
         ).pack(anchor="w", padx=24, pady=(8, 4))
 
-        self.history_box = ctk.CTkScrollableFrame(self, height=170)
+        self.history_box = ctk.CTkScrollableFrame(self, height=210)
         self.history_box.pack(padx=24, pady=(0, 16), fill="x")
 
     # ── Button toggle ─────────────────────────────────────────────────────────
@@ -209,7 +231,7 @@ class SongFinder(ctk.CTk):
             self._set_status(f"Versuch {attempt} — nehme {CHUNK_SECONDS}s auf...", "white")
 
             try:
-                audio = record_loopback(CHUNK_SECONDS, self._stop_evt)
+                audio, sr = record_loopback(CHUNK_SECONDS, self._stop_evt)
             except Exception as exc:
                 self._set_status(f"Audio-Fehler: {exc}", COLOR_ERR)
                 self._reset_btn()
@@ -221,7 +243,7 @@ class SongFinder(ctk.CTk):
                 return
 
             self._set_status("Erkenne...", "white")
-            wav = audio_to_wav_bytes(audio)
+            wav = audio_to_wav_bytes(audio, sr)
             result = query_audd(wav)
 
             if result:
@@ -307,23 +329,23 @@ class SongFinder(ctk.CTk):
         for entry in self._history:
             row = ctk.CTkFrame(
                 self.history_box,
-                fg_color=("gray85", "gray20"),
+                fg_color=("gray78", "#484848"),
                 corner_radius=6,
             )
-            row.pack(fill="x", pady=2, padx=2)
+            row.pack(fill="x", pady=3, padx=2)
 
             ctk.CTkLabel(
                 row,
                 text=f"{entry['title']}  —  {entry['artist']}",
-                font=ctk.CTkFont(size=12, weight="bold"),
-                anchor="w", wraplength=260,
-            ).pack(side="left", padx=10, pady=6)
+                font=ctk.CTkFont(size=13, weight="bold"),
+                anchor="w", wraplength=255, text_color=("gray10", "white"),
+            ).pack(side="left", padx=10, pady=8)
 
             ctk.CTkLabel(
                 row,
                 text=entry.get("time", ""),
                 font=ctk.CTkFont(size=10),
-                text_color="gray", anchor="e",
+                text_color=("gray30", "gray70"), anchor="e",
             ).pack(side="right", padx=10)
 
     # ── Helpers ───────────────────────────────────────────────────────────────
