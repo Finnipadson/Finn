@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrewDock — Dein Morgen. Dein Platz.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:    #F4ECD8;
+      --parchment:#EAD9BC;
+      --espresso: #1E0F06;
+      --brown:    #4A2C18;
+      --caramel:  #9A6A3A;
+      --sand:     #C8A97A;
+      --sage:     #7A8C6E;
+      --steel:    #8C9EA8;
+      --white:    #FAF8F3;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cream);
+      color: var(--espresso);
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* --- GRAIN OVERLAY --- */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.035;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* --- NAV --- */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.4rem 4rem;
+      background: transparent;
+      transition: background 0.4s, backdrop-filter 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(244,236,216,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(74,44,24,0.1);
+    }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--espresso);
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2.4rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--brown);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--caramel); }
+    .nav-cta {
+      background: var(--espresso);
+      color: var(--cream) !important;
+      padding: 0.55rem 1.4rem !important;
+      border-radius: 2px;
+    }
+    .nav-cta:hover { background: var(--brown); color: var(--cream) !important; }
+
+    /* --- HERO --- */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 8rem 4rem 4rem;
+      gap: 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -120px; right: -120px;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(154,106,58,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-text {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeUp 0.9s 0.2s forwards ease-out;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--caramel);
+      margin-bottom: 1.4rem;
+    }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.2rem, 6vw, 5.5rem);
+      font-weight: 300;
+      line-height: 1.08;
+      color: var(--espresso);
+      margin-bottom: 0.4rem;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--caramel);
+    }
+
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: var(--brown);
+      margin: 1.8rem 0 2.6rem;
+      line-height: 1.7;
+      max-width: 420px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--espresso);
+      color: var(--cream);
+      padding: 0.9rem 2.4rem;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
+    }
+    .btn-primary:hover {
+      background: var(--brown);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(30,15,6,0.22);
+    }
+
+    .hero-price {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      color: var(--brown);
+    }
+    .hero-price span {
+      display: block;
+      font-size: 0.65rem;
+      font-family: 'Jost', sans-serif;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--caramel);
+      margin-bottom: 0.2rem;
+    }
+
+    /* --- HERO IMAGE --- */
+    .hero-visual {
+      opacity: 0;
+      transform: translateX(30px);
+      animation: fadeLeft 1s 0.4s forwards ease-out;
+      position: relative;
+    }
+
+    .product-frame {
+      aspect-ratio: 4/5;
+      background: linear-gradient(145deg, #E8D5B0 0%, #D4BA88 40%, #C4A060 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(30,15,6,0.18), 0 8px 20px rgba(30,15,6,0.1);
+    }
+
+    .product-frame::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+    }
+
+    .product-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      color: rgba(30,15,6,0.35);
+    }
+
+    .product-placeholder svg {
+      width: 80px; height: 80px;
+      opacity: 0.5;
+    }
+
+    .product-placeholder p {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    /* Bamboo illustration inside product frame */
+    .bamboo-deco {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brewdock-svg {
+      width: 72%;
+      filter: drop-shadow(0 12px 24px rgba(30,15,6,0.25));
+    }
+
+    .badge-new {
+      position: absolute;
+      top: 1.4rem; right: 1.4rem;
+      background: var(--espresso);
+      color: var(--cream);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 0.4rem 0.8rem;
+      border-radius: 2px;
+    }
+
+    .hero-scroll-hint {
+      position: absolute;
+      bottom: 2.4rem; left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--caramel);
+      opacity: 0;
+      animation: fadeUp 0.8s 1.2s forwards;
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--caramel), transparent);
+      animation: scrollPulse 2s infinite;
+    }
+
+    /* --- SECTION COMMON --- */
+    section { padding: 6rem 4rem; }
+
+    .section-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--caramel);
+      margin-bottom: 0.8rem;
+      display: block;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-weight: 300;
+      line-height: 1.2;
+      color: var(--espresso);
+      margin-bottom: 1rem;
+    }
+
+    .divider {
+      width: 48px;
+      height: 1px;
+      background: var(--sand);
+      margin: 1.6rem 0;
+    }
+
+    /* --- MATERIALS --- */
+    .materials {
+      background: var(--espresso);
+      color: var(--cream);
+    }
+
+    .materials .section-label { color: var(--sand); }
+    .materials .section-title { color: var(--cream); }
+    .materials .divider { background: var(--caramel); }
+
+    .materials-header {
+      text-align: center;
+      max-width: 560px;
+      margin: 0 auto 4rem;
+    }
+
+    .materials-header p {
+      color: rgba(244,236,216,0.65);
+      font-size: 0.95rem;
+      line-height: 1.8;
+    }
+
+    .materials-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: rgba(244,236,216,0.08);
+      border: 1px solid rgba(244,236,216,0.08);
+    }
+
+    .material-card {
+      padding: 3rem 2rem;
+      background: var(--espresso);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.2rem;
+      transition: background 0.3s;
+      cursor: default;
+    }
+
+    .material-card:hover { background: var(--brown); }
+
+    .material-icon {
+      width: 52px; height: 52px;
+      border: 1px solid rgba(244,236,216,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .material-icon svg { width: 24px; height: 24px; }
+
+    .material-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 400;
+      color: var(--cream);
+    }
+
+    .material-card p {
+      font-size: 0.82rem;
+      color: rgba(244,236,216,0.55);
+      line-height: 1.75;
+    }
+
+    .material-tag {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--sand);
+      padding: 0.3rem 0.7rem;
+      border: 1px solid rgba(200,169,122,0.3);
+      border-radius: 2px;
+      margin-top: auto;
+    }
+
+    /* --- VARIANTS --- */
+    .variants {
+      background: var(--white);
+    }
+
+    .variants-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+    }
+
+    .variants-text p {
+      font-size: 0.92rem;
+      color: var(--brown);
+      line-height: 1.8;
+      margin-bottom: 2.4rem;
+    }
+
+    .specs-table {
+      border-top: 1px solid rgba(74,44,24,0.12);
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid rgba(74,44,24,0.08);
+      font-size: 0.82rem;
+    }
+
+    .spec-label {
+      color: var(--caramel);
+      letter-spacing: 0.08em;
+    }
+
+    .spec-value {
+      color: var(--espresso);
+      font-weight: 400;
+    }
+
+    .color-picker {
+      margin-top: 2.4rem;
+    }
+
+    .color-picker-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--caramel);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .colors {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .color-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+
+    .color-swatch {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative;
+    }
+
+    .color-swatch::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      transition: border-color 0.2s;
+    }
+
+    .color-option.active .color-swatch::after,
+    .color-option:hover .color-swatch::after {
+      border-color: var(--caramel);
+    }
+
+    .color-option:hover .color-swatch { transform: scale(1.08); }
+
+    .color-name {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--brown);
+    }
+
+    .natural { background: linear-gradient(135deg, #D4B483, #C09358); }
+    .schwarz { background: linear-gradient(135deg, #2C2420, #1A1410); }
+    .weiss   { background: linear-gradient(135deg, #F0EDE8, #E2DDD5); border: 1.5px solid rgba(74,44,24,0.15); }
+
+    .variants-visual {
+      position: relative;
+    }
+
+    .variants-frame {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, var(--parchment), var(--sand));
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 20px 60px rgba(30,15,6,0.12);
+    }
+
+    .dimension-lines {
+      position: absolute;
+      bottom: -1.5rem; right: -1.5rem;
+      background: var(--espresso);
+      color: var(--cream);
+      padding: 1rem 1.4rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      line-height: 1.8;
+    }
+
+    .dimension-lines strong {
+      display: block;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      font-weight: 400;
+      margin-bottom: 0.3rem;
+    }
+
+    /* --- REVIEWS --- */
+    .reviews {
+      background: var(--cream);
+    }
+
+    .reviews-header {
+      text-align: center;
+      max-width: 480px;
+      margin: 0 auto 3.5rem;
+    }
+
+    .stars-row {
+      display: flex;
+      gap: 0.2rem;
+      margin-bottom: 0.6rem;
+      justify-content: center;
+    }
+
+    .star { color: var(--sand); font-size: 1rem; }
+    .star-full { color: var(--caramel); }
+
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+
+    .review-card {
+      background: var(--white);
+      padding: 2.4rem;
+      position: relative;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .review-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(30,15,6,0.1);
+    }
+
+    .review-quote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      line-height: 1;
+      color: var(--sand);
+      margin-bottom: 0.5rem;
+      opacity: 0.6;
+    }
+
+    .review-text {
+      font-size: 0.9rem;
+      line-height: 1.75;
+      color: var(--brown);
+      margin-bottom: 1.6rem;
+    }
+
+    .review-author {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .review-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+      flex-shrink: 0;
+      color: var(--cream);
+    }
+
+    .av-1 { background: linear-gradient(135deg, var(--caramel), var(--brown)); }
+    .av-2 { background: linear-gradient(135deg, var(--sage), #4a6040); }
+    .av-3 { background: linear-gradient(135deg, var(--steel), #5a7a8a); }
+
+    .review-name {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: var(--espresso);
+      letter-spacing: 0.05em;
+    }
+
+    .review-detail {
+      font-size: 0.65rem;
+      color: var(--caramel);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .review-verified {
+      position: absolute;
+      top: 1.4rem; right: 1.4rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--sage);
+    }
+
+    /* --- CTA SECTION --- */
+    .cta-section {
+      background: var(--brown);
+      text-align: center;
+      padding: 8rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: 'BrewDock';
+      position: absolute;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(8rem, 20vw, 18rem);
+      font-weight: 300;
+      color: rgba(255,255,255,0.04);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .cta-section .section-label { color: var(--sand); }
+
+    .cta-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 300;
+      color: var(--cream);
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+
+    .cta-title em {
+      font-style: italic;
+      color: var(--sand);
+    }
+
+    .cta-sub {
+      font-size: 0.92rem;
+      color: rgba(244,236,216,0.65);
+      max-width: 420px;
+      margin: 0 auto 3rem;
+      line-height: 1.75;
+      position: relative;
+    }
+
+    .btn-primary-light {
+      display: inline-block;
+      background: var(--cream);
+      color: var(--espresso);
+      padding: 1.1rem 3rem;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
+      position: relative;
+    }
+
+    .btn-primary-light:hover {
+      background: var(--parchment);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(30,15,6,0.35);
+    }
+
+    .cta-trust {
+      display: flex;
+      justify-content: center;
+      gap: 2.4rem;
+      margin-top: 3rem;
+      position: relative;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(244,236,216,0.5);
+    }
+
+    .trust-dot {
+      width: 5px; height: 5px;
+      background: var(--sand);
+      border-radius: 50%;
+      opacity: 0.6;
+    }
+
+    /* --- FOOTER --- */
+    footer {
+      background: var(--espresso);
+      color: rgba(244,236,216,0.5);
+      padding: 2.4rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+    }
+
+    .footer-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 400;
+      color: var(--cream);
+      opacity: 0.8;
+    }
+
+    /* --- ANIMATIONS --- */
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeLeft {
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* stagger children */
+    .stagger > * { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+    .stagger.visible > *:nth-child(1) { transition-delay: 0s; }
+    .stagger.visible > *:nth-child(2) { transition-delay: 0.12s; }
+    .stagger.visible > *:nth-child(3) { transition-delay: 0.24s; }
+    .stagger.visible > *:nth-child(4) { transition-delay: 0.36s; }
+    .stagger.visible > * { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 900px) {
+      nav { padding: 1.2rem 1.8rem; }
+      .nav-links { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 6rem 1.8rem 3rem; gap: 3rem; }
+      .hero-visual { order: -1; }
+      section { padding: 4rem 1.8rem; }
+      .materials-grid { grid-template-columns: 1fr 1fr; }
+      .variants-inner { grid-template-columns: 1fr; gap: 3rem; }
+      .reviews-grid { grid-template-columns: 1fr; }
+      .cta-section { padding: 5rem 1.8rem; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+      .cta-trust { flex-direction: column; align-items: center; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <a href="#" class="nav-logo">BrewDock</a>
+    <ul class="nav-links">
+      <li><a href="#materialien">Materialien</a></li>
+      <li><a href="#varianten">Varianten</a></li>
+      <li><a href="#bewertungen">Bewertungen</a></li>
+      <li><a href="#kaufen" class="nav-cta">Jetzt kaufen</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-text">
+      <span class="hero-eyebrow">Küchenzubehör — Bambus & Edelstahl</span>
+      <h1 class="hero-title">Dein Morgen.<br><em>Dein Platz.</em></h1>
+      <p class="hero-subtitle">
+        BrewDock verbindet Funktion mit natürlicher Schönheit — eine kompakte Ablagestation, die jeden Morgen zu einem Ritual macht.
+      </p>
+      <div class="hero-actions">
+        <a href="#kaufen" class="btn-primary">Jetzt kaufen</a>
+        <div class="hero-price">
+          <span>Ab</span>
+          79,90 €
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="product-frame">
+        <span class="badge-new">Neu 2025</span>
+        <div class="bamboo-deco">
+          <!-- Inline SVG product illustration -->
+          <svg class="brewdock-svg" viewBox="0 0 320 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Base platform -->
+            <rect x="20" y="300" width="280" height="18" rx="4" fill="#3A2010" opacity="0.9"/>
+            <!-- Main body -->
+            <rect x="30" y="120" width="260" height="185" rx="6" fill="#C49A52"/>
+            <!-- Bamboo grain lines -->
+            <line x1="30" y1="145" x2="290" y2="145" stroke="#A87C38" stroke-width="0.8" opacity="0.5"/>
+            <line x1="30" y1="170" x2="290" y2="170" stroke="#A87C38" stroke-width="0.8" opacity="0.5"/>
+            <line x1="30" y1="195" x2="290" y2="195" stroke="#A87C38" stroke-width="0.8" opacity="0.5"/>
+            <line x1="30" y1="220" x2="290" y2="220" stroke="#A87C38" stroke-width="0.8" opacity="0.5"/>
+            <line x1="30" y1="245" x2="290" y2="245" stroke="#A87C38" stroke-width="0.8" opacity="0.5"/>
+            <line x1="30" y1="270" x2="290" y2="270" stroke="#A87C38" stroke-width="0.8" opacity="0.5"/>
+            <!-- Top surface dark -->
+            <rect x="30" y="110" width="260" height="16" rx="3" fill="#8B6022"/>
+            <!-- Drawer 1 -->
+            <rect x="38" y="200" width="120" height="42" rx="3" fill="#2C1A08" opacity="0.85"/>
+            <rect x="88" y="218" width="20" height="5" rx="2" fill="#C49A52"/>
+            <!-- Drawer 2 -->
+            <rect x="162" y="200" width="120" height="42" rx="3" fill="#2C1A08" opacity="0.85"/>
+            <rect x="212" y="218" width="20" height="5" rx="2" fill="#C49A52"/>
+            <!-- Drip tray slot indicator -->
+            <rect x="38" y="255" width="244" height="8" rx="2" fill="rgba(44,26,8,0.5)"/>
+            <!-- Silicone mat top -->
+            <rect x="38" y="126" width="244" height="12" rx="2" fill="#4A5E3A" opacity="0.6"/>
+            <!-- Coffee machine silhouette -->
+            <rect x="95" y="38" width="130" height="90" rx="6" fill="rgba(44,26,8,0.15)"/>
+            <rect x="105" y="48" width="110" height="70" rx="4" fill="rgba(44,26,8,0.1)"/>
+            <circle cx="160" cy="80" r="18" fill="rgba(44,26,8,0.12)"/>
+            <circle cx="160" cy="80" r="10" fill="rgba(44,26,8,0.15)"/>
+            <!-- Edelstahl trim -->
+            <rect x="28" y="108" width="264" height="4" rx="2" fill="#A8B8C0" opacity="0.7"/>
+            <rect x="28" y="296" width="264" height="4" rx="2" fill="#A8B8C0" opacity="0.7"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-scroll-hint">
+      <div class="scroll-line"></div>
+      <span>Entdecken</span>
+    </div>
+  </section>
+
+  <!-- MATERIALS -->
+  <section class="materials" id="materialien">
+    <div class="materials-header reveal">
+      <span class="section-label">Das Innere zählt</span>
+      <h2 class="section-title">Vier Materialien.<br>Ein perfektes Zusammenspiel.</h2>
+      <div class="divider" style="margin: 1.6rem auto;"></div>
+      <p>Jede Komponente wurde sorgfältig ausgewählt — für Langlebigkeit, Ästhetik und tägliche Freude.</p>
+    </div>
+
+    <div class="materials-grid stagger" id="matGrid">
+      <!-- Bambus -->
+      <div class="material-card">
+        <div class="material-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(244,236,216,0.7)" stroke-width="1.5" stroke-linecap="round">
+            <line x1="12" y1="2" x2="12" y2="22"/>
+            <line x1="8" y1="5" x2="16" y2="5"/>
+            <line x1="7" y1="10" x2="17" y2="10"/>
+            <line x1="8" y1="15" x2="16" y2="15"/>
+            <line x1="9" y1="20" x2="15" y2="20"/>
+          </svg>
+        </div>
+        <h3>Bambus</h3>
+        <p>Nachhaltiger FSC-zertifizierter Bambus mit natürlicher Maserung. Härter als die meisten Hölzer, leichter als Stahl.</p>
+        <span class="material-tag">Nachhaltig</span>
+      </div>
+
+      <!-- Edelstahl -->
+      <div class="material-card">
+        <div class="material-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(244,236,216,0.7)" stroke-width="1.5" stroke-linecap="round">
+            <rect x="3" y="8" width="18" height="8" rx="2"/>
+            <path d="M6 8V6a2 2 0 012-2h8a2 2 0 012 2v2"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+        </div>
+        <h3>Edelstahl</h3>
+        <p>Gebürsteter 304-Edelstahl für alle Rahmen und Einfassungen. Korrosionsbeständig, hygienisch und zeitlos.</p>
+        <span class="material-tag">Hygienisch</span>
+      </div>
+
+      <!-- Silikon -->
+      <div class="material-card">
+        <div class="material-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(244,236,216,0.7)" stroke-width="1.5" stroke-linecap="round">
+            <rect x="2" y="7" width="20" height="10" rx="5"/>
+            <circle cx="7" cy="12" r="1.5" fill="rgba(244,236,216,0.7)"/>
+            <circle cx="12" cy="12" r="1.5" fill="rgba(244,236,216,0.7)"/>
+            <circle cx="17" cy="12" r="1.5" fill="rgba(244,236,216,0.7)"/>
+          </svg>
+        </div>
+        <h3>Silikon</h3>
+        <p>Lebensmittelechte Silikonmatten verhindern Verrutschen der Maschine — lautlos, stabil, einfach zu reinigen.</p>
+        <span class="material-tag">Rutschfest</span>
+      </div>
+
+      <!-- Tropfauffang -->
+      <div class="material-card">
+        <div class="material-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(244,236,216,0.7)" stroke-width="1.5" stroke-linecap="round">
+            <path d="M12 2C12 2 5 9 5 14a7 7 0 0014 0C19 9 12 2 12 2z"/>
+            <path d="M9 15a3 3 0 006 0" stroke-dasharray="2 2"/>
+          </svg>
+        </div>
+        <h3>Tropfauffänger</h3>
+        <p>Versteckter herausnehmbarer Auffangbehälter unter der Ablagefläche. Kein Tropfen landet auf der Arbeitsplatte.</p>
+        <span class="material-tag">Unsichtbar</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- VARIANTS -->
+  <section class="variants" id="varianten">
+    <div class="variants-inner">
+      <div class="variants-text reveal">
+        <span class="section-label">Maße & Varianten</span>
+        <h2 class="section-title">Gemacht für<br>jeden Stil.</h2>
+        <div class="divider"></div>
+        <p>BrewDock passt sich deiner Küche an — nicht umgekehrt. Wähle die Farbe, die zu dir gehört.</p>
+
+        <div class="specs-table">
+          <div class="spec-row">
+            <span class="spec-label">Breite</span>
+            <span class="spec-value">42 cm</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Tiefe</span>
+            <span class="spec-value">30 cm</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Höhe</span>
+            <span class="spec-value">8,5 cm</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Gewicht</span>
+            <span class="spec-value">1,2 kg</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Schubladen</span>
+            <span class="spec-value">2 × tiefe Schublade</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Kapselkapazität</span>
+            <span class="spec-value">bis zu 40 Kapseln</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Reinigung</span>
+            <span class="spec-value">Alle Teile abnehmbar</span>
+          </div>
+        </div>
+
+        <div class="color-picker">
+          <span class="color-picker-label">Farbe wählen</span>
+          <div class="colors">
+            <div class="color-option active" onclick="selectColor(this, 'Natural')">
+              <div class="color-swatch natural"></div>
+              <span class="color-name">Natural</span>
+            </div>
+            <div class="color-option" onclick="selectColor(this, 'Schwarz')">
+              <div class="color-swatch schwarz"></div>
+              <span class="color-name">Schwarz</span>
+            </div>
+            <div class="color-option" onclick="selectColor(this, 'Weiß')">
+              <div class="color-swatch weiss"></div>
+              <span class="color-name">Weiß</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="variants-visual reveal">
+        <div class="variants-frame">
+          <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:80%; filter: drop-shadow(0 8px 20px rgba(30,15,6,0.2))">
+            <rect x="20" y="200" width="240" height="14" rx="3" fill="#3A2010" opacity="0.8"/>
+            <rect x="28" y="90" width="224" height="114" rx="5" fill="#C49A52"/>
+            <!-- grain -->
+            <line x1="28" y1="110" x2="252" y2="110" stroke="#A87C38" stroke-width="0.7" opacity="0.4"/>
+            <line x1="28" y1="130" x2="252" y2="130" stroke="#A87C38" stroke-width="0.7" opacity="0.4"/>
+            <line x1="28" y1="150" x2="252" y2="150" stroke="#A87C38" stroke-width="0.7" opacity="0.4"/>
+            <line x1="28" y1="170" x2="252" y2="170" stroke="#A87C38" stroke-width="0.7" opacity="0.4"/>
+            <line x1="28" y1="190" x2="252" y2="190" stroke="#A87C38" stroke-width="0.7" opacity="0.4"/>
+            <rect x="28" y="80" width="224" height="14" rx="3" fill="#8B6022"/>
+            <!-- drawers top view suggestion -->
+            <rect x="36" y="136" width="100" height="32" rx="2" fill="rgba(30,15,6,0.7)"/>
+            <rect x="80" y="150" width="16" height="4" rx="1" fill="#C49A52"/>
+            <rect x="144" y="136" width="100" height="32" rx="2" fill="rgba(30,15,6,0.7)"/>
+            <rect x="188" y="150" width="16" height="4" rx="1" fill="#C49A52"/>
+            <!-- steel trim -->
+            <rect x="26" y="78" width="228" height="3" rx="1.5" fill="#A8B8C0" opacity="0.8"/>
+            <rect x="26" y="197" width="228" height="3" rx="1.5" fill="#A8B8C0" opacity="0.8"/>
+            <!-- silicone mat top view -->
+            <rect x="36" y="94" width="208" height="9" rx="2" fill="#4A5E3A" opacity="0.5"/>
+            <!-- dimension arrows -->
+            <line x1="28" y1="230" x2="252" y2="230" stroke="#9A6A3A" stroke-width="1" marker-start="url(#a)" marker-end="url(#a)"/>
+            <text x="140" y="245" text-anchor="middle" fill="#9A6A3A" font-family="Jost,sans-serif" font-size="10" letter-spacing="1">42 cm</text>
+          </svg>
+        </div>
+        <div class="dimension-lines">
+          <strong>Kompaktformat</strong>
+          42 × 30 × 8,5 cm<br>
+          1,2 kg Eigengewicht
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section class="reviews" id="bewertungen">
+    <div class="reviews-header reveal">
+      <span class="section-label">Kundenstimmen</span>
+      <h2 class="section-title">Was andere sagen.</h2>
+      <div class="divider" style="margin: 1.4rem auto;"></div>
+      <div class="stars-row">
+        <span class="star star-full">★</span>
+        <span class="star star-full">★</span>
+        <span class="star star-full">★</span>
+        <span class="star star-full">★</span>
+        <span class="star star-full">★</span>
+      </div>
+      <p style="font-size:0.82rem;color:var(--caramel);letter-spacing:0.1em;">4,9 / 5 — über 340 Bewertungen</p>
+    </div>
+
+    <div class="reviews-grid stagger" id="revGrid">
+      <!-- Review 1 -->
+      <div class="review-card">
+        <span class="review-verified">✓ Verifiziert</span>
+        <div class="stars-row" style="justify-content:flex-start;margin-bottom:0.4rem;">
+          <span class="star star-full">★</span><span class="star star-full">★</span>
+          <span class="star star-full">★</span><span class="star star-full">★</span>
+          <span class="star star-full">★</span>
+        </div>
+        <div class="review-quote">"</div>
+        <p class="review-text">
+          Endlich Ordnung auf der Küchenzeile. Der BrewDock sieht nicht nur wunderschön aus — die Schubladen fassen problemlos meine gesamte Kapselsammlung und das Zubehör. Jeden Morgen ein kleines Glücksgefühl.
+        </p>
+        <div class="review-author">
+          <div class="review-avatar av-1">LM</div>
+          <div>
+            <div class="review-name">Lena M.</div>
+            <div class="review-detail">München — Natural</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review 2 -->
+      <div class="review-card">
+        <span class="review-verified">✓ Verifiziert</span>
+        <div class="stars-row" style="justify-content:flex-start;margin-bottom:0.4rem;">
+          <span class="star star-full">★</span><span class="star star-full">★</span>
+          <span class="star star-full">★</span><span class="star star-full">★</span>
+          <span class="star star-full">★</span>
+        </div>
+        <div class="review-quote">"</div>
+        <p class="review-text">
+          Die Qualität ist absolut premium. Bambus fühlt sich hochwertig an, der Edelstahl ist perfekt verarbeitet. Der versteckte Tropfauffänger ist ein Geniestreich — kein Wischen mehr. Kaufempfehlung ohne Wenn und Aber.
+        </p>
+        <div class="review-author">
+          <div class="review-avatar av-2">TK</div>
+          <div>
+            <div class="review-name">Thomas K.</div>
+            <div class="review-detail">Hamburg — Schwarz</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review 3 -->
+      <div class="review-card">
+        <span class="review-verified">✓ Verifiziert</span>
+        <div class="stars-row" style="justify-content:flex-start;margin-bottom:0.4rem;">
+          <span class="star star-full">★</span><span class="star star-full">★</span>
+          <span class="star star-full">★</span><span class="star star-full">★</span>
+          <span class="star" style="color:var(--sand)">★</span>
+        </div>
+        <div class="review-quote">"</div>
+        <p class="review-text">
+          Sieht auf Fotos schon toll aus, live ist er noch beeindruckender. Passt perfekt zu meiner weißen Küche in der Weiß-Variante. Einziger Punkt: Hätte gerne noch eine dritte Schublade — aber das ist Meckern auf hohem Niveau.
+        </p>
+        <div class="review-author">
+          <div class="review-avatar av-3">SB</div>
+          <div>
+            <div class="review-name">Sandra B.</div>
+            <div class="review-detail">Berlin — Weiß</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="kaufen">
+    <span class="section-label">Bereit für deinen BrewDock?</span>
+    <h2 class="cta-title">Dein Morgen.<br><em>Dein Platz.</em></h2>
+    <p class="cta-sub">Bestelle jetzt und erhalte kostenlosen Versand. Lieferzeit 3–5 Werktage. 30 Tage Rückgaberecht.</p>
+    <a href="#" class="btn-primary-light">Jetzt kaufen — ab 79,90 €</a>
+    <div class="cta-trust">
+      <div class="trust-item"><span class="trust-dot"></span>Kostenloser Versand</div>
+      <div class="trust-item"><span class="trust-dot"></span>30 Tage Rückgabe</div>
+      <div class="trust-item"><span class="trust-dot"></span>2 Jahre Garantie</div>
+      <div class="trust-item"><span class="trust-dot"></span>FSC-zertifiziert</div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <span class="footer-logo">BrewDock</span>
+    <span>© 2025 BrewDock GmbH — Alle Rechte vorbehalten</span>
+    <span>Datenschutz · Impressum · AGB</span>
+  </footer>
+
+  <script>
+    // Nav scroll effect
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // Intersection Observer for reveal animations
+    const revealEls = document.querySelectorAll('.reveal, .stagger');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12 });
+
+    revealEls.forEach(el => observer.observe(el));
+
+    // Color picker
+    function selectColor(el, name) {
+      document.querySelectorAll('.color-option').forEach(o => o.classList.remove('active'));
+      el.classList.add('active');
+    }
+  </script>
+</body>
+</html>
