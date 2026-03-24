@@ -23,8 +23,12 @@
       --muted-lt: #8898b5;
       --border: rgba(255,255,255,.1);
       --r:      18px;
+      --r-icon: 14px;
       --sh:     0 8px 40px rgba(8,15,30,.18);
       --sh-lg:  0 20px 60px rgba(8,15,30,.28);
+      --lbl-size:    .75rem;
+      --lbl-spacing: .1em;
+      --body-sm:     .9rem;
     }
 
     html { scroll-behavior: smooth; }
@@ -144,7 +148,7 @@
       display: inline-block;
       background: rgba(240,160,32,.15); border: 1px solid rgba(240,160,32,.4);
       color: var(--gold); padding: 6px 20px; border-radius: 999px;
-      font-size: .78rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+      font-size: var(--lbl-size); font-weight: 600; letter-spacing: var(--lbl-spacing); text-transform: uppercase;
       margin-bottom: 24px; animation: fadeDown .7s ease both;
     }
     .hero-title {
@@ -189,8 +193,12 @@
     .container { max-width: 1120px; margin: 0 auto; }
     .sec-label {
       display: inline-block; color: var(--gold); font-weight: 600;
-      font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 12px;
+      font-size: var(--lbl-size); letter-spacing: var(--lbl-spacing); text-transform: uppercase; margin-bottom: 12px;
     }
+    /* centered section header variant */
+    .sec-head-center { text-align: center; }
+    .sec-head-center .divider { margin-left: auto; margin-right: auto; }
+    .sec-head-center .sec-desc { margin-left: auto; margin-right: auto; }
     .sec-title {
       font-family: 'Fraunces', serif;
       font-size: clamp(2rem, 4vw, 3rem);
@@ -205,7 +213,7 @@
     /* ── ABOUT ── */
     #about { background: var(--white); }
     .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; margin-top: 56px; }
-    .about-text p { color: var(--muted); margin-bottom: 16px; line-height: 1.8; }
+    .about-text p { color: var(--muted); margin-bottom: 16px; font-size: var(--body-sm); }
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .stat-card {
       background: var(--cream); border-radius: var(--r);
@@ -216,6 +224,7 @@
     .stat-card:hover { transform: translateY(-6px); box-shadow: var(--sh); }
     .stat-num { font-family: 'Fraunces', serif; font-size: 2.6rem; font-weight: 700; color: var(--navy); line-height: 1; }
     .stat-num .unit { color: var(--gold); font-size: 1.4rem; }
+    .stat-num--text { font-size: 1.7rem; line-height: 1.25; }
     .stat-lbl { color: var(--muted); font-size: .8rem; margin-top: 8px; font-weight: 500; }
 
     /* ── SCHULARTEN ── */
@@ -235,13 +244,13 @@
     .schulart-icon {
       width: 60px; height: 60px;
       background: linear-gradient(135deg, var(--navy), var(--navy2));
-      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      border-radius: var(--r-icon); display: flex; align-items: center; justify-content: center;
       margin-bottom: 24px;
     }
     .schulart-icon svg { width: 30px; height: 30px; fill: var(--gold); }
     .schulart-card h3 { font-family: 'Fraunces', serif; font-size: 1.7rem; color: var(--navy); margin-bottom: 6px; }
-    .schulart-card .sub { color: var(--gold); font-weight: 600; font-size: .82rem; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 16px; }
-    .schulart-card p { color: var(--muted); margin-bottom: 16px; font-size: .95rem; }
+    .schulart-card .sub { color: var(--gold); font-weight: 600; font-size: var(--lbl-size); letter-spacing: var(--lbl-spacing); text-transform: uppercase; margin-bottom: 16px; }
+    .schulart-card p { color: var(--muted); margin-bottom: 16px; font-size: var(--body-sm); line-height: 1.7; }
     .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
     .tag { background: rgba(14,31,60,.07); color: var(--navy); padding: 4px 12px; border-radius: 999px; font-size: .78rem; font-weight: 500; }
 
@@ -263,7 +272,7 @@
     .fach-card:hover .fach-icon { background: rgba(240,160,32,.25); }
     .fach-icon svg { width: 34px; height: 34px; fill: var(--gold); }
     .fach-card h3 { font-family: 'Fraunces', serif; font-size: 1.2rem; color: var(--white); margin-bottom: 12px; }
-    .fach-card p { color: rgba(255,255,255,.55); font-size: .86rem; line-height: 1.65; }
+    .fach-card p { color: rgba(255,255,255,.55); font-size: var(--body-sm); line-height: 1.7; }
 
     /* ── COUNTDOWN ── */
     #countdown { background: linear-gradient(135deg, var(--ink) 0%, var(--navy) 100%); border-top: 1px solid rgba(240,160,32,.2); border-bottom: 1px solid rgba(240,160,32,.2); }
@@ -272,16 +281,16 @@
       display: inline-flex; align-items: center; gap: 8px;
       background: rgba(240,160,32,.12); border: 1px solid rgba(240,160,32,.3);
       color: var(--gold); padding: 6px 18px; border-radius: 999px;
-      font-size: .78rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+      font-size: var(--lbl-size); font-weight: 600; letter-spacing: var(--lbl-spacing); text-transform: uppercase;
       margin-bottom: 20px;
     }
-    .countdown-title { font-family: 'Fraunces', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; color: var(--white); margin-bottom: 10px; }
-    .countdown-sub { color: rgba(255,255,255,.55); margin-bottom: 48px; }
+    .countdown-title { font-family: 'Fraunces', serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; color: var(--white); margin-bottom: 12px; }
+    .countdown-sub { color: rgba(255,255,255,.55); font-size: var(--body-sm); margin-bottom: 48px; }
     .countdown-units { display: flex; align-items: center; justify-content: center; gap: 16px; }
     .cunit { display: flex; flex-direction: column; align-items: center; gap: 10px; }
     .cunit-box {
       background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
-      border-radius: 14px; padding: 20px 24px; min-width: 96px;
+      border-radius: var(--r); padding: 20px 24px; min-width: 96px;
       position: relative; overflow: hidden;
     }
     .cunit-box::before {
@@ -296,13 +305,13 @@
       transition: transform .15s ease, opacity .15s ease;
     }
     .cunit-num.flip { transform: translateY(-4px); opacity: 0; }
-    .cunit-lbl { font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+    .cunit-lbl { font-size: var(--lbl-size); font-weight: 600; letter-spacing: var(--lbl-spacing); text-transform: uppercase; color: rgba(255,255,255,.4); }
     .cdot { font-size: 2.5rem; color: rgba(255,255,255,.25); padding-bottom: 28px; }
     .countdown-cta { margin-top: 48px; }
 
     /* ── ABSCHLUESSE (Timeline) ── */
     #abschluesse { background: var(--white); }
-    .timeline { margin-top: 64px; position: relative; }
+    .timeline { margin-top: 56px; position: relative; }
     .timeline::before {
       content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
       width: 2px; background: linear-gradient(180deg, var(--gold), var(--navy));
@@ -332,11 +341,11 @@
     }
     .tl-item:hover .tl-dot-inner { transform: scale(1.15); }
     .tl-dot-inner span { color: var(--gold); font-weight: 700; font-size: .72rem; }
-    .tl-content .tl-lbl { color: var(--gold); font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
+    .tl-content .tl-lbl { color: var(--gold); font-size: var(--lbl-size); font-weight: 600; letter-spacing: var(--lbl-spacing); text-transform: uppercase; margin-bottom: 6px; }
     .tl-content h3 { font-family: 'Fraunces', serif; font-size: 1.25rem; color: var(--navy); margin-bottom: 10px; }
-    .tl-content p { color: var(--muted); font-size: .9rem; }
+    .tl-content p { color: var(--muted); font-size: var(--body-sm); line-height: 1.7; }
     .tl-content ul { list-style: none; margin-top: 10px; }
-    .tl-content ul li { color: var(--muted); font-size: .87rem; padding: 3px 0; }
+    .tl-content ul li { color: var(--muted); font-size: var(--body-sm); padding: 3px 0; }
     .tl-content ul li::before { content: '→ '; color: var(--gold); font-weight: 700; }
     .tl-item.left ul li::before { content: '← '; }
 
@@ -368,10 +377,10 @@
     .accordion-body { max-height: 0; overflow: hidden; transition: max-height .35s cubic-bezier(.4,0,.2,1); }
     .accordion-body-inner {
       padding: 0 28px 24px;
-      color: var(--muted); font-size: .93rem; line-height: 1.8;
+      color: var(--muted); font-size: var(--body-sm); line-height: 1.7;
     }
     .acc-check-list { list-style: none; margin-top: 8px; }
-    .acc-check-list li { padding: 7px 0; border-bottom: 1px solid rgba(0,0,0,.05); display: flex; align-items: flex-start; gap: 12px; }
+    .acc-check-list li { padding: 7px 0; border-bottom: 1px solid rgba(0,0,0,.05); display: flex; align-items: flex-start; gap: 12px; font-size: var(--body-sm); line-height: 1.7; }
     .acc-check-list li:last-child { border-bottom: none; }
     .acc-check-list li::before {
       content: ''; width: 18px; height: 18px; flex-shrink: 0; margin-top: 3px;
@@ -386,24 +395,24 @@
     .angebote-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 20px; margin-top: 56px; }
     .angebot-card {
       background: var(--cream); border-radius: var(--r);
-      padding: 28px 22px; text-align: center;
+      padding: 32px 24px; text-align: center;
       border: 2px solid transparent;
       transition: transform .3s, border-color .3s, box-shadow .3s;
     }
     .angebot-card:hover { transform: translateY(-6px); border-color: var(--gold); box-shadow: var(--sh); }
     .angebot-icon {
-      width: 52px; height: 52px;
+      width: 56px; height: 56px;
       background: linear-gradient(135deg, var(--navy), var(--navy2));
-      border-radius: 14px; display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 14px;
+      border-radius: var(--r-icon); display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
     }
     .angebot-icon svg { width: 26px; height: 26px; fill: var(--gold); }
-    .angebot-card h4 { font-size: .98rem; font-weight: 600; color: var(--navy); margin-bottom: 7px; }
-    .angebot-card p { color: var(--muted); font-size: .82rem; line-height: 1.55; }
+    .angebot-card h4 { font-size: var(--body-sm); font-weight: 600; color: var(--navy); margin-bottom: 7px; }
+    .angebot-card p { color: var(--muted); font-size: var(--body-sm); line-height: 1.7; }
 
     /* ── TESTIMONIALS (User Bewertungen) ── */
     #bewertungen { background: var(--ink); padding: 96px 0; }
-    .bew-head { text-align: center; padding: 0 24px; margin-bottom: 56px; }
+    .bew-head { text-align: center; padding: 0 24px; margin-bottom: 56px; max-width: 1120px; margin-left: auto; margin-right: auto; }
     .bew-cols {
       display: flex; justify-content: center; gap: 20px;
       max-height: 700px; overflow: hidden;
@@ -420,11 +429,11 @@
       background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
       border-radius: var(--r); padding: 24px;
     }
-    .bew-text { color: rgba(255,255,255,.8); font-size: .88rem; line-height: 1.7; margin-bottom: 18px; }
+    .bew-text { color: rgba(255,255,255,.8); font-size: var(--body-sm); line-height: 1.7; margin-bottom: 18px; }
     .bew-author { display: flex; align-items: center; gap: 12px; }
     .bew-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
-    .bew-name { font-weight: 600; color: var(--white); font-size: .85rem; }
-    .bew-role { color: var(--gold); font-size: .75rem; }
+    .bew-name { font-weight: 600; color: var(--white); font-size: var(--body-sm); }
+    .bew-role { color: var(--gold); font-size: var(--lbl-size); letter-spacing: var(--lbl-spacing); text-transform: uppercase; }
     .bew-stars { color: var(--gold); font-size: .75rem; margin-bottom: 10px; }
 
     /* ── KONTAKT ── */
@@ -439,12 +448,12 @@
     }
     .kontakt-item:hover { background: rgba(255,255,255,.1); border-color: var(--gold); }
     .kontakt-icon {
-      width: 42px; height: 42px; background: rgba(240,160,32,.18);
-      border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 44px; height: 44px; background: rgba(240,160,32,.18);
+      border-radius: var(--r-icon); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .kontakt-icon svg { width: 20px; height: 20px; fill: var(--gold); }
-    .k-lbl { color: var(--gold); font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-    .k-val { color: var(--white); font-size: .96rem; margin-top: 2px; }
+    .k-lbl { color: var(--gold); font-size: var(--lbl-size); font-weight: 600; letter-spacing: var(--lbl-spacing); text-transform: uppercase; }
+    .k-val { color: var(--white); font-size: var(--body-sm); margin-top: 2px; }
     .k-val a { color: var(--white); text-decoration: none; }
     .k-val a:hover { color: var(--gold); }
     .kontakt-map {
@@ -472,7 +481,7 @@
     }
     .footer-social a:hover { background: var(--gold); color: var(--ink); }
     .footer-social svg { width: 16px; height: 16px; fill: currentColor; }
-    .footer-col h5 { color: var(--white); font-size: .88rem; font-weight: 600; margin-bottom: 20px; }
+    .footer-col h5 { color: var(--white); font-size: var(--body-sm); font-weight: 600; margin-bottom: 20px; }
     .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
     .footer-col ul li a {
       color: rgba(255,255,255,.45); text-decoration: none; font-size: .84rem;
@@ -631,7 +640,7 @@
         <div class="stat-card"><div class="stat-num"><span class="counter" data-target="73">0</span></div><div class="stat-lbl">Lehrkräfte</div></div>
         <div class="stat-card"><div class="stat-num"><span class="counter" data-target="4">0</span></div><div class="stat-lbl">Fachrichtungen</div></div>
         <div class="stat-card"><div class="stat-num"><span class="counter" data-target="3">0</span></div><div class="stat-lbl">Abschlüsse möglich</div></div>
-        <div class="stat-card"><div class="stat-num" style="font-size:1.8rem;">seit<br>1971</div><div class="stat-lbl">Schule in Friedberg</div></div>
+        <div class="stat-card"><div class="stat-num stat-num--text">seit<br>1971</div><div class="stat-lbl">Schule in Friedberg</div></div>
         <div class="stat-card"><div class="stat-num"><span class="counter" data-target="0">0</span><span class="unit"> €</span></div><div class="stat-lbl">Schulgeld</div></div>
       </div>
     </div>
@@ -791,11 +800,11 @@
 <!-- AUFNAHME — Accordion -->
 <section id="aufnahme">
   <div class="container">
-    <div class="reveal" style="text-align:center;">
+    <div class="reveal sec-head-center">
       <span class="sec-label">Aufnahme</span>
       <h2 class="sec-title">So kommst du zu <em>uns</em></h2>
-      <div class="divider" style="margin: 14px auto 0;"></div>
-      <p class="sec-desc" style="margin: 16px auto 0;">Kein Schulgeld, keine Altersgrenze — faire Zugangsmöglichkeiten für alle.</p>
+      <div class="divider"></div>
+      <p class="sec-desc">Kein Schulgeld, keine Altersgrenze — faire Zugangsmöglichkeiten für alle.</p>
     </div>
     <div class="aufnahme-wrap">
       <div class="accordion-item reveal reveal-d1">
@@ -892,10 +901,10 @@
 
 <!-- BEWERTUNGEN (User Bewertungen — scrolling columns) -->
 <section id="bewertungen">
-  <div class="bew-head reveal">
+  <div class="bew-head reveal sec-head-center">
     <span class="sec-label">Stimmen</span>
     <h2 class="sec-title light">Was unsere <em>Schüler</em> sagen</h2>
-    <div class="divider" style="margin: 14px auto 0;"></div>
+    <div class="divider"></div>
   </div>
   <div class="bew-cols" id="bew-cols">
 
