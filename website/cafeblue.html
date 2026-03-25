@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cafe Blue | Restaurant & Cocktails Bar München</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:       #0c1923;
+      --navy-mid:   #152030;
+      --navy-light: #1d2f42;
+      --gold:       #c9a84c;
+      --gold-light: #e8c97a;
+      --gold-dim:   rgba(201,168,76,0.18);
+      --cream:      #f2e8d9;
+      --cream-mid:  #d9cfc0;
+      --muted:      rgba(242,232,217,0.5);
+      --font-d: 'Cormorant Garamond', Georgia, serif;
+      --font-b: 'Jost', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--navy);
+      color: var(--cream);
+      font-family: var(--font-b);
+      font-weight: 300;
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    /* ===========================
+       NAVIGATION
+    =========================== */
+    #nav {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 64px;
+      transition: background .4s, padding .3s, border-color .4s;
+      border-bottom: 1px solid transparent;
+    }
+    #nav.scrolled {
+      background: rgba(12,25,35,.95);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: 14px 64px;
+      border-bottom-color: rgba(201,168,76,.12);
+    }
+    .nav-logo {
+      font-family: var(--font-d);
+      font-size: 1.75rem;
+      font-weight: 500;
+      color: var(--cream);
+      text-decoration: none;
+      letter-spacing: .04em;
+    }
+    .nav-logo span { color: var(--gold); }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--cream-mid);
+      text-decoration: none;
+      font-size: .78rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+
+    .nav-btn {
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 9px 26px;
+      font-family: var(--font-b);
+      font-size: .75rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: background .22s, color .22s;
+      border-radius: 2px;
+    }
+    .nav-btn:hover { background: var(--gold); color: var(--navy); }
+
+    /* ===========================
+       HERO — SCROLL EXPANSION
+       (Bilder Animationen component)
+    =========================== */
+    #hero {
+      position: relative;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #hero-bg {
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=1920&q=80') center/cover no-repeat;
+    }
+    #hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, rgba(12,25,35,.55) 0%, rgba(12,25,35,.8) 100%);
+    }
+
+    #hero-media {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,.6);
+      transition: none;
+    }
+    #hero-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+    #hero-media-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.38);
+    }
+
+    .hero-copy {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      pointer-events: none;
+      padding: 0 24px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid rgba(201,168,76,.3);
+      border-radius: 20px;
+      padding: 5px 16px;
+      font-size: .72rem;
+      letter-spacing: .12em;
+      color: var(--gold-light);
+      margin-bottom: 18px;
+    }
+    .hero-dot {
+      width: 6px;
+      height: 6px;
+      background: #4fc97a;
+      border-radius: 50%;
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .hero-h1 {
+      font-family: var(--font-d);
+      font-size: clamp(2.8rem, 7vw, 6.5rem);
+      font-weight: 400;
+      line-height: 1;
+      color: var(--cream);
+      letter-spacing: .02em;
+      display: block;
+    }
+    .hero-h1 em {
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    .hero-scroll-label {
+      margin-top: 28px;
+      font-size: .7rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(242,232,217,.4);
+    }
+
+    #scroll-arrow {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      opacity: .6;
+      transition: opacity .3s;
+    }
+    .arrow-line {
+      width: 1px;
+      height: 44px;
+      background: linear-gradient(to bottom, transparent, var(--gold));
+      animation: arrowPulse 1.6s ease-in-out infinite;
+    }
+    @keyframes arrowPulse { 0%,100%{opacity:.4; transform:scaleY(1)} 50%{opacity:1; transform:scaleY(1.2)} }
+
+    /* ===========================
+       SHARED
+    =========================== */
+    section { padding: 110px 64px; }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+
+    .label {
+      font-size: .7rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 14px;
+    }
+    .heading {
+      font-family: var(--font-d);
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      font-weight: 400;
+      line-height: 1.1;
+      margin-bottom: 22px;
+    }
+    .heading em { font-style: italic; color: var(--gold-light); }
+    .body-text {
+      color: var(--muted);
+      font-size: .96rem;
+      line-height: 1.85;
+      max-width: 500px;
+    }
+
+    .btn-fill {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--navy);
+      padding: 13px 32px;
+      font-family: var(--font-b);
+      font-size: .78rem;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 2px;
+      border: none;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+    }
+    .btn-fill:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+    .btn-line {
+      display: inline-block;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 13px 32px;
+      font-family: var(--font-b);
+      font-size: .78rem;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background .2s, color .2s, transform .15s;
+    }
+    .btn-line:hover { background: var(--gold); color: var(--navy); transform: translateY(-1px); }
+
+    /* ===========================
+       ABOUT
+    =========================== */
+    #about { background: var(--navy-mid); }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 88px;
+      align-items: center;
+    }
+
+    .about-img-wrap {
+      position: relative;
+    }
+    .about-img-wrap img {
+      width: 100%;
+      height: 500px;
+      object-fit: cover;
+      border-radius: 3px;
+      display: block;
+    }
+    .about-img-wrap::before {
+      content: '';
+      position: absolute;
+      top: -18px;
+      left: -18px;
+      width: 55%;
+      height: 55%;
+      border: 1px solid rgba(201,168,76,.25);
+      border-radius: 3px;
+      pointer-events: none;
+    }
+
+    .about-stats {
+      display: flex;
+      gap: 44px;
+      margin-top: 44px;
+      padding-top: 36px;
+      border-top: 1px solid rgba(201,168,76,.12);
+    }
+    .stat-n {
+      font-family: var(--font-d);
+      font-size: 2.6rem;
+      color: var(--gold);
+      font-weight: 500;
+      line-height: 1;
+    }
+    .stat-l {
+      font-size: .72rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .about-cta { display: flex; gap: 14px; margin-top: 38px; flex-wrap: wrap; }
+
+    /* ===========================
+       MENU
+    =========================== */
+    #menu { background: var(--navy); }
+
+    /* SEARCH BAR — Suchfunktion component */
+    .search-block {
+      position: relative;
+      max-width: 460px;
+      margin-bottom: 44px;
+    }
+    .search-input {
+      width: 100%;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(201,168,76,.22);
+      color: var(--cream);
+      font-family: var(--font-b);
+      font-size: .92rem;
+      padding: 13px 48px 13px 18px;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color .2s, background .2s;
+    }
+    .search-input::placeholder { color: var(--muted); }
+    .search-input:focus {
+      border-color: var(--gold);
+      background: rgba(255,255,255,.06);
+    }
+    .search-icon {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      transition: color .2s;
+    }
+    .search-input:focus + .search-icon { color: var(--gold); }
+
+    .search-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: var(--navy-light);
+      border: 1px solid rgba(201,168,76,.18);
+      border-radius: 7px;
+      overflow: hidden;
+      z-index: 50;
+      box-shadow: 0 16px 48px rgba(0,0,0,.4);
+      animation: fadeDown .18s ease;
+    }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+
+    .sd-item {
+      padding: 11px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background .14s;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .sd-item:last-child { border-bottom: none; }
+    .sd-item:hover { background: rgba(201,168,76,.07); }
+    .sd-name { font-size: .88rem; color: var(--cream); }
+    .sd-cat { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+    .sd-price { font-size: .84rem; color: var(--gold); font-family: var(--font-d); font-weight: 500; }
+    .sd-empty { padding: 14px 18px; color: var(--muted); font-size: .84rem; }
+    .sd-hint { padding: 8px 18px; display: flex; justify-content: space-between; font-size: .7rem; color: var(--muted); border-top: 1px solid rgba(255,255,255,.05); letter-spacing: .06em; }
+
+    /* Tabs */
+    .menu-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid rgba(201,168,76,.13);
+      margin-bottom: 36px;
+    }
+    .m-tab {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: var(--font-b);
+      font-size: .76rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 12px 26px;
+      cursor: pointer;
+      position: relative;
+      transition: color .2s;
+    }
+    .m-tab::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 1px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform .22s;
+    }
+    .m-tab.active { color: var(--gold); }
+    .m-tab.active::after, .m-tab:hover::after { transform: scaleX(1); }
+    .m-tab:hover { color: var(--cream-mid); }
+
+    .menu-panel { display: none; }
+    .menu-panel.active { display: block; }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      border: 1px solid rgba(201,168,76,.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .m-item {
+      padding: 26px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      border-right: 1px solid rgba(201,168,76,.08);
+      border-bottom: 1px solid rgba(201,168,76,.08);
+      transition: background .18s;
+    }
+    .m-item:hover { background: rgba(201,168,76,.04); }
+    .m-item-info { flex: 1; min-width: 0; }
+    .m-item-name {
+      font-family: var(--font-d);
+      font-size: 1.08rem;
+      font-weight: 500;
+      margin-bottom: 5px;
+      color: var(--cream);
+    }
+    .m-item-desc { font-size: .8rem; color: var(--muted); line-height: 1.55; }
+    .m-item-price {
+      font-family: var(--font-d);
+      font-size: 1.12rem;
+      color: var(--gold);
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ===========================
+       TESTIMONIALS — User Bewertungen component
+    =========================== */
+    #testimonials { background: var(--navy-mid); overflow: hidden; }
+
+    .t-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .t-columns {
+      display: flex;
+      gap: 22px;
+      justify-content: center;
+      max-height: 680px;
+      overflow: hidden;
+      mask-image: linear-gradient(to bottom, transparent, black 14%, black 86%, transparent);
+      -webkit-mask-image: linear-gradient(to bottom, transparent, black 14%, black 86%, transparent);
+    }
+
+    .t-col {
+      width: 320px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .t-col-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      animation: scrollUp var(--dur, 22s) linear infinite;
+    }
+    @keyframes scrollUp {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(-50%); }
+    }
+
+    .t-card {
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(201,168,76,.1);
+      border-radius: 10px;
+      padding: 26px 28px;
+    }
+    .t-stars { color: var(--gold); font-size: .8rem; letter-spacing: 3px; margin-bottom: 12px; }
+    .t-text { font-size: .87rem; line-height: 1.72; color: var(--cream-mid); margin-bottom: 18px; }
+    .t-author { display: flex; align-items: center; gap: 11px; }
+    .t-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid rgba(201,168,76,.25);
+      flex-shrink: 0;
+    }
+    .t-name { font-size: .87rem; font-weight: 500; }
+    .t-role { font-size: .72rem; color: var(--muted); }
+
+    /* ===========================
+       FAQ — Accordion component
+    =========================== */
+    #faq { background: var(--navy); }
+
+    .faq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 88px;
+      align-items: start;
+    }
+
+    .accordion {
+      border-top: 1px solid rgba(201,168,76,.13);
+    }
+    .acc-item { border-bottom: 1px solid rgba(201,168,76,.13); }
+    .acc-trigger {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 22px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      cursor: pointer;
+      color: var(--cream);
+      font-family: var(--font-b);
+      font-size: .93rem;
+      font-weight: 300;
+      text-align: left;
+      transition: color .2s;
+    }
+    .acc-trigger:hover { color: var(--gold); }
+    .acc-chevron {
+      width: 17px; height: 17px;
+      flex-shrink: 0;
+      color: var(--gold);
+      transition: transform .24s ease;
+    }
+    .acc-item.open .acc-chevron { transform: rotate(180deg); }
+    .acc-body-wrap {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height .3s ease;
+    }
+    .acc-item.open .acc-body-wrap { max-height: 280px; }
+    .acc-body {
+      padding-bottom: 20px;
+      font-size: .88rem;
+      color: var(--muted);
+      line-height: 1.82;
+    }
+
+    .faq-aside { display: flex; flex-direction: column; gap: 20px; }
+
+    .info-box {
+      background: rgba(201,168,76,.06);
+      border: 1px solid rgba(201,168,76,.18);
+      border-radius: 7px;
+      padding: 36px 38px;
+    }
+    .info-box h3 {
+      font-family: var(--font-d);
+      font-size: 1.7rem;
+      margin-bottom: 14px;
+    }
+    .info-box p { color: var(--muted); font-size: .87rem; line-height: 1.75; margin-bottom: 26px; }
+    .info-box-btns { display: flex; flex-direction: column; gap: 10px; }
+
+    .hours-box { border: 1px solid rgba(201,168,76,.12); border-radius: 7px; overflow: hidden; }
+    .hours-head {
+      background: rgba(201,168,76,.07);
+      padding: 14px 22px;
+      font-size: .7rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .hours-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 11px 22px;
+      font-size: .86rem;
+      border-top: 1px solid rgba(255,255,255,.05);
+    }
+    .hours-day { color: var(--muted); }
+
+    /* ===========================
+       FOOTER — Footer component
+    =========================== */
+    footer {
+      background: var(--navy-mid);
+      border-top: 1px solid rgba(201,168,76,.1);
+      padding: 72px 64px 32px;
+    }
+
+    .footer-grid {
+      max-width: 1200px;
+      margin: 0 auto 56px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.6fr;
+      gap: 48px;
+    }
+
+    .f-brand {
+      font-family: var(--font-d);
+      font-size: 1.55rem;
+      font-weight: 500;
+      margin-bottom: 14px;
+    }
+    .f-brand span { color: var(--gold); }
+    .f-desc { color: var(--muted); font-size: .85rem; line-height: 1.75; margin-bottom: 24px; }
+
+    .f-socials { display: flex; gap: 11px; }
+    .f-social-btn {
+      width: 34px; height: 34px;
+      border: 1px solid rgba(201,168,76,.22);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted);
+      text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .f-social-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    .f-col-head {
+      font-size: .68rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+    }
+
+    .f-links { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .f-links a { color: var(--muted); text-decoration: none; font-size: .85rem; transition: color .2s; }
+    .f-links a:hover { color: var(--cream); }
+
+    .f-contact-row { display: flex; gap: 11px; align-items: flex-start; margin-bottom: 13px; }
+    .f-contact-icon { color: var(--gold); flex-shrink: 0; margin-top: 1px; }
+    .f-contact-text { color: var(--muted); font-size: .84rem; line-height: 1.55; }
+
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-top: 22px;
+      border-top: 1px solid rgba(201,168,76,.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-bottom p { color: var(--muted); font-size: .77rem; }
+
+    /* ===========================
+       FADE-IN SCROLL ANIMATION
+    =========================== */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity .65s ease, transform .65s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+    .fade-up.delay-1 { transition-delay: .1s; }
+    .fade-up.delay-2 { transition-delay: .2s; }
+    .fade-up.delay-3 { transition-delay: .32s; }
+
+    /* ===========================
+       RESPONSIVE
+    =========================== */
+    @media (max-width: 1100px) {
+      #nav, #nav.scrolled { padding-left: 32px; padding-right: 32px; }
+      section { padding: 88px 32px; }
+      .about-grid, .faq-grid { grid-template-columns: 1fr; gap: 52px; }
+      footer { padding: 60px 32px 28px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
+    }
+    @media (max-width: 768px) {
+      #nav, #nav.scrolled { padding: 14px 20px; }
+      .nav-links { display: none; }
+      section { padding: 70px 20px; }
+      .hero-h1 { font-size: 2.6rem; }
+      .t-col:not(:first-child) { display: none; }
+      .menu-grid { grid-template-columns: 1fr; }
+      footer { padding: 48px 20px 24px; }
+      .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========================
+     NAVIGATION
+======================== -->
+<nav id="nav">
+  <a href="#" class="nav-logo">Cafe <span>Blue</span></a>
+  <ul class="nav-links">
+    <li><a href="#about">Über uns</a></li>
+    <li><a href="#menu">Karte</a></li>
+    <li><a href="#testimonials">Bewertungen</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a href="tel:08974664693" class="nav-btn">Reservieren</a>
+</nav>
+
+<!-- ========================
+     HERO — SCROLL EXPANSION
+======================== -->
+<section id="hero">
+  <div id="hero-bg"></div>
+  <div id="hero-media">
+    <img src="https://images.unsplash.com/photo-1525268323446-0505b6fe7778?w=1280&q=80" alt="Cafe Blue">
+    <div id="hero-media-overlay"></div>
+  </div>
+  <div class="hero-copy" id="hero-copy">
+    <div class="hero-badge">
+      <span class="hero-dot"></span>
+      Täglich geöffnet bis 01:00 Uhr
+    </div>
+    <span class="hero-h1" id="h1a">Restaurant &amp;</span>
+    <span class="hero-h1" id="h1b"><em>Cocktails Bar</em></span>
+    <p class="hero-scroll-label">Scrollen zum Entdecken</p>
+  </div>
+  <div id="scroll-arrow">
+    <div class="arrow-line"></div>
+  </div>
+</section>
+
+<!-- ========================
+     ABOUT
+======================== -->
+<section id="about">
+  <div class="wrap">
+    <div class="about-grid">
+
+      <div class="about-img-wrap fade-up">
+        <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=900&q=80" alt="Cafe Blue Innen">
+      </div>
+
+      <div class="fade-up delay-1">
+        <div class="label">Über uns</div>
+        <h2 class="heading">Ein Ort für <em>Genuss</em><br>&amp; Geselligkeit</h2>
+        <p class="body-text">
+          Mitten in München-Sendling, wenige Schritte von der U-Bahn Implerstraße, lädt das Cafe Blue zum Verweilen ein. Ob entspannter Kaffee am Morgen, ausgiebiger Brunch am Wochenende oder handgefertigte Cocktails bis tief in die Nacht — wir bieten das Beste aus beiden Welten in einer Atmosphäre, die sich wie ein zweites Zuhause anfühlt.
+        </p>
+        <div class="about-stats">
+          <div>
+            <div class="stat-n">15+</div>
+            <div class="stat-l">Jahre Erfahrung</div>
+          </div>
+          <div>
+            <div class="stat-n">80+</div>
+            <div class="stat-l">Cocktails</div>
+          </div>
+          <div>
+            <div class="stat-n">4.7 ★</div>
+            <div class="stat-l">Google Bewertung</div>
+          </div>
+        </div>
+        <div class="about-cta">
+          <a href="#menu" class="btn-fill">Zur Speisekarte</a>
+          <a href="tel:08974664693" class="btn-line">Tisch reservieren</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ========================
+     MENU
+======================== -->
+<section id="menu">
+  <div class="wrap">
+
+    <div class="fade-up" style="margin-bottom:48px;">
+      <div class="label">Speisekarte</div>
+      <h2 class="heading">Unsere <em>Auswahl</em></h2>
+    </div>
+
+    <!-- SEARCH BAR (Suchfunktion) -->
+    <div class="search-block fade-up">
+      <input type="text" class="search-input" id="searchInput" placeholder="Gericht oder Getränk suchen…" autocomplete="off">
+      <svg class="search-icon" id="searchIconSvg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+    </div>
+
+    <!-- TABS -->
+    <div class="menu-tabs fade-up">
+      <button class="m-tab active" data-tab="speisen">Speisen</button>
+      <button class="m-tab" data-tab="cocktails">Cocktails</button>
+      <button class="m-tab" data-tab="drinks">Getränke</button>
+      <button class="m-tab" data-tab="kaffee">Kaffee &amp; Kuchen</button>
+    </div>
+
+    <!-- SPEISEN -->
+    <div class="menu-panel active fade-up" id="panel-speisen">
+      <div class="menu-grid">
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Avocado Toast</div><div class="m-item-desc">Sauerteig, Avocado, Pochiertes Ei, Kirschtomaten, Kresse</div></div><div class="m-item-price">12,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Eggs Benedict</div><div class="m-item-desc">Brioche, Pochiertes Ei, Lachs, Hollandaise, Rucola</div></div><div class="m-item-price">15,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Focaccia mit Burrata</div><div class="m-item-desc">Hausgemachte Focaccia, Burrata, Basilikumpesto, Rösttomaten</div></div><div class="m-item-price">14,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Caesar Salad</div><div class="m-item-desc">Römersalat, Parmesan, Croutons, Chicken, Caesar-Dressing</div></div><div class="m-item-price">13,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Blue Burger</div><div class="m-item-desc">Dry-Aged Beef, Blauschimmelkäse, Karamellzwiebeln, Brioche-Bun</div></div><div class="m-item-price">18,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Pasta al Limone</div><div class="m-item-desc">Tagliatelle, Zitronenbutter, Parmesan, Basilikum</div></div><div class="m-item-price">14,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Quiche des Tages</div><div class="m-item-desc">Täglich wechselnd, serviert mit Salat und Baguette</div></div><div class="m-item-price">11,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Garnelen Tacos</div><div class="m-item-desc">3 Tacos, Garnelen, Mango-Salsa, Chipotle-Creme, Koriander</div></div><div class="m-item-price">16,90 €</div></div>
+      </div>
+    </div>
+
+    <!-- COCKTAILS -->
+    <div class="menu-panel" id="panel-cocktails">
+      <div class="menu-grid">
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Blue Velvet</div><div class="m-item-desc">Hendricks Gin, Veilchenlikör, Zitrone, Holunderblütensirup</div></div><div class="m-item-price">13,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Smoky Negroni</div><div class="m-item-desc">Mezcal, Campari, Süßer Wermut, Orange-Twist</div></div><div class="m-item-price">13,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Midnight Espresso</div><div class="m-item-desc">Vodka, Kaffeelikör, Frischer Espresso, Vanille</div></div><div class="m-item-price">13,00 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Bavarian Sour</div><div class="m-item-desc">Whiskey, Apfelmost, Zitrone, Ahornsirup, Eiweiß-Schaum</div></div><div class="m-item-price">14,00 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Tropical Storm</div><div class="m-item-desc">Rum, Passionsfrucht, Kokosnuss, Limette, Ingwerbier</div></div><div class="m-item-price">13,00 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Rose Garden</div><div class="m-item-desc">Gin, Rosenlikör, Grapefruitsaft, Lychee, Tonic</div></div><div class="m-item-price">13,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Dark &amp; Stormy</div><div class="m-item-desc">Dunkler Rum, Ingwerbier, Limette, Angostura Bitters</div></div><div class="m-item-price">12,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Aperol Spritz Blue</div><div class="m-item-desc">Aperol, Prosecco, Blue Curaçao, Orange, Sodawasser</div></div><div class="m-item-price">10,90 €</div></div>
+      </div>
+    </div>
+
+    <!-- DRINKS -->
+    <div class="menu-panel" id="panel-drinks">
+      <div class="menu-grid">
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Craft Beer vom Fass</div><div class="m-item-desc">Täglich wechselnde lokale Brauereien, 0,4 l</div></div><div class="m-item-price">5,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Hauswein Rot / Weiß</div><div class="m-item-desc">Ausgewählter Hauswein, 0,2 l Glas</div></div><div class="m-item-price">6,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Prosecco</div><div class="m-item-desc">Flasche 0,75 l, frisch und fruchtig</div></div><div class="m-item-price">29,00 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Frisch gepresster Smoothie</div><div class="m-item-desc">Saisonal, täglich wechselnd, 0,4 l</div></div><div class="m-item-price">7,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Hausgemachte Limonade</div><div class="m-item-desc">Zitrone-Minze · Erdbeere-Basilikum · Ingwer-Holunder, 0,4 l</div></div><div class="m-item-price">5,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Wasser still / sprudelnd</div><div class="m-item-desc">0,75 l Flasche</div></div><div class="m-item-price">4,00 €</div></div>
+      </div>
+    </div>
+
+    <!-- KAFFEE & KUCHEN -->
+    <div class="menu-panel" id="panel-kaffee">
+      <div class="menu-grid">
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Espresso</div><div class="m-item-desc">Einfach oder doppelt, Specialty Coffee</div></div><div class="m-item-price">2,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Cappuccino</div><div class="m-item-desc">Specialty Espresso, aufgeschäumte Vollmilch</div></div><div class="m-item-price">4,00 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Flat White</div><div class="m-item-desc">Doppelter Ristretto, cremiger Microfoam</div></div><div class="m-item-price">4,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Matcha Latte</div><div class="m-item-desc">Ceremonial Grade Matcha, Hafermilch</div></div><div class="m-item-price">5,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Kuchen des Tages</div><div class="m-item-desc">Hausgemacht, täglich wechselnd — bitte nachfragen</div></div><div class="m-item-price">4,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Cheesecake New York</div><div class="m-item-desc">Klassischer Cheesecake, Beerenkompott, Schlagsahne</div></div><div class="m-item-price">6,50 €</div></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ========================
+     TESTIMONIALS — User Bewertungen
+======================== -->
+<section id="testimonials">
+  <div class="t-header fade-up">
+    <div class="label">Bewertungen</div>
+    <h2 class="heading">Was unsere <em>Gäste</em> sagen</h2>
+  </div>
+  <div class="t-columns">
+    <div class="t-col" id="tcol1">
+      <div class="t-col-inner" style="--dur:22s"></div>
+    </div>
+    <div class="t-col" id="tcol2">
+      <div class="t-col-inner" style="--dur:28s"></div>
+    </div>
+    <div class="t-col" id="tcol3">
+      <div class="t-col-inner" style="--dur:25s"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================
+     FAQ — Accordion
+======================== -->
+<section id="faq">
+  <div class="wrap">
+    <div class="faq-grid">
+
+      <div>
+        <div class="label fade-up">FAQ</div>
+        <h2 class="heading fade-up delay-1">Häufige <em>Fragen</em></h2>
+        <div class="accordion fade-up delay-2">
+
+          <div class="acc-item">
+            <button class="acc-trigger">
+              Muss ich einen Tisch reservieren?
+              <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="acc-body-wrap">
+              <div class="acc-body">Eine Reservierung ist nicht zwingend erforderlich, wird aber abends und am Wochenende empfohlen. Rufen Sie uns unter 089 74664693 an oder kommen Sie spontan vorbei — wir finden fast immer einen Platz für Sie.</div>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger">
+              Gibt es vegetarische oder vegane Gerichte?
+              <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="acc-body-wrap">
+              <div class="acc-body">Ja! Viele Gerichte sind vegetarisch oder können vegetarisch angepasst werden. Mehrere Optionen sind auch vegan. Fragen Sie gerne unser Serviceteam — wir helfen Ihnen bei der Auswahl.</div>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger">
+              Kann ich die Location für Events mieten?
+              <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="acc-body-wrap">
+              <div class="acc-body">Das Cafe Blue eignet sich hervorragend für private Feiern, Firmenevents und Geburtstage. Schreiben Sie uns an info@cafeblue.de für Anfragen zu exklusiven Veranstaltungen und wir erstellen Ihnen gerne ein individuelles Angebot.</div>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger">
+              Wie komme ich am besten hin?
+              <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="acc-body-wrap">
+              <div class="acc-body">Wir befinden uns in der Implerstraße 2, 81371 München (Sendling). Die U-Bahn-Station Implerstraße (U3/U6) liegt direkt vor der Tür. Auch per Rad oder zu Fuß aus dem Glockenbachviertel gut erreichbar.</div>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger">
+              Wann gibt es Brunch?
+              <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="acc-body-wrap">
+              <div class="acc-body">Am Wochenende öffnen wir bereits um 09:00 Uhr und servieren unser ausgiebiges Brunch-Angebot. Unter der Woche gibt es Frühstück ab 10:00 bis 12:00 Uhr.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="faq-aside fade-up delay-2">
+        <div class="info-box">
+          <h3>Noch eine <em style="color:var(--gold-light)">Frage?</em></h3>
+          <p>Wir freuen uns über Ihre Nachricht und antworten in der Regel innerhalb weniger Stunden.</p>
+          <div class="info-box-btns">
+            <a href="tel:08974664693" class="btn-fill">089 74664693</a>
+            <a href="mailto:info@cafeblue.de" class="btn-line">info@cafeblue.de</a>
+          </div>
+        </div>
+        <div class="hours-box">
+          <div class="hours-head">Öffnungszeiten</div>
+          <div class="hours-row"><span class="hours-day">Montag – Freitag</span><span>10:00 – 01:00</span></div>
+          <div class="hours-row"><span class="hours-day">Samstag – Sonntag</span><span>09:00 – 01:00</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ========================
+     FOOTER
+======================== -->
+<footer>
+  <div class="footer-grid">
+
+    <div>
+      <div class="f-brand">Cafe <span>Blue</span></div>
+      <p class="f-desc">Restaurant und Cocktails Bar im Herzen von München-Sendling. Geöffnet täglich für Frühstück, Mittagessen, Abendessen und Drinks bis in die Nacht.</p>
+      <div class="f-socials">
+        <a class="f-social-btn" href="#" title="Facebook">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a class="f-social-btn" href="#" title="Instagram">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a class="f-social-btn" href="#" title="Google Maps">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div>
+      <div class="f-col-head">Navigation</div>
+      <ul class="f-links">
+        <li><a href="#about">Über uns</a></li>
+        <li><a href="#menu">Speisekarte</a></li>
+        <li><a href="#testimonials">Bewertungen</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="f-col-head">Rechtliches</div>
+      <ul class="f-links">
+        <li><a href="#">Impressum</a></li>
+        <li><a href="#">Datenschutz</a></li>
+        <li><a href="#">AGB</a></li>
+        <li><a href="#">Allergeninformation</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="f-col-head">Kontakt &amp; Anfahrt</div>
+      <div class="f-contact-row">
+        <svg class="f-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span class="f-contact-text">Implerstraße 2<br>81371 München<br><span style="color:var(--gold);font-size:.78rem;">U3/U6 Implerstraße</span></span>
+      </div>
+      <div class="f-contact-row">
+        <svg class="f-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span class="f-contact-text">089 74664693</span>
+      </div>
+      <div class="f-contact-row">
+        <svg class="f-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span class="f-contact-text">info@cafeblue.de</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <p>&copy; 2026 Cafe Blue München. Alle Rechte vorbehalten.</p>
+    <p>Restaurant &amp; Cocktails Bar — Sendling, München</p>
+  </div>
+</footer>
+
+<script>
+// =============================================
+// NAV SCROLL
+// =============================================
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 50);
+}, { passive: true });
+
+// =============================================
+// HERO SCROLL EXPANSION
+// Adapted from: scroll-expansion-hero component
+// =============================================
+const heroMedia  = document.getElementById('hero-media');
+const heroOverlay = document.getElementById('hero-media-overlay');
+const heroBg      = document.getElementById('hero-bg');
+const h1a         = document.getElementById('h1a');
+const h1b         = document.getElementById('h1b');
+const scrollArrow = document.getElementById('scroll-arrow');
+
+let heroProgress = 0;
+let heroLocked   = false; // true once fully expanded
+
+function applyHero(p) {
+  const mobile = window.innerWidth < 768;
+  const w = Math.min(300 + p * (mobile ? 650 : 1250), window.innerWidth  * 0.95);
+  const h = Math.min(400 + p * (mobile ? 200 : 400),  window.innerHeight * 0.85);
+  heroMedia.style.width  = w + 'px';
+  heroMedia.style.height = h + 'px';
+  heroOverlay.style.opacity = (0.5 - p * 0.3).toFixed(3);
+  heroBg.style.opacity      = (1 - p).toFixed(3);
+  const tx = p * (mobile ? 120 : 150);
+  h1a.style.transform = `translateX(-${tx}vw)`;
+  h1b.style.transform = `translateX(${tx}vw)`;
+  scrollArrow.style.opacity = Math.max(0, 1 - p * 4).toFixed(3);
+}
+
+applyHero(0);
+
+window.addEventListener('wheel', function(e) {
+  if (heroLocked) {
+    if (e.deltaY < 0 && window.scrollY <= 5) {
+      heroLocked = false;
+      e.preventDefault();
+    }
+    return;
+  }
+  e.preventDefault();
+  heroProgress = Math.min(Math.max(heroProgress + e.deltaY * 0.0009, 0), 1);
+  applyHero(heroProgress);
+  if (heroProgress >= 1) heroLocked = true;
+}, { passive: false });
+
+let tStartY = 0;
+window.addEventListener('touchstart', e => { tStartY = e.touches[0].clientY; }, { passive: true });
+window.addEventListener('touchmove', function(e) {
+  if (heroLocked) return;
+  e.preventDefault();
+  const dy = tStartY - e.touches[0].clientY;
+  heroProgress = Math.min(Math.max(heroProgress + dy * (dy < 0 ? 0.008 : 0.005), 0), 1);
+  applyHero(heroProgress);
+  if (heroProgress >= 1) heroLocked = true;
+  tStartY = e.touches[0].clientY;
+}, { passive: false });
+
+// =============================================
+// MENU TABS
+// =============================================
+document.querySelectorAll('.m-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// =============================================
+// SEARCH BAR — Action Search Bar component
+// =============================================
+const ALL_ITEMS = [
+  { name:'Avocado Toast',         cat:'Speisen',        tab:'speisen',   price:'12,50 €' },
+  { name:'Eggs Benedict',         cat:'Speisen',        tab:'speisen',   price:'15,90 €' },
+  { name:'Focaccia mit Burrata',  cat:'Speisen',        tab:'speisen',   price:'14,50 €' },
+  { name:'Caesar Salad',          cat:'Speisen',        tab:'speisen',   price:'13,90 €' },
+  { name:'Blue Burger',           cat:'Speisen',        tab:'speisen',   price:'18,90 €' },
+  { name:'Pasta al Limone',       cat:'Speisen',        tab:'speisen',   price:'14,50 €' },
+  { name:'Quiche des Tages',      cat:'Speisen',        tab:'speisen',   price:'11,90 €' },
+  { name:'Garnelen Tacos',        cat:'Speisen',        tab:'speisen',   price:'16,90 €' },
+  { name:'Blue Velvet',           cat:'Cocktails',      tab:'cocktails', price:'13,50 €' },
+  { name:'Smoky Negroni',         cat:'Cocktails',      tab:'cocktails', price:'13,50 €' },
+  { name:'Midnight Espresso',     cat:'Cocktails',      tab:'cocktails', price:'13,00 €' },
+  { name:'Bavarian Sour',         cat:'Cocktails',      tab:'cocktails', price:'14,00 €' },
+  { name:'Tropical Storm',        cat:'Cocktails',      tab:'cocktails', price:'13,00 €' },
+  { name:'Rose Garden',           cat:'Cocktails',      tab:'cocktails', price:'13,50 €' },
+  { name:'Dark & Stormy',         cat:'Cocktails',      tab:'cocktails', price:'12,50 €' },
+  { name:'Aperol Spritz Blue',    cat:'Cocktails',      tab:'cocktails', price:'10,90 €' },
+  { name:'Craft Beer vom Fass',   cat:'Getränke',       tab:'drinks',    price:'5,50 €'  },
+  { name:'Hauswein Rot / Weiß',   cat:'Getränke',       tab:'drinks',    price:'6,50 €'  },
+  { name:'Hausgemachte Limonade', cat:'Getränke',       tab:'drinks',    price:'5,90 €'  },
+  { name:'Espresso',              cat:'Kaffee & Kuchen',tab:'kaffee',    price:'2,50 €'  },
+  { name:'Cappuccino',            cat:'Kaffee & Kuchen',tab:'kaffee',    price:'4,00 €'  },
+  { name:'Flat White',            cat:'Kaffee & Kuchen',tab:'kaffee',    price:'4,50 €'  },
+  { name:'Matcha Latte',          cat:'Kaffee & Kuchen',tab:'kaffee',    price:'5,50 €'  },
+  { name:'Kuchen des Tages',      cat:'Kaffee & Kuchen',tab:'kaffee',    price:'4,50 €'  },
+  { name:'Cheesecake New York',   cat:'Kaffee & Kuchen',tab:'kaffee',    price:'6,50 €'  },
+];
+
+const searchEl  = document.getElementById('searchInput');
+const iconEl    = document.getElementById('searchIconSvg');
+const searchBlock = document.querySelector('.search-block');
+let dropdown    = null;
+let searchTimer = null;
+
+function getOrCreateDropdown() {
+  if (!dropdown) {
+    dropdown = document.createElement('div');
+    dropdown.className = 'search-dropdown';
+    searchBlock.appendChild(dropdown);
+  }
+  return dropdown;
+}
+function removeDropdown() {
+  if (dropdown) { dropdown.remove(); dropdown = null; }
+}
+
+function renderDropdown(q) {
+  const qn  = q.trim().toLowerCase();
+  const res = qn
+    ? ALL_ITEMS.filter(i => i.name.toLowerCase().includes(qn) || i.cat.toLowerCase().includes(qn)).slice(0, 7)
+    : ALL_ITEMS.slice(0, 6);
+
+  const dd = getOrCreateDropdown();
+  if (!res.length) {
+    dd.innerHTML = '<div class="sd-empty">Keine Ergebnisse gefunden</div>';
+    return;
+  }
+  dd.innerHTML = res.map(r => `
+    <div class="sd-item" data-tab="${r.tab}">
+      <div>
+        <div class="sd-name">${r.name}</div>
+        <div class="sd-cat">${r.cat}</div>
+      </div>
+      <div class="sd-price">${r.price}</div>
+    </div>
+  `).join('') + '<div class="sd-hint"><span>Tippen zum Suchen</span><span>ESC schließen</span></div>';
+
+  dd.querySelectorAll('.sd-item').forEach(el => {
+    el.addEventListener('mousedown', () => {
+      const tab = el.dataset.tab;
+      document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+      const matchTab = document.querySelector(`.m-tab[data-tab="${tab}"]`);
+      if (matchTab) { matchTab.classList.add('active'); document.getElementById('panel-' + tab).classList.add('active'); }
+      searchEl.value = el.querySelector('.sd-name').textContent;
+      removeDropdown();
+      document.getElementById('menu').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+}
+
+searchEl.addEventListener('focus', () => renderDropdown(searchEl.value));
+searchEl.addEventListener('blur',  () => setTimeout(removeDropdown, 200));
+searchEl.addEventListener('keydown', e => { if (e.key === 'Escape') { removeDropdown(); searchEl.blur(); } });
+searchEl.addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  const hasVal = e.target.value.length > 0;
+  iconEl.innerHTML = hasVal
+    ? '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>'
+    : '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>';
+  searchTimer = setTimeout(() => renderDropdown(e.target.value), 160);
+});
+
+// =============================================
+// TESTIMONIALS — TestimonialsColumn component
+// =============================================
+const TESTIMONIALS = [
+  { t: 'Absolutes Lieblingslokal! Die Cocktails sind unschlagbar und die Atmosphäre so gemütlich. Komme mindestens einmal pro Woche.',    n: 'Lena K.',   r: 'Stammgast',      img: 'https://randomuser.me/api/portraits/women/44.jpg' },
+  { t: 'Brunch am Sonntag ist ein Muss. Alles frisch und liebevoll zubereitet, der Kaffee ist fantastisch. Immer freundliches Personal!',  n: 'Markus H.', r: 'München',        img: 'https://randomuser.me/api/portraits/men/32.jpg'   },
+  { t: 'Der Blue Velvet ist mein absoluter Favorit. Wir haben hier unsere Firmenfeier veranstaltet — perfekte Location!',                   n: 'Sophie M.', r: 'Event-Kundin',   img: 'https://randomuser.me/api/portraits/women/68.jpg' },
+  { t: 'Tolle Lage, super Service und die Pasta al Limone ist ein Gedicht. Endlich ein Ort in Sendling der alles richtig macht.',           n: 'Thomas B.', r: 'Sendling',       img: 'https://randomuser.me/api/portraits/men/14.jpg'   },
+  { t: 'Ich liebe die entspannte Atmosphäre mittags für Kaffee und Kuchen — und abends die riesige Cocktailauswahl. Beides top!',           n: 'Anna R.',   r: 'Regulärgast',    img: 'https://randomuser.me/api/portraits/women/21.jpg' },
+  { t: 'Das Craft Beer wechselt regelmäßig — als Bierliebhaber bin ich jedes Mal gespannt was neu ist. Sehr empfehlenswert!',              n: 'Felix W.',  r: 'Bierliebhaber',  img: 'https://randomuser.me/api/portraits/men/57.jpg'   },
+  { t: 'Das Frühstück hier rettet meinen Samstag. Eggs Benedict perfekt zubereitet, der Hollandaise fehlt es an nichts.',                  n: 'Julia S.',  r: 'Frühstücks-Fan', img: 'https://randomuser.me/api/portraits/women/33.jpg' },
+  { t: 'Super entspannte Atmosphäre, tolle Musik und ein Blue Burger der sich gewaschen hat. Definitiv immer wieder!',                     n: 'David L.',  r: 'München',        img: 'https://randomuser.me/api/portraits/men/41.jpg'   },
+  { t: 'Die Garnelen Tacos sind unglaublich lecker! Das Team ist immer herzlich und hilfsbereit. Genau das richtige Ambiente.',            n: 'Marie F.',  r: 'Food-Bloggerin', img: 'https://randomuser.me/api/portraits/women/55.jpg' },
+];
+
+function buildCards(items) {
+  return [...items, ...items].map(i => `
+    <div class="t-card">
+      <div class="t-stars">★★★★★</div>
+      <p class="t-text">${i.t}</p>
+      <div class="t-author">
+        <img class="t-avatar" src="${i.img}" alt="${i.n}" loading="lazy">
+        <div>
+          <div class="t-name">${i.n}</div>
+          <div class="t-role">${i.r}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.querySelector('#tcol1 .t-col-inner').innerHTML = buildCards(TESTIMONIALS.slice(0, 3));
+document.querySelector('#tcol2 .t-col-inner').innerHTML = buildCards(TESTIMONIALS.slice(3, 6));
+document.querySelector('#tcol3 .t-col-inner').innerHTML = buildCards(TESTIMONIALS.slice(6, 9));
+
+function updateColVisibility() {
+  const w = window.innerWidth;
+  document.getElementById('tcol2').style.display = w >= 768  ? 'block' : 'none';
+  document.getElementById('tcol3').style.display = w >= 1100 ? 'block' : 'none';
+}
+updateColVisibility();
+window.addEventListener('resize', updateColVisibility, { passive: true });
+
+// =============================================
+// ACCORDION — shadcn Accordion component
+// =============================================
+document.querySelectorAll('.acc-trigger').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item   = btn.closest('.acc-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.acc-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+});
+
+// =============================================
+// FADE IN ON SCROLL
+// =============================================
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.08 });
+document.querySelectorAll('.fade-up').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
