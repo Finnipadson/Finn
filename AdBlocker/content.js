@@ -60,6 +60,34 @@ function removeAdElements() {
 // ============================================================
 // VIDEO-AD AUTO-SKIP
 // ============================================================
+
+// Skip-Button Selektoren — alle bekannten YouTube-Varianten
+const SKIP_SELECTORS = [
+  '.ytp-ad-skip-button',
+  '.ytp-ad-skip-button-modern',
+  '.ytp-ad-skip-button-container button',
+  '.ytp-skip-ad-button',
+  '[class*="skip-button"]',
+  '[class*="skip_button"]',
+  'button[id*="skip"]'
+];
+
+// Verhindert doppeltes Anhängen der Event-Listener am selben Video-Element
+let adVideoEl = null;
+
+function skipVideoNow(video) {
+  if (!video) return;
+  // 1. Skip-Button klicken (sofortiger, sauberer Skip)
+  for (const sel of SKIP_SELECTORS) {
+    const btn = document.querySelector(sel);
+    if (btn) { btn.click(); return; }
+  }
+  // 2. Ans Ende spulen wenn Duration bekannt
+  if (video.duration && isFinite(video.duration) && video.duration > 0) {
+    video.currentTime = video.duration;
+  }
+}
+
 function handleVideoAd() {
   if (!enabled) return;
 
@@ -68,28 +96,34 @@ function handleVideoAd() {
 
   // Ad-Erkennung: Klassen auf dem Player-Container (NICHT entfernen)
   const adShowing = document.querySelector('.ad-showing, .ad-interrupting');
-  const adBadge   = document.querySelector('.ytp-ad-simple-ad-badge, .ytp-ad-preview-container');
+  const adBadge   = document.querySelector('.ytp-ad-simple-ad-badge, .ytp-ad-preview-container, .ytp-ad-duration-remaining');
 
   if (adShowing || adBadge) {
-    // Sofort stummschalten — Ad ist nicht hörbar während Skip ausgeführt wird
+    // Sofort stummschalten
     if (!video.muted) video.muted = true;
+    // Sofort maximale Playback-Rate — Ad rauscht durch, auch wenn Skip fehlschlägt
+    if (video.playbackRate < 16) video.playbackRate = 16;
 
-    // 1. Versuch: Skip-Button klicken
-    const skipBtn = document.querySelector(
-      '.ytp-ad-skip-button, .ytp-ad-skip-button-modern, [class*="skip-button"]'
-    );
-    if (skipBtn) {
-      skipBtn.click();
-      return;
-    }
+    // Skip sofort versuchen
+    skipVideoNow(video);
 
-    // 2. Versuch: Video ans Ende spulen
-    if (video.duration && isFinite(video.duration) && video.duration > 0) {
-      video.currentTime = video.duration;
-      video.playbackRate = 16;
+    // Event-Listener anhängen sobald Duration verfügbar — einmalig pro Ad-Video
+    if (adVideoEl !== video) {
+      adVideoEl = video;
+
+      const onReady = () => {
+        if (!enabled) return;
+        const stillAd = document.querySelector('.ad-showing, .ad-interrupting, .ytp-ad-simple-ad-badge');
+        if (stillAd) skipVideoNow(video);
+      };
+
+      video.addEventListener('loadedmetadata', onReady, { once: true });
+      video.addEventListener('durationchange', onReady, { once: true });
+      video.addEventListener('canplay',        onReady, { once: true });
     }
   } else {
-    // Kein Ad aktiv — Mute und Playback-Rate zurücksetzen
+    // Kein Ad aktiv — alles zurücksetzen
+    adVideoEl = null;
     if (video.muted) video.muted = false;
     if (video.playbackRate !== 1) video.playbackRate = 1;
   }
@@ -131,7 +165,7 @@ function startAdCheck() {
     attachVideoListener();
     handleVideoAd();
     removeAdElements();
-  }, 300);
+  }, 100);
 }
 
 function stopAdCheck() {

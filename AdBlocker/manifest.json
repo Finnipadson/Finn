@@ -43,5 +43,16 @@
   "icons": {
     "48": "icon48.png",
     "96": "icon96.png"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "yt-adblocker@local",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": ["none"],
+        "optional": []
+      }
+    }
   }
 }

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FOS BOS Musterstadt — Fachoberschule & Berufsoberschule</title>
+  <style>
+    /* ══════════════════════════════════════
+       DESIGN TOKENS — FOS BOS
+       Modern Clean · Light Mode · Education
+    ══════════════════════════════════════ */
+    :root {
+      /* Brand */
+      --primary:        #2563eb;
+      --primary-dark:   #1d4ed8;
+      --primary-light:  #3b82f6;
+      --primary-subtle: #eff6ff;
+      --primary-border: #bfdbfe;
+      --accent:         #0891b2;
+      --accent-light:   #06b6d4;
+      --accent-subtle:  #ecfeff;
+
+      /* Backgrounds */
+      --bg:             #ffffff;
+      --bg-subtle:      #f8fafc;
+      --bg-section:     #f1f5f9;
+      --bg-dark:        #0f172a;
+
+      /* Text */
+      --text:           #0f172a;
+      --text-muted:     #475569;
+      --text-subtle:    #94a3b8;
+      --text-on-primary:#ffffff;
+
+      /* Borders */
+      --border:         #e2e8f0;
+      --border-strong:  #cbd5e1;
+
+      /* Status */
+      --success:        #16a34a;
+      --success-subtle: #f0fdf4;
+      --error:          #dc2626;
+      --warning:        #d97706;
+
+      /* Radius */
+      --r-sm:   6px;
+      --r-md:   10px;
+      --r-lg:   16px;
+      --r-xl:   20px;
+      --r-2xl:  28px;
+      --r-full: 9999px;
+
+      /* Shadows */
+      --shadow-sm:  0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:  0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+      --shadow-lg:  0 10px 28px rgba(0,0,0,.1), 0 4px 8px rgba(0,0,0,.04);
+      --shadow-xl:  0 20px 48px rgba(0,0,0,.12);
+
+      /* Transitions */
+      --t-fast:   150ms ease;
+      --t-base:   200ms ease;
+      --t-slow:   350ms ease;
+
+      /* Fonts */
+      --font:     -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    /* ── Reset & Base ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+    /* ── Layout ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+    .section { padding: 80px 0; }
+    .section-sm { padding: 56px 0; }
+
+    /* ── Typography ── */
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .eyebrow::before { content: ''; width: 20px; height: 2px; background: var(--primary); border-radius: 2px; }
+
+    h1,h2,h3,h4 { line-height: 1.15; letter-spacing: -0.02em; color: var(--text); }
+    h1 { font-size: clamp(36px, 5vw, 60px); font-weight: 800; }
+    h2 { font-size: clamp(28px, 3.5vw, 42px); font-weight: 800; }
+    h3 { font-size: 22px; font-weight: 700; }
+    h4 { font-size: 17px; font-weight: 600; }
+    p  { color: var(--text-muted); line-height: 1.7; }
+
+    .text-primary { color: var(--primary); }
+    .text-accent  { color: var(--accent); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: var(--r-md);
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      transition: transform var(--t-fast), box-shadow var(--t-base), background var(--t-fast);
+      white-space: nowrap;
+    }
+    .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: scale(.98); }
+
+    .btn-primary {
+      background: var(--primary); color: white;
+      box-shadow: 0 4px 14px rgba(37,99,235,.3);
+    }
+    .btn-primary:hover { background: var(--primary-dark); box-shadow: 0 6px 20px rgba(37,99,235,.4); }
+
+    .btn-outline {
+      background: transparent; color: var(--primary);
+      border: 1.5px solid var(--primary);
+    }
+    .btn-outline:hover { background: var(--primary-subtle); }
+
+    .btn-white {
+      background: white; color: var(--primary);
+      box-shadow: var(--shadow-md);
+    }
+    .btn-white:hover { box-shadow: var(--shadow-lg); }
+
+    .btn-ghost {
+      background: transparent; color: var(--text-muted);
+      padding: 8px 14px; font-size: 14px;
+    }
+    .btn-ghost:hover { color: var(--text); background: var(--bg-subtle); }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+    }
+    .navbar-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px;
+    }
+    .navbar-logo { display: flex; align-items: center; gap: 12px; }
+    .navbar-logo-mark {
+      width: 40px; height: 40px;
+      background: var(--primary); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .navbar-logo-mark svg { width: 22px; height: 22px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .navbar-logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .navbar-logo-main { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: -.3px; }
+    .navbar-logo-sub  { font-size: 11px; color: var(--text-subtle); font-weight: 500; }
+
+    .navbar-nav { display: flex; align-items: center; gap: 2px; }
+    .nav-link {
+      padding: 8px 14px; border-radius: var(--r-md);
+      font-size: 14px; font-weight: 500; color: var(--text-muted);
+      transition: color var(--t-fast), background var(--t-fast);
+    }
+    .nav-link:hover { color: var(--text); background: var(--bg-subtle); }
+    .nav-link.active { color: var(--primary); background: var(--primary-subtle); font-weight: 600; }
+
+    .navbar-actions { display: flex; align-items: center; gap: 10px; }
+    .nav-search {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: var(--r-md);
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      font-size: 13px; color: var(--text-subtle); cursor: pointer;
+      transition: border-color var(--t-fast), box-shadow var(--t-fast);
+    }
+    .nav-search:hover { border-color: var(--primary-border); box-shadow: 0 0 0 3px rgba(37,99,235,.08); }
+    .nav-search svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(160deg, var(--bg) 0%, var(--primary-subtle) 60%, #e0f2fe 100%);
+      padding: 80px 0 100px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(37,99,235,.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute; bottom: -100px; left: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(8,145,178,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 64px; align-items: center; position: relative; z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: var(--r-full);
+      background: white; border: 1px solid var(--primary-border);
+      font-size: 13px; font-weight: 600; color: var(--primary);
+      margin-bottom: 24px; box-shadow: var(--shadow-sm);
+    }
+    .hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.2)} }
+
+    .hero h1 { margin-bottom: 20px; }
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero p { font-size: 18px; margin-bottom: 36px; max-width: 480px; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .hero-visual {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; position: relative;
+    }
+    .hero-card {
+      background: white; border-radius: var(--r-xl); padding: 24px;
+      box-shadow: var(--shadow-lg); border: 1px solid var(--border);
+      transition: transform var(--t-slow), box-shadow var(--t-slow);
+    }
+    .hero-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
+    .hero-card.featured {
+      grid-column: span 2;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white; border: none;
+    }
+    .hero-card.featured p { color: rgba(255,255,255,.8); }
+    .hero-card-icon {
+      width: 44px; height: 44px; border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .hero-card-icon svg { width: 22px; height: 22px; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .hero-card h4 { margin-bottom: 6px; font-size: 15px; }
+    .hero-card p { font-size: 13px; line-height: 1.5; margin: 0; }
+    .hero-card.featured .hero-card-icon { background: rgba(255,255,255,.2); }
+    .hero-card.featured .hero-card-icon svg { stroke: white; fill: none; }
+    .hero-card.featured h4 { color: white; }
+    .hero-card-icon-blue  { background: var(--primary-subtle); }
+    .hero-card-icon-blue svg  { stroke: var(--primary); fill: none; }
+    .hero-card-icon-cyan  { background: var(--accent-subtle); }
+    .hero-card-icon-cyan svg  { stroke: var(--accent); fill: none; }
+
+    /* ── Quicklinks ── */
+    .quicklinks { background: var(--bg-dark); padding: 20px 0; }
+    .quicklinks-inner { display: flex; gap: 8px; overflow-x: auto; align-items: center; }
+    .quicklinks-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.4); letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; margin-right: 8px; }
+    .ql {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: var(--r-full);
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+      font-size: 13px; font-weight: 500; color: rgba(255,255,255,.75);
+      white-space: nowrap; transition: all var(--t-fast);
+    }
+    .ql:hover { background: rgba(255,255,255,.14); color: white; }
+    .ql svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    /* ── Stats ── */
+    .stats-bar { background: var(--primary); padding: 40px 0; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; }
+    .stat-item { text-align: center; padding: 0 24px; position: relative; }
+    .stat-item + .stat-item::before { content: ''; position: absolute; left: 0; top: 10%; bottom: 10%; width: 1px; background: rgba(255,255,255,.2); }
+    .stat-value { font-size: 42px; font-weight: 800; color: white; letter-spacing: -1.5px; line-height: 1; margin-bottom: 6px; }
+    .stat-value span { font-size: 24px; }
+    .stat-label { font-size: 14px; color: rgba(255,255,255,.75); font-weight: 500; }
+
+    /* ── Bildungsgänge ── */
+    .bildungsgang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .bg-card {
+      border-radius: var(--r-2xl); overflow: hidden;
+      border: 1px solid var(--border); box-shadow: var(--shadow-md);
+      transition: transform var(--t-slow), box-shadow var(--t-slow);
+    }
+    .bg-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
+    .bg-card-header { padding: 32px 32px 24px; position: relative; }
+    .bg-card-header.fos { background: linear-gradient(135deg, #eff6ff, #dbeafe); }
+    .bg-card-header.bos { background: linear-gradient(135deg, #ecfeff, #cffafe); }
+    .bg-card-badge {
+      display: inline-block; padding: 4px 14px;
+      border-radius: var(--r-full); font-size: 12px; font-weight: 700;
+      letter-spacing: .5px; margin-bottom: 14px;
+    }
+    .bg-card-badge.fos { background: var(--primary); color: white; }
+    .bg-card-badge.bos { background: var(--accent); color: white; }
+    .bg-card-title { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+    .bg-card-sub { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    .bg-card-body { padding: 24px 32px 32px; background: white; }
+    .bg-track-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .bg-track {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: var(--r-lg);
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      font-size: 14px; font-weight: 500; color: var(--text);
+      transition: border-color var(--t-fast), background var(--t-fast);
+      cursor: pointer;
+    }
+    .bg-track:hover { border-color: var(--primary-border); background: var(--primary-subtle); }
+    .bg-track-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .bg-track-dot.fos { background: var(--primary); }
+    .bg-track-dot.bos { background: var(--accent); }
+    .bg-track-arrow { margin-left: auto; width: 16px; height: 16px; color: var(--text-subtle); transition: transform var(--t-fast), color var(--t-fast); }
+    .bg-track:hover .bg-track-arrow { transform: translateX(3px); color: var(--primary); }
+    .bg-track-arrow svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Aktuelles / News ── */
+    .news-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    .news-main .news-card { margin-bottom: 16px; }
+    .news-card {
+      display: flex; gap: 20px;
+      padding: 20px; border-radius: var(--r-xl);
+      background: white; border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--t-base), border-color var(--t-fast);
+    }
+    .news-card:hover { box-shadow: var(--shadow-md); border-color: var(--primary-border); }
+    .news-card-img {
+      width: 80px; height: 80px; border-radius: var(--r-lg);
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .news-card-body { flex: 1; min-width: 0; }
+    .news-card-meta { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+    .news-cat {
+      display: inline-block; padding: 2px 10px;
+      border-radius: var(--r-full); font-size: 11px; font-weight: 600; letter-spacing: .3px;
+    }
+    .news-cat.event   { background: #fef3c7; color: #92400e; }
+    .news-cat.info    { background: var(--primary-subtle); color: var(--primary); }
+    .news-cat.success { background: var(--success-subtle); color: var(--success); }
+    .news-date { font-size: 12px; color: var(--text-subtle); }
+    .news-card h4 { font-size: 15px; margin-bottom: 4px; transition: color var(--t-fast); }
+    .news-card:hover h4 { color: var(--primary); }
+    .news-card p { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0; }
+
+    .news-sidebar { display: flex; flex-direction: column; gap: 14px; }
+    .sidebar-widget {
+      background: white; border-radius: var(--r-xl);
+      border: 1px solid var(--border); overflow: hidden;
+    }
+    .widget-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px;
+    }
+    .widget-header svg { width: 16px; height: 16px; stroke: var(--primary); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .widget-body { padding: 16px 20px; }
+    .event-item { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+    .event-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .event-date-box { text-align: center; min-width: 40px; }
+    .event-day  { font-size: 20px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .event-mon  { font-size: 11px; color: var(--text-subtle); font-weight: 500; text-transform: uppercase; }
+    .event-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .event-desc  { font-size: 12px; color: var(--text-subtle); }
+
+    .contact-item { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; }
+    .contact-icon { width: 34px; height: 34px; border-radius: var(--r-md); background: var(--primary-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .contact-icon svg { width: 16px; height: 16px; stroke: var(--primary); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .contact-label { font-size: 11px; color: var(--text-subtle); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
+    .contact-value { font-size: 13px; color: var(--text); font-weight: 600; }
+
+    /* ── Features / USPs ── */
+    .features { background: var(--bg-section); }
+    .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+    .feature-card {
+      background: white; border-radius: var(--r-xl);
+      padding: 28px; border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      transition: transform var(--t-slow), box-shadow var(--t-slow);
+    }
+    .feature-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .feature-icon {
+      width: 52px; height: 52px; border-radius: var(--r-lg);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+    }
+    .feature-icon svg { width: 26px; height: 26px; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .feature-card h3 { font-size: 18px; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; line-height: 1.65; }
+
+    /* ── CTA Banner ── */
+    .cta-banner {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--accent) 100%);
+      border-radius: var(--r-2xl); padding: 56px 64px;
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 40px; align-items: center;
+      position: relative; overflow: hidden;
+    }
+    .cta-banner::before {
+      content: '';
+      position: absolute; top: -50%; right: -10%;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .cta-banner h2 { color: white; font-size: 32px; margin-bottom: 10px; }
+    .cta-banner p { color: rgba(255,255,255,.8); font-size: 16px; margin: 0; }
+    .cta-actions { display: flex; gap: 12px; flex-shrink: 0; position: relative; z-index: 1; }
+
+    /* ── Footer ── */
+    .footer { background: var(--bg-dark); padding: 64px 0 32px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+    .footer-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .footer-logo-mark { width: 38px; height: 38px; background: var(--primary); border-radius: 9px; display: flex; align-items: center; justify-content: center; }
+    .footer-logo-mark svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .footer-logo-name { font-size: 15px; font-weight: 800; color: white; }
+    .footer-desc { font-size: 13px; color: rgba(255,255,255,.4); line-height: 1.65; margin-bottom: 20px; max-width: 280px; }
+    .footer-social { display: flex; gap: 8px; }
+    .social-btn { width: 36px; height: 36px; border-radius: var(--r-md); background: rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center; transition: background var(--t-fast); }
+    .social-btn:hover { background: rgba(255,255,255,.15); }
+    .social-btn svg { width: 16px; height: 16px; stroke: rgba(255,255,255,.7); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .footer-col-title { font-size: 13px; font-weight: 700; color: white; margin-bottom: 16px; letter-spacing: .3px; }
+    .footer-links { display: flex; flex-direction: column; gap: 8px; }
+    .footer-link { font-size: 13px; color: rgba(255,255,255,.45); transition: color var(--t-fast); }
+    .footer-link:hover { color: rgba(255,255,255,.85); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-copy { font-size: 13px; color: rgba(255,255,255,.3); }
+    .footer-legal { display: flex; gap: 20px; }
+    .footer-legal a { font-size: 13px; color: rgba(255,255,255,.3); transition: color var(--t-fast); }
+    .footer-legal a:hover { color: rgba(255,255,255,.6); }
+
+    /* ── Topbar ── */
+    .topbar { background: var(--primary); padding: 8px 0; }
+    .topbar-inner { display: flex; justify-content: space-between; align-items: center; }
+    .topbar-left { font-size: 13px; color: rgba(255,255,255,.85); display: flex; align-items: center; gap: 6px; }
+    .topbar-left svg { width: 14px; height: 14px; stroke: rgba(255,255,255,.8); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .topbar-right { display: flex; gap: 16px; }
+    .topbar-link { font-size: 13px; color: rgba(255,255,255,.75); transition: color var(--t-fast); }
+    .topbar-link:hover { color: white; }
+
+    /* ── Section headers ── */
+    .section-header { margin-bottom: 48px; }
+    .section-header.centered { text-align: center; }
+    .section-header h2 { margin-bottom: 12px; }
+    .section-header p { font-size: 17px; max-width: 540px; }
+    .section-header.centered p { margin: 0 auto; }
+    .section-header-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid var(--border); }
+
+    /* ── Anmeldung CTA inline ── */
+    .anmeldung-strip {
+      background: var(--primary-subtle); border: 1px solid var(--primary-border);
+      border-radius: var(--r-xl); padding: 20px 28px;
+      display: flex; align-items: center; gap: 20px; justify-content: space-between;
+    }
+    .anmeldung-strip-left { display: flex; align-items: center; gap: 14px; }
+    .anmeldung-icon { width: 44px; height: 44px; background: var(--primary); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .anmeldung-icon svg { width: 22px; height: 22px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .anmeldung-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .anmeldung-desc  { font-size: 13px; color: var(--text-muted); }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .news-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .container { padding: 0 20px; }
+      .section { padding: 56px 0; }
+      .bildungsgang-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .cta-banner { grid-template-columns: 1fr; padding: 36px 28px; }
+      .navbar-nav { display: none; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .topbar { display: none; }
+    }
+
+    /* ── Utility ── */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-3 { gap: 12px; }
+    .mt-6 { margin-top: 24px; }
+    .mb-2 { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="container">
+      <div class="topbar-inner">
+        <div class="topbar-left">
+          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 012 1.25a2 2 0 012-2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 6.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 13.92z"/></svg>
+          (089) 123 456 — Mo–Fr 8:00–16:00 Uhr
+        </div>
+        <div class="topbar-right">
+          <a href="#" class="topbar-link">Sekretariat</a>
+          <a href="#" class="topbar-link">Moodle</a>
+          <a href="#" class="topbar-link">WebUntis</a>
+          <a href="#" class="topbar-link">Stundenplan</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="#" class="navbar-logo">
+          <div class="navbar-logo-mark">
+            <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </div>
+          <div class="navbar-logo-text">
+            <span class="navbar-logo-main">FOS · BOS</span>
+            <span class="navbar-logo-sub">Musterstadt</span>
+          </div>
+        </a>
+
+        <nav class="navbar-nav">
+          <a href="#" class="nav-link active">Start</a>
+          <a href="#bildung" class="nav-link">Bildungsgänge</a>
+          <a href="#aktuelles" class="nav-link">Aktuelles</a>
+          <a href="#schule" class="nav-link">Schule</a>
+          <a href="#kontakt" class="nav-link">Kontakt</a>
+        </nav>
+
+        <div class="navbar-actions">
+          <div class="nav-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Suchen
+          </div>
+          <a href="#anmeldung" class="btn btn-primary" style="padding: 9px 18px; font-size: 14px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            Anmelden
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div>
+          <div class="hero-badge">
+            <div class="hero-badge-dot"></div>
+            Anmeldung 2025/26 läuft
+          </div>
+          <h1>Dein Weg zum<br><span>Abitur & Studium.</span></h1>
+          <p>Die FOS und BOS Musterstadt bietet dir die ideale Vorbereitung für Hochschule, Studium und Karriere — modern, praxisnah und zukunftsorientiert.</p>
+          <div class="hero-actions">
+            <a href="#bildung" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              Bildungsgänge entdecken
+            </a>
+            <a href="#anmeldung" class="btn btn-outline">Jetzt anmelden</a>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-card featured">
+            <div class="hero-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <h4>Fachhochschulreife & Abitur</h4>
+            <p>Zwei anerkannte Abschlüsse — bundesweit geöffnete Türen zu Hochschulen und Universitäten.</p>
+          </div>
+          <div class="hero-card">
+            <div class="hero-card-icon hero-card-icon-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </div>
+            <h4>Moderne Ausstattung</h4>
+            <p>Digitale Tafeln, Laptops, aktuelle Software.</p>
+          </div>
+          <div class="hero-card">
+            <div class="hero-card-icon hero-card-icon-cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <h4>Flexible Zeiten</h4>
+            <p>Teilzeit- und Vollzeitmodelle verfügbar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quicklinks -->
+  <div class="quicklinks">
+    <div class="container">
+      <div class="quicklinks-inner">
+        <span class="quicklinks-label">Schnellzugriff</span>
+        <a href="#" class="ql"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Anmeldeformular</a>
+        <a href="#" class="ql"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schulkalender</a>
+        <a href="#" class="ql"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Lehrkräfte</a>
+        <a href="#" class="ql"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Stundenpläne</a>
+        <a href="#" class="ql"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>Prüfungstermine</a>
+        <a href="#" class="ql"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Kontakt</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value">1.200<span>+</span></div>
+          <div class="stat-label">Schülerinnen & Schüler</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">85<span>%</span></div>
+          <div class="stat-label">Bestehensquote</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">12</div>
+          <div class="stat-label">Fachrichtungen</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">50<span>+</span></div>
+          <div class="stat-label">Lehrkräfte</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bildungsgänge -->
+  <section class="section" id="bildung">
+    <div class="container">
+      <div class="section-header">
+        <div class="eyebrow">Unser Angebot</div>
+        <div class="section-header-row">
+          <div>
+            <h2>Dein Bildungsweg<br>beginnt hier.</h2>
+          </div>
+          <p style="max-width:360px;">Wähle zwischen Fachoberschule und Berufsoberschule — beide führen dich zum anerkannten Abschluss.</p>
+        </div>
+      </div>
+
+      <div class="bildungsgang-grid">
+        <!-- FOS -->
+        <div class="bg-card">
+          <div class="bg-card-header fos">
+            <span class="bg-card-badge fos">FOS</span>
+            <h3 class="bg-card-title">Fachoberschule</h3>
+            <p class="bg-card-sub">Klasse 11 &amp; 12 · Fachhochschulreife</p>
+          </div>
+          <div class="bg-card-body">
+            <div class="bg-track-list">
+              <div class="bg-track">
+                <div class="bg-track-dot fos"></div>
+                Technik
+                <span class="bg-track-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+              <div class="bg-track">
+                <div class="bg-track-dot fos"></div>
+                Wirtschaft &amp; Verwaltung
+                <span class="bg-track-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+              <div class="bg-track">
+                <div class="bg-track-dot fos"></div>
+                Sozialwesen
+                <span class="bg-track-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+              <div class="bg-track">
+                <div class="bg-track-dot fos"></div>
+                Agrarwirtschaft / Umwelt
+                <span class="bg-track-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+              <div class="bg-track">
+                <div class="bg-track-dot fos"></div>
+                Gestaltung
+                <span class="bg-track-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+            </div>
+            <a href="#" class="btn btn-primary" style="width:100%;justify-content:center;">
+              Mehr zur FOS
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- BOS -->
+        <div class="bg-card">
+          <div class="bg-card-header bos">
+            <span class="bg-card-badge bos">BOS</span>
+            <h3 class="bg-card-title">Berufsoberschule</h3>
+            <p class="bg-card-sub">Klasse 12 &amp; 13 · Fachgebundenes Abitur / Allg. Hochschulreife</p>
+          </div>
+          <div class="bg-card-body">
+            <div class="bg-track-list">
+              <div class="bg-track">
+                <div class="bg-track-dot bos"></div>
+                Technik
+                <span class="bg-track-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+              <div class="bg-track">
+                <div class="bg-track-dot bos"></div>
+                Wirtschaft &amp; Verwaltung
+                <span class="bg-track-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+              <div class="bg-track">
+                <div class="bg-track-dot bos"></div>
+                Sozialwesen
+                <span class="bg-track-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+              <div class="bg-track">
+                <div class="bg-track-dot bos"></div>
+                Agrarwirtschaft / Umwelt
+                <span class="bg-track-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+              <div class="bg-track">
+                <div class="bg-track-dot bos"></div>
+                Allgemeines Abitur (BOS 13)
+                <span class="bg-track-arrow"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+            </div>
+            <a href="#" class="btn" style="width:100%;justify-content:center;background:var(--accent);color:white;box-shadow:0 4px 14px rgba(8,145,178,.3);">
+              Mehr zur BOS
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Anmeldungs-Strip -->
+  <div style="padding: 0 0 64px;">
+    <div class="container">
+      <div class="anmeldung-strip" id="anmeldung">
+        <div class="anmeldung-strip-left">
+          <div class="anmeldung-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <div>
+            <div class="anmeldung-title">Anmeldung für das Schuljahr 2025/26</div>
+            <div class="anmeldung-desc">Anmeldefrist: 28. Februar 2025 · Online und persönlich möglich</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="#" class="btn btn-outline" style="font-size:14px;padding:9px 18px;">Infos zur Anmeldung</a>
+          <a href="#" class="btn btn-primary" style="font-size:14px;padding:9px 18px;">Online anmelden</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section class="section features">
+    <div class="container">
+      <div class="section-header centered">
+        <div class="eyebrow">Warum FOS BOS</div>
+        <h2>Das macht uns besonders.</h2>
+        <p>Wir verbinden solide schulische Bildung mit modernen Lernmethoden und echter Praxisnähe.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#eff6ff;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </div>
+          <h3>Anerkannte Abschlüsse</h3>
+          <p>Fachhochschulreife und Allgemeine Hochschulreife — bundesweit anerkannt und von Hochschulen geschätzt.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#ecfeff;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h3>Digitale Ausstattung</h3>
+          <p>Moderne Klassenräume mit digitalen Tafeln, Laptops und Lernplattformen für optimales Lernen.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#f0fdf4;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <h3>Erfahrene Lehrkräfte</h3>
+          <p>Über 50 engagierte Lehrerinnen und Lehrer mit Fachexpertise und pädagogischer Leidenschaft.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#fff7ed;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Individuelle Förderung</h3>
+          <p>Nachhilfeangebote, Beratung und Tutorenprogramm für den bestmöglichen Schulerfolg.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#fdf2f8;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <h3>Flexible Modelle</h3>
+          <p>Vollzeit und Teilzeit — wir passen uns deinem Leben an, nicht umgekehrt.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#fff1f2;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          </div>
+          <h3>Aktives Schulleben</h3>
+          <p>AGs, Sportangebote, Projekttage und Ausflüge — Schule ist mehr als Unterricht.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Aktuelles -->
+  <section class="section" id="aktuelles">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-header-row">
+          <div>
+            <div class="eyebrow">Neuigkeiten</div>
+            <h2>Aktuelles aus der Schule.</h2>
+          </div>
+          <a href="#" class="btn btn-ghost">
+            Alle Meldungen
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="news-grid">
+        <div class="news-main">
+          <div class="news-card">
+            <div class="news-card-img" style="background:#eff6ff;">📚</div>
+            <div class="news-card-body">
+              <div class="news-card-meta">
+                <span class="news-cat info">Information</span>
+                <span class="news-date">15. Januar 2025</span>
+              </div>
+              <h4>Anmeldephase für das Schuljahr 2025/26 hat begonnen</h4>
+              <p>Ab sofort können sich Interessierte für die FOS und BOS Musterstadt für das kommende Schuljahr anmelden. Die Anmeldefrist endet am 28. Februar 2025.</p>
+            </div>
+          </div>
+          <div class="news-card">
+            <div class="news-card-img" style="background:#f0fdf4;">🏆</div>
+            <div class="news-card-body">
+              <div class="news-card-meta">
+                <span class="news-cat success">Erfolg</span>
+                <span class="news-date">10. Januar 2025</span>
+              </div>
+              <h4>Unsere Schüler gewinnen Regionalwettbewerb Mathematik</h4>
+              <p>Drei Schülerinnen der FOS Technik belegten beim Regionalwettbewerb "Jugend forscht" die Plätze 1 bis 3. Herzlichen Glückwunsch!</p>
+            </div>
+          </div>
+          <div class="news-card">
+            <div class="news-card-img" style="background:#fff7ed;">🎭</div>
+            <div class="news-card-body">
+              <div class="news-card-meta">
+                <span class="news-cat event">Veranstaltung</span>
+                <span class="news-date">5. Januar 2025</span>
+              </div>
+              <h4>Tag der offenen Tür am 8. Februar 2025</h4>
+              <p>Lerne unsere Schule kennen! Am 8. Februar öffnen wir unsere Türen von 9 bis 14 Uhr. Führungen, Infostände und Gespräche mit Schülern und Lehrern.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="news-sidebar">
+          <div class="sidebar-widget">
+            <div class="widget-header">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Nächste Termine
+            </div>
+            <div class="widget-body">
+              <div class="event-item">
+                <div class="event-date-box"><div class="event-day">08</div><div class="event-mon">Feb</div></div>
+                <div><div class="event-title">Tag der offenen Tür</div><div class="event-desc">9:00 – 14:00 Uhr</div></div>
+              </div>
+              <div class="event-item">
+                <div class="event-date-box"><div class="event-day">28</div><div class="event-mon">Feb</div></div>
+                <div><div class="event-title">Anmeldeschluss 25/26</div><div class="event-desc">Online & persönlich</div></div>
+              </div>
+              <div class="event-item">
+                <div class="event-date-box"><div class="event-day">14</div><div class="event-mon">Apr</div></div>
+                <div><div class="event-title">Osterferien Beginn</div><div class="event-desc">Bis 25. April 2025</div></div>
+              </div>
+              <div class="event-item">
+                <div class="event-date-box"><div class="event-day">12</div><div class="event-mon">Mai</div></div>
+                <div><div class="event-title">Abiturprüfungen</div><div class="event-desc">Schriftliche Prüfungen</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-widget" id="kontakt">
+            <div class="widget-header">
+              <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 012 1.25a2 2 0 012-2h3"/></svg>
+              Kontakt
+            </div>
+            <div class="widget-body">
+              <div class="contact-item">
+                <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+                <div><div class="contact-label">Adresse</div><div class="contact-value">Schulstraße 1<br>80000 Musterstadt</div></div>
+              </div>
+              <div class="contact-item">
+                <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07"/></svg></div>
+                <div><div class="contact-label">Telefon</div><div class="contact-value">(089) 123 456</div></div>
+              </div>
+              <div class="contact-item">
+                <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                <div><div class="contact-label">E-Mail</div><div class="contact-value">info@fosbos-ms.de</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section style="padding: 0 0 80px;">
+    <div class="container">
+      <div class="cta-banner">
+        <div>
+          <h2>Bereit für deinen nächsten Schritt?</h2>
+          <p>Melde dich jetzt für das Schuljahr 2025/26 an und starte deinen Weg zur Fachhochschulreife oder zum Abitur.</p>
+        </div>
+        <div class="cta-actions">
+          <a href="#" class="btn btn-white">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            Infoveranstaltung
+          </a>
+          <a href="#" class="btn" style="background:rgba(255,255,255,.2);color:white;border:1.5px solid rgba(255,255,255,.4);">
+            Online anmelden
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-logo">
+            <div class="footer-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+            <span class="footer-logo-name">FOS · BOS Musterstadt</span>
+          </div>
+          <p class="footer-desc">Fachoberschule und Berufsoberschule Musterstadt — dein Weg zur Fachhochschulreife und zum Abitur.</p>
+          <div class="footer-social">
+            <a href="#" class="social-btn"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+            <a href="#" class="social-btn"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+            <a href="#" class="social-btn"><svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58a2.78 2.78 0 001.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 001.95-1.95A29 29 0 0023 12a29 29 0 00-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Bildungsgänge</div>
+          <div class="footer-links">
+            <a href="#" class="footer-link">FOS Technik</a>
+            <a href="#" class="footer-link">FOS Wirtschaft</a>
+            <a href="#" class="footer-link">FOS Sozialwesen</a>
+            <a href="#" class="footer-link">BOS 12</a>
+            <a href="#" class="footer-link">BOS 13 (Abitur)</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Schule</div>
+          <div class="footer-links">
+            <a href="#" class="footer-link">Über uns</a>
+            <a href="#" class="footer-link">Lehrkräfte</a>
+            <a href="#" class="footer-link">Schulleitung</a>
+            <a href="#" class="footer-link">Leitbild</a>
+            <a href="#" class="footer-link">Kooperationen</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Service</div>
+          <div class="footer-links">
+            <a href="#" class="footer-link">Anmeldung</a>
+            <a href="#" class="footer-link">Stundenplan</a>
+            <a href="#" class="footer-link">Schulkalender</a>
+            <a href="#" class="footer-link">Moodle</a>
+            <a href="#" class="footer-link">Kontakt</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span class="footer-copy">© 2025 FOS BOS Musterstadt. Alle Rechte vorbehalten.</span>
+        <div class="footer-legal">
+          <a href="#">Impressum</a>
+          <a href="#">Datenschutz</a>
+          <a href="#">Barrierefreiheit</a>
+          <a href="#">Sitemap</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
