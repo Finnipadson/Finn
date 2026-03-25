@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Café Reitschule | Restaurant München Schwabing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ivory:    #f7f1e8;
+      --ivory-d:  #ede4d6;
+      --ivory-dd: #e0d5c4;
+      --green:    #2b4535;
+      --green-m:  #3a5e47;
+      --green-l:  #4e7a5e;
+      --terra:    #b5613a;
+      --terra-l:  #d4845c;
+      --brown:    #6b4c34;
+      --text:     #2a2118;
+      --text-mid: #5a4a38;
+      --text-soft:#8a7b6a;
+      --font-d: 'DM Serif Display', Georgia, serif;
+      --font-b: 'Outfit', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--ivory);
+      color: var(--text);
+      font-family: var(--font-b);
+      font-weight: 300;
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    /* texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: .025;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    }
+
+    /* ===========================
+       NAVIGATION
+    =========================== */
+    #nav {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 68px;
+      transition: background .4s, padding .3s, box-shadow .4s;
+    }
+    #nav.scrolled {
+      background: rgba(247,241,232,.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 14px 68px;
+      box-shadow: 0 1px 0 var(--ivory-dd), 0 4px 20px rgba(43,69,53,.06);
+    }
+
+    .nav-logo {
+      font-family: var(--font-d);
+      font-size: 1.55rem;
+      color: var(--green);
+      text-decoration: none;
+      letter-spacing: .01em;
+    }
+    .nav-logo em { font-style: italic; color: var(--terra); }
+
+    .nav-links { display: flex; gap: 34px; list-style: none; }
+    .nav-links a {
+      color: var(--text-mid);
+      text-decoration: none;
+      font-size: .77rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--green); }
+
+    .nav-btn {
+      background: var(--green);
+      color: var(--ivory);
+      padding: 10px 26px;
+      font-family: var(--font-b);
+      font-size: .75rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: background .2s, transform .15s;
+    }
+    .nav-btn:hover { background: var(--green-m); transform: translateY(-1px); }
+
+    /* ===========================
+       HERO — SCROLL EXPANSION
+       (Bilder Animationen component)
+    =========================== */
+    #hero {
+      position: relative;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: var(--ivory-d);
+    }
+
+    #hero-bg {
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=1920&q=80') center/cover no-repeat;
+    }
+    #hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, rgba(247,241,232,.18) 0%, rgba(43,69,53,.25) 100%);
+    }
+
+    #hero-media {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(43,69,53,.28), 0 0 0 1px rgba(43,69,53,.08);
+    }
+    #hero-media img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+    #hero-media-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(43,69,53,.2);
+    }
+
+    .hero-copy {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      pointer-events: none;
+      padding: 0 24px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(247,241,232,.9);
+      border: 1px solid rgba(43,69,53,.18);
+      border-radius: 20px;
+      padding: 5px 16px;
+      font-size: .71rem;
+      letter-spacing: .1em;
+      color: var(--green);
+      margin-bottom: 18px;
+    }
+    .hero-dot {
+      width: 6px; height: 6px;
+      background: var(--terra);
+      border-radius: 50%;
+      animation: blink 2.2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    .hero-h1 {
+      font-family: var(--font-d);
+      font-size: clamp(2.6rem, 6.5vw, 6rem);
+      font-weight: 400;
+      line-height: 1.02;
+      color: var(--ivory);
+      text-shadow: 0 2px 30px rgba(43,69,53,.35);
+      display: block;
+      letter-spacing: -.01em;
+    }
+    .hero-h1 em {
+      font-style: italic;
+      color: #f0d9a8;
+    }
+
+    .hero-sub {
+      margin-top: 18px;
+      font-size: .82rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(247,241,232,.65);
+    }
+
+    #scroll-arrow {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      opacity: .5;
+      transition: opacity .3s;
+    }
+    .arrow-line {
+      width: 1px; height: 42px;
+      background: linear-gradient(to bottom, transparent, var(--ivory));
+      animation: pulse 1.7s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:.3;transform:scaleY(1)} 50%{opacity:.9;transform:scaleY(1.15)} }
+
+    /* ===========================
+       SHARED
+    =========================== */
+    section { padding: 110px 68px; }
+    .wrap { max-width: 1180px; margin: 0 auto; }
+
+    .label {
+      font-size: .68rem;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: var(--terra);
+      margin-bottom: 14px;
+    }
+    .heading {
+      font-family: var(--font-d);
+      font-size: clamp(2rem, 3.8vw, 3.2rem);
+      font-weight: 400;
+      line-height: 1.12;
+      color: var(--green);
+      margin-bottom: 20px;
+    }
+    .heading em { font-style: italic; color: var(--terra); }
+    .body-text {
+      color: var(--text-mid);
+      font-size: .96rem;
+      line-height: 1.85;
+      max-width: 500px;
+    }
+
+    .btn-fill {
+      display: inline-block;
+      background: var(--green);
+      color: var(--ivory);
+      padding: 13px 32px;
+      font-family: var(--font-b);
+      font-size: .77rem;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 2px;
+      border: none;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+    }
+    .btn-fill:hover { background: var(--green-m); transform: translateY(-1px); }
+
+    .btn-line {
+      display: inline-block;
+      border: 1.5px solid var(--green);
+      color: var(--green);
+      padding: 12px 30px;
+      font-family: var(--font-b);
+      font-size: .77rem;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background .2s, color .2s, transform .15s;
+    }
+    .btn-line:hover { background: var(--green); color: var(--ivory); transform: translateY(-1px); }
+
+    /* ===========================
+       ABOUT
+    =========================== */
+    #about { background: var(--ivory); }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 90px;
+      align-items: center;
+    }
+
+    .about-copy { order: -1; }
+
+    .about-img-wrap {
+      position: relative;
+    }
+    .about-img-wrap img {
+      width: 100%; height: 520px;
+      object-fit: cover;
+      border-radius: 3px;
+      display: block;
+    }
+    /* decorative leaf motif */
+    .about-img-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      width: 120px;
+      height: 120px;
+      border: 2px solid rgba(43,69,53,.15);
+      border-radius: 3px;
+      pointer-events: none;
+    }
+    .about-tag {
+      display: inline-block;
+      background: var(--green);
+      color: var(--ivory);
+      font-size: .7rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 2px;
+      margin-bottom: 18px;
+    }
+
+    .about-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid var(--ivory-dd);
+    }
+    .stat-n {
+      font-family: var(--font-d);
+      font-size: 2.4rem;
+      color: var(--terra);
+      line-height: 1;
+    }
+    .stat-l {
+      font-size: .7rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-top: 4px;
+    }
+    .about-btns { display: flex; gap: 14px; margin-top: 36px; flex-wrap: wrap; }
+
+    /* ===========================
+       MENU
+    =========================== */
+    #menu { background: var(--ivory-d); }
+
+    /* SEARCH BAR (Suchfunktion component) */
+    .search-block {
+      position: relative;
+      max-width: 440px;
+      margin-bottom: 42px;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--ivory);
+      border: 1.5px solid var(--ivory-dd);
+      color: var(--text);
+      font-family: var(--font-b);
+      font-size: .91rem;
+      padding: 13px 48px 13px 18px;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .search-input::placeholder { color: var(--text-soft); }
+    .search-input:focus {
+      border-color: var(--green-l);
+      box-shadow: 0 0 0 3px rgba(43,69,53,.07);
+    }
+    .search-icon {
+      position: absolute;
+      right: 15px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-soft);
+      pointer-events: none;
+      transition: color .2s;
+    }
+    .search-input:focus + .search-icon { color: var(--green); }
+
+    .search-dropdown {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0; right: 0;
+      background: var(--ivory);
+      border: 1.5px solid var(--ivory-dd);
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 50;
+      box-shadow: 0 12px 40px rgba(43,69,53,.12);
+      animation: fadeDown .17s ease;
+    }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
+
+    .sd-item {
+      padding: 11px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background .13s;
+      border-bottom: 1px solid rgba(0,0,0,.04);
+    }
+    .sd-item:last-of-type { border-bottom: none; }
+    .sd-item:hover { background: rgba(43,69,53,.05); }
+    .sd-name { font-size: .87rem; color: var(--text); }
+    .sd-cat  { font-size: .72rem; color: var(--text-soft); margin-top: 2px; }
+    .sd-price { font-size: .85rem; color: var(--terra); font-family: var(--font-d); }
+    .sd-empty { padding: 14px 18px; color: var(--text-soft); font-size: .84rem; }
+    .sd-hint  { padding: 8px 18px; display: flex; justify-content: space-between; font-size: .68rem; color: var(--text-soft); border-top: 1px solid rgba(0,0,0,.05); letter-spacing: .06em; }
+
+    /* Tabs */
+    .menu-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1.5px solid var(--ivory-dd);
+      margin-bottom: 32px;
+      overflow-x: auto;
+    }
+    .m-tab {
+      background: none;
+      border: none;
+      color: var(--text-soft);
+      font-family: var(--font-b);
+      font-size: .74rem;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      padding: 12px 24px;
+      cursor: pointer;
+      white-space: nowrap;
+      position: relative;
+      transition: color .2s;
+      flex-shrink: 0;
+    }
+    .m-tab::after {
+      content: '';
+      position: absolute;
+      bottom: -1.5px; left: 0; right: 0;
+      height: 1.5px;
+      background: var(--terra);
+      transform: scaleX(0);
+      transition: transform .22s;
+    }
+    .m-tab.active { color: var(--terra); }
+    .m-tab.active::after, .m-tab:hover::after { transform: scaleX(1); }
+    .m-tab:hover { color: var(--text-mid); }
+
+    .menu-panel { display: none; }
+    .menu-panel.active { display: block; }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1px;
+      background: var(--ivory-dd);
+      border: 1px solid var(--ivory-dd);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .m-item {
+      padding: 24px 28px;
+      background: var(--ivory-d);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      transition: background .18s;
+    }
+    .m-item:hover { background: var(--ivory); }
+    .m-item-info { flex: 1; min-width: 0; }
+    .m-item-name {
+      font-family: var(--font-d);
+      font-size: 1.05rem;
+      color: var(--green);
+      margin-bottom: 5px;
+    }
+    .m-item-desc { font-size: .79rem; color: var(--text-soft); line-height: 1.55; }
+    .m-item-price {
+      font-family: var(--font-d);
+      font-size: 1.08rem;
+      color: var(--terra);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ===========================
+       TESTIMONIALS — User Bewertungen
+    =========================== */
+    #testimonials { background: var(--green); overflow: hidden; }
+    #testimonials .label { color: rgba(247,241,232,.5); }
+    #testimonials .heading { color: var(--ivory); }
+    #testimonials .heading em { color: #f0d9a8; }
+
+    .t-header { text-align: center; margin-bottom: 60px; }
+
+    .t-columns {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      max-height: 640px;
+      overflow: hidden;
+      mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+      -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+    }
+
+    .t-col { width: 310px; flex-shrink: 0; overflow: hidden; }
+    .t-col-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: scrollUp var(--dur, 22s) linear infinite;
+    }
+    @keyframes scrollUp { 0%{transform:translateY(0)} 100%{transform:translateY(-50%)} }
+
+    .t-card {
+      background: rgba(247,241,232,.06);
+      border: 1px solid rgba(247,241,232,.1);
+      border-radius: 8px;
+      padding: 24px 26px;
+    }
+    .t-stars { color: #f0d9a8; font-size: .78rem; letter-spacing: 3px; margin-bottom: 11px; }
+    .t-text  { font-size: .86rem; line-height: 1.7; color: rgba(247,241,232,.8); margin-bottom: 18px; }
+    .t-author { display: flex; align-items: center; gap: 11px; }
+    .t-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(247,241,232,.2); flex-shrink: 0; }
+    .t-name   { font-size: .87rem; font-weight: 500; color: var(--ivory); }
+    .t-role   { font-size: .71rem; color: rgba(247,241,232,.5); }
+
+    /* ===========================
+       FAQ — Accordion component
+    =========================== */
+    #faq { background: var(--ivory); }
+
+    .faq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 90px;
+      align-items: start;
+    }
+
+    .accordion { border-top: 1.5px solid var(--ivory-dd); }
+    .acc-item  { border-bottom: 1.5px solid var(--ivory-dd); }
+    .acc-trigger {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 21px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      cursor: pointer;
+      color: var(--text);
+      font-family: var(--font-b);
+      font-size: .92rem;
+      font-weight: 300;
+      text-align: left;
+      transition: color .2s;
+    }
+    .acc-trigger:hover { color: var(--green); }
+    .acc-chevron {
+      width: 16px; height: 16px;
+      flex-shrink: 0;
+      color: var(--terra);
+      transition: transform .24s ease;
+    }
+    .acc-item.open .acc-chevron { transform: rotate(180deg); }
+    .acc-body-wrap {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height .3s ease;
+    }
+    .acc-item.open .acc-body-wrap { max-height: 260px; }
+    .acc-body {
+      padding-bottom: 20px;
+      font-size: .88rem;
+      color: var(--text-soft);
+      line-height: 1.82;
+    }
+
+    .faq-aside { display: flex; flex-direction: column; gap: 18px; }
+
+    .info-box {
+      background: var(--green);
+      border-radius: 6px;
+      padding: 36px 38px;
+    }
+    .info-box h3 {
+      font-family: var(--font-d);
+      font-size: 1.65rem;
+      color: var(--ivory);
+      margin-bottom: 12px;
+    }
+    .info-box p { color: rgba(247,241,232,.7); font-size: .87rem; line-height: 1.75; margin-bottom: 24px; }
+    .info-box-btns { display: flex; flex-direction: column; gap: 10px; }
+
+    .btn-ivory {
+      display: inline-block;
+      background: var(--ivory);
+      color: var(--green);
+      padding: 13px 28px;
+      font-family: var(--font-b);
+      font-size: .77rem;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: background .2s, transform .15s;
+    }
+    .btn-ivory:hover { background: var(--ivory-d); transform: translateY(-1px); }
+
+    .btn-line-ivory {
+      display: inline-block;
+      border: 1.5px solid rgba(247,241,232,.4);
+      color: rgba(247,241,232,.85);
+      padding: 12px 28px;
+      font-family: var(--font-b);
+      font-size: .77rem;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-line-ivory:hover { border-color: var(--ivory); color: var(--ivory); }
+
+    .hours-box { border: 1.5px solid var(--ivory-dd); border-radius: 6px; overflow: hidden; background: var(--ivory-d); }
+    .hours-head {
+      background: var(--ivory-dd);
+      padding: 13px 22px;
+      font-size: .68rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--green);
+    }
+    .hours-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 11px 22px;
+      font-size: .86rem;
+      border-top: 1px solid var(--ivory-dd);
+    }
+    .hours-day { color: var(--text-soft); }
+    .hours-time { color: var(--text); font-weight: 400; }
+
+    /* ===========================
+       FOOTER — Footer component
+    =========================== */
+    footer {
+      background: var(--green);
+      padding: 72px 68px 32px;
+    }
+
+    .footer-grid {
+      max-width: 1180px;
+      margin: 0 auto 56px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.6fr;
+      gap: 48px;
+    }
+
+    .f-brand { font-family: var(--font-d); font-size: 1.5rem; color: var(--ivory); margin-bottom: 14px; }
+    .f-brand em { font-style: italic; color: #f0d9a8; }
+    .f-desc  { color: rgba(247,241,232,.6); font-size: .85rem; line-height: 1.75; margin-bottom: 24px; }
+
+    .f-socials { display: flex; gap: 10px; }
+    .f-social-btn {
+      width: 33px; height: 33px;
+      border: 1px solid rgba(247,241,232,.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(247,241,232,.55);
+      text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .f-social-btn:hover { border-color: #f0d9a8; color: #f0d9a8; }
+
+    .f-col-head {
+      font-size: .67rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: rgba(247,241,232,.45);
+      margin-bottom: 18px;
+    }
+    .f-links { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .f-links a { color: rgba(247,241,232,.65); text-decoration: none; font-size: .85rem; transition: color .2s; }
+    .f-links a:hover { color: var(--ivory); }
+
+    .f-contact-row { display: flex; gap: 11px; align-items: flex-start; margin-bottom: 12px; }
+    .f-contact-icon { color: #f0d9a8; flex-shrink: 0; margin-top: 2px; }
+    .f-contact-text { color: rgba(247,241,232,.65); font-size: .84rem; line-height: 1.55; }
+
+    .footer-bottom {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding-top: 22px;
+      border-top: 1px solid rgba(247,241,232,.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-bottom p { color: rgba(247,241,232,.4); font-size: .77rem; }
+
+    /* ===========================
+       FADE-IN
+    =========================== */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(26px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+    .fade-up.d1 { transition-delay: .1s; }
+    .fade-up.d2 { transition-delay: .2s; }
+    .fade-up.d3 { transition-delay: .32s; }
+
+    /* ===========================
+       RESPONSIVE
+    =========================== */
+    @media (max-width: 1100px) {
+      #nav, #nav.scrolled { padding-left: 32px; padding-right: 32px; }
+      section { padding: 88px 32px; }
+      .about-grid, .faq-grid { grid-template-columns: 1fr; gap: 50px; }
+      .about-copy { order: 0; }
+      footer { padding: 60px 32px 28px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+    }
+    @media (max-width: 768px) {
+      #nav, #nav.scrolled { padding: 14px 20px; }
+      .nav-links { display: none; }
+      section { padding: 68px 20px; }
+      .hero-h1 { font-size: 2.4rem; }
+      .t-col:not(:first-child) { display: none; }
+      .menu-grid { grid-template-columns: 1fr; }
+      footer { padding: 48px 20px 24px; }
+      .footer-grid { grid-template-columns: 1fr; gap: 26px; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========================
+     NAVIGATION
+======================== -->
+<nav id="nav">
+  <a href="#" class="nav-logo">Café <em>Reitschule</em></a>
+  <ul class="nav-links">
+    <li><a href="#about">Geschichte</a></li>
+    <li><a href="#menu">Speisekarte</a></li>
+    <li><a href="#testimonials">Bewertungen</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a href="tel:+498938887600" class="nav-btn">Reservieren</a>
+</nav>
+
+<!-- ========================
+     HERO — SCROLL EXPANSION
+======================== -->
+<section id="hero">
+  <div id="hero-bg"></div>
+  <div id="hero-media">
+    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1280&q=80" alt="Café Reitschule">
+    <div id="hero-media-overlay"></div>
+  </div>
+  <div class="hero-copy" id="hero-copy">
+    <div class="hero-badge">
+      <span class="hero-dot"></span>
+      Täglich geöffnet · Schwabing, München
+    </div>
+    <span class="hero-h1" id="h1a">Der richtige Ort,</span>
+    <span class="hero-h1" id="h1b"><em>zu fast jeder Zeit</em></span>
+    <p class="hero-sub">Scrollen zum Entdecken</p>
+  </div>
+  <div id="scroll-arrow">
+    <div class="arrow-line"></div>
+  </div>
+</section>
+
+<!-- ========================
+     ABOUT
+======================== -->
+<section id="about">
+  <div class="wrap">
+    <div class="about-grid">
+
+      <div class="about-copy fade-up">
+        <span class="about-tag">Seit Jahrzehnten</span>
+        <div class="label">Über uns</div>
+        <h2 class="heading">Zwischen Englischem Garten<br>&amp; <em>Leopoldstraße</em></h2>
+        <p class="body-text">
+          Das Café Reitschule liegt im Herzen von Schwabing — zwischen dem Englischen Garten und der Leopoldstraße. Auf über 2.000 m² Fläche mit 180 Plätzen im Innenbereich und 270 auf der Terrasse bieten wir Touristen, Nachbarn, Geschäftsleuten und Familien einen Ort für jeden Anlass.
+        </p>
+        <p class="body-text" style="margin-top:14px;">
+          Von einem ausgedehnten Frühstück am Wochenende über ein entspanntes Mittagessen bis zum Abendessen: Wir sind der richtige Ort — zu fast jeder Zeit.
+        </p>
+        <div class="about-stats">
+          <div>
+            <div class="stat-n">2.000</div>
+            <div class="stat-l">m² Fläche</div>
+          </div>
+          <div>
+            <div class="stat-n">450</div>
+            <div class="stat-l">Sitzplätze</div>
+          </div>
+          <div>
+            <div class="stat-n">3</div>
+            <div class="stat-l">Terrassen</div>
+          </div>
+        </div>
+        <div class="about-btns">
+          <a href="#menu" class="btn-fill">Zur Speisekarte</a>
+          <a href="tel:+498938887600" class="btn-line">Tisch reservieren</a>
+        </div>
+      </div>
+
+      <div class="about-img-wrap fade-up d1">
+        <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&q=80" alt="Café Reitschule Innen">
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ========================
+     MENU
+======================== -->
+<section id="menu">
+  <div class="wrap">
+
+    <div class="fade-up" style="margin-bottom:44px;">
+      <div class="label">Speisekarte</div>
+      <h2 class="heading">Unsere <em>Auswahl</em></h2>
+    </div>
+
+    <!-- SEARCH (Suchfunktion component) -->
+    <div class="search-block fade-up">
+      <input type="text" class="search-input" id="searchInput" placeholder="Gericht oder Getränk suchen…" autocomplete="off">
+      <svg class="search-icon" id="searchIconSvg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+    </div>
+
+    <!-- TABS -->
+    <div class="menu-tabs fade-up">
+      <button class="m-tab active" data-tab="mittagessen">Mittagessen</button>
+      <button class="m-tab" data-tab="abendessen">Abendessen</button>
+      <button class="m-tab" data-tab="fruehstueck">Frühstück &amp; Brunch</button>
+      <button class="m-tab" data-tab="getraenke">Getränke</button>
+    </div>
+
+    <!-- MITTAGESSEN -->
+    <div class="menu-panel active fade-up" id="panel-mittagessen">
+      <div class="menu-grid">
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Bayerische Leberknödelsuppe</div><div class="m-item-desc">Hausgemachte Leberknödel in kräftiger Rindsbrühe, Schnittlauch</div></div><div class="m-item-price">9,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Schwabing Salat</div><div class="m-item-desc">Bunt gemischter Salat, Ziegenkäse, Walnüsse, Honig-Senf-Dressing</div></div><div class="m-item-price">14,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Vitello Tonnato</div><div class="m-item-desc">Dünn geschnittenes Kalbfleisch, Thunfischcreme, Kapern, Zitrone</div></div><div class="m-item-price">16,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Pasta des Tages</div><div class="m-item-desc">Frische Pasta, täglich wechselnde Sauce — bitte nachfragen</div></div><div class="m-item-price">13,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Münchner Schnitzel</div><div class="m-item-desc">Kalbsschnitzel, Bratkartoffeln, Preiselbeeren, Zitrone</div></div><div class="m-item-price">24,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Lachsforelle vom Grill</div><div class="m-item-desc">Bayrische Lachsforelle, Kräuterbutter, Kartoffeln, Saison-Gemüse</div></div><div class="m-item-price">22,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Tagessuppe</div><div class="m-item-desc">Täglich wechselnd, mit frischem Baguette</div></div><div class="m-item-price">7,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Vegetarischer Flammkuchen</div><div class="m-item-desc">Schmand, Kirschtomaten, Rucola, Parmesan, Balsamico</div></div><div class="m-item-price">14,50 €</div></div>
+      </div>
+    </div>
+
+    <!-- ABENDESSEN -->
+    <div class="menu-panel" id="panel-abendessen">
+      <div class="menu-grid">
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Beef Tartare</div><div class="m-item-desc">Handgeschnittenes Rinderfilet, Kapern, Schalotten, Eigelb, Toast</div></div><div class="m-item-price">19,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Burrata &amp; Prosciutto</div><div class="m-item-desc">Büffelmilch-Burrata, Parmaschinken, Rösttomaten, Basilikumöl</div></div><div class="m-item-price">17,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Reitschule Steak</div><div class="m-item-desc">200g Rinderfilet, Sauce Béarnaise, Pommes allumettes, Saison-Salat</div></div><div class="m-item-price">38,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Ente à l'orange</div><div class="m-item-desc">Bayrische Ente, Orangenjus, Rotkohl, Semmelknödel</div></div><div class="m-item-price">29,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Wolfsbarsch gebraten</div><div class="m-item-desc">Gegrillter Wolfsbarsch, Fenchel, Safran-Kartoffeln, Aioli</div></div><div class="m-item-price">27,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Risotto al Tartufo</div><div class="m-item-desc">Cremiges Trüffelrisotto, Parmesan, schwarze Trüffelspäne</div></div><div class="m-item-price">24,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Käsevariation</div><div class="m-item-desc">Drei bayrische Käsesorten, Trauben, Walnüsse, Feigensenf, Brot</div></div><div class="m-item-price">16,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Crème brûlée</div><div class="m-item-desc">Klassische Vanillecreme, karamellisierter Zucker, Beeren</div></div><div class="m-item-price">8,90 €</div></div>
+      </div>
+    </div>
+
+    <!-- FRÜHSTÜCK & BRUNCH -->
+    <div class="menu-panel" id="panel-fruehstueck">
+      <div class="menu-grid">
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Klassisches Frühstück</div><div class="m-item-desc">Drei Brotarten, Butter, Marmeladen, Honig, Aufschnitt, Käse, Ei</div></div><div class="m-item-price">16,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Reitschule Brunch</div><div class="m-item-desc">Sonntags 09:30–16:00 — reichhaltiges Brunchbuffet, alle Klassiker</div></div><div class="m-item-price">34,00 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Eggs Florentine</div><div class="m-item-desc">Pochierte Eier, Blattspinat, Hollandaise, English Muffin</div></div><div class="m-item-price">14,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Pancakes mit Ahornsirup</div><div class="m-item-desc">Fluffige Pancakes, Ahornsirup, frische Beeren, Schlagsahne</div></div><div class="m-item-price">13,90 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Granola Bowl</div><div class="m-item-desc">Hausgemachtes Granola, Joghurt, Honig, saisonale Früchte</div></div><div class="m-item-price">10,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Rühreier mit Räucherlachs</div><div class="m-item-desc">Cremige Rühreier, Räucherlachs, Toast, Kapern, rote Zwiebeln</div></div><div class="m-item-price">15,90 €</div></div>
+      </div>
+    </div>
+
+    <!-- GETRÄNKE -->
+    <div class="menu-panel" id="panel-getraenke">
+      <div class="menu-grid">
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Espresso</div><div class="m-item-desc">Einfach oder doppelt, Specialty Coffee</div></div><div class="m-item-price">2,80 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Cappuccino</div><div class="m-item-desc">Specialty Espresso, aufgeschäumte Vollmilch</div></div><div class="m-item-price">4,20 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Aperol Spritz</div><div class="m-item-desc">Aperol, Prosecco, Sodawasser, Orange</div></div><div class="m-item-price">9,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Weißbier</div><div class="m-item-desc">Bayrisches Hefeweizen, 0,5 l</div></div><div class="m-item-price">5,20 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Hauswein Weiß / Rot</div><div class="m-item-desc">Sorgfältig ausgewählter Hauswein, 0,2 l Glas</div></div><div class="m-item-price">7,50 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Frisch gepresster Orangensaft</div><div class="m-item-desc">Täglich frisch gepresst, 0,3 l</div></div><div class="m-item-price">6,80 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Mineralwasser</div><div class="m-item-desc">Still oder sprudelnd, 0,5 l Flasche</div></div><div class="m-item-price">4,20 €</div></div>
+        <div class="m-item"><div class="m-item-info"><div class="m-item-name">Hugo</div><div class="m-item-desc">Prosecco, Holunderblütensirup, Minze, Limette, Sodawasser</div></div><div class="m-item-price">9,50 €</div></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ========================
+     TESTIMONIALS — User Bewertungen
+======================== -->
+<section id="testimonials">
+  <div class="t-header fade-up">
+    <div class="label">Bewertungen</div>
+    <h2 class="heading">Was unsere <em>Gäste</em> sagen</h2>
+  </div>
+  <div class="t-columns">
+    <div class="t-col" id="tcol1"><div class="t-col-inner" style="--dur:23s"></div></div>
+    <div class="t-col" id="tcol2"><div class="t-col-inner" style="--dur:29s"></div></div>
+    <div class="t-col" id="tcol3"><div class="t-col-inner" style="--dur:26s"></div></div>
+  </div>
+</section>
+
+<!-- ========================
+     FAQ — Accordion
+======================== -->
+<section id="faq">
+  <div class="wrap">
+    <div class="faq-grid">
+
+      <div>
+        <div class="label fade-up">FAQ</div>
+        <h2 class="heading fade-up d1">Häufige <em>Fragen</em></h2>
+        <div class="accordion fade-up d2">
+
+          <div class="acc-item">
+            <button class="acc-trigger">
+              Wie kann ich reservieren?
+              <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="acc-body-wrap">
+              <div class="acc-body">Reservierungen nehmen wir telefonisch unter +49 89 38 88 76 0 oder per E-Mail an contact@cafe-reitschule.de entgegen. Den Sonntagsbrunch buchen Sie bequem über OpenTable.</div>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger">
+              Wann findet der Sonntagsbrunch statt?
+              <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="acc-body-wrap">
+              <div class="acc-body">Unser ausgiebiger Sonntagsbrunch findet jeden Sonntag von 09:30 bis 16:00 Uhr statt. Bitte reservieren Sie rechtzeitig über OpenTable, da er sehr beliebt ist. Samstags und an Feiertagen öffnen wir bereits um 09:00 Uhr für das Frühstück.</div>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger">
+              Bieten Sie Räumlichkeiten für Events an?
+              <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="acc-body-wrap">
+              <div class="acc-body">Ja! Das Café Reitschule verfügt über mehrere exklusive Eventräume: Orangerie, Lounge, Studio sowie Panorama- und weitere Terrassen. Für Anfragen kontaktieren Sie uns bitte direkt — wir erstellen Ihnen gerne ein maßgeschneidertes Angebot.</div>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger">
+              Wo genau liegt das Café Reitschule?
+              <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="acc-body-wrap">
+              <div class="acc-body">Wir befinden uns in der Königinstraße 34, 80802 München — im Herzen von Schwabing, zwischen dem Englischen Garten und der Leopoldstraße. Die nächste U-Bahn-Station ist Münchner Freiheit (U3/U6), ca. 5 Gehminuten entfernt.</div>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger">
+              Bieten Sie auch Catering an?
+              <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="acc-body-wrap">
+              <div class="acc-body">Ja, wir bieten professionelles Catering für Firmenevents, private Feiern und Kulturveranstaltungen an. Sprechen Sie uns an — wir beraten Sie gerne individuell unter contact@cafe-reitschule.de oder telefonisch.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="faq-aside fade-up d2">
+        <div class="info-box">
+          <h3>Kontakt &amp; <em style="color:#f0d9a8">Reservierung</em></h3>
+          <p>Wir freuen uns auf Ihre Anfrage und helfen Ihnen gerne bei der Planung Ihres Besuchs oder Events.</p>
+          <div class="info-box-btns">
+            <a href="tel:+498938887600" class="btn-ivory">+49 89 38 88 76 0</a>
+            <a href="mailto:contact@cafe-reitschule.de" class="btn-line-ivory">contact@cafe-reitschule.de</a>
+          </div>
+        </div>
+        <div class="hours-box">
+          <div class="hours-head">Öffnungszeiten</div>
+          <div class="hours-row"><span class="hours-day">Montag – Freitag</span><span class="hours-time">11:30 – 23:00</span></div>
+          <div class="hours-row"><span class="hours-day">Samstag</span><span class="hours-time">09:00 – 23:00</span></div>
+          <div class="hours-row"><span class="hours-day">Sonntag &amp; Feiertage</span><span class="hours-time">09:00 – 19:00</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ========================
+     FOOTER — Footer component
+======================== -->
+<footer>
+  <div class="footer-grid">
+
+    <div>
+      <div class="f-brand">Café <em>Reitschule</em></div>
+      <p class="f-desc">Restaurant in Schwabing, München — zwischen Englischem Garten und Leopoldstraße. Der richtige Ort zu fast jeder Zeit, für jeden Anlass.</p>
+      <div class="f-socials">
+        <a class="f-social-btn" href="#" title="Facebook">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a class="f-social-btn" href="#" title="Instagram">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a class="f-social-btn" href="#" title="OpenTable">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div>
+      <div class="f-col-head">Navigation</div>
+      <ul class="f-links">
+        <li><a href="#about">Geschichte</a></li>
+        <li><a href="#menu">Speisekarte</a></li>
+        <li><a href="#testimonials">Bewertungen</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="f-col-head">Rechtliches</div>
+      <ul class="f-links">
+        <li><a href="#">Impressum</a></li>
+        <li><a href="#">Datenschutz</a></li>
+        <li><a href="#">AGB</a></li>
+        <li><a href="#">Allergeninformation</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="f-col-head">Kontakt &amp; Anfahrt</div>
+      <div class="f-contact-row">
+        <svg class="f-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span class="f-contact-text">Königinstraße 34<br>80802 München<br><span style="color:#f0d9a8;font-size:.78rem;">U3/U6 Münchner Freiheit</span></span>
+      </div>
+      <div class="f-contact-row">
+        <svg class="f-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span class="f-contact-text">+49 89 38 88 76 0</span>
+      </div>
+      <div class="f-contact-row">
+        <svg class="f-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span class="f-contact-text">contact@cafe-reitschule.de</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <p>&copy; 2026 Café Reitschule München. Alle Rechte vorbehalten.</p>
+    <p>Restaurant · Schwabing · Königinstraße 34</p>
+  </div>
+</footer>
+
+<script>
+// =============================================
+// NAV SCROLL
+// =============================================
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 50);
+}, { passive: true });
+
+// =============================================
+// HERO SCROLL EXPANSION
+// Adapted from: scroll-expansion-hero component
+// =============================================
+const heroMedia   = document.getElementById('hero-media');
+const heroOverlay = document.getElementById('hero-media-overlay');
+const heroBg      = document.getElementById('hero-bg');
+const h1a         = document.getElementById('h1a');
+const h1b         = document.getElementById('h1b');
+const scrollArrow = document.getElementById('scroll-arrow');
+
+let heroProgress = 0;
+let heroLocked   = false;
+
+function applyHero(p) {
+  const mobile = window.innerWidth < 768;
+  const w = Math.min(300 + p * (mobile ? 640 : 1220), window.innerWidth  * 0.95);
+  const h = Math.min(400 + p * (mobile ? 200 : 400),  window.innerHeight * 0.85);
+  heroMedia.style.width  = w + 'px';
+  heroMedia.style.height = h + 'px';
+  heroOverlay.style.opacity = (0.45 - p * 0.25).toFixed(3);
+  heroBg.style.opacity      = (1 - p).toFixed(3);
+  const tx = p * (mobile ? 110 : 145);
+  h1a.style.transform = `translateX(-${tx}vw)`;
+  h1b.style.transform = `translateX(${tx}vw)`;
+  scrollArrow.style.opacity = Math.max(0, 1 - p * 4).toFixed(3);
+}
+applyHero(0);
+
+window.addEventListener('wheel', function(e) {
+  if (heroLocked) {
+    if (e.deltaY < 0 && window.scrollY <= 5) { heroLocked = false; e.preventDefault(); }
+    return;
+  }
+  e.preventDefault();
+  heroProgress = Math.min(Math.max(heroProgress + e.deltaY * 0.0009, 0), 1);
+  applyHero(heroProgress);
+  if (heroProgress >= 1) heroLocked = true;
+}, { passive: false });
+
+let tStartY = 0;
+window.addEventListener('touchstart', e => { tStartY = e.touches[0].clientY; }, { passive: true });
+window.addEventListener('touchmove', function(e) {
+  if (heroLocked) return;
+  e.preventDefault();
+  const dy = tStartY - e.touches[0].clientY;
+  heroProgress = Math.min(Math.max(heroProgress + dy * (dy < 0 ? 0.008 : 0.005), 0), 1);
+  applyHero(heroProgress);
+  if (heroProgress >= 1) heroLocked = true;
+  tStartY = e.touches[0].clientY;
+}, { passive: false });
+
+// =============================================
+// MENU TABS
+// =============================================
+document.querySelectorAll('.m-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// =============================================
+// SEARCH BAR — Action Search Bar component
+// =============================================
+const ALL_ITEMS = [
+  { name:'Bayerische Leberknödelsuppe',   cat:'Mittagessen',        tab:'mittagessen',  price:'9,50 €'  },
+  { name:'Schwabing Salat',               cat:'Mittagessen',        tab:'mittagessen',  price:'14,90 €' },
+  { name:'Vitello Tonnato',               cat:'Mittagessen',        tab:'mittagessen',  price:'16,90 €' },
+  { name:'Pasta des Tages',               cat:'Mittagessen',        tab:'mittagessen',  price:'13,50 €' },
+  { name:'Münchner Schnitzel',            cat:'Mittagessen',        tab:'mittagessen',  price:'24,90 €' },
+  { name:'Lachsforelle vom Grill',        cat:'Mittagessen',        tab:'mittagessen',  price:'22,90 €' },
+  { name:'Beef Tartare',                  cat:'Abendessen',         tab:'abendessen',   price:'19,90 €' },
+  { name:'Reitschule Steak',              cat:'Abendessen',         tab:'abendessen',   price:'38,90 €' },
+  { name:'Ente à l\'orange',             cat:'Abendessen',         tab:'abendessen',   price:'29,90 €' },
+  { name:'Wolfsbarsch gebraten',          cat:'Abendessen',         tab:'abendessen',   price:'27,50 €' },
+  { name:'Risotto al Tartufo',            cat:'Abendessen',         tab:'abendessen',   price:'24,50 €' },
+  { name:'Crème brûlée',                 cat:'Abendessen',         tab:'abendessen',   price:'8,90 €'  },
+  { name:'Klassisches Frühstück',         cat:'Frühstück & Brunch', tab:'fruehstueck',  price:'16,50 €' },
+  { name:'Reitschule Brunch',             cat:'Frühstück & Brunch', tab:'fruehstueck',  price:'34,00 €' },
+  { name:'Eggs Florentine',               cat:'Frühstück & Brunch', tab:'fruehstueck',  price:'14,50 €' },
+  { name:'Pancakes mit Ahornsirup',       cat:'Frühstück & Brunch', tab:'fruehstueck',  price:'13,90 €' },
+  { name:'Espresso',                      cat:'Getränke',           tab:'getraenke',    price:'2,80 €'  },
+  { name:'Cappuccino',                    cat:'Getränke',           tab:'getraenke',    price:'4,20 €'  },
+  { name:'Aperol Spritz',                 cat:'Getränke',           tab:'getraenke',    price:'9,50 €'  },
+  { name:'Weißbier',                      cat:'Getränke',           tab:'getraenke',    price:'5,20 €'  },
+  { name:'Hauswein Weiß / Rot',           cat:'Getränke',           tab:'getraenke',    price:'7,50 €'  },
+  { name:'Hugo',                          cat:'Getränke',           tab:'getraenke',    price:'9,50 €'  },
+];
+
+const searchEl    = document.getElementById('searchInput');
+const iconEl      = document.getElementById('searchIconSvg');
+const searchBlock = document.querySelector('.search-block');
+let dropdown      = null;
+let searchTimer   = null;
+
+function getOrCreate() {
+  if (!dropdown) { dropdown = document.createElement('div'); dropdown.className = 'search-dropdown'; searchBlock.appendChild(dropdown); }
+  return dropdown;
+}
+function removeDrop() { if (dropdown) { dropdown.remove(); dropdown = null; } }
+
+function renderDrop(q) {
+  const qn = q.trim().toLowerCase();
+  const res = qn
+    ? ALL_ITEMS.filter(i => i.name.toLowerCase().includes(qn) || i.cat.toLowerCase().includes(qn)).slice(0, 7)
+    : ALL_ITEMS.slice(0, 6);
+  const dd = getOrCreate();
+  if (!res.length) { dd.innerHTML = '<div class="sd-empty">Keine Ergebnisse</div>'; return; }
+  dd.innerHTML = res.map(r => `
+    <div class="sd-item" data-tab="${r.tab}">
+      <div><div class="sd-name">${r.name}</div><div class="sd-cat">${r.cat}</div></div>
+      <div class="sd-price">${r.price}</div>
+    </div>
+  `).join('') + '<div class="sd-hint"><span>Tippen zum Suchen</span><span>ESC schließen</span></div>';
+  dd.querySelectorAll('.sd-item').forEach(el => {
+    el.addEventListener('mousedown', () => {
+      const tab = el.dataset.tab;
+      document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+      const mt = document.querySelector(`.m-tab[data-tab="${tab}"]`);
+      if (mt) { mt.classList.add('active'); document.getElementById('panel-' + tab).classList.add('active'); }
+      searchEl.value = el.querySelector('.sd-name').textContent;
+      removeDrop();
+      document.getElementById('menu').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+}
+
+searchEl.addEventListener('focus', () => renderDrop(searchEl.value));
+searchEl.addEventListener('blur', () => setTimeout(removeDrop, 200));
+searchEl.addEventListener('keydown', e => { if (e.key === 'Escape') { removeDrop(); searchEl.blur(); } });
+searchEl.addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  iconEl.innerHTML = e.target.value.length
+    ? '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>'
+    : '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>';
+  searchTimer = setTimeout(() => renderDrop(e.target.value), 160);
+});
+
+// =============================================
+// TESTIMONIALS — TestimonialsColumn component
+// =============================================
+const TESTIMONIALS = [
+  { t:'Wunderschöne Lage direkt am Englischen Garten. Die Terrasse ist im Sommer ein absoluter Geheimtipp! Essen war hervorragend.', n:'Katharina W.', r:'München', img:'https://randomuser.me/api/portraits/women/34.jpg' },
+  { t:'Der Sonntagsbrunch ist phänomenal. Wir kommen seit Jahren und die Qualität ist konstant hoch. Sehr zu empfehlen!',             n:'Stefan M.',   r:'Stammgast', img:'https://randomuser.me/api/portraits/men/22.jpg'   },
+  { t:'Perfekt für unser Firmen-Event — die Orangerie war ein Traum. Service tadellos, Essen erstklassig. Absolut buchungswert!',    n:'Laura B.',    r:'Event-Kundin', img:'https://randomuser.me/api/portraits/women/58.jpg' },
+  { t:'Das Reitschule Steak ist das beste in München. Atmosphäre einmalig, Personal freundlich und zuvorkommend.',                    n:'Michael H.',  r:'Schwabing', img:'https://randomuser.me/api/portraits/men/44.jpg'   },
+  { t:'Schon seit meiner Kindheit liebe ich diesen Ort. Die Geschichte des Hauses ist spürbar — ein echtes Münchner Original.',       n:'Petra S.',    r:'Regulärgast', img:'https://randomuser.me/api/portraits/women/29.jpg' },
+  { t:'Mittags eine echte Oase. Die Leberknödelsuppe ist authentisch bayrisch und der Vitello Tonnato war fantastisch.',              n:'Jonas F.',    r:'München', img:'https://randomuser.me/api/portraits/men/36.jpg'   },
+  { t:'Top Lage, einladende Atmosphäre und eine Speisekarte die sowohl Klassiker als auch moderne Gerichte bietet. 5 Sterne!',       n:'Anna K.',     r:'Gastronomie-Fan', img:'https://randomuser.me/api/portraits/women/47.jpg' },
+  { t:'Eggs Florentine zum Brunch — besser als in London! Ruhige Sitzecke auf der Terrasse macht dieses Café unschlagbar.',          n:'David L.',    r:'München', img:'https://randomuser.me/api/portraits/men/63.jpg'   },
+  { t:'Haben hier unsere Hochzeitsfeier gehabt und alle Gäste waren begeistert. Catering und Service perfekt koordiniert.',          n:'Marie &amp; Tom', r:'Hochzeitspaar', img:'https://randomuser.me/api/portraits/women/16.jpg' },
+];
+
+function buildCards(items) {
+  return [...items, ...items].map(i => `
+    <div class="t-card">
+      <div class="t-stars">★★★★★</div>
+      <p class="t-text">${i.t}</p>
+      <div class="t-author">
+        <img class="t-avatar" src="${i.img}" alt="${i.n}" loading="lazy">
+        <div><div class="t-name">${i.n}</div><div class="t-role">${i.r}</div></div>
+      </div>
+    </div>
+  `).join('');
+}
+document.querySelector('#tcol1 .t-col-inner').innerHTML = buildCards(TESTIMONIALS.slice(0, 3));
+document.querySelector('#tcol2 .t-col-inner').innerHTML = buildCards(TESTIMONIALS.slice(3, 6));
+document.querySelector('#tcol3 .t-col-inner').innerHTML = buildCards(TESTIMONIALS.slice(6, 9));
+
+function updateCols() {
+  const w = window.innerWidth;
+  document.getElementById('tcol2').style.display = w >= 768  ? 'block' : 'none';
+  document.getElementById('tcol3').style.display = w >= 1100 ? 'block' : 'none';
+}
+updateCols();
+window.addEventListener('resize', updateCols, { passive: true });
+
+// =============================================
+// ACCORDION — shadcn Accordion component
+// =============================================
+document.querySelectorAll('.acc-trigger').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item   = btn.closest('.acc-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.acc-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+});
+
+// =============================================
+// FADE IN ON SCROLL
+// =============================================
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+}, { threshold: 0.08 });
+document.querySelectorAll('.fade-up').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
