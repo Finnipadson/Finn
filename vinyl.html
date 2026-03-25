@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GROOVEHAUS — Vinyl & Records</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0805;
+      --surface: #13100a;
+      --surface-2: #1e1810;
+      --border: #2e2418;
+      --cream: #f2e4c4;
+      --cream-dim: #c8b898;
+      --amber: #d4891c;
+      --amber-05: rgba(212,137,28,0.05);
+      --amber-10: rgba(212,137,28,0.10);
+      --amber-50: rgba(212,137,28,0.50);
+      --orange: #c43d1a;
+      --muted: #6b5840;
+      /* System tokens */
+      --section-pad: 6rem 3rem;
+      --body-size: 0.95rem;
+      --body-lh: 1.7;
+      --label-spacing: 0.25em;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.35;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 3rem;
+      background: linear-gradient(to bottom, rgba(10,8,5,0.97) 0%, transparent 100%);
+    }
+
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      color: var(--cream);
+      text-transform: uppercase;
+    }
+    .nav-logo span { color: var(--amber); }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--cream-dim);
+      text-decoration: none;
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--amber); }
+    .nav-cta {
+      background: var(--amber) !important;
+      color: var(--bg) !important;
+      padding: 0.5rem 1.25rem;
+      border-radius: 2px;
+      font-weight: 600 !important;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 6rem 3rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 200px;
+      background: linear-gradient(to bottom, transparent, var(--bg));
+      pointer-events: none;
+    }
+    .hero-bg-text {
+      position: absolute;
+      bottom: 8%;
+      left: -2%;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(6rem, 18vw, 20rem);
+      font-weight: 900;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(212, 137, 28, 0.07);
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .hero-content { position: relative; z-index: 2; }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      letter-spacing: var(--label-spacing);
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 1.5rem;
+    }
+    .hero-tag::before {
+      content: '';
+      display: block;
+      width: 2rem; height: 1px;
+      background: var(--amber);
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 5.5vw, 6rem);
+      font-weight: 900;
+      line-height: 1;
+      color: var(--cream);
+      margin-bottom: 1.5rem;
+    }
+    h1 em { font-style: italic; color: var(--amber); }
+
+    .hero-sub {
+      font-size: var(--body-size);
+      color: var(--cream-dim);
+      line-height: var(--body-lh);
+      max-width: 38ch;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn-primary {
+      background: var(--amber);
+      color: var(--bg);
+      border: none;
+      padding: 0.875rem 2rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      text-decoration: none;
+      display: inline-block;
+      border-radius: 2px;
+    }
+    .btn-primary:hover { background: var(--orange); transform: translateY(-1px); }
+
+    .btn-ghost {
+      color: var(--cream-dim);
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.3s;
+    }
+    .btn-ghost:hover { color: var(--cream); }
+    .btn-ghost::after { content: '→'; transition: transform 0.3s; }
+    .btn-ghost:hover::after { transform: translateX(4px); }
+
+    /* ── VINYL ── */
+    .hero-visual {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .vinyl-wrap {
+      position: relative;
+      width: clamp(300px, 40vw, 520px);
+      aspect-ratio: 1;
+    }
+
+    .vinyl-shadow {
+      position: absolute;
+      inset: 5%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 60%, rgba(212,137,28,0.2), transparent 70%);
+      filter: blur(40px);
+      animation: pulse 4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+
+    .vinyl-record {
+      width: 100%;
+      height: 100%;
+      animation: spin 20s linear infinite;
+      position: relative;
+      z-index: 2;
+      cursor: pointer;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .needle-arm {
+      position: absolute;
+      top: 4%;
+      right: 5%;
+      width: 32%;
+      z-index: 3;
+      transform-origin: 15% 10%;
+      transform: rotate(25deg);
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+    }
+
+    /* ── SECTION SHARED ── */
+    .section-header { text-align: center; margin-bottom: 4rem; }
+    .section-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      letter-spacing: var(--label-spacing);
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    h2 em { font-style: italic; color: var(--amber); }
+    .section-sub { font-size: var(--body-size); color: var(--cream-dim); margin-top: 1rem; }
+
+    /* ── RECORDS ── */
+    .records-section {
+      padding: var(--section-pad);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .records-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    .record-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.75rem;
+      cursor: pointer;
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  border-color 0.3s, box-shadow 0.35s;
+      position: relative;
+      overflow: hidden;
+    }
+    .record-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--amber-05) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .record-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--amber-50);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px var(--amber-10);
+    }
+    .record-card:hover::before { opacity: 1; }
+
+    .record-cover {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    }
+    /* Vinyl groove rings on cover */
+    .record-cover::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: repeating-radial-gradient(
+        circle at 50%,
+        transparent 0px,
+        transparent 6px,
+        rgba(0,0,0,0.15) 7px,
+        transparent 8px
+      );
+    }
+    .record-center {
+      position: absolute;
+      inset: 42%;
+      border-radius: 50%;
+      background: var(--bg);
+      z-index: 2;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
+    }
+
+    .cover-1 { background: conic-gradient(from 0deg, #8b1a1a 0%, #d4891c 30%, #2d1a4a 60%, #c43d1a 80%, #8b1a1a 100%); }
+    .cover-2 { background: conic-gradient(from 90deg, #0a3d2e, #1a6b4a, #d4891c, #5a2a0a, #0a3d2e); }
+    .cover-3 { background: conic-gradient(from 180deg, #1a0a3d, #5a1a8b, #8b3a1a, #d4441c, #1a0a3d); }
+    .cover-4 { background: conic-gradient(from 45deg, #0a2a3d, #1a5a8b, #3d8b6b, #1a3a5a, #0a2a3d); }
+    .cover-5 { background: conic-gradient(from 270deg, #3d1a0a, #8b4a1a, #d4891c, #5a3a0a, #3d1a0a); }
+    .cover-6 { background: conic-gradient(from 135deg, #111, #3a3a3a, #d4891c, #2a1a0a, #111); }
+
+    .record-info { position: relative; z-index: 1; }
+    .record-genre {
+      font-size: 0.65rem;
+      letter-spacing: var(--label-spacing);
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 0.4rem;
+    }
+    .record-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 0.25rem;
+    }
+    .record-artist { font-size: var(--body-size); color: var(--cream-dim); margin-bottom: 1rem; }
+    .record-footer { display: flex; align-items: center; justify-content: space-between; }
+    .record-price { font-size: 1.1rem; font-weight: 600; color: var(--cream); }
+    .record-price span { font-size: 0.75rem; color: var(--muted); font-weight: 300; margin-left: 0.25rem; }
+    .record-btn {
+      width: 2.25rem; height: 2.25rem;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--cream-dim);
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      line-height: 1;
+    }
+    .record-card:hover .record-btn {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: var(--bg);
+    }
+
+    /* ── WHY VINYL ── */
+    .why-section {
+      padding: var(--section-pad);
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+    .why-section::before {
+      content: '';
+      position: absolute;
+      top: -50%; right: -10%;
+      width: 60vw; height: 60vw;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(196,61,26,0.06), transparent 60%);
+      pointer-events: none;
+    }
+    .why-inner { max-width: 1400px; margin: 0 auto; }
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2rem;
+    }
+    .why-card {
+      position: relative;
+      padding: 2.5rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  border-color 0.3s, box-shadow 0.35s;
+    }
+    .why-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--amber-50);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px var(--amber-10);
+    }
+    .why-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 5rem;
+      font-weight: 900;
+      color: rgba(212,137,28,0.08);
+      line-height: 1;
+      position: absolute;
+      top: 1rem; right: 1.5rem;
+      user-select: none;
+    }
+    .why-icon { width: 3rem; height: 3rem; margin-bottom: 1.5rem; color: var(--amber); }
+    .why-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 1rem;
+    }
+    .why-text { font-size: var(--body-size); color: var(--cream-dim); line-height: var(--body-lh); }
+
+    /* ── NEWSLETTER ── */
+    .newsletter-section {
+      padding: var(--section-pad);
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+    .newsletter-content h2 { margin-bottom: 1rem; }
+    .newsletter-content p { color: var(--cream-dim); font-size: var(--body-size); line-height: var(--body-lh); max-width: 38ch; }
+
+    .newsletter-form { display: flex; flex-direction: column; gap: 1rem; }
+    .form-row { display: flex; }
+    .newsletter-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-right: none;
+      color: var(--cream);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+      padding: 0.875rem 1.25rem;
+      outline: none;
+      transition: border-color 0.3s;
+      border-radius: 2px 0 0 2px;
+    }
+    .newsletter-input::placeholder { color: var(--muted); }
+    .newsletter-input:focus { border-color: var(--amber); }
+    .newsletter-submit {
+      background: var(--amber);
+      color: var(--bg);
+      border: none;
+      padding: 0.875rem 1.75rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s;
+      border-radius: 0 2px 2px 0;
+      white-space: nowrap;
+    }
+    .newsletter-submit:hover { background: var(--orange); }
+    .form-note { font-size: 0.75rem; color: var(--muted); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+    .footer-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 4rem 3rem 2.5rem;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+    }
+    .footer-brand .nav-logo { display: block; margin-bottom: 1rem; }
+    .footer-brand p { font-size: 0.85rem; color: var(--muted); line-height: 1.7; max-width: 28ch; margin-bottom: 1.5rem; }
+    .social-links { display: flex; gap: 0.75rem; }
+    .social-link {
+      width: 2.25rem; height: 2.25rem;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .social-link:hover { border-color: var(--amber); color: var(--amber); }
+    .footer-col h4 { font-size: 0.7rem; letter-spacing: var(--label-spacing); text-transform: uppercase; color: var(--cream); margin-bottom: 1.25rem; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.65rem; }
+    .footer-col a { font-size: 0.85rem; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+    .footer-col a:hover { color: var(--cream-dim); }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .footer-bottom p { font-size: 0.75rem; color: var(--muted); }
+    .footer-bottom-links { display: flex; gap: 2rem; }
+    .footer-bottom-links a { font-size: 0.75rem; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+    .footer-bottom-links a:hover { color: var(--cream-dim); }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .records-grid { grid-template-columns: repeat(2, 1fr); }
+      .why-grid { grid-template-columns: 1fr 1fr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      nav { padding: 1.25rem 1.5rem; }
+      .nav-links { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 6rem 1.5rem 3rem; gap: 3rem; }
+      .hero-visual { order: -1; }
+      .vinyl-wrap { width: 70vw; max-width: 280px; }
+      .records-section { padding: 4rem 1.5rem; }
+      .records-grid { grid-template-columns: 1fr; }
+      .why-section { padding: 4rem 1.5rem; }
+      .why-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+      .newsletter-section { grid-template-columns: 1fr; gap: 2rem; padding: 4rem 1.5rem; }
+      .footer-inner { grid-template-columns: 1fr 1fr; padding: 3rem 1.5rem 2rem; gap: 2rem; }
+      .footer-brand { grid-column: 1 / -1; }
+      .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-logo">Groove<span>Haus</span></div>
+  <ul class="nav-links">
+    <li><a href="#records">Records</a></li>
+    <li><a href="#why">Why Vinyl</a></li>
+    <li><a href="#newsletter">Newsletter</a></li>
+    <li><a href="#" class="nav-cta">Shop Now</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg-text">VINYL</div>
+
+  <div class="hero-content">
+    <div class="hero-tag">Est. 1978 — Hamburg</div>
+    <h1>Pure<br><em>Analog.</em><br>Pure Sound.</h1>
+    <p class="hero-sub">
+      Entdecke handverlesene Schallplatten aus Jazz, Soul, Krautrock und darüber hinaus.
+      Jede Platte erzählt eine Geschichte — bereit zum Abspielen.
+    </p>
+    <div class="hero-actions">
+      <a href="#records" class="btn-primary">Kollektion entdecken</a>
+      <a href="#why" class="btn-ghost">Warum Vinyl</a>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="vinyl-wrap">
+      <div class="vinyl-shadow"></div>
+
+      <!-- Vinyl Record SVG -->
+      <svg class="vinyl-record" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="labelGrad" cx="40%" cy="35%">
+            <stop offset="0%" stop-color="#2a1c0a"/>
+            <stop offset="100%" stop-color="#120c04"/>
+          </radialGradient>
+          <radialGradient id="sheen" cx="35%" cy="30%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.04)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+        </defs>
+
+        <!-- Outer disc -->
+        <circle cx="200" cy="200" r="198" fill="#0d0c0b" stroke="#1c1a17" stroke-width="1.5"/>
+
+        <!-- Grooves -->
+        <circle cx="200" cy="200" r="188" fill="none" stroke="#191714" stroke-width="0.8"/>
+        <circle cx="200" cy="200" r="183" fill="none" stroke="#141210" stroke-width="1.2"/>
+        <circle cx="200" cy="200" r="177" fill="none" stroke="#1c1a17" stroke-width="0.6"/>
+        <circle cx="200" cy="200" r="171" fill="none" stroke="#111" stroke-width="1"/>
+        <circle cx="200" cy="200" r="165" fill="none" stroke="#191714" stroke-width="0.8"/>
+        <circle cx="200" cy="200" r="159" fill="none" stroke="#141210" stroke-width="1.2"/>
+        <circle cx="200" cy="200" r="153" fill="none" stroke="#1c1a17" stroke-width="0.6"/>
+        <circle cx="200" cy="200" r="147" fill="none" stroke="#111" stroke-width="1"/>
+        <circle cx="200" cy="200" r="141" fill="none" stroke="#191714" stroke-width="0.8"/>
+        <circle cx="200" cy="200" r="135" fill="none" stroke="#141210" stroke-width="1.2"/>
+        <circle cx="200" cy="200" r="129" fill="none" stroke="#1c1a17" stroke-width="0.6"/>
+        <circle cx="200" cy="200" r="123" fill="none" stroke="#111" stroke-width="1"/>
+        <circle cx="200" cy="200" r="117" fill="none" stroke="#191714" stroke-width="0.8"/>
+        <circle cx="200" cy="200" r="111" fill="none" stroke="#141210" stroke-width="1.2"/>
+        <circle cx="200" cy="200" r="105" fill="none" stroke="#1c1a17" stroke-width="0.6"/>
+        <circle cx="200" cy="200" r="99"  fill="none" stroke="#111" stroke-width="1"/>
+        <circle cx="200" cy="200" r="93"  fill="none" stroke="#191714" stroke-width="0.8"/>
+        <circle cx="200" cy="200" r="87"  fill="none" stroke="#141210" stroke-width="1.2"/>
+        <circle cx="200" cy="200" r="81"  fill="none" stroke="#1c1a17" stroke-width="0.6"/>
+        <circle cx="200" cy="200" r="75"  fill="none" stroke="#111" stroke-width="1"/>
+
+        <!-- Sheen overlay -->
+        <circle cx="200" cy="200" r="198" fill="url(#sheen)"/>
+
+        <!-- Light reflection arc -->
+        <path d="M 50 145 A 165 165 0 0 1 350 145" fill="none" stroke="rgba(255,255,255,0.025)" stroke-width="22"/>
+
+        <!-- Label area -->
+        <circle cx="200" cy="200" r="68" fill="#1c1209"/>
+        <circle cx="200" cy="200" r="66" fill="url(#labelGrad)"/>
+
+        <!-- Label rings -->
+        <circle cx="200" cy="200" r="65" fill="none" stroke="#d4891c" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="200" cy="200" r="60" fill="none" stroke="#d4891c" stroke-width="0.5" opacity="0.25"/>
+
+        <!-- Label text -->
+        <text x="200" y="187" text-anchor="middle" fill="#d4891c" font-size="6.5" letter-spacing="3" font-family="'Outfit', sans-serif" font-weight="600" opacity="0.9">GROOVE HAUS</text>
+        <text x="200" y="202" text-anchor="middle" fill="#f2e4c4" font-size="12" letter-spacing="1" font-family="Georgia, 'Playfair Display', serif" font-style="italic" font-weight="700">Analog</text>
+        <text x="200" y="216" text-anchor="middle" fill="#6b5840" font-size="6" letter-spacing="2.5" font-family="'Outfit', sans-serif">33 ⅓ RPM</text>
+
+        <!-- Spindle hole -->
+        <circle cx="200" cy="200" r="5.5" fill="#050403"/>
+        <circle cx="200" cy="200" r="3.5" fill="#0d0a07"/>
+      </svg>
+
+      <!-- Tonearm / Needle -->
+      <svg class="needle-arm" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+        <!-- Pivot base -->
+        <circle cx="14" cy="9" r="7" fill="#1a1612" stroke="#3d3028" stroke-width="1"/>
+        <circle cx="14" cy="9" r="3.5" fill="#d4891c" opacity="0.6"/>
+        <!-- Arm body -->
+        <line x1="14" y1="9" x2="58" y2="72" stroke="#2a2218" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="14" y1="9" x2="58" y2="72" stroke="#3d3028" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Headshell -->
+        <rect x="52" y="66" width="10" height="6" rx="1.5" fill="#1e1a14" stroke="#3d3028" stroke-width="0.8"/>
+        <!-- Stylus -->
+        <line x1="57" y1="72" x2="58" y2="79" stroke="#d4891c" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- Records Section -->
+<section id="records" class="records-section">
+  <div class="section-header reveal">
+    <div class="section-tag">Aktuelle Highlights</div>
+    <h2>Featured <em>Records</em></h2>
+    <p class="section-sub">Handverlesene Platten — frisch eingetroffen</p>
+  </div>
+
+  <div class="records-grid">
+    <div class="record-card reveal reveal-delay-1">
+      <div class="record-cover cover-1"><div class="record-center"></div></div>
+      <div class="record-info">
+        <div class="record-genre">Jazz / Soul</div>
+        <div class="record-title">Midnight Conversations</div>
+        <div class="record-artist">The Harlem Quartet</div>
+        <div class="record-footer">
+          <div class="record-price">€ 28,00 <span>LP</span></div>
+          <button class="record-btn">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="record-card reveal reveal-delay-2">
+      <div class="record-cover cover-2"><div class="record-center"></div></div>
+      <div class="record-info">
+        <div class="record-genre">Krautrock</div>
+        <div class="record-title">Elektrische Felder</div>
+        <div class="record-artist">Kosmische Reise</div>
+        <div class="record-footer">
+          <div class="record-price">€ 34,00 <span>LP</span></div>
+          <button class="record-btn">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="record-card reveal reveal-delay-3">
+      <div class="record-cover cover-3"><div class="record-center"></div></div>
+      <div class="record-info">
+        <div class="record-genre">Psychedelic Rock</div>
+        <div class="record-title">Purple Haze Revisited</div>
+        <div class="record-artist">Sunflower Electric</div>
+        <div class="record-footer">
+          <div class="record-price">€ 22,50 <span>LP</span></div>
+          <button class="record-btn">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="record-card reveal reveal-delay-1">
+      <div class="record-cover cover-4"><div class="record-center"></div></div>
+      <div class="record-info">
+        <div class="record-genre">Ambient / Electronic</div>
+        <div class="record-title">Tiefes Wasser</div>
+        <div class="record-artist">Klaus Bernhardt</div>
+        <div class="record-footer">
+          <div class="record-price">€ 31,00 <span>LP</span></div>
+          <button class="record-btn">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="record-card reveal reveal-delay-2">
+      <div class="record-cover cover-5"><div class="record-center"></div></div>
+      <div class="record-info">
+        <div class="record-genre">Blues / Gospel</div>
+        <div class="record-title">Southern Crossroads</div>
+        <div class="record-artist">Mama Ray & The Delta Five</div>
+        <div class="record-footer">
+          <div class="record-price">€ 19,00 <span>LP</span></div>
+          <button class="record-btn">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="record-card reveal reveal-delay-3">
+      <div class="record-cover cover-6"><div class="record-center"></div></div>
+      <div class="record-info">
+        <div class="record-genre">Classic Rock</div>
+        <div class="record-title">Iron Shadows</div>
+        <div class="record-artist">The Dark Valley Band</div>
+        <div class="record-footer">
+          <div class="record-price">€ 26,00 <span>LP</span></div>
+          <button class="record-btn">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Why Vinyl Section -->
+<section id="why" class="why-section">
+  <div class="why-inner">
+    <div class="section-header reveal">
+      <div class="section-tag">Das Original</div>
+      <h2>Warum <em>Vinyl?</em></h2>
+      <p class="section-sub">Drei Gründe, warum Schallplatten unschlagbar bleiben</p>
+    </div>
+
+    <div class="why-grid">
+      <div class="why-card reveal reveal-delay-1">
+        <div class="why-number">01</div>
+        <svg class="why-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="16" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="24" cy="24" r="10" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="24" cy="24" r="3" fill="currentColor"/>
+          <path d="M31 10l3-4M17 38l-3 4M38 17l4-3M10 31l-4 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div class="why-title">Warmer Klang</div>
+        <p class="why-text">
+          Analoge Aufnahmen erfassen das vollständige Klangspektrum ohne digitale Kompression.
+          Das Ergebnis ist ein warmer, lebendiger Sound, den kein Streaming-Dienst replizieren kann —
+          direkt von der Rille in dein Ohr.
+        </p>
+      </div>
+
+      <div class="why-card reveal reveal-delay-2">
+        <div class="why-number">02</div>
+        <svg class="why-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 40V20l12-12 12 12v20H28V30h-8v10H12z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M8 40h32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M21 14l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="why-title">Sammlerwert</div>
+        <p class="why-text">
+          Vinyl ist mehr als Musik — es ist ein Kunstobjekt. Erstpressungen, limitierte Editionen
+          und farbige Pressungen steigen im Wert. Eine gute Sammlung ist eine Investition
+          in Kultur und Geschichte.
+        </p>
+      </div>
+
+      <div class="why-card reveal reveal-delay-3">
+        <div class="why-number">03</div>
+        <svg class="why-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="32" height="32" rx="3" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16 20h16M16 26h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="33" cy="28" r="4" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16 14h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div class="why-title">Album-Artwork</div>
+        <p class="why-text">
+          Das großformatige Cover einer LP ist ein eigenständiges Kunstwerk. Liner Notes,
+          Fotografie, Design — das physische Erlebnis macht Musik greifbar und gibt ihr
+          Kontext und Tiefe.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Newsletter Section -->
+<section id="newsletter" class="newsletter-section">
+  <div class="newsletter-content reveal">
+    <div class="section-tag">Immer informiert</div>
+    <h2>Neue Platten,<br><em>kein Spam.</em></h2>
+    <p>
+      Einmal pro Woche: frische Ankünfte, seltene Funde und
+      exklusive Angebote für Newsletter-Abonnenten.
+      Keine Algorithmen — nur Musik, die zählt.
+    </p>
+  </div>
+
+  <div class="reveal reveal-delay-2">
+    <form class="newsletter-form" onsubmit="handleSubmit(event)">
+      <div class="form-row">
+        <input
+          type="email"
+          class="newsletter-input"
+          placeholder="deine@email.de"
+          required
+          id="email-input"
+        />
+        <button type="submit" class="newsletter-submit" id="submit-btn">Anmelden</button>
+      </div>
+      <p class="form-note">Kein Spam. Jederzeit abmeldbar. Datenschutz wird ernst genommen.</p>
+    </form>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="nav-logo">Groove<span>Haus</span></span>
+      <p>
+        Dein Anlaufpunkt für hochwertige Schallplatten in Hamburg.
+        Seit 1978 verbinden wir Musikliebhaber mit dem perfekten Klang.
+      </p>
+      <div class="social-links">
+        <a href="#" class="social-link" aria-label="Instagram">IG</a>
+        <a href="#" class="social-link" aria-label="Facebook">FB</a>
+        <a href="#" class="social-link" aria-label="Twitter">TW</a>
+        <a href="#" class="social-link" aria-label="Bandcamp">BC</a>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>Entdecken</h4>
+      <ul>
+        <li><a href="#">Neuankünfte</a></li>
+        <li><a href="#">Bestseller</a></li>
+        <li><a href="#">Jazz &amp; Soul</a></li>
+        <li><a href="#">Rock &amp; Pop</a></li>
+        <li><a href="#">Electronic</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Info</h4>
+      <ul>
+        <li><a href="#">Über uns</a></li>
+        <li><a href="#">Versand &amp; Rückgabe</a></li>
+        <li><a href="#">Plattenankauf</a></li>
+        <li><a href="#">Reparatur &amp; Pflege</a></li>
+        <li><a href="#">FAQ</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Kontakt</h4>
+      <ul>
+        <li><a href="#">Schanzenviertel 42, HH</a></li>
+        <li><a href="#">Di–Sa 11–19 Uhr</a></li>
+        <li><a href="#">hallo@groovehaus.de</a></li>
+        <li><a href="#">+49 40 123 456 78</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2026 GrooveHaus. Alle Rechte vorbehalten.</p>
+    <div class="footer-bottom-links">
+      <a href="#">Datenschutz</a>
+      <a href="#">Impressum</a>
+      <a href="#">AGB</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+  reveals.forEach(el => observer.observe(el));
+
+  // Newsletter submit
+  function handleSubmit(e) {
+    e.preventDefault();
+    const input = document.getElementById('email-input');
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = 'Danke!';
+    btn.style.background = '#2d6a3a';
+    input.value = '';
+    setTimeout(() => {
+      btn.textContent = 'Anmelden';
+      btn.style.background = '';
+    }, 3000);
+  }
+
+  // Vinyl hover pause
+  const vinyl = document.querySelector('.vinyl-record');
+  vinyl.addEventListener('mouseenter', () => vinyl.style.animationPlayState = 'paused');
+  vinyl.addEventListener('mouseleave', () => vinyl.style.animationPlayState = 'running');
+
+  // Record card add-to-cart feedback
+  document.querySelectorAll('.record-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const original = this.textContent;
+      this.textContent = '✓';
+      this.style.background = '#d4891c';
+      this.style.borderColor = '#d4891c';
+      this.style.color = '#0a0805';
+      setTimeout(() => {
+        this.textContent = original;
+        this.style.background = '';
+        this.style.borderColor = '';
+        this.style.color = '';
+      }, 1500);
+    });
+  });
+
+  // Trigger hero reveal on load
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.hero .reveal, .hero-content, .hero-visual').forEach(el => {
+      el.classList.add('visible');
+    });
+  });
+</script>
+
+</body>
+</html>
