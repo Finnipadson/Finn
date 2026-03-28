@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nokia Snake</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: radial-gradient(ellipse at center, #1a1d30 0%, #08080f 100%);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px 20px 60px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+/* ── PHONE BODY ── */
+.phone {
+  width: 344px;
+  background: linear-gradient(165deg, #2b3070 0%, #1c2158 30%, #161a48 70%, #111438 100%);
+  border-radius: 36px 36px 90px 90px / 36px 36px 130px 130px;
+  padding: 20px 18px 50px;
+  position: relative;
+  box-shadow:
+    inset 0 3px 5px rgba(255,255,255,0.18),
+    inset 2px 0 4px rgba(255,255,255,0.06),
+    inset -2px 0 4px rgba(0,0,0,0.3),
+    inset 0 -8px 20px rgba(0,0,0,0.5),
+    0 6px 0 #0e1030,
+    0 10px 0 #0a0c24,
+    0 14px 0 #060818,
+    0 40px 100px rgba(0,0,0,0.95);
+  user-select: none;
+}
+
+/* Antenna stub top-right */
+.phone::before {
+  content: '';
+  position: absolute;
+  top: -22px;
+  right: 38px;
+  width: 14px;
+  height: 24px;
+  background: linear-gradient(165deg, #2b3070, #161a48);
+  border-radius: 4px 4px 0 0;
+  box-shadow:
+    inset 1px 0 3px rgba(255,255,255,0.1),
+    0 -2px 0 #0a0c24;
+}
+
+/* Side seam line */
+.phone::after {
+  content: '';
+  position: absolute;
+  top: 36px;
+  bottom: 60px;
+  left: 8px;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%);
+  border-radius: 1px;
+}
+
+/* ── TOP DETAILS ── */
+.phone-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.speaker-grill {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.speaker-hole {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #0a0c1e;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.05);
+}
+
+.nokia-logo {
+  color: #4a5fbb;
+  font-family: Arial, sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+}
+
+/* ── SCREEN ── */
+.screen-bezel {
+  background: #06070f;
+  border-radius: 8px;
+  padding: 7px;
+  margin-bottom: 12px;
+  box-shadow:
+    inset 0 4px 12px rgba(0,0,0,0.95),
+    inset 0 1px 3px rgba(0,0,0,0.8),
+    0 1px 2px rgba(255,255,255,0.07);
+}
+
+.screen-lcd {
+  background: #9BBC0F;
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  /* LCD scan-line texture */
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(0,0,0,0.04) 1px,
+    rgba(0,0,0,0.04) 2px
+  );
+}
+
+.screen-lcd::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 20%, rgba(255,255,220,0.12) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+#c {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── SOFT KEYS ── */
+.soft-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 6px;
+  margin-bottom: 10px;
+}
+
+.soft-key {
+  background: linear-gradient(180deg, #2e3580 0%, #1e2460 60%, #161c50 100%);
+  border: none;
+  border-radius: 6px;
+  color: #6a7dcc;
+  font-size: 5.5px;
+  font-family: 'Press Start 2P', monospace;
+  padding: 8px 0;
+  width: 78px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.12),
+    0 4px 0 #0e1040,
+    0 5px 8px rgba(0,0,0,0.5);
+  transition: transform 0.06s, box-shadow 0.06s;
+  letter-spacing: 0.5px;
+}
+.soft-key:active {
+  transform: translateY(3px);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.12), 0 1px 0 #0e1040;
+}
+
+/* ── D-PAD ── */
+.dpad-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.dpad {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+
+.dp {
+  position: absolute;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5a6fcc;
+  font-size: 9px;
+  transition: transform 0.06s;
+  background: linear-gradient(180deg, #2e3580 0%, #1e2460 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.1),
+    0 3px 0 #0e1040,
+    0 4px 6px rgba(0,0,0,0.4);
+}
+.dp:active { transform: translateY(2px); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 1px 0 #0e1040; }
+
+.dp-up    { top:0;  left:32px; width:32px; height:32px; border-radius:6px 6px 0 0; }
+.dp-down  { bottom:0; left:32px; width:32px; height:32px; border-radius:0 0 6px 6px; }
+.dp-left  { top:32px; left:0; width:32px; height:32px; border-radius:6px 0 0 6px; }
+.dp-right { top:32px; right:0; width:32px; height:32px; border-radius:0 6px 6px 0; }
+.dp-ctr   {
+  top:32px; left:32px; width:32px; height:32px;
+  background: linear-gradient(135deg, #363d90 0%, #1a2060 100%);
+  border-radius: 2px;
+  cursor: default;
+}
+
+/* ── NUMBER PAD ── */
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  padding: 0 6px;
+  margin-bottom: 8px;
+}
+
+.n {
+  background: linear-gradient(180deg, #2e3580 0%, #1e2460 60%, #161c50 100%);
+  border: none;
+  border-radius: 5px;
+  color: #6a7dcc;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 8px 0 5px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.1),
+    0 3px 0 #0e1040,
+    0 4px 6px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: transform 0.06s, box-shadow 0.06s;
+}
+.n:active { transform: translateY(2px); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 1px 0 #0e1040; }
+.n sub { font-size: 4px; color: #4a5aaa; display: block; }
+
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 7px;
+  padding: 0 6px;
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- Top: Speaker + Logo -->
+  <div class="phone-top">
+    <div class="speaker-grill">
+      <div class="speaker-hole"></div>
+      <div class="speaker-hole"></div>
+      <div class="speaker-hole"></div>
+      <div class="speaker-hole"></div>
+      <div class="speaker-hole"></div>
+      <div class="speaker-hole"></div>
+    </div>
+    <div class="nokia-logo">Nokia</div>
+  </div>
+
+  <!-- LCD Screen -->
+  <div class="screen-bezel">
+    <div class="screen-lcd">
+      <canvas id="c" width="288" height="224"></canvas>
+    </div>
+  </div>
+
+  <!-- Soft Keys -->
+  <div class="soft-row">
+    <button class="soft-key" id="btnMenu">Menu</button>
+    <button class="soft-key" id="btnBack">Back</button>
+  </div>
+
+  <!-- D-Pad -->
+  <div class="dpad-wrap">
+    <div class="dpad">
+      <button class="dp dp-up"    id="btnUp">▲</button>
+      <button class="dp dp-left"  id="btnLeft">◄</button>
+      <button class="dp dp-ctr"></button>
+      <button class="dp dp-right" id="btnRight">►</button>
+      <button class="dp dp-down"  id="btnDown">▼</button>
+    </div>
+  </div>
+
+  <!-- Number Pad -->
+  <div class="numpad">
+    <button class="n">1<sub>·</sub></button>
+    <button class="n">2<sub>abc</sub></button>
+    <button class="n">3<sub>def</sub></button>
+    <button class="n">4<sub>ghi</sub></button>
+    <button class="n">5<sub>jkl</sub></button>
+    <button class="n">6<sub>mno</sub></button>
+    <button class="n">7<sub>pqrs</sub></button>
+    <button class="n">8<sub>tuv</sub></button>
+    <button class="n">9<sub>wxyz</sub></button>
+  </div>
+  <div class="bottom-row">
+    <button class="n">*</button>
+    <button class="n">0<sub>+</sub></button>
+    <button class="n">#</button>
+  </div>
+
+</div><!-- /.phone -->
+
+<script>
+// ═══════════════════════════════════════════════
+//  NOKIA SNAKE  —  1:1 Nokia 3310 recreation
+//  Grid: 18×12 (matches 84×48px Nokia screen ratio)
+//  Colors: authentic Nokia LCD 4-shade palette
+// ═══════════════════════════════════════════════
+
+const COLS   = 18;
+const ROWS   = 12;
+const CELL   = 16;
+const SCR_H  = 32;  // score bar height in px
+// Canvas: 288 × 224  (288 = 18×16, 224 = 32 + 12×16)
+
+const LCD = {
+  OFF:    '#9BBC0F',   // LCD unlit (bg)
+  LIGHT:  '#8BAC0F',   // subtle grid tint
+  MID:    '#306230',   // mid shade
+  DARK:   '#0F380F',   // darkest / snake / text
+};
+
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+
+// ── AUDIO ──────────────────────────────────────
+let AC = null;
+function initAudio() { if (!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); }
+
+function tone(freq, dur, type = 'square', vol = 0.25) {
+  if (!AC) return;
+  const o = AC.createOscillator();
+  const g = AC.createGain();
+  o.connect(g); g.connect(AC.destination);
+  o.type = type;
+  o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur);
+  o.start(AC.currentTime);
+  o.stop(AC.currentTime + dur);
+}
+
+function sfxEat() {
+  tone(880,  0.06);
+  setTimeout(() => tone(1320, 0.08), 55);
+}
+
+function sfxDie() {
+  tone(330, 0.12, 'sawtooth', 0.3);
+  setTimeout(() => tone(220, 0.15, 'sawtooth', 0.3), 110);
+  setTimeout(() => tone(110, 0.25, 'sawtooth', 0.25), 220);
+}
+
+// ── STATE ──────────────────────────────────────
+let snake, dir, nextDir, food, score, gameState, speed, gameLoop, blinkLoop;
+let hiScore = parseInt(localStorage.getItem('nokiaSnakeHi')) || 0;
+// gameState: 'menu' | 'playing' | 'paused' | 'over'
+
+function initGame() {
+  // Start snake in middle, length 3, moving right
+  snake = [
+    { x: 10, y: 6 },
+    { x:  9, y: 6 },
+    { x:  8, y: 6 },
+  ];
+  dir     = { x: 1, y: 0 };
+  nextDir = { x: 1, y: 0 };
+  score   = 0;
+  speed   = 150;
+  spawnFood();
+  gameState = 'playing';
+  clearInterval(gameLoop);
+  gameLoop = setInterval(tick, speed);
+}
+
+function spawnFood() {
+  const free = [];
+  for (let x = 0; x < COLS; x++)
+    for (let y = 0; y < ROWS; y++)
+      if (!snake.some(s => s.x === x && s.y === y))
+        free.push({ x, y });
+  food = free[Math.floor(Math.random() * free.length)];
+}
+
+function updateSpeed(s) {
+  speed = s;
+  clearInterval(gameLoop);
+  gameLoop = setInterval(tick, speed);
+}
+
+// ── GAME LOOP ──────────────────────────────────
+function tick() {
+  if (gameState !== 'playing') return;
+
+  dir = nextDir;
+  const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+  // Wall collision → die
+  if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+    return gameover();
+  }
+  // Self collision → die
+  if (snake.some(s => s.x === head.x && s.y === head.y)) {
+    return gameover();
+  }
+
+  snake.unshift(head);
+
+  if (head.x === food.x && head.y === food.y) {
+    score++;
+    sfxEat();
+    if (score % 5 === 0)
+      updateSpeed(Math.max(60, speed - 10));
+    spawnFood();
+  } else {
+    snake.pop();
+  }
+
+  draw();
+}
+
+function gameover() {
+  clearInterval(gameLoop);
+  sfxDie();
+  if (score > hiScore) {
+    hiScore = score;
+    localStorage.setItem('nokiaSnakeHi', hiScore);
+  }
+  gameState = 'over';
+  draw();
+  // Blink loop for "press any key"
+  clearInterval(blinkLoop);
+  blinkLoop = setInterval(draw, 500);
+}
+
+// ── DRAWING ────────────────────────────────────
+function draw() {
+  ctx.fillStyle = LCD.OFF;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if      (gameState === 'menu')                  drawMenu();
+  else if (gameState === 'playing' ||
+           gameState === 'paused')                drawGame();
+  else if (gameState === 'over')                  drawGameOver();
+}
+
+// Score bar (top 32 px)
+function drawScoreBar() {
+  // Separator line
+  ctx.fillStyle = LCD.DARK;
+  ctx.fillRect(0, 0, canvas.width, 2);
+  ctx.fillRect(0, SCR_H - 2, canvas.width, 2);
+
+  ctx.font = "7px 'Press Start 2P'";
+  ctx.fillStyle = LCD.DARK;
+
+  // Left: score
+  ctx.fillText('SC:' + score, 4, 15);
+
+  // Center: level
+  const lv  = Math.floor((150 - speed) / 10) + 1;
+  const lvT = 'LV:' + lv;
+  const lvW = ctx.measureText(lvT).width;
+  ctx.fillText(lvT, canvas.width / 2 - lvW / 2, 15);
+
+  // Right: hi-score
+  const hiT = 'HI:' + hiScore;
+  const hiW = ctx.measureText(hiT).width;
+  ctx.fillText(hiT, canvas.width - hiW - 4, 15);
+}
+
+// Subtle grid
+function drawGrid() {
+  ctx.fillStyle = LCD.LIGHT;
+  for (let x = 0; x <= COLS; x++)
+    for (let y = 0; y <= ROWS; y++)
+      ctx.fillRect(x * CELL, SCR_H + y * CELL, 1, 1);
+}
+
+// Snake segments
+function drawSnake() {
+  for (let i = 0; i < snake.length; i++) {
+    const { x, y } = snake[i];
+    const px = x * CELL;
+    const py = SCR_H + y * CELL;
+
+    ctx.fillStyle = LCD.DARK;
+    ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
+
+    if (i === 0) {
+      // Head — add eyes
+      ctx.fillStyle = LCD.OFF;
+      const d = dir;
+      if      (d.x ===  1) { ctx.fillRect(px+CELL-5, py+3, 2, 2); ctx.fillRect(px+CELL-5, py+CELL-5, 2, 2); }
+      else if (d.x === -1) { ctx.fillRect(px+3,      py+3, 2, 2); ctx.fillRect(px+3,      py+CELL-5, 2, 2); }
+      else if (d.y === -1) { ctx.fillRect(px+3,      py+3, 2, 2); ctx.fillRect(px+CELL-5, py+3,      2, 2); }
+      else                 { ctx.fillRect(px+3, py+CELL-5, 2, 2); ctx.fillRect(px+CELL-5, py+CELL-5, 2, 2); }
+    } else {
+      // Body — inner lighter square for depth
+      ctx.fillStyle = LCD.MID;
+      ctx.fillRect(px + 3, py + 3, CELL - 6, CELL - 6);
+    }
+  }
+}
+
+// Food — Nokia-style cross/plus
+function drawFood() {
+  const px = food.x * CELL;
+  const py = SCR_H + food.y * CELL;
+  ctx.fillStyle = LCD.DARK;
+  // Center block
+  ctx.fillRect(px + 5, py + 5, 6, 6);
+  // Cross arms
+  ctx.fillRect(px + 7, py + 2, 2, 3);   // top
+  ctx.fillRect(px + 7, py + 11, 2, 3);  // bottom
+  ctx.fillRect(px + 2, py + 7, 3, 2);   // left
+  ctx.fillRect(px + 11, py + 7, 3, 2);  // right
+}
+
+// ── SCREENS ────────────────────────────────────
+function blink() {
+  return Math.floor(Date.now() / 600) % 2 === 0;
+}
+
+function drawMenu() {
+  ctx.fillStyle = LCD.DARK;
+
+  // Title
+  ctx.font = "16px 'Press Start 2P'";
+  const tw = ctx.measureText('SNAKE').width;
+  ctx.fillText('SNAKE', canvas.width / 2 - tw / 2, 46);
+
+  // Small Nokia decorative snake
+  const demo = [{x:4,y:5},{x:5,y:5},{x:6,y:5},{x:6,y:6},{x:6,y:7}];
+  for (const s of demo) {
+    ctx.fillRect(s.x * CELL + 1, SCR_H + s.y * CELL + 1, CELL - 2, CELL - 2);
+  }
+  // Demo food
+  const fx = 11 * CELL, fy = SCR_H + 6 * CELL;
+  ctx.fillRect(fx+5, fy+5, 6, 6);
+  ctx.fillRect(fx+7, fy+2, 2, 3); ctx.fillRect(fx+7, fy+11, 2, 3);
+  ctx.fillRect(fx+2, fy+7, 3, 2); ctx.fillRect(fx+11, fy+7, 3, 2);
+
+  ctx.font = "6px 'Press Start 2P'";
+  const ht = 'HI: ' + hiScore;
+  const hw = ctx.measureText(ht).width;
+  ctx.fillText(ht, canvas.width / 2 - hw / 2, 112);
+
+  if (blink()) {
+    const pt = 'PRESS ANY KEY';
+    const pw = ctx.measureText(pt).width;
+    ctx.fillText(pt, canvas.width / 2 - pw / 2, 134);
+  }
+}
+
+function drawGame() {
+  drawScoreBar();
+  drawGrid();
+  drawFood();
+  drawSnake();
+
+  if (gameState === 'paused') {
+    ctx.fillStyle = 'rgba(155,188,15,0.75)';
+    ctx.fillRect(0, SCR_H, canvas.width, canvas.height - SCR_H);
+    ctx.fillStyle = LCD.DARK;
+    ctx.font = "8px 'Press Start 2P'";
+    const pt = 'PAUSED';
+    const pw = ctx.measureText(pt).width;
+    ctx.fillText(pt, canvas.width / 2 - pw / 2, SCR_H + ROWS * CELL / 2 + 4);
+    ctx.font = "5px 'Press Start 2P'";
+    const rt = 'SPACE TO CONTINUE';
+    const rw = ctx.measureText(rt).width;
+    ctx.fillText(rt, canvas.width / 2 - rw / 2, SCR_H + ROWS * CELL / 2 + 18);
+  }
+}
+
+function drawGameOver() {
+  drawScoreBar();
+
+  ctx.fillStyle = LCD.DARK;
+
+  ctx.font = "8px 'Press Start 2P'";
+  const gt = 'GAME OVER';
+  const gw = ctx.measureText(gt).width;
+  ctx.fillText(gt, canvas.width / 2 - gw / 2, SCR_H + 44);
+
+  ctx.font = "6px 'Press Start 2P'";
+  const st = 'SCORE: ' + score;
+  const sw = ctx.measureText(st).width;
+  ctx.fillText(st, canvas.width / 2 - sw / 2, SCR_H + 66);
+
+  if (score > 0 && score === hiScore) {
+    const nt = 'NEW RECORD!';
+    const nw = ctx.measureText(nt).width;
+    ctx.fillText(nt, canvas.width / 2 - nw / 2, SCR_H + 84);
+  }
+
+  if (blink()) {
+    const bt = 'PRESS ANY KEY';
+    const bw = ctx.measureText(bt).width;
+    ctx.fillText(bt, canvas.width / 2 - bw / 2, SCR_H + 108);
+  }
+}
+
+// ── INPUT ──────────────────────────────────────
+function handleInput(dx, dy) {
+  initAudio();
+
+  if (gameState === 'menu') {
+    initGame(); return;
+  }
+  if (gameState === 'over') {
+    clearInterval(blinkLoop);
+    gameState = 'menu';
+    clearInterval(gameLoop);
+    draw(); return;
+  }
+  if (gameState === 'paused') return;
+
+  // Prevent 180° reversal
+  if (dx !== 0 && dir.x === -dx) return;
+  if (dy !== 0 && dir.y === -dy) return;
+  nextDir = { x: dx, y: dy };
+}
+
+function handleSpace() {
+  initAudio();
+  if (gameState === 'playing') {
+    gameState = 'paused'; draw();
+  } else if (gameState === 'paused') {
+    gameState = 'playing';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  switch (e.key) {
+    case 'ArrowUp':    case 'w': case 'W': handleInput( 0, -1); e.preventDefault(); break;
+    case 'ArrowDown':  case 's': case 'S': handleInput( 0,  1); e.preventDefault(); break;
+    case 'ArrowLeft':  case 'a': case 'A': handleInput(-1,  0); e.preventDefault(); break;
+    case 'ArrowRight': case 'd': case 'D': handleInput( 1,  0); e.preventDefault(); break;
+    case ' ':                               handleSpace();        e.preventDefault(); break;
+    default:
+      if (gameState === 'menu' || gameState === 'over') handleInput(0, 0);
+  }
+});
+
+// D-Pad buttons
+document.getElementById('btnUp')   ?.addEventListener('click', () => handleInput( 0, -1));
+document.getElementById('btnDown') ?.addEventListener('click', () => handleInput( 0,  1));
+document.getElementById('btnLeft') ?.addEventListener('click', () => handleInput(-1,  0));
+document.getElementById('btnRight')?.addEventListener('click', () => handleInput( 1,  0));
+
+document.getElementById('btnMenu')?.addEventListener('click', () => {
+  initAudio();
+  handleSpace();
+});
+document.getElementById('btnBack')?.addEventListener('click', () => {
+  initAudio();
+  if (gameState === 'playing' || gameState === 'paused') {
+    clearInterval(gameLoop);
+    clearInterval(blinkLoop);
+    gameState = 'menu';
+    draw();
+  }
+});
+
+// ── BOOT ──────────────────────────────────────
+gameState = 'menu';
+draw();
+// Menu blink animation
+clearInterval(blinkLoop);
+blinkLoop = setInterval(() => {
+  if (gameState === 'menu') draw();
+}, 500);
+</script>
+</body>
+</html>
