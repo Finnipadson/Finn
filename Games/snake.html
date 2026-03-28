@@ -8,11 +8,37 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* ── CSS THEME VARIABLES (Classic default) ── */
+:root {
+  --phone-grad-1: #2b3070;
+  --phone-grad-2: #1c2158;
+  --phone-grad-3: #161a48;
+  --phone-grad-4: #111438;
+  --phone-shadow-1: #0e1030;
+  --phone-shadow-2: #0a0c24;
+  --phone-shadow-3: #060818;
+  --btn-grad-1: #2e3580;
+  --btn-grad-2: #1e2460;
+  --btn-grad-3: #161c50;
+  --btn-shadow: #0e1040;
+  --btn-text: #6a7dcc;
+  --sub-text: #4a5aaa;
+  --dpad-text: #5a6fcc;
+  --dpad-ctr-1: #363d90;
+  --dpad-ctr-2: #1a2060;
+  --nokia-logo: #4a5fbb;
+  --speaker-hole: #0a0c1e;
+  --lcd-bg: #9BBC0F;
+  --lcd-scanline: rgba(0,0,0,0.04);
+  --lcd-shine: rgba(255,255,220,0.12);
+}
+
 body {
   background: radial-gradient(ellipse at center, #1a1d30 0%, #08080f 100%);
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
   min-height: 100vh;
   padding: 40px 20px 60px;
   font-family: 'Press Start 2P', monospace;
@@ -21,7 +47,11 @@ body {
 /* ── PHONE BODY ── */
 .phone {
   width: 344px;
-  background: linear-gradient(165deg, #2b3070 0%, #1c2158 30%, #161a48 70%, #111438 100%);
+  background: linear-gradient(165deg,
+    var(--phone-grad-1) 0%,
+    var(--phone-grad-2) 30%,
+    var(--phone-grad-3) 70%,
+    var(--phone-grad-4) 100%);
   border-radius: 36px 36px 90px 90px / 36px 36px 130px 130px;
   padding: 20px 18px 50px;
   position: relative;
@@ -30,11 +60,12 @@ body {
     inset 2px 0 4px rgba(255,255,255,0.06),
     inset -2px 0 4px rgba(0,0,0,0.3),
     inset 0 -8px 20px rgba(0,0,0,0.5),
-    0 6px 0 #0e1030,
-    0 10px 0 #0a0c24,
-    0 14px 0 #060818,
+    0 6px 0 var(--phone-shadow-1),
+    0 10px 0 var(--phone-shadow-2),
+    0 14px 0 var(--phone-shadow-3),
     0 40px 100px rgba(0,0,0,0.95);
   user-select: none;
+  transition: background 0.3s, box-shadow 0.3s;
 }
 
 /* Antenna stub top-right */
@@ -45,11 +76,12 @@ body {
   right: 38px;
   width: 14px;
   height: 24px;
-  background: linear-gradient(165deg, #2b3070, #161a48);
+  background: linear-gradient(165deg, var(--phone-grad-1), var(--phone-grad-3));
   border-radius: 4px 4px 0 0;
   box-shadow:
     inset 1px 0 3px rgba(255,255,255,0.1),
-    0 -2px 0 #0a0c24;
+    0 -2px 0 var(--phone-shadow-2);
+  transition: background 0.3s;
 }
 
 /* Side seam line */
@@ -83,17 +115,19 @@ body {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #0a0c1e;
+  background: var(--speaker-hole);
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.05);
+  transition: background 0.3s;
 }
 
 .nokia-logo {
-  color: #4a5fbb;
+  color: var(--nokia-logo);
   font-family: Arial, sans-serif;
   font-weight: 900;
   font-size: 13px;
   letter-spacing: 5px;
   text-transform: uppercase;
+  transition: color 0.3s;
 }
 
 /* ── SCREEN ── */
@@ -109,27 +143,27 @@ body {
 }
 
 .screen-lcd {
-  background: #9BBC0F;
+  background: var(--lcd-bg);
   border-radius: 3px;
   overflow: hidden;
   display: flex;
   justify-content: center;
   position: relative;
-  /* LCD scan-line texture */
   background-image: repeating-linear-gradient(
     0deg,
     transparent,
     transparent 1px,
-    rgba(0,0,0,0.04) 1px,
-    rgba(0,0,0,0.04) 2px
+    var(--lcd-scanline) 1px,
+    var(--lcd-scanline) 2px
   );
+  transition: background-color 0.3s;
 }
 
 .screen-lcd::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 30% 20%, rgba(255,255,220,0.12) 0%, transparent 60%);
+  background: radial-gradient(ellipse at 30% 20%, var(--lcd-shine) 0%, transparent 60%);
   pointer-events: none;
   z-index: 2;
 }
@@ -152,10 +186,10 @@ body {
 }
 
 .soft-key {
-  background: linear-gradient(180deg, #2e3580 0%, #1e2460 60%, #161c50 100%);
+  background: linear-gradient(180deg, var(--btn-grad-1) 0%, var(--btn-grad-2) 60%, var(--btn-grad-3) 100%);
   border: none;
   border-radius: 6px;
-  color: #6a7dcc;
+  color: var(--btn-text);
   font-size: 5.5px;
   font-family: 'Press Start 2P', monospace;
   padding: 8px 0;
@@ -163,14 +197,14 @@ body {
   cursor: pointer;
   box-shadow:
     inset 0 1px 2px rgba(255,255,255,0.12),
-    0 4px 0 #0e1040,
+    0 4px 0 var(--btn-shadow),
     0 5px 8px rgba(0,0,0,0.5);
-  transition: transform 0.06s, box-shadow 0.06s;
+  transition: transform 0.06s, box-shadow 0.06s, background 0.3s, color 0.3s;
   letter-spacing: 0.5px;
 }
 .soft-key:active {
   transform: translateY(3px);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,0.12), 0 1px 0 #0e1040;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.12), 0 1px 0 var(--btn-shadow);
 }
 
 /* ── D-PAD ── */
@@ -193,16 +227,16 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5a6fcc;
+  color: var(--dpad-text);
   font-size: 9px;
-  transition: transform 0.06s;
-  background: linear-gradient(180deg, #2e3580 0%, #1e2460 100%);
+  transition: transform 0.06s, background 0.3s, color 0.3s;
+  background: linear-gradient(180deg, var(--btn-grad-1) 0%, var(--btn-grad-2) 100%);
   box-shadow:
     inset 0 1px 2px rgba(255,255,255,0.1),
-    0 3px 0 #0e1040,
+    0 3px 0 var(--btn-shadow),
     0 4px 6px rgba(0,0,0,0.4);
 }
-.dp:active { transform: translateY(2px); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 1px 0 #0e1040; }
+.dp:active { transform: translateY(2px); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 1px 0 var(--btn-shadow); }
 
 .dp-up    { top:0;  left:32px; width:32px; height:32px; border-radius:6px 6px 0 0; }
 .dp-down  { bottom:0; left:32px; width:32px; height:32px; border-radius:0 0 6px 6px; }
@@ -210,9 +244,10 @@ body {
 .dp-right { top:32px; right:0; width:32px; height:32px; border-radius:0 6px 6px 0; }
 .dp-ctr   {
   top:32px; left:32px; width:32px; height:32px;
-  background: linear-gradient(135deg, #363d90 0%, #1a2060 100%);
+  background: linear-gradient(135deg, var(--dpad-ctr-1) 0%, var(--dpad-ctr-2) 100%);
   border-radius: 2px;
   cursor: default;
+  transition: background 0.3s;
 }
 
 /* ── NUMBER PAD ── */
@@ -225,32 +260,61 @@ body {
 }
 
 .n {
-  background: linear-gradient(180deg, #2e3580 0%, #1e2460 60%, #161c50 100%);
+  background: linear-gradient(180deg, var(--btn-grad-1) 0%, var(--btn-grad-2) 60%, var(--btn-grad-3) 100%);
   border: none;
   border-radius: 5px;
-  color: #6a7dcc;
+  color: var(--btn-text);
   font-family: 'Press Start 2P', monospace;
   font-size: 8px;
   padding: 8px 0 5px;
   cursor: pointer;
   box-shadow:
     inset 0 1px 2px rgba(255,255,255,0.1),
-    0 3px 0 #0e1040,
+    0 3px 0 var(--btn-shadow),
     0 4px 6px rgba(0,0,0,0.4);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  transition: transform 0.06s, box-shadow 0.06s;
+  transition: transform 0.06s, box-shadow 0.06s, background 0.3s, color 0.3s;
 }
-.n:active { transform: translateY(2px); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 1px 0 #0e1040; }
-.n sub { font-size: 4px; color: #4a5aaa; display: block; }
+.n:active { transform: translateY(2px); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 1px 0 var(--btn-shadow); }
+.n sub { font-size: 4px; color: var(--sub-text); display: block; transition: color 0.3s; }
 
 .bottom-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 7px;
   padding: 0 6px;
+}
+
+/* ── THEME SWATCHES ── */
+.theme-bar {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 22px;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.swatch:hover {
+  transform: scale(1.25);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.swatch.active {
+  border-color: rgba(255,255,255,0.75);
+  transform: scale(1.18);
+  box-shadow: 0 0 10px rgba(255,255,255,0.2), 0 4px 12px rgba(0,0,0,0.6);
 }
 </style>
 </head>
@@ -315,11 +379,20 @@ body {
 
 </div><!-- /.phone -->
 
+<!-- Theme Swatches -->
+<div class="theme-bar">
+  <div class="swatch active" data-theme="classic" style="background:#1c2158" title="Classic"></div>
+  <div class="swatch"        data-theme="stealth" style="background:#1c1c1c" title="Stealth"></div>
+  <div class="swatch"        data-theme="banana"  style="background:#b88e00" title="Banana"></div>
+  <div class="swatch"        data-theme="ice"     style="background:#90a4ae" title="Ice"></div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════
 //  NOKIA SNAKE  —  1:1 Nokia 3310 recreation
 //  Grid: 18×12 (matches 84×48px Nokia screen ratio)
 //  Colors: authentic Nokia LCD 4-shade palette
+//  Themes: Classic / Stealth / Banana / Ice
 // ═══════════════════════════════════════════════
 
 const COLS   = 18;
@@ -329,18 +402,87 @@ const SCR_H  = 32;  // score bar height in px
 // Canvas: 288 × 224  (288 = 18×16, 224 = 32 + 12×16)
 
 const LCD = {
-  OFF:    '#9BBC0F',   // LCD unlit (bg)
-  LIGHT:  '#8BAC0F',   // subtle grid tint
-  MID:    '#306230',   // mid shade
-  DARK:   '#0F380F',   // darkest / snake / text
+  OFF:    '#9BBC0F',
+  LIGHT:  '#8BAC0F',
+  MID:    '#306230',
+  DARK:   '#0F380F',
 };
 
 const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
 
+// ── THEMES ────────────────────────────────────
+const THEMES = {
+  classic: {
+    '--phone-grad-1': '#2b3070', '--phone-grad-2': '#1c2158',
+    '--phone-grad-3': '#161a48', '--phone-grad-4': '#111438',
+    '--phone-shadow-1': '#0e1030', '--phone-shadow-2': '#0a0c24', '--phone-shadow-3': '#060818',
+    '--btn-grad-1': '#2e3580', '--btn-grad-2': '#1e2460', '--btn-grad-3': '#161c50',
+    '--btn-shadow': '#0e1040', '--btn-text': '#6a7dcc', '--sub-text': '#4a5aaa',
+    '--dpad-text': '#5a6fcc', '--dpad-ctr-1': '#363d90', '--dpad-ctr-2': '#1a2060',
+    '--nokia-logo': '#4a5fbb', '--speaker-hole': '#0a0c1e',
+    '--lcd-bg': '#9BBC0F', '--lcd-scanline': 'rgba(0,0,0,0.04)', '--lcd-shine': 'rgba(255,255,220,0.12)',
+    lcd: { OFF: '#9BBC0F', LIGHT: '#8BAC0F', MID: '#306230', DARK: '#0F380F' },
+    pause: 'rgba(155,188,15,0.75)',
+  },
+  stealth: {
+    '--phone-grad-1': '#2a2a2a', '--phone-grad-2': '#1c1c1c',
+    '--phone-grad-3': '#141414', '--phone-grad-4': '#0a0a0a',
+    '--phone-shadow-1': '#050505', '--phone-shadow-2': '#030303', '--phone-shadow-3': '#010101',
+    '--btn-grad-1': '#333333', '--btn-grad-2': '#222222', '--btn-grad-3': '#1a1a1a',
+    '--btn-shadow': '#050505', '--btn-text': '#888888', '--sub-text': '#555555',
+    '--dpad-text': '#777777', '--dpad-ctr-1': '#3a3a3a', '--dpad-ctr-2': '#1f1f1f',
+    '--nokia-logo': '#666666', '--speaker-hole': '#050505',
+    '--lcd-bg': '#d0d0d0', '--lcd-scanline': 'rgba(0,0,0,0.05)', '--lcd-shine': 'rgba(255,255,255,0.15)',
+    lcd: { OFF: '#d0d0d0', LIGHT: '#c0c0c0', MID: '#606060', DARK: '#111111' },
+    pause: 'rgba(190,190,190,0.75)',
+  },
+  banana: {
+    '--phone-grad-1': '#d4a800', '--phone-grad-2': '#b88e00',
+    '--phone-grad-3': '#9a7500', '--phone-grad-4': '#7a5c00',
+    '--phone-shadow-1': '#4a3800', '--phone-shadow-2': '#352800', '--phone-shadow-3': '#1e1600',
+    '--btn-grad-1': '#c49a00', '--btn-grad-2': '#a07e00', '--btn-grad-3': '#856800',
+    '--btn-shadow': '#4a3800', '--btn-text': '#ffe066', '--sub-text': '#c49a00',
+    '--dpad-text': '#ffd700', '--dpad-ctr-1': '#d4a800', '--dpad-ctr-2': '#9a7500',
+    '--nokia-logo': '#ffe066', '--speaker-hole': '#3d2b00',
+    '--lcd-bg': '#F5C518', '--lcd-scanline': 'rgba(0,0,0,0.04)', '--lcd-shine': 'rgba(255,255,200,0.15)',
+    lcd: { OFF: '#F5C518', LIGHT: '#E8B800', MID: '#9B6F00', DARK: '#3D2B00' },
+    pause: 'rgba(245,197,24,0.75)',
+  },
+  ice: {
+    '--phone-grad-1': '#b0bec5', '--phone-grad-2': '#90a4ae',
+    '--phone-grad-3': '#78909c', '--phone-grad-4': '#607d8b',
+    '--phone-shadow-1': '#37474f', '--phone-shadow-2': '#263238', '--phone-shadow-3': '#1a2329',
+    '--btn-grad-1': '#9fb5be', '--btn-grad-2': '#7d9ba6', '--btn-grad-3': '#6a8a96',
+    '--btn-shadow': '#37474f', '--btn-text': '#e0f4ff', '--sub-text': '#aaccee',
+    '--dpad-text': '#cce8f8', '--dpad-ctr-1': '#adc4cd', '--dpad-ctr-2': '#7a99a6',
+    '--nokia-logo': '#ddeeff', '--speaker-hole': '#263238',
+    '--lcd-bg': '#c8e0f4', '--lcd-scanline': 'rgba(0,20,60,0.04)', '--lcd-shine': 'rgba(255,255,255,0.2)',
+    lcd: { OFF: '#c8e0f4', LIGHT: '#b0cfea', MID: '#3a6fa0', DARK: '#0a2a50' },
+    pause: 'rgba(200,224,244,0.75)',
+  },
+};
+
+let currentTheme = 'classic';
+
+function applyTheme(id) {
+  const t = THEMES[id];
+  const root = document.documentElement.style;
+  for (const [key, val] of Object.entries(t)) {
+    if (key.startsWith('--')) root.setProperty(key, val);
+  }
+  Object.assign(LCD, t.lcd);
+  currentTheme = id;
+  localStorage.setItem('nokiaSnakeTheme', id);
+  document.querySelectorAll('.swatch').forEach(s =>
+    s.classList.toggle('active', s.dataset.theme === id)
+  );
+  draw();
+}
+
 // ── AUDIO ──────────────────────────────────────
 let AC = null;
-function initAudio() { if (!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); }
+function initAudio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); }
 
 function tone(freq, dur, type = 'square', vol = 0.25) {
   if (!AC) return;
@@ -356,7 +498,7 @@ function tone(freq, dur, type = 'square', vol = 0.25) {
 }
 
 function sfxEat() {
-  tone(880,  0.06);
+  tone(880, 0.06);
   setTimeout(() => tone(1320, 0.08), 55);
 }
 
@@ -372,7 +514,6 @@ let hiScore = parseInt(localStorage.getItem('nokiaSnakeHi')) || 0;
 // gameState: 'menu' | 'playing' | 'paused' | 'over'
 
 function initGame() {
-  // Start snake in middle, length 3, moving right
   snake = [
     { x: 10, y: 6 },
     { x:  9, y: 6 },
@@ -410,11 +551,9 @@ function tick() {
   dir = nextDir;
   const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
 
-  // Wall collision → die
   if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
     return gameover();
   }
-  // Self collision → die
   if (snake.some(s => s.x === head.x && s.y === head.y)) {
     return gameover();
   }
@@ -443,7 +582,6 @@ function gameover() {
   }
   gameState = 'over';
   draw();
-  // Blink loop for "press any key"
   clearInterval(blinkLoop);
   blinkLoop = setInterval(draw, 500);
 }
@@ -453,15 +591,13 @@ function draw() {
   ctx.fillStyle = LCD.OFF;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  if      (gameState === 'menu')                  drawMenu();
+  if      (gameState === 'menu')                 drawMenu();
   else if (gameState === 'playing' ||
-           gameState === 'paused')                drawGame();
-  else if (gameState === 'over')                  drawGameOver();
+           gameState === 'paused')               drawGame();
+  else if (gameState === 'over')                 drawGameOver();
 }
 
-// Score bar (top 32 px)
 function drawScoreBar() {
-  // Separator line
   ctx.fillStyle = LCD.DARK;
   ctx.fillRect(0, 0, canvas.width, 2);
   ctx.fillRect(0, SCR_H - 2, canvas.width, 2);
@@ -469,22 +605,18 @@ function drawScoreBar() {
   ctx.font = "7px 'Press Start 2P'";
   ctx.fillStyle = LCD.DARK;
 
-  // Left: score
   ctx.fillText('SC:' + score, 4, 15);
 
-  // Center: level
   const lv  = Math.floor((150 - speed) / 10) + 1;
   const lvT = 'LV:' + lv;
   const lvW = ctx.measureText(lvT).width;
   ctx.fillText(lvT, canvas.width / 2 - lvW / 2, 15);
 
-  // Right: hi-score
   const hiT = 'HI:' + hiScore;
   const hiW = ctx.measureText(hiT).width;
   ctx.fillText(hiT, canvas.width - hiW - 4, 15);
 }
 
-// Subtle grid
 function drawGrid() {
   ctx.fillStyle = LCD.LIGHT;
   for (let x = 0; x <= COLS; x++)
@@ -492,7 +624,6 @@ function drawGrid() {
       ctx.fillRect(x * CELL, SCR_H + y * CELL, 1, 1);
 }
 
-// Snake segments
 function drawSnake() {
   for (let i = 0; i < snake.length; i++) {
     const { x, y } = snake[i];
@@ -503,7 +634,6 @@ function drawSnake() {
     ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
 
     if (i === 0) {
-      // Head — add eyes
       ctx.fillStyle = LCD.OFF;
       const d = dir;
       if      (d.x ===  1) { ctx.fillRect(px+CELL-5, py+3, 2, 2); ctx.fillRect(px+CELL-5, py+CELL-5, 2, 2); }
@@ -511,28 +641,23 @@ function drawSnake() {
       else if (d.y === -1) { ctx.fillRect(px+3,      py+3, 2, 2); ctx.fillRect(px+CELL-5, py+3,      2, 2); }
       else                 { ctx.fillRect(px+3, py+CELL-5, 2, 2); ctx.fillRect(px+CELL-5, py+CELL-5, 2, 2); }
     } else {
-      // Body — inner lighter square for depth
       ctx.fillStyle = LCD.MID;
       ctx.fillRect(px + 3, py + 3, CELL - 6, CELL - 6);
     }
   }
 }
 
-// Food — Nokia-style cross/plus
 function drawFood() {
   const px = food.x * CELL;
   const py = SCR_H + food.y * CELL;
   ctx.fillStyle = LCD.DARK;
-  // Center block
   ctx.fillRect(px + 5, py + 5, 6, 6);
-  // Cross arms
-  ctx.fillRect(px + 7, py + 2, 2, 3);   // top
-  ctx.fillRect(px + 7, py + 11, 2, 3);  // bottom
-  ctx.fillRect(px + 2, py + 7, 3, 2);   // left
-  ctx.fillRect(px + 11, py + 7, 3, 2);  // right
+  ctx.fillRect(px + 7, py + 2, 2, 3);
+  ctx.fillRect(px + 7, py + 11, 2, 3);
+  ctx.fillRect(px + 2, py + 7, 3, 2);
+  ctx.fillRect(px + 11, py + 7, 3, 2);
 }
 
-// ── SCREENS ────────────────────────────────────
 function blink() {
   return Math.floor(Date.now() / 600) % 2 === 0;
 }
@@ -540,17 +665,14 @@ function blink() {
 function drawMenu() {
   ctx.fillStyle = LCD.DARK;
 
-  // Title
   ctx.font = "16px 'Press Start 2P'";
   const tw = ctx.measureText('SNAKE').width;
   ctx.fillText('SNAKE', canvas.width / 2 - tw / 2, 46);
 
-  // Small Nokia decorative snake
   const demo = [{x:4,y:5},{x:5,y:5},{x:6,y:5},{x:6,y:6},{x:6,y:7}];
   for (const s of demo) {
     ctx.fillRect(s.x * CELL + 1, SCR_H + s.y * CELL + 1, CELL - 2, CELL - 2);
   }
-  // Demo food
   const fx = 11 * CELL, fy = SCR_H + 6 * CELL;
   ctx.fillRect(fx+5, fy+5, 6, 6);
   ctx.fillRect(fx+7, fy+2, 2, 3); ctx.fillRect(fx+7, fy+11, 2, 3);
@@ -575,7 +697,7 @@ function drawGame() {
   drawSnake();
 
   if (gameState === 'paused') {
-    ctx.fillStyle = 'rgba(155,188,15,0.75)';
+    ctx.fillStyle = THEMES[currentTheme].pause;
     ctx.fillRect(0, SCR_H, canvas.width, canvas.height - SCR_H);
     ctx.fillStyle = LCD.DARK;
     ctx.font = "8px 'Press Start 2P'";
@@ -632,7 +754,6 @@ function handleInput(dx, dy) {
   }
   if (gameState === 'paused') return;
 
-  // Prevent 180° reversal
   if (dx !== 0 && dir.x === -dx) return;
   if (dy !== 0 && dir.y === -dy) return;
   nextDir = { x: dx, y: dy };
@@ -659,16 +780,12 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// D-Pad buttons
 document.getElementById('btnUp')   ?.addEventListener('click', () => handleInput( 0, -1));
 document.getElementById('btnDown') ?.addEventListener('click', () => handleInput( 0,  1));
 document.getElementById('btnLeft') ?.addEventListener('click', () => handleInput(-1,  0));
 document.getElementById('btnRight')?.addEventListener('click', () => handleInput( 1,  0));
 
-document.getElementById('btnMenu')?.addEventListener('click', () => {
-  initAudio();
-  handleSpace();
-});
+document.getElementById('btnMenu')?.addEventListener('click', () => { initAudio(); handleSpace(); });
 document.getElementById('btnBack')?.addEventListener('click', () => {
   initAudio();
   if (gameState === 'playing' || gameState === 'paused') {
@@ -679,9 +796,16 @@ document.getElementById('btnBack')?.addEventListener('click', () => {
   }
 });
 
+// Swatch click handlers
+document.querySelectorAll('.swatch').forEach(s =>
+  s.addEventListener('click', () => applyTheme(s.dataset.theme))
+);
+
 // ── BOOT ──────────────────────────────────────
 gameState = 'menu';
-draw();
+// Load saved theme (applies colors + draws)
+const savedTheme = localStorage.getItem('nokiaSnakeTheme') || 'classic';
+applyTheme(savedTheme);
 // Menu blink animation
 clearInterval(blinkLoop);
 blinkLoop = setInterval(() => {
