@@ -3,384 +3,468 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nokia Snake</title>
+<title>Snake</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ── CSS THEME VARIABLES (Classic default) ── */
 :root {
-  --phone-grad-1: #2b3070;
-  --phone-grad-2: #1c2158;
-  --phone-grad-3: #161a48;
-  --phone-grad-4: #111438;
-  --phone-shadow-1: #0e1030;
-  --phone-shadow-2: #0a0c24;
-  --phone-shadow-3: #060818;
-  --btn-grad-1: #2e3580;
-  --btn-grad-2: #1e2460;
-  --btn-grad-3: #161c50;
-  --btn-shadow: #0e1040;
-  --btn-text: #6a7dcc;
-  --sub-text: #4a5aaa;
-  --dpad-text: #5a6fcc;
-  --dpad-ctr-1: #363d90;
-  --dpad-ctr-2: #1a2060;
-  --nokia-logo: #4a5fbb;
-  --speaker-hole: #0a0c1e;
-  --lcd-bg: #9BBC0F;
-  --lcd-scanline: rgba(0,0,0,0.04);
-  --lcd-shine: rgba(255,255,220,0.12);
+  --phone-grad-1: #2b3070; --phone-grad-2: #1c2158;
+  --phone-grad-3: #161a48; --phone-grad-4: #111438;
+  --phone-shadow-1: #0e1030; --phone-shadow-2: #0a0c24; --phone-shadow-3: #060818;
+  --btn-grad-1: #2e3580; --btn-grad-2: #1e2460; --btn-grad-3: #161c50;
+  --btn-shadow: #0e1040; --btn-text: #6a7dcc; --sub-text: #4a5aaa;
+  --dpad-text: #5a6fcc; --dpad-ctr-1: #363d90; --dpad-ctr-2: #1a2060;
+  --nokia-logo: #4a5fbb; --speaker-hole: #0a0c1e;
+  --lcd-bg: #9BBC0F; --lcd-scanline: rgba(0,0,0,0.04); --lcd-shine: rgba(255,255,220,0.12);
 }
 
 body {
   background: radial-gradient(ellipse at center, #1a1d30 0%, #08080f 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  min-height: 100vh;
-  padding: 40px 20px 60px;
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 24px 20px 60px;
   font-family: 'Press Start 2P', monospace;
 }
 
-/* ── PHONE BODY ── */
-.phone {
-  width: 344px;
-  background: linear-gradient(165deg,
-    var(--phone-grad-1) 0%,
-    var(--phone-grad-2) 30%,
-    var(--phone-grad-3) 70%,
-    var(--phone-grad-4) 100%);
-  border-radius: 36px 36px 90px 90px / 36px 36px 130px 130px;
-  padding: 20px 18px 50px;
-  position: relative;
-  box-shadow:
-    inset 0 3px 5px rgba(255,255,255,0.18),
-    inset 2px 0 4px rgba(255,255,255,0.06),
-    inset -2px 0 4px rgba(0,0,0,0.3),
-    inset 0 -8px 20px rgba(0,0,0,0.5),
-    0 6px 0 var(--phone-shadow-1),
-    0 10px 0 var(--phone-shadow-2),
-    0 14px 0 var(--phone-shadow-3),
-    0 40px 100px rgba(0,0,0,0.95);
-  user-select: none;
-  transition: background 0.3s, box-shadow 0.3s;
+/* ── DEVICE SELECTOR ── */
+.dev-selector {
+  display: flex; gap: 6px; margin-bottom: 18px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
 }
+.dev-tab {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  background: none; border: none; cursor: pointer;
+  padding: 7px 12px; border-radius: 8px;
+  transition: background 0.2s;
+}
+.dev-tab:hover { background: rgba(255,255,255,0.06); }
+.dev-tab.active { background: rgba(255,255,255,0.1); box-shadow: 0 0 0 1px rgba(255,255,255,0.14); }
+.dev-tab span { font-size: 5px; color: #444; transition: color 0.2s; letter-spacing: 0.5px; }
+.dev-tab.active span { color: #999; }
+.dev-tab .th { transition: transform 0.2s; }
+.dev-tab:hover .th { transform: scale(1.1) translateY(-1px); }
 
-/* Antenna stub top-right */
-.phone::before {
-  content: '';
-  position: absolute;
-  top: -22px;
-  right: 38px;
-  width: 14px;
-  height: 24px;
-  background: linear-gradient(165deg, var(--phone-grad-1), var(--phone-grad-3));
-  border-radius: 4px 4px 0 0;
-  box-shadow:
-    inset 1px 0 3px rgba(255,255,255,0.1),
-    0 -2px 0 var(--phone-shadow-2);
-  transition: background 0.3s;
-}
+/* Thumbnails */
+.th-nokia  { width:18px; height:28px; border-radius:3px 3px 8px 8px/3px 3px 11px 11px; background:linear-gradient(165deg,#2b3070,#111438); box-shadow:0 2px 5px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.2); }
+.th-gb     { width:20px; height:28px; border-radius:3px 3px 3px 10px; background:linear-gradient(160deg,#c0b8d0,#9080b0); box-shadow:0 2px 5px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.3); }
+.th-arcade { width:22px; height:28px; clip-path:polygon(12% 0%,88% 0%,100% 100%,0% 100%); background:linear-gradient(180deg,#1a1a1a,#080808); box-shadow:0 2px 5px rgba(0,0,0,.5); }
+.th-term   { width:28px; height:20px; border-radius:3px; background:linear-gradient(160deg,#c8bfa0,#b0a07a); box-shadow:0 2px 5px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.3); }
 
-/* Side seam line */
-.phone::after {
-  content: '';
-  position: absolute;
-  top: 36px;
-  bottom: 60px;
-  left: 8px;
-  width: 2px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%);
-  border-radius: 1px;
-}
+.device { display:none; }
+.device.active { display:block; }
 
-/* ── TOP DETAILS ── */
-.phone-top {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
+/* ═══ NOKIA 3310 ═══ */
+.dev-nokia {
+  width:344px;
+  background:linear-gradient(165deg,var(--phone-grad-1) 0%,var(--phone-grad-2) 30%,var(--phone-grad-3) 70%,var(--phone-grad-4) 100%);
+  border-radius:36px 36px 90px 90px/36px 36px 130px 130px;
+  padding:20px 18px 50px; position:relative;
+  box-shadow:inset 0 3px 5px rgba(255,255,255,.18),inset 2px 0 4px rgba(255,255,255,.06),inset -2px 0 4px rgba(0,0,0,.3),inset 0 -8px 20px rgba(0,0,0,.5),0 6px 0 var(--phone-shadow-1),0 10px 0 var(--phone-shadow-2),0 14px 0 var(--phone-shadow-3),0 40px 100px rgba(0,0,0,.95);
+  user-select:none; transition:background .3s,box-shadow .3s;
 }
+.dev-nokia::before {
+  content:''; position:absolute; top:-22px; right:38px; width:14px; height:24px;
+  background:linear-gradient(165deg,var(--phone-grad-1),var(--phone-grad-3));
+  border-radius:4px 4px 0 0;
+  box-shadow:inset 1px 0 3px rgba(255,255,255,.1),0 -2px 0 var(--phone-shadow-2);
+  transition:background .3s;
+}
+.dev-nokia::after {
+  content:''; position:absolute; top:36px; bottom:60px; left:8px; width:2px;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04)); border-radius:1px;
+}
+.phone-top { display:flex; flex-direction:column; align-items:center; gap:6px; margin-bottom:14px; }
+.speaker-grill { display:flex; gap:4px; align-items:center; }
+.speaker-hole { width:4px; height:4px; border-radius:50%; background:var(--speaker-hole); box-shadow:inset 0 1px 2px rgba(0,0,0,.9),0 1px 1px rgba(255,255,255,.05); transition:background .3s; }
+.nokia-logo { color:var(--nokia-logo); font-family:Arial,sans-serif; font-weight:900; font-size:13px; letter-spacing:5px; text-transform:uppercase; transition:color .3s; }
 
-.speaker-grill {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
+.screen-bezel { background:#06070f; border-radius:8px; padding:7px; margin-bottom:12px; box-shadow:inset 0 4px 12px rgba(0,0,0,.95),inset 0 1px 3px rgba(0,0,0,.8),0 1px 2px rgba(255,255,255,.07); }
+.screen-lcd { background:var(--lcd-bg); border-radius:3px; overflow:hidden; display:flex; justify-content:center; position:relative; background-image:repeating-linear-gradient(0deg,transparent,transparent 1px,var(--lcd-scanline) 1px,var(--lcd-scanline) 2px); transition:background-color .3s; }
+.screen-lcd::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 30% 20%,var(--lcd-shine) 0%,transparent 60%); pointer-events:none; z-index:2; }
+#c { display:block; image-rendering:pixelated; image-rendering:crisp-edges; position:relative; z-index:1; }
 
-.speaker-hole {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--speaker-hole);
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.05);
-  transition: background 0.3s;
-}
+.soft-row { display:flex; justify-content:space-between; align-items:center; padding:0 6px; margin-bottom:10px; }
+.soft-key { background:linear-gradient(180deg,var(--btn-grad-1) 0%,var(--btn-grad-2) 60%,var(--btn-grad-3) 100%); border:none; border-radius:6px; color:var(--btn-text); font-size:5.5px; font-family:'Press Start 2P',monospace; padding:8px 0; width:78px; cursor:pointer; box-shadow:inset 0 1px 2px rgba(255,255,255,.12),0 4px 0 var(--btn-shadow),0 5px 8px rgba(0,0,0,.5); transition:transform .06s,box-shadow .06s,background .3s,color .3s; letter-spacing:.5px; }
+.soft-key:active { transform:translateY(3px); box-shadow:inset 0 1px 2px rgba(255,255,255,.12),0 1px 0 var(--btn-shadow); }
 
-.nokia-logo {
-  color: var(--nokia-logo);
-  font-family: Arial, sans-serif;
-  font-weight: 900;
-  font-size: 13px;
-  letter-spacing: 5px;
-  text-transform: uppercase;
-  transition: color 0.3s;
-}
-
-/* ── SCREEN ── */
-.screen-bezel {
-  background: #06070f;
-  border-radius: 8px;
-  padding: 7px;
-  margin-bottom: 12px;
-  box-shadow:
-    inset 0 4px 12px rgba(0,0,0,0.95),
-    inset 0 1px 3px rgba(0,0,0,0.8),
-    0 1px 2px rgba(255,255,255,0.07);
-}
-
-.screen-lcd {
-  background: var(--lcd-bg);
-  border-radius: 3px;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  position: relative;
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 1px,
-    var(--lcd-scanline) 1px,
-    var(--lcd-scanline) 2px
-  );
-  transition: background-color 0.3s;
-}
-
-.screen-lcd::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 30% 20%, var(--lcd-shine) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 2;
-}
-
-#c {
-  display: block;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  position: relative;
-  z-index: 1;
-}
-
-/* ── SOFT KEYS ── */
-.soft-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 6px;
-  margin-bottom: 10px;
-}
-
-.soft-key {
-  background: linear-gradient(180deg, var(--btn-grad-1) 0%, var(--btn-grad-2) 60%, var(--btn-grad-3) 100%);
-  border: none;
-  border-radius: 6px;
-  color: var(--btn-text);
-  font-size: 5.5px;
-  font-family: 'Press Start 2P', monospace;
-  padding: 8px 0;
-  width: 78px;
-  cursor: pointer;
-  box-shadow:
-    inset 0 1px 2px rgba(255,255,255,0.12),
-    0 4px 0 var(--btn-shadow),
-    0 5px 8px rgba(0,0,0,0.5);
-  transition: transform 0.06s, box-shadow 0.06s, background 0.3s, color 0.3s;
-  letter-spacing: 0.5px;
-}
-.soft-key:active {
-  transform: translateY(3px);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,0.12), 0 1px 0 var(--btn-shadow);
-}
-
-/* ── D-PAD ── */
-.dpad-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-
-.dpad {
-  position: relative;
-  width: 96px;
-  height: 96px;
-}
-
-.dp {
-  position: absolute;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--dpad-text);
-  font-size: 9px;
-  transition: transform 0.06s, background 0.3s, color 0.3s;
-  background: linear-gradient(180deg, var(--btn-grad-1) 0%, var(--btn-grad-2) 100%);
-  box-shadow:
-    inset 0 1px 2px rgba(255,255,255,0.1),
-    0 3px 0 var(--btn-shadow),
-    0 4px 6px rgba(0,0,0,0.4);
-}
-.dp:active { transform: translateY(2px); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 1px 0 var(--btn-shadow); }
-
-.dp-up    { top:0;  left:32px; width:32px; height:32px; border-radius:6px 6px 0 0; }
+.dpad-wrap { display:flex; justify-content:center; margin-bottom:12px; }
+.dpad { position:relative; width:96px; height:96px; }
+.dp { position:absolute; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--dpad-text); font-size:9px; transition:transform .06s,background .3s,color .3s; background:linear-gradient(180deg,var(--btn-grad-1) 0%,var(--btn-grad-2) 100%); box-shadow:inset 0 1px 2px rgba(255,255,255,.1),0 3px 0 var(--btn-shadow),0 4px 6px rgba(0,0,0,.4); }
+.dp:active { transform:translateY(2px); box-shadow:inset 0 1px 2px rgba(255,255,255,.1),0 1px 0 var(--btn-shadow); }
+.dp-up    { top:0;    left:32px; width:32px; height:32px; border-radius:6px 6px 0 0; }
 .dp-down  { bottom:0; left:32px; width:32px; height:32px; border-radius:0 0 6px 6px; }
-.dp-left  { top:32px; left:0; width:32px; height:32px; border-radius:6px 0 0 6px; }
-.dp-right { top:32px; right:0; width:32px; height:32px; border-radius:0 6px 6px 0; }
-.dp-ctr   {
-  top:32px; left:32px; width:32px; height:32px;
-  background: linear-gradient(135deg, var(--dpad-ctr-1) 0%, var(--dpad-ctr-2) 100%);
-  border-radius: 2px;
-  cursor: default;
-  transition: background 0.3s;
-}
+.dp-left  { top:32px; left:0;    width:32px; height:32px; border-radius:6px 0 0 6px; }
+.dp-right { top:32px; right:0;   width:32px; height:32px; border-radius:0 6px 6px 0; }
+.dp-ctr   { top:32px; left:32px; width:32px; height:32px; background:linear-gradient(135deg,var(--dpad-ctr-1),var(--dpad-ctr-2)); border-radius:2px; cursor:default; transition:background .3s; }
+.numpad { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; padding:0 6px; margin-bottom:8px; }
+.n { background:linear-gradient(180deg,var(--btn-grad-1) 0%,var(--btn-grad-2) 60%,var(--btn-grad-3) 100%); border:none; border-radius:5px; color:var(--btn-text); font-family:'Press Start 2P',monospace; font-size:8px; padding:8px 0 5px; cursor:pointer; box-shadow:inset 0 1px 2px rgba(255,255,255,.1),0 3px 0 var(--btn-shadow),0 4px 6px rgba(0,0,0,.4); display:flex; flex-direction:column; align-items:center; gap:2px; transition:transform .06s,box-shadow .06s,background .3s,color .3s; }
+.n:active { transform:translateY(2px); box-shadow:inset 0 1px 2px rgba(255,255,255,.1),0 1px 0 var(--btn-shadow); }
+.n sub { font-size:4px; color:var(--sub-text); display:block; transition:color .3s; }
+.bottom-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; padding:0 6px; }
 
-/* ── NUMBER PAD ── */
-.numpad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 7px;
-  padding: 0 6px;
-  margin-bottom: 8px;
-}
+/* Theme Swatches */
+.theme-bar { display:none; gap:14px; justify-content:center; align-items:center; margin-top:22px; }
+.theme-bar.visible { display:flex; }
+.swatch { width:22px; height:22px; border-radius:50%; cursor:pointer; border:3px solid transparent; box-shadow:0 2px 10px rgba(0,0,0,.6); transition:transform .15s,border-color .15s,box-shadow .15s; }
+.swatch:hover { transform:scale(1.25); }
+.swatch.active { border-color:rgba(255,255,255,.75); transform:scale(1.18); }
 
-.n {
-  background: linear-gradient(180deg, var(--btn-grad-1) 0%, var(--btn-grad-2) 60%, var(--btn-grad-3) 100%);
-  border: none;
-  border-radius: 5px;
-  color: var(--btn-text);
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  padding: 8px 0 5px;
-  cursor: pointer;
-  box-shadow:
-    inset 0 1px 2px rgba(255,255,255,0.1),
-    0 3px 0 var(--btn-shadow),
-    0 4px 6px rgba(0,0,0,0.4);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  transition: transform 0.06s, box-shadow 0.06s, background 0.3s, color 0.3s;
+/* ═══ GAME BOY DMG-01 ═══ */
+.dev-gb {
+  width:330px;
+  background:linear-gradient(160deg,#ccc4dc 0%,#b8b0cc 40%,#a8a0bc 100%);
+  border-radius:10px 10px 10px 54px;
+  padding:18px 20px 30px; position:relative;
+  box-shadow:inset 0 2px 4px rgba(255,255,255,.4),inset -3px 0 6px rgba(0,0,0,.08),inset 0 -6px 14px rgba(0,0,0,.12),0 4px 0 #9080a8,0 7px 0 #706090,0 28px 80px rgba(0,0,0,.85);
+  user-select:none;
 }
-.n:active { transform: translateY(2px); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 1px 0 var(--btn-shadow); }
-.n sub { font-size: 4px; color: var(--sub-text); display: block; transition: color 0.3s; }
+.gb-toprow { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+.gb-power  { display:flex; align-items:center; gap:5px; }
+.gb-led    { width:7px; height:7px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#ff6666,#cc0000); box-shadow:0 0 5px rgba(255,50,50,.7); }
+.gb-power span { font-size:5px; color:#9080a8; letter-spacing:.5px; }
+.gb-brand  { text-align:right; }
+.gb-brand .nintendo { display:block; font-family:Arial,sans-serif; font-style:italic; font-weight:bold; font-size:7px; color:#8070a8; letter-spacing:1px; }
+.gb-brand .gameboy  { display:block; font-family:'Arial Black',Arial,sans-serif; font-weight:900; font-size:10px; color:#6050888; letter-spacing:2px; color:#705088; }
 
-.bottom-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 7px;
-  padding: 0 6px;
+.gb-screen-area { margin-bottom:14px; }
+.gb-dotmatrix { display:block; font-size:5px; color:#9080a8; letter-spacing:.3px; text-align:center; margin-bottom:5px; }
+.gb-bezel {
+  background:#1a1820; border-radius:8px 8px 4px 4px;
+  padding:10px 18px 16px; position:relative;
+  box-shadow:inset 0 4px 12px rgba(0,0,0,.95),inset 0 1px 3px rgba(0,0,0,.8);
 }
+.gb-bezel::before { content:''; position:absolute; top:6px; left:18px; right:18px; height:2px; background:linear-gradient(90deg,transparent,#302838 20%,#302838 80%,transparent); }
+.gb-screen-inner {
+  background:#8fac5c; border-radius:2px; overflow:hidden;
+  display:flex; justify-content:center; position:relative;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,.05) 1px,rgba(0,0,0,.05) 2px);
+}
+.gb-screen-inner::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 30% 20%,rgba(255,255,240,.1) 0%,transparent 60%); pointer-events:none; z-index:2; }
 
-/* ── THEME SWATCHES ── */
-.theme-bar {
-  display: flex;
-  gap: 14px;
-  justify-content: center;
-  align-items: center;
-  margin-top: 22px;
-}
+.gb-controls { display:flex; justify-content:space-between; align-items:center; padding:0 6px; margin-bottom:14px; }
+.gb-dpad-outer { position:relative; width:80px; height:80px; }
+.gb-dp { position:absolute; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#2a2830,#1a1820); color:#666; font-size:8px; box-shadow:inset 0 1px 1px rgba(255,255,255,.06),0 2px 0 #0a0810,0 3px 5px rgba(0,0,0,.4); transition:transform .06s; }
+.gb-dp:active { transform:translateY(1px); }
+.gb-dp.gb-up    { top:0;    left:26px; width:28px; height:28px; border-radius:4px 4px 0 0; }
+.gb-dp.gb-down  { bottom:0; left:26px; width:28px; height:28px; border-radius:0 0 4px 4px; }
+.gb-dp.gb-left  { top:26px; left:0;    width:28px; height:28px; border-radius:4px 0 0 4px; }
+.gb-dp.gb-right { top:26px; right:0;   width:28px; height:28px; border-radius:0 4px 4px 0; }
+.gb-dp.gb-ctr   { top:26px; left:26px; width:28px; height:28px; background:#1e1c24; cursor:default; }
 
-.swatch {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 3px solid transparent;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.6);
-  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
-  position: relative;
+.gb-ab { display:flex; flex-direction:column; align-items:flex-end; gap:8px; transform:rotate(-20deg); margin-right:8px; }
+.gb-abrow { display:flex; gap:8px; align-items:center; }
+.gb-btn { border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:7px; font-family:'Press Start 2P',monospace; color:rgba(255,255,255,.7); transition:transform .06s; }
+.gb-btn:active { transform:scale(.92); }
+.gb-btn-a { width:38px; height:38px; background:radial-gradient(circle at 35% 30%,#c04060,#8a1830); box-shadow:0 4px 0 #5a0020,0 5px 10px rgba(0,0,0,.5),inset 0 1px 3px rgba(255,255,255,.2); }
+.gb-btn-b { width:34px; height:34px; background:radial-gradient(circle at 35% 30%,#b03858,#781428); box-shadow:0 3px 0 #4a0018,0 4px 8px rgba(0,0,0,.4),inset 0 1px 3px rgba(255,255,255,.15); }
+
+.gb-meta { display:flex; justify-content:center; gap:24px; margin-bottom:16px; }
+.gb-meta-btn { background:linear-gradient(180deg,#9080a8,#706088); border:none; border-radius:10px; color:#3a2858; font-size:5px; font-family:'Press Start 2P',monospace; padding:5px 14px; cursor:pointer; box-shadow:inset 0 1px 2px rgba(255,255,255,.25),0 2px 0 #4a3868; transition:transform .06s; letter-spacing:.5px; }
+.gb-meta-btn:active { transform:translateY(1px); }
+
+.gb-speaker { display:flex; justify-content:flex-end; padding-right:6px; }
+.gb-speaker-grid { display:grid; grid-template-columns:repeat(6,6px); grid-template-rows:repeat(2,6px); gap:4px; }
+.gb-shole { width:6px; height:6px; border-radius:50%; background:#0a0810; box-shadow:inset 0 1px 1px rgba(0,0,0,.9),0 1px 1px rgba(255,255,255,.06); }
+
+/* ═══ ARCADE CABINET ═══ */
+.dev-arcade {
+  width:370px; position:relative; user-select:none;
+  box-shadow:0 30px 100px rgba(0,0,0,.95),0 0 60px rgba(0,255,100,.04);
 }
-.swatch:hover {
-  transform: scale(1.25);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+.arc-body {
+  background:linear-gradient(180deg,#161616 0%,#101010 100%);
+  clip-path:polygon(7% 0%,93% 0%,100% 100%,0% 100%);
+  position:relative;
 }
-.swatch.active {
-  border-color: rgba(255,255,255,0.75);
-  transform: scale(1.18);
-  box-shadow: 0 0 10px rgba(255,255,255,0.2), 0 4px 12px rgba(0,0,0,0.6);
+/* Marquee */
+.arc-marquee {
+  padding:20px 40px 16px; text-align:center;
+  background:linear-gradient(180deg,#081408,#050d05);
+  border-bottom:2px solid rgba(0,255,100,.5);
+  box-shadow:0 0 30px rgba(0,255,100,.2),inset 0 -4px 12px rgba(0,255,100,.08);
 }
+.arc-title { font-size:22px; color:#00ff66; letter-spacing:10px; text-shadow:0 0 10px #00ff66,0 0 25px rgba(0,255,100,.5),0 0 50px rgba(0,255,100,.2); }
+.arc-title-sub { display:block; font-size:5px; color:#00aa44; letter-spacing:3px; margin-top:4px; }
+
+/* Monitor */
+.arc-monitor { padding:14px 40px; background:#0c0c0c; }
+.arc-screen-wrap {
+  border:2px solid #00bb44; border-radius:3px; position:relative; overflow:hidden;
+  box-shadow:0 0 20px rgba(0,255,100,.3),0 0 40px rgba(0,255,100,.12),inset 0 0 30px rgba(0,0,0,.8);
+}
+.arc-screen {
+  background:#050a05; display:flex; justify-content:center;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,255,100,.02) 1px,rgba(0,255,100,.02) 2px);
+  position:relative;
+}
+.arc-screen::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 30% 20%,rgba(0,255,100,.05) 0%,transparent 60%); pointer-events:none; z-index:2; }
+
+/* Controls */
+.arc-panel {
+  padding:16px 40px 20px; background:#0e0e0e; border-top:1px solid #1a1a1a;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.arc-joy { display:flex; flex-direction:column; align-items:center; gap:6px; }
+.arc-joy-ring { width:56px; height:56px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#282828,#0e0e0e); border:2px solid #2a2a2a; box-shadow:0 4px 0 #060606,0 6px 12px rgba(0,0,0,.6),inset 0 2px 4px rgba(255,255,255,.04); display:flex; align-items:center; justify-content:center; }
+.arc-joy-knob { width:24px; height:24px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#404040,#181818); box-shadow:0 3px 0 #0a0a0a,0 4px 8px rgba(0,0,0,.5); }
+.arc-joy-label { font-size:4px; color:#333; letter-spacing:1px; }
+
+.arc-dirs { display:grid; grid-template-columns:repeat(3,34px); gap:3px; }
+.arc-dir { width:34px; height:34px; border:none; border-radius:50%; cursor:pointer; background:radial-gradient(circle at 35% 30%,#252525,#141414); color:#444; font-size:8px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 0 #050505,0 5px 10px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.05); transition:transform .06s,color .15s; }
+.arc-dir:hover { color:#00ff66; }
+.arc-dir:active { transform:translateY(2px); box-shadow:0 2px 0 #050505; }
+.arc-dir.blank { background:none; box-shadow:none; cursor:default; }
+.arc-dir.blank:hover { color:#444; }
+
+.arc-btns { display:grid; grid-template-columns:repeat(2,42px); gap:8px; }
+.arc-act { width:42px; height:42px; border-radius:50%; border:none; cursor:pointer; font-size:6px; font-family:'Press Start 2P',monospace; color:rgba(255,255,255,.8); box-shadow:0 5px 0 rgba(0,0,0,.5),0 6px 12px rgba(0,0,0,.4),inset 0 2px 4px rgba(255,255,255,.2); transition:transform .06s,box-shadow .06s; }
+.arc-act:active { transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.5); }
+.arc-act-r { background:radial-gradient(circle at 35% 30%,#ff5555,#cc1111); }
+.arc-act-y { background:radial-gradient(circle at 35% 30%,#ffdd33,#cc9900); color:rgba(0,0,0,.5); }
+.arc-act-b { background:radial-gradient(circle at 35% 30%,#5599ff,#1144cc); }
+.arc-act-g { background:radial-gradient(circle at 35% 30%,#44cc55,#119922); }
+
+.arc-footer { padding:6px; text-align:center; font-size:5px; color:#1e1e1e; letter-spacing:3px; }
+
+/* ═══ TERMINAL / CRT ═══ */
+.dev-terminal { display:flex; flex-direction:column; align-items:center; user-select:none; }
+.term-body {
+  width:400px;
+  background:linear-gradient(160deg,#cec09a 0%,#b8aa84 50%,#a89872 100%);
+  border-radius:10px 10px 5px 5px; padding:18px 28px 18px;
+  box-shadow:inset 0 3px 6px rgba(255,255,255,.35),inset -3px 0 6px rgba(0,0,0,.08),0 4px 0 #887050,0 7px 0 #6a5838,0 30px 80px rgba(0,0,0,.8);
+  position:relative;
+}
+.term-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
+.term-brand { font-family:'Arial Black',Arial,sans-serif; font-weight:900; font-size:10px; color:#8a7a56; letter-spacing:2px; }
+.term-model-no { font-size:5px; color:#a89a70; letter-spacing:1px; }
+
+.term-frame {
+  background:#181208; border-radius:12px 12px 8px 8px; padding:12px 16px 14px;
+  box-shadow:inset 0 6px 20px rgba(0,0,0,.95),inset 0 2px 6px rgba(0,0,0,.8),0 2px 4px rgba(0,0,0,.4);
+  margin-bottom:12px; position:relative;
+}
+.term-crt {
+  background:#050906; border-radius:6px; overflow:hidden;
+  display:flex; justify-content:center; position:relative;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.9),0 0 8px rgba(0,255,100,.06);
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,40,10,.06) 2px,rgba(0,40,10,.06) 4px);
+}
+.term-crt::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 40% 30%,rgba(0,200,80,.05) 0%,transparent 60%); pointer-events:none; z-index:2; box-shadow:inset 0 0 60px rgba(0,0,0,.4); }
+
+.term-controls { display:flex; align-items:center; gap:10px; }
+.term-pwr { width:16px; height:16px; border-radius:50%; border:none; cursor:pointer; background:radial-gradient(circle at 35% 30%,#dd4444,#aa0000); box-shadow:0 2px 0 #660000,0 3px 6px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.2); transition:transform .06s; }
+.term-pwr:active { transform:scale(.9); }
+.term-knob { width:20px; height:20px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#aa9970,#887750); box-shadow:0 2px 0 #554430; position:relative; }
+.term-knob::after { content:''; position:absolute; top:3px; left:50%; transform:translateX(-50%); width:2px; height:6px; background:#443320; border-radius:1px; }
+.term-vent { display:flex; gap:3px; margin-left:auto; }
+.term-vs { width:3px; height:14px; background:#907050; border-radius:1px; box-shadow:inset 0 1px 2px rgba(0,0,0,.4); }
+
+/* Keyboard keys */
+.term-keys { margin-top:12px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.term-krow { display:flex; gap:4px; }
+.tkey { width:32px; height:30px; border:none; border-radius:4px; cursor:pointer; background:linear-gradient(180deg,#d8cca8,#b8a880); color:#5a4a28; font-size:7px; font-family:'Press Start 2P',monospace; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 2px rgba(255,255,255,.4),0 3px 0 #8a7248,0 4px 7px rgba(0,0,0,.3); transition:transform .06s,box-shadow .06s; }
+.tkey:active { transform:translateY(2px); box-shadow:inset 0 1px 2px rgba(255,255,255,.4),0 1px 0 #8a7248; }
+.tkey.wide { width:100px; font-size:5px; letter-spacing:.5px; }
+
+.term-neck { width:56px; height:18px; background:linear-gradient(180deg,#a89872,#887050); box-shadow:inset 0 1px 3px rgba(0,0,0,.15); }
+.term-base { width:180px; height:14px; background:linear-gradient(180deg,#987050,#7a5838); border-radius:0 0 8px 8px; box-shadow:0 4px 12px rgba(0,0,0,.5); }
 </style>
 </head>
 <body>
 
-<div class="phone">
+<!-- Device selector -->
+<div class="dev-selector">
+  <button class="dev-tab active" data-dev="nokia">
+    <div class="th th-nokia"></div><span>Nokia</span>
+  </button>
+  <button class="dev-tab" data-dev="gameboy">
+    <div class="th th-gb"></div><span>Game Boy</span>
+  </button>
+  <button class="dev-tab" data-dev="arcade">
+    <div class="th th-arcade"></div><span>Arcade</span>
+  </button>
+  <button class="dev-tab" data-dev="terminal">
+    <div class="th th-term"></div><span>Terminal</span>
+  </button>
+</div>
 
-  <!-- Top: Speaker + Logo -->
-  <div class="phone-top">
-    <div class="speaker-grill">
-      <div class="speaker-hole"></div>
-      <div class="speaker-hole"></div>
-      <div class="speaker-hole"></div>
-      <div class="speaker-hole"></div>
-      <div class="speaker-hole"></div>
-      <div class="speaker-hole"></div>
+<!-- ══ NOKIA 3310 ══ -->
+<div class="device active" id="dev-nokia">
+  <div class="dev-nokia">
+    <div class="phone-top">
+      <div class="speaker-grill">
+        <div class="speaker-hole"></div><div class="speaker-hole"></div>
+        <div class="speaker-hole"></div><div class="speaker-hole"></div>
+        <div class="speaker-hole"></div><div class="speaker-hole"></div>
+      </div>
+      <div class="nokia-logo">Nokia</div>
     </div>
-    <div class="nokia-logo">Nokia</div>
-  </div>
-
-  <!-- LCD Screen -->
-  <div class="screen-bezel">
-    <div class="screen-lcd">
-      <canvas id="c" width="288" height="224"></canvas>
+    <div class="screen-bezel">
+      <div class="screen-lcd" id="slot-nokia">
+        <canvas id="c" width="288" height="224"></canvas>
+      </div>
+    </div>
+    <div class="soft-row">
+      <button class="soft-key" data-action="pause">Menu</button>
+      <button class="soft-key" data-action="back">Back</button>
+    </div>
+    <div class="dpad-wrap">
+      <div class="dpad">
+        <button class="dp dp-up"    data-action="up">▲</button>
+        <button class="dp dp-left"  data-action="left">◄</button>
+        <button class="dp dp-ctr"></button>
+        <button class="dp dp-right" data-action="right">►</button>
+        <button class="dp dp-down"  data-action="down">▼</button>
+      </div>
+    </div>
+    <div class="numpad">
+      <button class="n">1<sub>·</sub></button><button class="n">2<sub>abc</sub></button><button class="n">3<sub>def</sub></button>
+      <button class="n">4<sub>ghi</sub></button><button class="n">5<sub>jkl</sub></button><button class="n">6<sub>mno</sub></button>
+      <button class="n">7<sub>pqrs</sub></button><button class="n">8<sub>tuv</sub></button><button class="n">9<sub>wxyz</sub></button>
+    </div>
+    <div class="bottom-row">
+      <button class="n">*</button><button class="n">0<sub>+</sub></button><button class="n">#</button>
     </div>
   </div>
+</div>
 
-  <!-- Soft Keys -->
-  <div class="soft-row">
-    <button class="soft-key" id="btnMenu">Menu</button>
-    <button class="soft-key" id="btnBack">Back</button>
-  </div>
-
-  <!-- D-Pad -->
-  <div class="dpad-wrap">
-    <div class="dpad">
-      <button class="dp dp-up"    id="btnUp">▲</button>
-      <button class="dp dp-left"  id="btnLeft">◄</button>
-      <button class="dp dp-ctr"></button>
-      <button class="dp dp-right" id="btnRight">►</button>
-      <button class="dp dp-down"  id="btnDown">▼</button>
+<!-- ══ GAME BOY ══ -->
+<div class="device" id="dev-gameboy">
+  <div class="dev-gb">
+    <div class="gb-toprow">
+      <div class="gb-power">
+        <div class="gb-led"></div>
+        <span>POWER</span>
+      </div>
+      <div class="gb-brand">
+        <span class="nintendo">Nintendo</span>
+        <span class="gameboy">GAME BOY</span>
+      </div>
+    </div>
+    <div class="gb-screen-area">
+      <span class="gb-dotmatrix">DOT MATRIX WITH STEREO SOUND</span>
+      <div class="gb-bezel">
+        <div class="gb-screen-inner" id="slot-gameboy"></div>
+      </div>
+    </div>
+    <div class="gb-controls">
+      <div class="gb-dpad-outer">
+        <button class="gb-dp gb-up"    data-action="up">▲</button>
+        <button class="gb-dp gb-left"  data-action="left">◄</button>
+        <button class="gb-dp gb-ctr"></button>
+        <button class="gb-dp gb-right" data-action="right">►</button>
+        <button class="gb-dp gb-down"  data-action="down">▼</button>
+      </div>
+      <div class="gb-ab">
+        <div class="gb-abrow">
+          <button class="gb-btn gb-btn-a" data-action="pause">A</button>
+        </div>
+        <div class="gb-abrow">
+          <button class="gb-btn gb-btn-b" data-action="back">B</button>
+        </div>
+      </div>
+    </div>
+    <div class="gb-meta">
+      <button class="gb-meta-btn" data-action="back">SELECT</button>
+      <button class="gb-meta-btn" data-action="pause">START</button>
+    </div>
+    <div class="gb-speaker">
+      <div class="gb-speaker-grid">
+        <div class="gb-shole"></div><div class="gb-shole"></div><div class="gb-shole"></div>
+        <div class="gb-shole"></div><div class="gb-shole"></div><div class="gb-shole"></div>
+        <div class="gb-shole"></div><div class="gb-shole"></div><div class="gb-shole"></div>
+        <div class="gb-shole"></div><div class="gb-shole"></div><div class="gb-shole"></div>
+      </div>
     </div>
   </div>
+</div>
 
-  <!-- Number Pad -->
-  <div class="numpad">
-    <button class="n">1<sub>·</sub></button>
-    <button class="n">2<sub>abc</sub></button>
-    <button class="n">3<sub>def</sub></button>
-    <button class="n">4<sub>ghi</sub></button>
-    <button class="n">5<sub>jkl</sub></button>
-    <button class="n">6<sub>mno</sub></button>
-    <button class="n">7<sub>pqrs</sub></button>
-    <button class="n">8<sub>tuv</sub></button>
-    <button class="n">9<sub>wxyz</sub></button>
+<!-- ══ ARCADE ══ -->
+<div class="device" id="dev-arcade">
+  <div class="dev-arcade">
+    <div class="arc-body">
+      <div class="arc-marquee">
+        <span class="arc-title">SNAKE</span>
+        <span class="arc-title-sub">INSERT COIN TO PLAY</span>
+      </div>
+      <div class="arc-monitor">
+        <div class="arc-screen-wrap">
+          <div class="arc-screen" id="slot-arcade"></div>
+        </div>
+      </div>
+      <div class="arc-panel">
+        <div class="arc-joy">
+          <div class="arc-joy-ring"><div class="arc-joy-knob"></div></div>
+          <span class="arc-joy-label">JOYSTICK</span>
+        </div>
+        <div class="arc-dirs">
+          <div class="arc-dir blank"></div>
+          <button class="arc-dir" data-action="up">▲</button>
+          <div class="arc-dir blank"></div>
+          <button class="arc-dir" data-action="left">◄</button>
+          <div class="arc-dir blank"></div>
+          <button class="arc-dir" data-action="right">►</button>
+          <div class="arc-dir blank"></div>
+          <button class="arc-dir" data-action="down">▼</button>
+          <div class="arc-dir blank"></div>
+        </div>
+        <div class="arc-btns">
+          <button class="arc-act arc-act-r" data-action="pause">STA</button>
+          <button class="arc-act arc-act-y" data-action="back">BCK</button>
+          <button class="arc-act arc-act-b">P1</button>
+          <button class="arc-act arc-act-g">P2</button>
+        </div>
+      </div>
+      <div class="arc-footer">© 1997 SNAKE CORP · ALL RIGHTS RESERVED</div>
+    </div>
   </div>
-  <div class="bottom-row">
-    <button class="n">*</button>
-    <button class="n">0<sub>+</sub></button>
-    <button class="n">#</button>
+</div>
+
+<!-- ══ TERMINAL ══ -->
+<div class="device" id="dev-terminal">
+  <div class="dev-terminal">
+    <div class="term-body">
+      <div class="term-header">
+        <span class="term-brand">COMPUTRON</span>
+        <span class="term-model-no">MODEL C-80 · 12&quot; CRT</span>
+      </div>
+      <div class="term-frame">
+        <div class="term-crt" id="slot-terminal"></div>
+      </div>
+      <div class="term-controls">
+        <button class="term-pwr" data-action="pause" title="POWER / PAUSE"></button>
+        <div class="term-knob"></div>
+        <div class="term-knob"></div>
+        <div class="term-vent">
+          <div class="term-vs"></div><div class="term-vs"></div><div class="term-vs"></div>
+          <div class="term-vs"></div><div class="term-vs"></div>
+        </div>
+      </div>
+      <div class="term-keys">
+        <div class="term-krow">
+          <button class="tkey" data-action="up">▲</button>
+        </div>
+        <div class="term-krow">
+          <button class="tkey" data-action="left">◄</button>
+          <button class="tkey" data-action="down">▼</button>
+          <button class="tkey" data-action="right">►</button>
+        </div>
+        <div class="term-krow">
+          <button class="tkey wide" data-action="pause">PAUSE / MENU</button>
+        </div>
+      </div>
+    </div>
+    <div class="term-neck"></div>
+    <div class="term-base"></div>
   </div>
+</div>
 
-</div><!-- /.phone -->
-
-<!-- Theme Swatches -->
-<div class="theme-bar">
+<!-- Nokia Theme Swatches -->
+<div class="theme-bar visible">
   <div class="swatch active" data-theme="classic" style="background:#1c2158" title="Classic"></div>
   <div class="swatch"        data-theme="stealth" style="background:#1c1c1c" title="Stealth"></div>
   <div class="swatch"        data-theme="banana"  style="background:#b88e00" title="Banana"></div>
@@ -389,140 +473,141 @@ body {
 
 <script>
 // ═══════════════════════════════════════════════
-//  NOKIA SNAKE  —  1:1 Nokia 3310 recreation
-//  Grid: 18×12 (matches 84×48px Nokia screen ratio)
-//  Colors: authentic Nokia LCD 4-shade palette
-//  Themes: Classic / Stealth / Banana / Ice
+//  SNAKE — Multi-Device Edition
+//  Nokia 3310 | Game Boy | Arcade | Terminal
 // ═══════════════════════════════════════════════
 
-const COLS   = 18;
-const ROWS   = 12;
-const CELL   = 16;
-const SCR_H  = 32;  // score bar height in px
-// Canvas: 288 × 224  (288 = 18×16, 224 = 32 + 12×16)
+const COLS = 18, ROWS = 12, CELL = 16, SCR_H = 32;
 
-const LCD = {
-  OFF:    '#9BBC0F',
-  LIGHT:  '#8BAC0F',
-  MID:    '#306230',
-  DARK:   '#0F380F',
-};
+const LCD = { OFF:'#9BBC0F', LIGHT:'#8BAC0F', MID:'#306230', DARK:'#0F380F' };
 
 const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
 
-// ── THEMES ────────────────────────────────────
+// ── NOKIA THEMES ─────────────────────────────
 const THEMES = {
   classic: {
-    '--phone-grad-1': '#2b3070', '--phone-grad-2': '#1c2158',
-    '--phone-grad-3': '#161a48', '--phone-grad-4': '#111438',
-    '--phone-shadow-1': '#0e1030', '--phone-shadow-2': '#0a0c24', '--phone-shadow-3': '#060818',
-    '--btn-grad-1': '#2e3580', '--btn-grad-2': '#1e2460', '--btn-grad-3': '#161c50',
-    '--btn-shadow': '#0e1040', '--btn-text': '#6a7dcc', '--sub-text': '#4a5aaa',
-    '--dpad-text': '#5a6fcc', '--dpad-ctr-1': '#363d90', '--dpad-ctr-2': '#1a2060',
-    '--nokia-logo': '#4a5fbb', '--speaker-hole': '#0a0c1e',
-    '--lcd-bg': '#9BBC0F', '--lcd-scanline': 'rgba(0,0,0,0.04)', '--lcd-shine': 'rgba(255,255,220,0.12)',
-    lcd: { OFF: '#9BBC0F', LIGHT: '#8BAC0F', MID: '#306230', DARK: '#0F380F' },
-    pause: 'rgba(155,188,15,0.75)',
+    '--phone-grad-1':'#2b3070','--phone-grad-2':'#1c2158','--phone-grad-3':'#161a48','--phone-grad-4':'#111438',
+    '--phone-shadow-1':'#0e1030','--phone-shadow-2':'#0a0c24','--phone-shadow-3':'#060818',
+    '--btn-grad-1':'#2e3580','--btn-grad-2':'#1e2460','--btn-grad-3':'#161c50',
+    '--btn-shadow':'#0e1040','--btn-text':'#6a7dcc','--sub-text':'#4a5aaa',
+    '--dpad-text':'#5a6fcc','--dpad-ctr-1':'#363d90','--dpad-ctr-2':'#1a2060',
+    '--nokia-logo':'#4a5fbb','--speaker-hole':'#0a0c1e',
+    '--lcd-bg':'#9BBC0F','--lcd-scanline':'rgba(0,0,0,0.04)','--lcd-shine':'rgba(255,255,220,0.12)',
+    lcd:{OFF:'#9BBC0F',LIGHT:'#8BAC0F',MID:'#306230',DARK:'#0F380F'},
+    pause:'rgba(155,188,15,0.75)',
   },
   stealth: {
-    '--phone-grad-1': '#2a2a2a', '--phone-grad-2': '#1c1c1c',
-    '--phone-grad-3': '#141414', '--phone-grad-4': '#0a0a0a',
-    '--phone-shadow-1': '#050505', '--phone-shadow-2': '#030303', '--phone-shadow-3': '#010101',
-    '--btn-grad-1': '#333333', '--btn-grad-2': '#222222', '--btn-grad-3': '#1a1a1a',
-    '--btn-shadow': '#050505', '--btn-text': '#888888', '--sub-text': '#555555',
-    '--dpad-text': '#777777', '--dpad-ctr-1': '#3a3a3a', '--dpad-ctr-2': '#1f1f1f',
-    '--nokia-logo': '#666666', '--speaker-hole': '#050505',
-    '--lcd-bg': '#d0d0d0', '--lcd-scanline': 'rgba(0,0,0,0.05)', '--lcd-shine': 'rgba(255,255,255,0.15)',
-    lcd: { OFF: '#d0d0d0', LIGHT: '#c0c0c0', MID: '#606060', DARK: '#111111' },
-    pause: 'rgba(190,190,190,0.75)',
+    '--phone-grad-1':'#2a2a2a','--phone-grad-2':'#1c1c1c','--phone-grad-3':'#141414','--phone-grad-4':'#0a0a0a',
+    '--phone-shadow-1':'#050505','--phone-shadow-2':'#030303','--phone-shadow-3':'#010101',
+    '--btn-grad-1':'#333333','--btn-grad-2':'#222222','--btn-grad-3':'#1a1a1a',
+    '--btn-shadow':'#050505','--btn-text':'#888888','--sub-text':'#555555',
+    '--dpad-text':'#777777','--dpad-ctr-1':'#3a3a3a','--dpad-ctr-2':'#1f1f1f',
+    '--nokia-logo':'#666666','--speaker-hole':'#050505',
+    '--lcd-bg':'#d0d0d0','--lcd-scanline':'rgba(0,0,0,0.05)','--lcd-shine':'rgba(255,255,255,0.15)',
+    lcd:{OFF:'#d0d0d0',LIGHT:'#c0c0c0',MID:'#606060',DARK:'#111111'},
+    pause:'rgba(190,190,190,0.75)',
   },
   banana: {
-    '--phone-grad-1': '#d4a800', '--phone-grad-2': '#b88e00',
-    '--phone-grad-3': '#9a7500', '--phone-grad-4': '#7a5c00',
-    '--phone-shadow-1': '#4a3800', '--phone-shadow-2': '#352800', '--phone-shadow-3': '#1e1600',
-    '--btn-grad-1': '#c49a00', '--btn-grad-2': '#a07e00', '--btn-grad-3': '#856800',
-    '--btn-shadow': '#4a3800', '--btn-text': '#ffe066', '--sub-text': '#c49a00',
-    '--dpad-text': '#ffd700', '--dpad-ctr-1': '#d4a800', '--dpad-ctr-2': '#9a7500',
-    '--nokia-logo': '#ffe066', '--speaker-hole': '#3d2b00',
-    '--lcd-bg': '#F5C518', '--lcd-scanline': 'rgba(0,0,0,0.04)', '--lcd-shine': 'rgba(255,255,200,0.15)',
-    lcd: { OFF: '#F5C518', LIGHT: '#E8B800', MID: '#9B6F00', DARK: '#3D2B00' },
-    pause: 'rgba(245,197,24,0.75)',
+    '--phone-grad-1':'#d4a800','--phone-grad-2':'#b88e00','--phone-grad-3':'#9a7500','--phone-grad-4':'#7a5c00',
+    '--phone-shadow-1':'#4a3800','--phone-shadow-2':'#352800','--phone-shadow-3':'#1e1600',
+    '--btn-grad-1':'#c49a00','--btn-grad-2':'#a07e00','--btn-grad-3':'#856800',
+    '--btn-shadow':'#4a3800','--btn-text':'#ffe066','--sub-text':'#c49a00',
+    '--dpad-text':'#ffd700','--dpad-ctr-1':'#d4a800','--dpad-ctr-2':'#9a7500',
+    '--nokia-logo':'#ffe066','--speaker-hole':'#3d2b00',
+    '--lcd-bg':'#F5C518','--lcd-scanline':'rgba(0,0,0,0.04)','--lcd-shine':'rgba(255,255,200,0.15)',
+    lcd:{OFF:'#F5C518',LIGHT:'#E8B800',MID:'#9B6F00',DARK:'#3D2B00'},
+    pause:'rgba(245,197,24,0.75)',
   },
   ice: {
-    '--phone-grad-1': '#b0bec5', '--phone-grad-2': '#90a4ae',
-    '--phone-grad-3': '#78909c', '--phone-grad-4': '#607d8b',
-    '--phone-shadow-1': '#37474f', '--phone-shadow-2': '#263238', '--phone-shadow-3': '#1a2329',
-    '--btn-grad-1': '#9fb5be', '--btn-grad-2': '#7d9ba6', '--btn-grad-3': '#6a8a96',
-    '--btn-shadow': '#37474f', '--btn-text': '#e0f4ff', '--sub-text': '#aaccee',
-    '--dpad-text': '#cce8f8', '--dpad-ctr-1': '#adc4cd', '--dpad-ctr-2': '#7a99a6',
-    '--nokia-logo': '#ddeeff', '--speaker-hole': '#263238',
-    '--lcd-bg': '#c8e0f4', '--lcd-scanline': 'rgba(0,20,60,0.04)', '--lcd-shine': 'rgba(255,255,255,0.2)',
-    lcd: { OFF: '#c8e0f4', LIGHT: '#b0cfea', MID: '#3a6fa0', DARK: '#0a2a50' },
-    pause: 'rgba(200,224,244,0.75)',
+    '--phone-grad-1':'#b0bec5','--phone-grad-2':'#90a4ae','--phone-grad-3':'#78909c','--phone-grad-4':'#607d8b',
+    '--phone-shadow-1':'#37474f','--phone-shadow-2':'#263238','--phone-shadow-3':'#1a2329',
+    '--btn-grad-1':'#9fb5be','--btn-grad-2':'#7d9ba6','--btn-grad-3':'#6a8a96',
+    '--btn-shadow':'#37474f','--btn-text':'#e0f4ff','--sub-text':'#aaccee',
+    '--dpad-text':'#cce8f8','--dpad-ctr-1':'#adc4cd','--dpad-ctr-2':'#7a99a6',
+    '--nokia-logo':'#ddeeff','--speaker-hole':'#263238',
+    '--lcd-bg':'#c8e0f4','--lcd-scanline':'rgba(0,20,60,0.04)','--lcd-shine':'rgba(255,255,255,0.2)',
+    lcd:{OFF:'#c8e0f4',LIGHT:'#b0cfea',MID:'#3a6fa0',DARK:'#0a2a50'},
+    pause:'rgba(200,224,244,0.75)',
   },
 };
 
-let currentTheme = 'classic';
+// ── DEVICE LCD CONFIGS ─────────────────────────
+const DEVICE_LCD = {
+  nokia:    null,  // uses THEMES system
+  gameboy:  { OFF:'#8fac5c', LIGHT:'#7a9a4a', MID:'#3c6428', DARK:'#1a2e10', pause:'rgba(143,172,92,0.75)' },
+  arcade:   { OFF:'#060c06', LIGHT:'#0a180a', MID:'#00aa44', DARK:'#39ff14', pause:'rgba(0,255,100,0.12)' },
+  terminal: { OFF:'#050906', LIGHT:'#080e08', MID:'#00aa44', DARK:'#33ff66', pause:'rgba(0,255,80,0.1)' },
+};
 
+let currentDevice = 'nokia';
+let currentTheme  = 'classic';
+
+// ── DEVICE SWITCH ──────────────────────────────
+function switchDevice(id) {
+  document.querySelectorAll('.device').forEach(d => d.classList.remove('active'));
+  document.getElementById('dev-' + id).classList.add('active');
+
+  // Move canvas into new slot
+  document.getElementById('slot-' + id).appendChild(canvas);
+
+  if (id === 'nokia') {
+    const saved = localStorage.getItem('nokiaSnakeTheme') || 'classic';
+    applyTheme(saved);
+    document.querySelector('.theme-bar').classList.add('visible');
+  } else {
+    const cfg = DEVICE_LCD[id];
+    Object.assign(LCD, cfg);
+    document.querySelector('.theme-bar').classList.remove('visible');
+    draw();
+  }
+
+  currentDevice = id;
+  localStorage.setItem('nokiaSnakeDevice', id);
+
+  document.querySelectorAll('.dev-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.dev === id)
+  );
+}
+
+// ── NOKIA THEME ────────────────────────────────
 function applyTheme(id) {
   const t = THEMES[id];
-  const root = document.documentElement.style;
-  for (const [key, val] of Object.entries(t)) {
-    if (key.startsWith('--')) root.setProperty(key, val);
-  }
+  const s = document.documentElement.style;
+  for (const [k, v] of Object.entries(t))
+    if (k.startsWith('--')) s.setProperty(k, v);
   Object.assign(LCD, t.lcd);
   currentTheme = id;
   localStorage.setItem('nokiaSnakeTheme', id);
-  document.querySelectorAll('.swatch').forEach(s =>
-    s.classList.toggle('active', s.dataset.theme === id)
+  document.querySelectorAll('.swatch').forEach(sw =>
+    sw.classList.toggle('active', sw.dataset.theme === id)
   );
   draw();
 }
 
 // ── AUDIO ──────────────────────────────────────
 let AC = null;
-function initAudio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); }
-
-function tone(freq, dur, type = 'square', vol = 0.25) {
+function initAudio() { if (!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); }
+function tone(freq, dur, type='square', vol=0.25) {
   if (!AC) return;
-  const o = AC.createOscillator();
-  const g = AC.createGain();
+  const o = AC.createOscillator(), g = AC.createGain();
   o.connect(g); g.connect(AC.destination);
-  o.type = type;
-  o.frequency.value = freq;
+  o.type = type; o.frequency.value = freq;
   g.gain.setValueAtTime(vol, AC.currentTime);
   g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur);
-  o.start(AC.currentTime);
-  o.stop(AC.currentTime + dur);
+  o.start(AC.currentTime); o.stop(AC.currentTime + dur);
 }
-
-function sfxEat() {
-  tone(880, 0.06);
-  setTimeout(() => tone(1320, 0.08), 55);
-}
-
-function sfxDie() {
-  tone(330, 0.12, 'sawtooth', 0.3);
-  setTimeout(() => tone(220, 0.15, 'sawtooth', 0.3), 110);
-  setTimeout(() => tone(110, 0.25, 'sawtooth', 0.25), 220);
-}
+function sfxEat() { tone(880,.06); setTimeout(()=>tone(1320,.08),55); }
+function sfxDie()  { tone(330,.12,'sawtooth',.3); setTimeout(()=>tone(220,.15,'sawtooth',.3),110); setTimeout(()=>tone(110,.25,'sawtooth',.25),220); }
 
 // ── STATE ──────────────────────────────────────
 let snake, dir, nextDir, food, score, gameState, speed, gameLoop, blinkLoop;
 let hiScore = parseInt(localStorage.getItem('nokiaSnakeHi')) || 0;
-// gameState: 'menu' | 'playing' | 'paused' | 'over'
 
 function initGame() {
-  snake = [
-    { x: 10, y: 6 },
-    { x:  9, y: 6 },
-    { x:  8, y: 6 },
-  ];
-  dir     = { x: 1, y: 0 };
-  nextDir = { x: 1, y: 0 };
-  score   = 0;
-  speed   = 150;
+  snake = [{x:10,y:6},{x:9,y:6},{x:8,y:6}];
+  dir = nextDir = {x:1,y:0};
+  score = 0; speed = 150;
   spawnFood();
   gameState = 'playing';
   clearInterval(gameLoop);
@@ -531,286 +616,205 @@ function initGame() {
 
 function spawnFood() {
   const free = [];
-  for (let x = 0; x < COLS; x++)
-    for (let y = 0; y < ROWS; y++)
-      if (!snake.some(s => s.x === x && s.y === y))
-        free.push({ x, y });
-  food = free[Math.floor(Math.random() * free.length)];
+  for (let x=0;x<COLS;x++) for (let y=0;y<ROWS;y++)
+    if (!snake.some(s=>s.x===x&&s.y===y)) free.push({x,y});
+  food = free[Math.floor(Math.random()*free.length)];
 }
 
 function updateSpeed(s) {
-  speed = s;
-  clearInterval(gameLoop);
-  gameLoop = setInterval(tick, speed);
+  speed = s; clearInterval(gameLoop); gameLoop = setInterval(tick,speed);
 }
 
-// ── GAME LOOP ──────────────────────────────────
+// ── GAME TICK ──────────────────────────────────
 function tick() {
   if (gameState !== 'playing') return;
-
   dir = nextDir;
-  const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-
-  if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
-    return gameover();
-  }
-  if (snake.some(s => s.x === head.x && s.y === head.y)) {
-    return gameover();
-  }
-
+  const head = {x:snake[0].x+dir.x, y:snake[0].y+dir.y};
+  if (head.x<0||head.x>=COLS||head.y<0||head.y>=ROWS) return gameover();
+  if (snake.some(s=>s.x===head.x&&s.y===head.y))       return gameover();
   snake.unshift(head);
-
-  if (head.x === food.x && head.y === food.y) {
-    score++;
-    sfxEat();
-    if (score % 5 === 0)
-      updateSpeed(Math.max(60, speed - 10));
+  if (head.x===food.x&&head.y===food.y) {
+    score++; sfxEat();
+    if (score%5===0) updateSpeed(Math.max(60,speed-10));
     spawnFood();
-  } else {
-    snake.pop();
-  }
-
+  } else { snake.pop(); }
   draw();
 }
 
 function gameover() {
-  clearInterval(gameLoop);
-  sfxDie();
-  if (score > hiScore) {
-    hiScore = score;
-    localStorage.setItem('nokiaSnakeHi', hiScore);
-  }
-  gameState = 'over';
-  draw();
-  clearInterval(blinkLoop);
-  blinkLoop = setInterval(draw, 500);
+  clearInterval(gameLoop); sfxDie();
+  if (score>hiScore) { hiScore=score; localStorage.setItem('nokiaSnakeHi',hiScore); }
+  gameState = 'over'; draw();
+  clearInterval(blinkLoop); blinkLoop = setInterval(draw,500);
 }
 
 // ── DRAWING ────────────────────────────────────
 function draw() {
   ctx.fillStyle = LCD.OFF;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  if      (gameState === 'menu')                 drawMenu();
-  else if (gameState === 'playing' ||
-           gameState === 'paused')               drawGame();
-  else if (gameState === 'over')                 drawGameOver();
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  if      (gameState==='menu')                        drawMenu();
+  else if (gameState==='playing'||gameState==='paused') drawGame();
+  else if (gameState==='over')                        drawGameOver();
 }
 
 function drawScoreBar() {
   ctx.fillStyle = LCD.DARK;
-  ctx.fillRect(0, 0, canvas.width, 2);
-  ctx.fillRect(0, SCR_H - 2, canvas.width, 2);
-
-  ctx.font = "7px 'Press Start 2P'";
-  ctx.fillStyle = LCD.DARK;
-
-  ctx.fillText('SC:' + score, 4, 15);
-
-  const lv  = Math.floor((150 - speed) / 10) + 1;
-  const lvT = 'LV:' + lv;
-  const lvW = ctx.measureText(lvT).width;
-  ctx.fillText(lvT, canvas.width / 2 - lvW / 2, 15);
-
-  const hiT = 'HI:' + hiScore;
-  const hiW = ctx.measureText(hiT).width;
-  ctx.fillText(hiT, canvas.width - hiW - 4, 15);
+  ctx.fillRect(0,0,canvas.width,2);
+  ctx.fillRect(0,SCR_H-2,canvas.width,2);
+  ctx.font="7px 'Press Start 2P'"; ctx.fillStyle=LCD.DARK;
+  ctx.fillText('SC:'+score,4,15);
+  const lv='LV:'+(Math.floor((150-speed)/10)+1), lw=ctx.measureText(lv).width;
+  ctx.fillText(lv,canvas.width/2-lw/2,15);
+  const hi='HI:'+hiScore, hw=ctx.measureText(hi).width;
+  ctx.fillText(hi,canvas.width-hw-4,15);
 }
 
 function drawGrid() {
-  ctx.fillStyle = LCD.LIGHT;
-  for (let x = 0; x <= COLS; x++)
-    for (let y = 0; y <= ROWS; y++)
-      ctx.fillRect(x * CELL, SCR_H + y * CELL, 1, 1);
+  ctx.fillStyle=LCD.LIGHT;
+  for(let x=0;x<=COLS;x++) for(let y=0;y<=ROWS;y++) ctx.fillRect(x*CELL,SCR_H+y*CELL,1,1);
 }
 
 function drawSnake() {
-  for (let i = 0; i < snake.length; i++) {
-    const { x, y } = snake[i];
-    const px = x * CELL;
-    const py = SCR_H + y * CELL;
-
-    ctx.fillStyle = LCD.DARK;
-    ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
-
-    if (i === 0) {
-      ctx.fillStyle = LCD.OFF;
-      const d = dir;
-      if      (d.x ===  1) { ctx.fillRect(px+CELL-5, py+3, 2, 2); ctx.fillRect(px+CELL-5, py+CELL-5, 2, 2); }
-      else if (d.x === -1) { ctx.fillRect(px+3,      py+3, 2, 2); ctx.fillRect(px+3,      py+CELL-5, 2, 2); }
-      else if (d.y === -1) { ctx.fillRect(px+3,      py+3, 2, 2); ctx.fillRect(px+CELL-5, py+3,      2, 2); }
-      else                 { ctx.fillRect(px+3, py+CELL-5, 2, 2); ctx.fillRect(px+CELL-5, py+CELL-5, 2, 2); }
+  for(let i=0;i<snake.length;i++) {
+    const {x,y}=snake[i], px=x*CELL, py=SCR_H+y*CELL;
+    ctx.fillStyle=LCD.DARK;
+    ctx.fillRect(px+1,py+1,CELL-2,CELL-2);
+    if(i===0) {
+      ctx.fillStyle=LCD.OFF; const d=dir;
+      if(d.x===1)  { ctx.fillRect(px+CELL-5,py+3,2,2); ctx.fillRect(px+CELL-5,py+CELL-5,2,2); }
+      else if(d.x===-1) { ctx.fillRect(px+3,py+3,2,2); ctx.fillRect(px+3,py+CELL-5,2,2); }
+      else if(d.y===-1) { ctx.fillRect(px+3,py+3,2,2); ctx.fillRect(px+CELL-5,py+3,2,2); }
+      else               { ctx.fillRect(px+3,py+CELL-5,2,2); ctx.fillRect(px+CELL-5,py+CELL-5,2,2); }
     } else {
-      ctx.fillStyle = LCD.MID;
-      ctx.fillRect(px + 3, py + 3, CELL - 6, CELL - 6);
+      ctx.fillStyle=LCD.MID; ctx.fillRect(px+3,py+3,CELL-6,CELL-6);
     }
   }
 }
 
 function drawFood() {
-  const px = food.x * CELL;
-  const py = SCR_H + food.y * CELL;
-  ctx.fillStyle = LCD.DARK;
-  ctx.fillRect(px + 5, py + 5, 6, 6);
-  ctx.fillRect(px + 7, py + 2, 2, 3);
-  ctx.fillRect(px + 7, py + 11, 2, 3);
-  ctx.fillRect(px + 2, py + 7, 3, 2);
-  ctx.fillRect(px + 11, py + 7, 3, 2);
+  const px=food.x*CELL, py=SCR_H+food.y*CELL;
+  ctx.fillStyle=LCD.DARK;
+  ctx.fillRect(px+5,py+5,6,6);
+  ctx.fillRect(px+7,py+2,2,3); ctx.fillRect(px+7,py+11,2,3);
+  ctx.fillRect(px+2,py+7,3,2); ctx.fillRect(px+11,py+7,3,2);
 }
 
-function blink() {
-  return Math.floor(Date.now() / 600) % 2 === 0;
-}
+function blink() { return Math.floor(Date.now()/600)%2===0; }
 
 function drawMenu() {
-  ctx.fillStyle = LCD.DARK;
-
-  ctx.font = "16px 'Press Start 2P'";
-  const tw = ctx.measureText('SNAKE').width;
-  ctx.fillText('SNAKE', canvas.width / 2 - tw / 2, 46);
-
-  const demo = [{x:4,y:5},{x:5,y:5},{x:6,y:5},{x:6,y:6},{x:6,y:7}];
-  for (const s of demo) {
-    ctx.fillRect(s.x * CELL + 1, SCR_H + s.y * CELL + 1, CELL - 2, CELL - 2);
-  }
-  const fx = 11 * CELL, fy = SCR_H + 6 * CELL;
-  ctx.fillRect(fx+5, fy+5, 6, 6);
-  ctx.fillRect(fx+7, fy+2, 2, 3); ctx.fillRect(fx+7, fy+11, 2, 3);
-  ctx.fillRect(fx+2, fy+7, 3, 2); ctx.fillRect(fx+11, fy+7, 3, 2);
-
-  ctx.font = "6px 'Press Start 2P'";
-  const ht = 'HI: ' + hiScore;
-  const hw = ctx.measureText(ht).width;
-  ctx.fillText(ht, canvas.width / 2 - hw / 2, 112);
-
-  if (blink()) {
-    const pt = 'PRESS ANY KEY';
-    const pw = ctx.measureText(pt).width;
-    ctx.fillText(pt, canvas.width / 2 - pw / 2, 134);
-  }
+  ctx.fillStyle=LCD.DARK;
+  ctx.font="16px 'Press Start 2P'";
+  const tw=ctx.measureText('SNAKE').width;
+  ctx.fillText('SNAKE',canvas.width/2-tw/2,46);
+  const demo=[{x:4,y:5},{x:5,y:5},{x:6,y:5},{x:6,y:6},{x:6,y:7}];
+  for(const s of demo) ctx.fillRect(s.x*CELL+1,SCR_H+s.y*CELL+1,CELL-2,CELL-2);
+  const fx=11*CELL,fy=SCR_H+6*CELL;
+  ctx.fillRect(fx+5,fy+5,6,6); ctx.fillRect(fx+7,fy+2,2,3); ctx.fillRect(fx+7,fy+11,2,3);
+  ctx.fillRect(fx+2,fy+7,3,2); ctx.fillRect(fx+11,fy+7,3,2);
+  ctx.font="6px 'Press Start 2P'";
+  const ht='HI: '+hiScore, hw=ctx.measureText(ht).width;
+  ctx.fillText(ht,canvas.width/2-hw/2,112);
+  if(blink()) { const pt='PRESS ANY KEY',pw=ctx.measureText(pt).width; ctx.fillText(pt,canvas.width/2-pw/2,134); }
 }
 
 function drawGame() {
-  drawScoreBar();
-  drawGrid();
-  drawFood();
-  drawSnake();
-
-  if (gameState === 'paused') {
-    ctx.fillStyle = THEMES[currentTheme].pause;
-    ctx.fillRect(0, SCR_H, canvas.width, canvas.height - SCR_H);
-    ctx.fillStyle = LCD.DARK;
-    ctx.font = "8px 'Press Start 2P'";
-    const pt = 'PAUSED';
-    const pw = ctx.measureText(pt).width;
-    ctx.fillText(pt, canvas.width / 2 - pw / 2, SCR_H + ROWS * CELL / 2 + 4);
-    ctx.font = "5px 'Press Start 2P'";
-    const rt = 'SPACE TO CONTINUE';
-    const rw = ctx.measureText(rt).width;
-    ctx.fillText(rt, canvas.width / 2 - rw / 2, SCR_H + ROWS * CELL / 2 + 18);
+  drawScoreBar(); drawGrid(); drawFood(); drawSnake();
+  if(gameState==='paused') {
+    const p = currentDevice==='nokia' ? THEMES[currentTheme].pause : DEVICE_LCD[currentDevice].pause;
+    ctx.fillStyle=p;
+    ctx.fillRect(0,SCR_H,canvas.width,canvas.height-SCR_H);
+    ctx.fillStyle=LCD.DARK;
+    ctx.font="8px 'Press Start 2P'";
+    const pt='PAUSED',pw=ctx.measureText(pt).width;
+    ctx.fillText(pt,canvas.width/2-pw/2,SCR_H+ROWS*CELL/2+4);
+    ctx.font="5px 'Press Start 2P'";
+    const rt='SPACE TO CONTINUE',rw=ctx.measureText(rt).width;
+    ctx.fillText(rt,canvas.width/2-rw/2,SCR_H+ROWS*CELL/2+18);
   }
 }
 
 function drawGameOver() {
-  drawScoreBar();
-
-  ctx.fillStyle = LCD.DARK;
-
-  ctx.font = "8px 'Press Start 2P'";
-  const gt = 'GAME OVER';
-  const gw = ctx.measureText(gt).width;
-  ctx.fillText(gt, canvas.width / 2 - gw / 2, SCR_H + 44);
-
-  ctx.font = "6px 'Press Start 2P'";
-  const st = 'SCORE: ' + score;
-  const sw = ctx.measureText(st).width;
-  ctx.fillText(st, canvas.width / 2 - sw / 2, SCR_H + 66);
-
-  if (score > 0 && score === hiScore) {
-    const nt = 'NEW RECORD!';
-    const nw = ctx.measureText(nt).width;
-    ctx.fillText(nt, canvas.width / 2 - nw / 2, SCR_H + 84);
-  }
-
-  if (blink()) {
-    const bt = 'PRESS ANY KEY';
-    const bw = ctx.measureText(bt).width;
-    ctx.fillText(bt, canvas.width / 2 - bw / 2, SCR_H + 108);
-  }
+  drawScoreBar(); ctx.fillStyle=LCD.DARK;
+  ctx.font="8px 'Press Start 2P'";
+  const gt='GAME OVER',gw=ctx.measureText(gt).width;
+  ctx.fillText(gt,canvas.width/2-gw/2,SCR_H+44);
+  ctx.font="6px 'Press Start 2P'";
+  const st='SCORE: '+score,sw=ctx.measureText(st).width;
+  ctx.fillText(st,canvas.width/2-sw/2,SCR_H+66);
+  if(score>0&&score===hiScore) { const nt='NEW RECORD!',nw=ctx.measureText(nt).width; ctx.fillText(nt,canvas.width/2-nw/2,SCR_H+84); }
+  if(blink()) { const bt='PRESS ANY KEY',bw=ctx.measureText(bt).width; ctx.fillText(bt,canvas.width/2-bw/2,SCR_H+108); }
 }
 
 // ── INPUT ──────────────────────────────────────
-function handleInput(dx, dy) {
+function handleInput(dx,dy) {
   initAudio();
-
-  if (gameState === 'menu') {
-    initGame(); return;
-  }
-  if (gameState === 'over') {
-    clearInterval(blinkLoop);
-    gameState = 'menu';
-    clearInterval(gameLoop);
-    draw(); return;
-  }
-  if (gameState === 'paused') return;
-
-  if (dx !== 0 && dir.x === -dx) return;
-  if (dy !== 0 && dir.y === -dy) return;
-  nextDir = { x: dx, y: dy };
+  if(gameState==='menu')  { initGame(); return; }
+  if(gameState==='over')  { clearInterval(blinkLoop); gameState='menu'; clearInterval(gameLoop); draw(); return; }
+  if(gameState==='paused') return;
+  if(dx!==0&&dir.x===-dx) return;
+  if(dy!==0&&dir.y===-dy) return;
+  nextDir={x:dx,y:dy};
 }
-
 function handleSpace() {
   initAudio();
-  if (gameState === 'playing') {
-    gameState = 'paused'; draw();
-  } else if (gameState === 'paused') {
-    gameState = 'playing';
+  if(gameState==='playing') { gameState='paused'; draw(); }
+  else if(gameState==='paused') { gameState='playing'; }
+}
+function handleBack() {
+  initAudio();
+  if(gameState==='playing'||gameState==='paused') {
+    clearInterval(gameLoop); clearInterval(blinkLoop); gameState='menu'; draw();
   }
 }
 
-document.addEventListener('keydown', e => {
-  switch (e.key) {
-    case 'ArrowUp':    case 'w': case 'W': handleInput( 0, -1); e.preventDefault(); break;
-    case 'ArrowDown':  case 's': case 'S': handleInput( 0,  1); e.preventDefault(); break;
-    case 'ArrowLeft':  case 'a': case 'A': handleInput(-1,  0); e.preventDefault(); break;
-    case 'ArrowRight': case 'd': case 'D': handleInput( 1,  0); e.preventDefault(); break;
-    case ' ':                               handleSpace();        e.preventDefault(); break;
-    default:
-      if (gameState === 'menu' || gameState === 'over') handleInput(0, 0);
-  }
-});
-
-document.getElementById('btnUp')   ?.addEventListener('click', () => handleInput( 0, -1));
-document.getElementById('btnDown') ?.addEventListener('click', () => handleInput( 0,  1));
-document.getElementById('btnLeft') ?.addEventListener('click', () => handleInput(-1,  0));
-document.getElementById('btnRight')?.addEventListener('click', () => handleInput( 1,  0));
-
-document.getElementById('btnMenu')?.addEventListener('click', () => { initAudio(); handleSpace(); });
-document.getElementById('btnBack')?.addEventListener('click', () => {
+// Unified button handler via data-action
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-action]');
+  if (!b) return;
   initAudio();
-  if (gameState === 'playing' || gameState === 'paused') {
-    clearInterval(gameLoop);
-    clearInterval(blinkLoop);
-    gameState = 'menu';
-    draw();
+  switch(b.dataset.action) {
+    case 'up':    handleInput(0,-1); break;
+    case 'down':  handleInput(0, 1); break;
+    case 'left':  handleInput(-1,0); break;
+    case 'right': handleInput( 1,0); break;
+    case 'pause': handleSpace();     break;
+    case 'back':  handleBack();      break;
   }
 });
 
-// Swatch click handlers
+// Device tab clicks
+document.querySelectorAll('.dev-tab').forEach(t =>
+  t.addEventListener('click', () => switchDevice(t.dataset.dev))
+);
+
+// Nokia theme swatch clicks
 document.querySelectorAll('.swatch').forEach(s =>
   s.addEventListener('click', () => applyTheme(s.dataset.theme))
 );
 
+// Keyboard
+document.addEventListener('keydown', e => {
+  switch(e.key) {
+    case 'ArrowUp':   case 'w': case 'W': handleInput(0,-1);  e.preventDefault(); break;
+    case 'ArrowDown': case 's': case 'S': handleInput(0, 1);  e.preventDefault(); break;
+    case 'ArrowLeft': case 'a': case 'A': handleInput(-1,0);  e.preventDefault(); break;
+    case 'ArrowRight':case 'd': case 'D': handleInput( 1,0);  e.preventDefault(); break;
+    case ' ':                              handleSpace();       e.preventDefault(); break;
+    default: if(gameState==='menu'||gameState==='over') handleInput(0,0);
+  }
+});
+
 // ── BOOT ──────────────────────────────────────
 gameState = 'menu';
-// Load saved theme (applies colors + draws)
-const savedTheme = localStorage.getItem('nokiaSnakeTheme') || 'classic';
-applyTheme(savedTheme);
-// Menu blink animation
+const savedDevice = localStorage.getItem('nokiaSnakeDevice') || 'nokia';
+const savedTheme  = localStorage.getItem('nokiaSnakeTheme')  || 'classic';
+if (savedDevice === 'nokia') {
+  applyTheme(savedTheme);
+} else {
+  switchDevice(savedDevice);
+}
 clearInterval(blinkLoop);
-blinkLoop = setInterval(() => {
-  if (gameState === 'menu') draw();
-}, 500);
+blinkLoop = setInterval(() => { if(gameState==='menu') draw(); }, 500);
 </script>
 </body>
 </html>
