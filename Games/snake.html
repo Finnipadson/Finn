@@ -805,6 +805,9 @@ function handleInput(dx,dy) {
   if(dx!==0&&dir.x===-dx) return;
   if(dy!==0&&dir.y===-dy) return;
   nextDir={x:dx,y:dy};
+  // Sofortige visuelle Reaktion: Kopfrichtung updaten + Tick-Timer vorspulen
+  dir = nextDir;
+  lastTickTime = performance.now() - speed * 0.75;
 }
 function handleSpace() {
   initAudio();
