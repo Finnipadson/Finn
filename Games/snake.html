@@ -22,7 +22,7 @@
 body {
   background: radial-gradient(ellipse at center, #1a1d30 0%, #08080f 100%);
   display: flex; flex-direction: column; align-items: center;
-  min-height: 100vh; padding: 24px 20px 60px;
+  height: 100vh; overflow: hidden; padding: 8px 20px;
   font-family: 'Press Start 2P', monospace;
 }
 
@@ -58,7 +58,7 @@ body {
 
 /* ═══ NOKIA 3310 ═══ */
 .dev-nokia {
-  width:344px;
+  width:424px;
   background:linear-gradient(165deg,var(--phone-grad-1) 0%,var(--phone-grad-2) 30%,var(--phone-grad-3) 70%,var(--phone-grad-4) 100%);
   border-radius:36px 36px 90px 90px/36px 36px 130px 130px;
   padding:20px 18px 50px; position:relative;
@@ -114,7 +114,7 @@ body {
 
 /* ═══ GAME BOY DMG-01 ═══ */
 .dev-gb {
-  width:330px;
+  width:450px;
   background:linear-gradient(160deg,#ccc4dc 0%,#b8b0cc 40%,#a8a0bc 100%);
   border-radius:10px 10px 10px 54px;
   padding:18px 20px 30px; position:relative;
@@ -305,7 +305,7 @@ body {
     </div>
     <div class="screen-bezel">
       <div class="screen-lcd" id="slot-nokia">
-        <canvas id="c" width="288" height="224"></canvas>
+        <canvas id="c" width="360" height="272"></canvas>
       </div>
     </div>
     <div class="soft-row">
@@ -477,7 +477,7 @@ body {
 //  Nokia 3310 | Game Boy | Arcade | Terminal
 // ═══════════════════════════════════════════════
 
-const COLS = 18, ROWS = 12, CELL = 16, SCR_H = 32;
+const COLS = 18, ROWS = 12, CELL = 20, SCR_H = 32;
 
 const LCD = { OFF:'#9BBC0F', LIGHT:'#8BAC0F', MID:'#306230', DARK:'#0F380F' };
 
@@ -543,6 +543,24 @@ const DEVICE_LCD = {
 let currentDevice = 'nokia';
 let currentTheme  = 'classic';
 
+// ── SCALE DEVICE TO FIT VIEWPORT ──────────────
+function scaleDevice() {
+  const active = document.querySelector('.device.active');
+  if (!active) return;
+  active.style.transform = '';
+  const sel   = document.querySelector('.dev-selector');
+  const tbar  = document.querySelector('.theme-bar');
+  const selH  = sel  ? sel.offsetHeight  + 8  : 0;
+  const tbarH = tbar && tbar.classList.contains('visible') ? tbar.offsetHeight + 22 : 0;
+  const availH = window.innerHeight - selH - tbarH - 24;
+  const availW = window.innerWidth  - 40;
+  const natH   = active.scrollHeight;
+  const natW   = active.scrollWidth;
+  const scale  = Math.min(availH / natH, availW / natW, 2.5);
+  active.style.transformOrigin = 'top center';
+  active.style.transform = `scale(${scale})`;
+}
+
 // ── DEVICE SWITCH ──────────────────────────────
 function switchDevice(id) {
   document.querySelectorAll('.device').forEach(d => d.classList.remove('active'));
@@ -568,6 +586,7 @@ function switchDevice(id) {
   document.querySelectorAll('.dev-tab').forEach(t =>
     t.classList.toggle('active', t.dataset.dev === id)
   );
+  scaleDevice();
 }
 
 // ── NOKIA THEME ────────────────────────────────
@@ -583,6 +602,7 @@ function applyTheme(id) {
     sw.classList.toggle('active', sw.dataset.theme === id)
   );
   draw();
+  scaleDevice();
 }
 
 // ── AUDIO ──────────────────────────────────────
@@ -815,6 +835,8 @@ if (savedDevice === 'nokia') {
 }
 clearInterval(blinkLoop);
 blinkLoop = setInterval(() => { if(gameState==='menu') draw(); }, 500);
+scaleDevice();
+window.addEventListener('resize', scaleDevice);
 </script>
 </body>
 </html>
