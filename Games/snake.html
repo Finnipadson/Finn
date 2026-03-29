@@ -550,6 +550,8 @@ function scaleDevice() {
   // Reset first so we measure natural size
   active.style.transform = '';
   active.style.marginBottom = '';
+  active.style.marginLeft   = '';
+  active.style.marginRight  = '';
   const sel   = document.querySelector('.dev-selector');
   const tbar  = document.querySelector('.theme-bar');
   const selH  = sel  ? sel.offsetHeight + 8  : 0;
@@ -561,7 +563,10 @@ function scaleDevice() {
   const scale  = Math.min(availH / natH, availW / natW, 2.5);
   active.style.transformOrigin = 'top center';
   active.style.transform = `scale(${scale})`;
-  // Compensate layout height so content below isn't hidden under the scaled device
+  // Collapse/expand layout box to match visual size — prevents overflow clipping on all sides
+  const hDelta = (natW * (scale - 1)) / 2;
+  active.style.marginLeft  = hDelta + 'px';
+  active.style.marginRight = hDelta + 'px';
   if (scale > 1) active.style.marginBottom = (natH * (scale - 1)) + 'px';
 }
 
