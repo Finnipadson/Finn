@@ -623,15 +623,31 @@ function sfxDie()  { tone(330,.12,'sawtooth',.3); setTimeout(()=>tone(220,.15,'s
 // ── STATE ──────────────────────────────────────
 let snake, dir, nextDir, food, score, gameState, speed, gameLoop, blinkLoop;
 let hiScore = parseInt(localStorage.getItem('nokiaSnakeHi')) || 0;
+let prevSnake = null, grew = false, lastTickTime = 0, tickProgress = 0, rafId = null;
+
+function startRenderLoop() {
+  if (rafId) cancelAnimationFrame(rafId);
+  function loop(now) {
+    rafId = requestAnimationFrame(loop);
+    if (gameState === 'playing') {
+      tickProgress = Math.min((now - lastTickTime) / speed, 1);
+      draw();
+    }
+  }
+  rafId = requestAnimationFrame(loop);
+}
 
 function initGame() {
   snake = [{x:10,y:6},{x:9,y:6},{x:8,y:6}];
   dir = nextDir = {x:1,y:0};
   score = 0; speed = 150;
+  prevSnake = null; grew = false;
+  lastTickTime = performance.now(); tickProgress = 0;
   spawnFood();
   gameState = 'playing';
   clearInterval(gameLoop);
   gameLoop = setInterval(tick, speed);
+  startRenderLoop();
 }
 
 function spawnFood() {
@@ -648,17 +664,19 @@ function updateSpeed(s) {
 // ── GAME TICK ──────────────────────────────────
 function tick() {
   if (gameState !== 'playing') return;
+  prevSnake = snake.map(s => ({x:s.x, y:s.y}));
+  lastTickTime = performance.now();
+  tickProgress = 0;
   dir = nextDir;
   const head = {x:snake[0].x+dir.x, y:snake[0].y+dir.y};
   if (head.x<0||head.x>=COLS||head.y<0||head.y>=ROWS) return gameover();
   if (snake.some(s=>s.x===head.x&&s.y===head.y))       return gameover();
   snake.unshift(head);
   if (head.x===food.x&&head.y===food.y) {
-    score++; sfxEat();
+    score++; grew = true; sfxEat();
     if (score%5===0) updateSpeed(Math.max(60,speed-10));
     spawnFood();
-  } else { snake.pop(); }
-  draw();
+  } else { snake.pop(); grew = false; }
 }
 
 function gameover() {
@@ -695,8 +713,12 @@ function drawGrid() {
 }
 
 function drawSnake() {
+  const t = tickProgress;
+  const ps = prevSnake;
   for(let i=0;i<snake.length;i++) {
-    const {x,y}=snake[i], px=x*CELL, py=SCR_H+y*CELL;
+    const cur=snake[i], prev=ps&&ps[i]?ps[i]:cur;
+    const px=(prev.x+(cur.x-prev.x)*t)*CELL;
+    const py=SCR_H+(prev.y+(cur.y-prev.y)*t)*CELL;
     ctx.fillStyle=LCD.DARK;
     ctx.fillRect(px+1,py+1,CELL-2,CELL-2);
     if(i===0) {
