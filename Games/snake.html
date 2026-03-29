@@ -22,7 +22,7 @@
 body {
   background: radial-gradient(ellipse at center, #1a1d30 0%, #08080f 100%);
   display: flex; flex-direction: column; align-items: center;
-  height: 100vh; overflow: hidden; padding: 8px 20px;
+  min-height: 100vh; overflow-x: hidden; padding: 8px 20px;
   font-family: 'Press Start 2P', monospace;
 }
 
@@ -547,18 +547,22 @@ let currentTheme  = 'classic';
 function scaleDevice() {
   const active = document.querySelector('.device.active');
   if (!active) return;
+  // Reset first so we measure natural size
   active.style.transform = '';
+  active.style.marginBottom = '';
   const sel   = document.querySelector('.dev-selector');
   const tbar  = document.querySelector('.theme-bar');
-  const selH  = sel  ? sel.offsetHeight  + 8  : 0;
+  const selH  = sel  ? sel.offsetHeight + 8  : 0;
   const tbarH = tbar && tbar.classList.contains('visible') ? tbar.offsetHeight + 22 : 0;
   const availH = window.innerHeight - selH - tbarH - 24;
   const availW = window.innerWidth  - 40;
-  const natH   = active.scrollHeight;
-  const natW   = active.scrollWidth;
+  const natH   = active.offsetHeight;
+  const natW   = active.offsetWidth;
   const scale  = Math.min(availH / natH, availW / natW, 2.5);
   active.style.transformOrigin = 'top center';
   active.style.transform = `scale(${scale})`;
+  // Compensate layout height so content below isn't hidden under the scaled device
+  if (scale > 1) active.style.marginBottom = (natH * (scale - 1)) + 'px';
 }
 
 // ── DEVICE SWITCH ──────────────────────────────
