@@ -112,6 +112,31 @@ a { color: inherit; }
 .bar.locked .tb { filter: grayscale(1) brightness(.6); pointer-events: none; }
 #nextwave { min-width: 96px; flex-direction: column; gap: 0; line-height: 1.1; font-size: .95rem; }
 #nextwave small { font-size: .7rem; font-weight: 400; opacity: .85; }
+.abils { display: flex; gap: 5px; }
+.ab { position: relative; width: 40px; height: 40px; border-radius: 6px; background: #3a2c1e; border: 2px solid #121a12; box-shadow: inset 0 2px 0 rgba(255,255,255,.1), 0 3px 0 #0e150e; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.ab canvas { width: 24px; height: 24px; position: relative; z-index: 1; }
+.ab .key { position: absolute; right: 2px; bottom: 0; font-size: .62rem; color: var(--ink2); z-index: 3; }
+.ab .cd { position: absolute; inset: 0; z-index: 2; background: conic-gradient(rgba(8,10,8,.72) var(--p, 0%), transparent 0); }
+.ab .sec { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; color: #fff3dc; text-shadow: 0 2px 0 #000; }
+.ab.ready { animation: ready .5s; }
+.ab.armed { outline: 2px solid var(--gold); background: #6a4a1e; }
+@keyframes ready { 50% { transform: scale(1.12); } }
+/* ---------- Kampagnenkarte ---------- */
+.world { position: relative; padding: 8px; }
+.world canvas { width: 100%; height: auto; border-radius: 4px; border: 2px solid #121a12; cursor: pointer; touch-action: manipulation; }
+.detail { padding: 14px; display: grid; gap: 10px; }
+.detail h3 { font-size: 1.35rem; font-weight: 700; color: var(--gold); }
+.detail .sub { color: var(--ink2); font-size: .9rem; }
+.abil-list { padding: 12px 14px; display: grid; gap: 8px; }
+.abil-list h3 { font-size: 1.05rem; font-weight: 600; display: flex; justify-content: space-between; }
+.abrow { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 6px; background: var(--bg2); border: 2px solid transparent; text-align: left; width: 100%; }
+.abrow canvas { width: 28px; height: 28px; flex-shrink: 0; }
+.abrow .txt { flex: 1; font-size: .85rem; color: var(--ink2); line-height: 1.3; }
+.abrow .txt b { color: var(--ink); font-size: .95rem; display: block; }
+.abrow .slot { min-width: 34px; height: 30px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-weight: 700; background: #1a2419; color: var(--ink3); border: 2px solid #121a12; font-size: .8rem; padding: 0 6px; }
+.abrow.on { border-color: var(--gold); }
+.abrow.on .slot { background: var(--wood-l); color: #fff3dc; }
+.abrow.locked { opacity: .5; }
 .tip { position: fixed; z-index: 30; pointer-events: none; padding: 6px 10px; font-size: .8rem; max-width: 220px; display: none; }
 .tip.on { display: block; }
 
@@ -131,7 +156,11 @@ a { color: inherit; }
   .towers { grid-template-columns: repeat(4, 1fr); grid-template-rows: auto auto; }
   .tb { min-height: 54px; }
   .tb canvas { width: 26px; height: 32px; }
-  .stat { font-size: .92rem; padding: 3px 7px; }
+  .stat { font-size: .88rem; padding: 3px 5px; gap: 4px; }
+  .hud { gap: 4px; }
+  .hud .stat:nth-of-type(3) img { display: none; }
+  .ab { width: 34px; height: 34px; }
+  .ab canvas { width: 20px; height: 20px; }
   #nextwave { min-width: 76px; }
 }
 </style>
@@ -147,6 +176,7 @@ a { color: inherit; }
     <span class="stat gold"><img id="ico-coin" alt=""><span id="h-gold">0</span></span>
     <span class="stat"><img id="ico-flag" alt=""><span id="h-wave">0/8</span></span>
     <span class="grow"></span>
+    <div class="abils" id="abils"></div>
     <button class="btn small stone" id="b-speed" aria-label="Tempo">1×</button>
   </div>
   <div class="stagewrap" id="stagewrap">
@@ -231,6 +261,24 @@ const TOWER = {
 };
 const TOWER_KEYS = Object.keys(TOWER);
 const TARGET_MODES = [['first', 'Erster'], ['strong', 'Stärkster'], ['near', 'Nächster']];
+
+// Aktive Fähigkeiten – freigeschaltet über gesammelte Sterne (alle Karten × alle Schwierigkeiten)
+const ABILITY = {
+  fire: { name: 'Feuerregen',  cd: 35, target: 'area', r: 34, stars: 1,  desc: 'Meteore auf eine Stelle – hoher Flächenschaden, trifft auch Flieger.' },
+  ice:  { name: 'Eiszeit',     cd: 50, stars: 3,  desc: 'Friert alle Gegner 3 s ein, danach sind sie verlangsamt.' },
+  tax:  { name: 'Steuer',      cd: 60, stars: 6,  desc: 'Sofort Gold: 50 + 10 pro Welle.' },
+  wall: { name: 'Mauer',       cd: 45, target: 'path', stars: 10, desc: 'Palisade auf dem Weg hält Bodentruppen bis zu 8 s auf.' },
+  heal: { name: 'Burg heilen', cd: 90, stars: 15, desc: 'Stellt 5 Burg-Leben wieder her.' },
+};
+const ABILITY_KEYS = ['q', 'w', 'e'];
+const EARLY_BONUS = w => 15 + 3 * w;         // Extragold, wenn die nächste Welle früher gerufen wird
+
+// Kampagnenkarte: Orte 1–3 spielbar, 4–8 folgen in Phase 3
+const WORLD_NODES = [
+  { x: 62, y: 222 }, { x: 146, y: 150 }, { x: 246, y: 214 },
+  { x: 300, y: 128, name: 'Fährfurt' }, { x: 372, y: 206, name: 'Nebelhain' }, { x: 428, y: 124, name: 'Hexenweiher' },
+  { x: 352, y: 56, name: 'Steinbrücke' }, { x: 440, y: 40, name: 'Königsburg' },
+];
 
 // ============================================================
 // KARTEN
@@ -374,7 +422,7 @@ const inHill = (map, x, y) => map.hills.some(h => ((x - h.cx) / h.rx) ** 2 + ((y
 // ============================================================
 const SAVE_KEY = 'burgwacht_v1';
 function loadSave() {
-  const d = { stars: {}, settings: { sfx: 0.7, music: 0.4 }, diff: 'normal', seenHint: false, seenTypes: [] };
+  const d = { stars: {}, settings: { sfx: 0.7, music: 0.4 }, diff: 'normal', seenHint: false, seenTypes: [], loadout: [] };
   try { const raw = localStorage.getItem(SAVE_KEY); if (raw) { const o = JSON.parse(raw); Object.assign(d, o); d.settings = Object.assign({ sfx: 0.7, music: 0.4 }, o.settings); } } catch (e) { }
   return d;
 }
@@ -382,6 +430,14 @@ let SV = loadSave();
 function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(SV)); } catch (e) { } }
 const mapStars = id => SV.stars[id] || {};
 const mapUnlocked = i => i === 0 || Object.values(mapStars(MAPS[i - 1].id)).some(s => s > 0);
+const totalStars = () => MAPS.reduce((a, m) => a + Object.values(mapStars(m.id)).reduce((x, y) => x + y, 0), 0);
+const maxStars = () => MAPS.length * 9;
+const abilUnlocked = id => totalStars() >= ABILITY[id].stars;
+// Ausrüstung: nur freigeschaltete, max. 3 (neu freigeschaltete setzt endGame einmalig ein, solange Platz ist)
+function loadout() {
+  SV.loadout = (SV.loadout || []).filter(id => ABILITY[id] && abilUnlocked(id)).slice(0, 3);
+  return SV.loadout;
+}
 
 // ============================================================
 // SOUND & MUSIK (synthetisiert)
@@ -450,6 +506,8 @@ const Sound = (() => {
     win() { horn([294, 370, 440, 587], 0.32, 0.08); },
     lose() { horn([220, 196, 175, 147], 0.4, 0.08); },
     deny() { tone(150, 0.12, { type: 'square', vol: 0.05 }); },
+    fireCast() { noise(0.7, { freq: 1200, q: 0.6, vol: 0.18 }); tone(500, 0.6, { type: 'sawtooth', vol: 0.03, glide: 120 }); },
+    freezeAll() { [1760, 2349, 2637, 3136].forEach((f, i) => tone(f, 0.5, { vol: 0.04, delay: i * 0.05 })); noise(0.5, { freq: 6000, q: 0.5, vol: 0.08 }); },
   };
   function pluck(f, t, vol) {
     const os = ctx.createOscillator(), os2 = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
@@ -760,8 +818,9 @@ function newGame(mapIdx, diff) {
     time: 0, speed: 1, paused: false, over: false,
     blocked: computeGrid(map), occ: new Map(),
     boss: null, bossNoteShown: false,
+    paid: 0, walls: [], meteors: [], abilReady: {}, armedAbil: null, slots: loadout().slice(),
   };
-  updateHud(); updateBar(); closeMenu();
+  updateHud(); updateBar(); closeMenu(); buildAbilBar();
 }
 function routeFor(key) {
   const m = G.map;
@@ -770,8 +829,16 @@ function routeFor(key) {
   if (m.split && m.split[key]) key = m.split[key][Math.random() < 0.5 ? 0 : 1];
   return routePx(m.routes[key]);
 }
+const canCallEarly = () => G && G.waveActive && !G.queue.length && G.wave < G.map.waves.length;
 function startWave() {
-  if (!G || G.waveActive || G.over || G.paused || G.wave >= G.map.waves.length) return;
+  if (!G || G.over || G.paused || G.wave >= G.map.waves.length) return;
+  if (G.waveActive && !canCallEarly()) return;
+  if (G.waveActive) {
+    // Früher rufen: Bonus der laufenden Welle sofort auszahlen + Extragold
+    const extra = EARLY_BONUS(G.wave);
+    payWave(extra);
+    addFx({ k: 'text', x: W / 2, y: 40, text: 'Früh gerufen +' + extra, col: '#ffd36a', until: G.time + 1.4 });
+  }
   const groups = G.map.waves[G.wave];
   G.queue = [];
   for (const [type, n, route, gap, at] of groups) for (let i = 0; i < n; i++) G.queue.push({ t: at + i * gap, type, route });
@@ -886,7 +953,7 @@ function update(dt) {
   // Spawns
   if (G.waveActive) {
     G.waveTime += dt;
-    while (G.queue.length && G.queue[0].t <= G.waveTime) { const q = G.queue.shift(); spawnEnemy(q.type, q.route); }
+    while (G.queue.length && G.queue[0].t <= G.waveTime) { const q = G.queue.shift(); spawnEnemy(q.type, q.route); if (!G.queue.length) updateBar(); }
   }
   // Gegner
   for (const e of G.enemies) {
@@ -896,7 +963,7 @@ function update(dt) {
     for (const c of G.clouds) if (!e.fly && Math.hypot(c.x - e.x, c.y - e.y) < c.r) { e.hp -= c.dps * dt; e.poisonUntil = Math.max(e.poisonUntil, G.time + 0.5); e.poisonDps = Math.max(e.poisonDps, 0.0001); if (e.hp <= 0) { kill(e); break; } }
     if (!e.alive) continue;
     let mult = 1;
-    if (e.frozenUntil > G.time) mult = 0;
+    if (e.frozenUntil > G.time || wallBlocks(e)) mult = 0;
     else if (e.slowUntil > G.time) mult = 1 - e.slow;
     moveEnemy(e, st.sp * mult * dt);
     if (!e.alive) continue;
@@ -952,6 +1019,7 @@ function update(dt) {
     }
   }
   G.projs = G.projs.filter(p => !p.dead);
+  updateAbilities(dt);
   G.clouds = G.clouds.filter(c => c.until > G.time);
   G.fx = G.fx.filter(f => f.until > G.time);
   G.enemies = G.enemies.filter(e => e.alive);
@@ -998,16 +1066,24 @@ function impact(p) {
       break;
   }
 }
+// Zahlt Minen-Einkommen und Wellenbonus für alle noch nicht abgerechneten Wellen
+function payWave(extra = 0) {
+  let income = 0, bonus = extra;
+  while (G.paid < G.wave) {
+    G.paid++;
+    for (const t of G.towers) if (t.type === 'mine' && t.busyUntil <= G.time) { const inc = TOWER.mine.income[t.lvl - 1]; income += inc; addFx({ k: 'text', x: t.x, y: t.cy - 26, text: '+' + inc, col: '#ffd36a', until: G.time + 1.4 }); }
+    if (G.paid < G.map.waves.length) bonus += WAVE_BONUS(G.paid);
+  }
+  G.gold += income + bonus;
+  if (income || bonus) Sound.play('coin');
+  updateHud(); updateBar();
+  return bonus;
+}
 function waveDone() {
   G.waveActive = false;
-  let income = 0;
-  for (const t of G.towers) if (t.type === 'mine' && t.busyUntil <= G.time) { const inc = TOWER.mine.income[t.lvl - 1]; income += inc; addFx({ k: 'text', x: t.x, y: t.cy - 26, text: '+' + inc, col: '#ffd36a', until: G.time + 1.4 }); }
-  if (income) { G.gold += income; Sound.play('coin'); }
+  const bonus = payWave();
   if (G.wave >= G.map.waves.length) { endGame(true); return; }
-  const bonus = WAVE_BONUS(G.wave);
-  G.gold += bonus;
   banner(`Welle geschafft · +${bonus} Gold`);
-  updateHud(); updateBar();
 }
 
 // ============================================================
@@ -1043,10 +1119,99 @@ function sell(t) {
 }
 
 // ============================================================
+// FÄHIGKEITEN
+// ============================================================
+const abilLeft = id => Math.max(0, (G.abilReady[id] || 0) - G.time);
+function nearestPathPoint(x, y) {
+  let best = null, bd = Infinity;
+  for (const [x1, y1, x2, y2] of mapSegments(G.map)) {
+    const dx = x2 - x1, dy = y2 - y1, t = clamp(((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy || 1), 0, 1);
+    const px = x1 + t * dx, py = y1 + t * dy, d = Math.hypot(x - px, y - py);
+    if (d < bd && px >= 0 && px <= W && py >= 0 && py <= H) { bd = d; best = { x: px, y: py, d }; }
+  }
+  return best;
+}
+function triggerAbility(id) {
+  if (!G || G.over || G.paused || !G.slots.includes(id)) return;
+  if (abilLeft(id) > 0) { Sound.play('deny'); return; }
+  const a = ABILITY[id];
+  if (a.target) {
+    G.armedAbil = G.armedAbil === id ? null : id;
+    armed = null; ghost = null; closeMenu(); updateBar();
+    if (G.armedAbil) banner(a.target === 'path' ? 'Mauer: Stelle auf dem Weg wählen' : 'Feuerregen: Ziel wählen');
+    Sound.play('click'); updateAbilBar(); return;
+  }
+  useAbility(id);
+}
+function useAbility(id, x, y) {
+  const a = ABILITY[id];
+  if (id === 'fire') {
+    const dmg = (55 + 8 * G.wave) * (G.diff === 'hard' ? 1.1 : 1);
+    for (let i = 0; i < 5; i++) {
+      const ang = i * 1.26 + Math.random() * 0.5, rr = i === 0 ? 0 : a.r * (0.35 + Math.random() * 0.4);
+      G.meteors.push({ x: x + Math.cos(ang) * rr, y: y + Math.sin(ang) * rr * 0.7, at: G.time + 0.45 + i * 0.13, dmg: dmg * (i === 0 ? 0.6 : 0.35), r: 22 });
+    }
+    Sound.play('fireCast');
+  } else if (id === 'ice') {
+    for (const e of G.enemies) {
+      if (!e.alive) continue;
+      if (ENEMY[e.type].boss) { e.slow = 0.5; e.slowUntil = G.time + 4; }
+      else { e.frozenUntil = G.time + 3; e.slow = 0.4; e.slowUntil = G.time + 6; }
+    }
+    addFx({ k: 'frostflash', x: 0, y: 0, until: G.time + 0.8 });
+    Sound.play('freezeAll');
+  } else if (id === 'tax') {
+    const g = 50 + 10 * G.wave; G.gold += g;
+    addFx({ k: 'text', x: G.map.castle.cx, y: G.map.castle.by - 80, text: '+' + g + ' Gold', col: '#ffd36a', until: G.time + 1.6 });
+    Sound.play('coin');
+  } else if (id === 'wall') {
+    const p = nearestPathPoint(x, y);
+    if (!p || p.d > 16) { Sound.play('deny'); banner('Die Mauer muss auf den Weg'); return false; }
+    const hp = 260 * DIFF[G.diff].hp * MAP_HP[G.mapIdx] * (1 + 0.06 * G.wave);
+    G.walls.push({ x: p.x, y: p.y, hp, max: hp, until: G.time + 8 });
+    Sound.play('build');
+  } else if (id === 'heal') {
+    if (G.lives >= G.maxLives) { Sound.play('deny'); banner('Die Burg ist unversehrt'); return false; }
+    const n = Math.min(5, G.maxLives - G.lives); G.lives += n;
+    addFx({ k: 'text', x: G.map.castle.cx, y: G.map.castle.by - 80, text: '+' + n + ' Leben', col: '#8ee05a', until: G.time + 1.6 });
+    addFx({ k: 'healglow', x: G.map.castle.cx, y: G.map.castle.by - 30, until: G.time + 1 });
+    Sound.play('heal');
+  }
+  G.abilReady[id] = G.time + a.cd;
+  G.armedAbil = null;
+  updateHud(); updateAbilBar();
+  return true;
+}
+function updateAbilities(dt) {
+  // Meteore
+  for (const m of G.meteors) {
+    if (m.done || m.at > G.time) continue;
+    m.done = true;
+    addFx({ k: 'boom', x: m.x, y: m.y, r: m.r + 4, until: G.time + 0.35 });
+    addFx({ k: 'scorch', x: m.x, y: m.y, until: G.time + 4 });
+    for (const e of G.enemies) if (e.alive && Math.hypot(e.x - m.x, e.y - (e.fly ? 10 : 4) - m.y) <= m.r) { damage(e, m.dmg, { arc: 1 }); if (e.alive) { e.poisonUntil = Math.max(e.poisonUntil, G.time + 2); e.poisonDps = Math.max(e.poisonDps, 6); } }
+    Sound.play('boom');
+  }
+  G.meteors = G.meteors.filter(m => !m.done);
+  // Mauern
+  for (const w of G.walls) {
+    for (const e of G.enemies) {
+      if (!e.alive || e.fly || Math.hypot(e.x - w.x, e.y - w.y) > 11) continue;
+      w.hp -= (ENEMY[e.type].boss ? 220 : 10 + 6 * e.dmg) * dt;
+      if (Math.random() < dt * 3) addFx({ k: 'spark', x: w.x + (Math.random() - 0.5) * 8, y: w.y - 8, until: G.time + 0.15 });
+    }
+    if (w.hp <= 0 || w.until <= G.time) { w.gone = true; addFx({ k: 'poof', x: w.x, y: w.y - 6, until: G.time + 0.4, col: '#a06a3c' }); if (w.hp <= 0) Sound.play('block'); }
+  }
+  G.walls = G.walls.filter(w => !w.gone);
+}
+const wallBlocks = e => !e.fly && G.walls.some(w => Math.hypot(e.x - w.x, e.y - w.y) <= 11);
+
+// ============================================================
 // RENDER
 // ============================================================
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
 let selected = null, ghost = null; // ghost: {type, tx, ty}
+let hoverPos = null;               // Mausposition auf der Karte (logische Pixel)
 function drawRange(x, y, r, col) {
   ctx.save();
   ctx.fillStyle = col.replace('A', '.12'); ctx.strokeStyle = col.replace('A', '.75');
@@ -1063,6 +1228,12 @@ function render() {
   if (wl) for (let k = 0; k < 30; k++) { const i = Math.floor(hash(k, tick) * wl) * 2; ctx.fillRect(layer.water[i], layer.water[i + 1], 1, 1); }
   // Burgfahne
   { const { cx, by } = G.map.castle, fx = cx - 18 + 18, fy = by - 52 - 16; ctx.fillStyle = fr ? '#e2a64a' : '#d9952f'; ctx.fillRect(fx, fy, 7, 4); ctx.fillRect(fx + 7, fy + 1, fr ? 2 : 1, 2); }
+  // Brandflecken der Meteore
+  for (const f of G.fx) if (f.k === 'scorch') {
+    ctx.globalAlpha = 0.45 * Math.min(1, (f.until - G.time) / 1.5);
+    ctx.fillStyle = '#2a1a10'; ctx.beginPath(); ctx.ellipse(f.x, f.y, 11, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
   // Giftwolken
   for (const c of G.clouds) { ctx.globalAlpha = 0.35 * Math.min(1, (c.until - G.time)); ctx.fillStyle = '#7ae04a'; ctx.beginPath(); ctx.ellipse(c.x, c.y, c.r, c.r * 0.55, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
   // Bauvorschau
@@ -1078,11 +1249,25 @@ function render() {
   const list = [];
   for (const t of G.towers) list.push({ y: t.by, f: () => drawTower(t, fr) });
   for (const e of G.enemies) if (!e.fly) list.push({ y: e.y, f: () => drawEnemy(e) });
+  for (const w of G.walls) list.push({ y: w.y + 3, f: () => drawWall(w) });
   if (ghost && ghost.tx >= 0) list.push({ y: ghost.ty * TILE + 22, f: () => { ctx.globalAlpha = 0.6; ctx.drawImage(towerSprite(ghost.type, 1, 0), tc(ghost.tx) - 16, ghost.ty * TILE + 22 - 37); ctx.globalAlpha = 1; } });
   list.sort((a, b) => a.y - b.y).forEach(o => o.f());
   for (const e of G.enemies) if (e.fly) drawEnemy(e);
   // Geschosse
   for (const p of G.projs) drawProj(p);
+  // Fallende Meteore
+  for (const m of G.meteors) {
+    const k = clamp(1 - (m.at - G.time) / 0.45, 0, 1);
+    if (k <= 0) continue;
+    const mx = Math.round(m.x + (1 - k) * 50), my = Math.round(m.y - (1 - k) * 130);
+    ctx.fillStyle = '#ffd36a'; for (let i = 1; i < 7; i++) ctx.fillRect(mx + i * 2, my - i * 5, 2, 2);
+    ctx.fillStyle = '#e0604a'; ctx.fillRect(mx - 3, my - 3, 6, 6); ctx.fillStyle = '#ffd36a'; ctx.fillRect(mx - 1, my - 2, 3, 3); ctx.fillStyle = '#3a1408'; ctx.fillRect(mx - 3, my + 3, 6, 1);
+  }
+  // Zielvorschau für Fähigkeiten
+  if (G.armedAbil && hoverPos) {
+    if (G.armedAbil === 'fire') drawRange(hoverPos.x, hoverPos.y, ABILITY.fire.r, 'rgba(255,140,60,A)');
+    else { const p = nearestPathPoint(hoverPos.x, hoverPos.y), ok = p && p.d <= 16; if (ok) { ctx.globalAlpha = 0.6; drawWall({ x: p.x, y: p.y, hp: 1, max: 1 }); ctx.globalAlpha = 1; } else { ctx.fillStyle = 'rgba(230,90,70,.8)'; ctx.fillRect(Math.round(hoverPos.x) - 4, Math.round(hoverPos.y) - 1, 9, 2); ctx.fillRect(Math.round(hoverPos.x) - 1, Math.round(hoverPos.y) - 4, 2, 9); } }
+  }
   // Effekte
   for (const f of G.fx) drawFx(f);
   // Lebensbalken
@@ -1138,6 +1323,19 @@ function drawEnemy(e) {
   if (e.slowUntil > G.time && e.frozenUntil <= G.time) { ctx.fillStyle = '#bfefff'; ctx.fillRect(Math.round(e.x - 4 + (Math.floor(G.time * 8) % 8)), Math.round(e.y - 2), 1, 1); }
   if (e.poisonUntil > G.time && Math.floor(G.time * 4 + e.phase) % 2) { ctx.fillStyle = '#8ee05a'; ctx.fillRect(Math.round(e.x + 3), Math.round(e.y - s.height - 3), 2, 2); }
 }
+function drawWall(w) {
+  const x = Math.round(w.x), y = Math.round(w.y);
+  ctx.fillStyle = 'rgba(25,55,20,.4)'; ctx.fillRect(x - 11, y + 2, 22, 2);
+  for (let i = -10; i <= 8; i += 4) {
+    const h = 13 + ((i + 10) % 8 === 0 ? 2 : 0);
+    ctx.fillStyle = '#3b2414'; ctx.fillRect(x + i - 1, y - h - 1, 4, h + 3);
+    ctx.fillStyle = '#a06a3c'; ctx.fillRect(x + i, y - h, 2, h + 1);
+    ctx.fillStyle = '#c99a5f'; ctx.fillRect(x + i, y - h, 1, h);
+    ctx.fillStyle = '#3b2414'; ctx.fillRect(x + i, y - h - 2, 2, 1);
+  }
+  ctx.fillStyle = '#6b4426'; ctx.fillRect(x - 11, y - 9, 22, 2); ctx.fillRect(x - 11, y - 4, 22, 2);
+  if (w.hp < w.max) { ctx.fillStyle = '#1a1010'; ctx.fillRect(x - 9, y - 21, 18, 3); ctx.fillStyle = '#e8b04a'; ctx.fillRect(x - 8, y - 20, Math.max(1, Math.round(16 * w.hp / w.max)), 1); }
+}
 function drawProj(p) {
   const x = Math.round(p.x), y = Math.round(p.y);
   switch (p.kind) {
@@ -1176,6 +1374,16 @@ function drawFx(f) {
     case 'spark': ctx.fillStyle = '#fff3a0'; ctx.fillRect(Math.round(f.x), Math.round(f.y), 2, 2); break;
     case 'plus': ctx.fillStyle = '#8ee05a'; ctx.globalAlpha = 1 - k; { const y = Math.round(f.y - k * 6); ctx.fillRect(Math.round(f.x) - 1, y - 2, 1, 5); ctx.fillRect(Math.round(f.x) - 3, y, 5, 1); } ctx.globalAlpha = 1; break;
     case 'ring': ctx.strokeStyle = `rgba(255,230,140,${1 - k})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r * k, f.r * k * 0.6, 0, 0, Math.PI * 2); ctx.stroke(); break;
+    case 'frostflash':
+      ctx.fillStyle = `rgba(190,235,255,${0.45 * (1 - k)})`; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = `rgba(255,255,255,${1 - k})`;
+      for (let i = 0; i < 60; i++) ctx.fillRect(Math.round(hash(i, 7) * W), Math.round((hash(i, 9) * H + k * 30) % H), 1, 1);
+      break;
+    case 'healglow':
+      ctx.fillStyle = `rgba(142,224,90,${0.5 * (1 - k)})`; ctx.beginPath(); ctx.ellipse(f.x, f.y, 30 + k * 10, 34 + k * 10, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#8ee05a'; for (let i = 0; i < 6; i++) { const yy = Math.round(f.y - k * 30 - i * 6); ctx.fillRect(Math.round(f.x - 20 + i * 8) - 1, yy - 2, 1, 5); ctx.fillRect(Math.round(f.x - 20 + i * 8) - 3, yy, 5, 1); }
+      break;
+    case 'scorch': break;
   }
 }
 
@@ -1195,6 +1403,37 @@ const ICONS = {
   star: pixIcon(['....oo....', '...oyyo...', '...oyyo...', 'ooooyyoooo', 'oyyyyyyyyo', '.oyyyyyyo.', '..oyyyyo..', '.oyyooyyo.', '.oyo..oyo.', '.oo....oo.'], { o: '#5c3a10', y: '#e8b04a' }),
   starOff: pixIcon(['....oo....', '...oyyo...', '...oyyo...', 'ooooyyoooo', 'oyyyyyyyyo', '.oyyyyyyo.', '..oyyyyo..', '.oyyooyyo.', '.oyo..oyo.', '.oo....oo.'], { o: '#26301f', y: '#4a5a40' }),
 };
+const ABIL_ICONS = {
+  fire: pixIcon(['.........yy.', '........yr..', '.......yr...', '....ooyr....', '...orrro....', '..orryyro...', '..oryyyro...', '..orryrro...', '...orrro....', '....ooo.....', '............', '............'], { o: '#3a1408', r: '#e0604a', y: '#ffd36a' }),
+  ice: pixIcon(['.....w......', '...w.w.w....', '....www.....', '.w..www..w..', '..w..w..w...', 'wwwwwwwwwww.', '..w..w..w...', '.w..www..w..', '....www.....', '...w.w.w....', '.....w......', '............'], { w: '#bfefff' }),
+  tax: pixIcon(['....oooo....', '.....oo.....', '....oyyo....', '...oybbyo...', '..obbbbbbo..', '.obbbybbbbo.', '.obbyyybbbo.', '.obbbybbbbo.', '.obbbbbbbbo.', '..oooooooo..', '............', '............'], { o: '#3a2410', y: '#ffd36a', b: '#a8743a' }),
+  wall: pixIcon(['..o...o...o.', '.oyo.oyo.oyo', '.oyo.oyo.oyo', 'oooooooooooo', 'obbbbbbbbbbo', '.oyo.oyo.oyo', '.oyo.oyo.oyo', 'oooooooooooo', 'obbbbbbbbbbo', '.oyo.oyo.oyo', '.ooo.ooo.ooo', '............'], { o: '#3b2414', y: '#c99a5f', b: '#8a5a33' }),
+  heal: pixIcon(['............', '.oo..oo.....', 'orrhorrro...', 'orrrrrrro...', 'orrrrrrro.g.', '.orrrrro.ggg', '..orrro...g.', '...oro......', '....o.......', '............', '............', '............'], { o: '#3a1010', r: '#e0604a', h: '#ffd0c4', g: '#8ee05a' }),
+};
+const iconCanvas = (src, w = 12, h = 12) => { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(src, 0, 0); return c; };
+function buildAbilBar() {
+  const box = $('#abils'); box.innerHTML = '';
+  G.slots.forEach((id, i) => {
+    const b = document.createElement('button'); b.className = 'ab'; b.dataset.ab = id; b.title = `${ABILITY[id].name} (${ABILITY_KEYS[i].toUpperCase()}) – ${ABILITY[id].desc}`;
+    b.appendChild(iconCanvas(ABIL_ICONS[id]));
+    b.insertAdjacentHTML('beforeend', `<span class="cd"></span><span class="sec"></span><span class="key">${ABILITY_KEYS[i].toUpperCase()}</span>`);
+    box.appendChild(b);
+  });
+}
+const abilWasReady = {};
+function updateAbilBar() {
+  if (!G) return;
+  document.querySelectorAll('.ab').forEach(b => {
+    const id = b.dataset.ab, left = abilLeft(id), p = left > 0 ? Math.round(left / ABILITY[id].cd * 100) : 0;
+    b.querySelector('.cd').style.setProperty('--p', p + '%');
+    b.querySelector('.sec').textContent = left > 0 ? Math.ceil(left) : '';
+    b.classList.toggle('armed', G.armedAbil === id);
+    const ready = left <= 0;
+    if (ready && abilWasReady[id] === false) { b.classList.remove('ready'); void b.offsetWidth; b.classList.add('ready'); }
+    abilWasReady[id] = ready;
+  });
+}
+$('#abils').addEventListener('click', e => { const b = e.target.closest('.ab'); if (b) { Sound.unlock(); triggerAbility(b.dataset.ab); } });
 $('#ico-heart').src = ICONS.heart.toDataURL(); $('#ico-coin').src = ICONS.coin.toDataURL(); $('#ico-flag').src = ICONS.flag.toDataURL();
 
 function updateHud() {
@@ -1222,9 +1461,9 @@ function updateBar() {
   document.querySelectorAll('.tb').forEach(b => { b.classList.toggle('poor', G.gold < TOWER[b.dataset.type].cost); b.classList.toggle('armed', armed === b.dataset.type); });
   $('#bar').classList.toggle('locked', G.paused || G.over);
   const nw = $('#nextwave');
-  const last = G.wave >= G.map.waves.length;
-  nw.classList.toggle('off', G.waveActive || last || G.over);
-  nw.innerHTML = G.waveActive ? `Welle ${G.wave}<small>läuft …</small>` : last ? 'Fertig' : `Welle ${G.wave + 1}<small>Leertaste</small>`;
+  const last = G.wave >= G.map.waves.length, early = canCallEarly();
+  nw.classList.toggle('off', (G.waveActive && !early) || last || G.over);
+  nw.innerHTML = early ? `Früher rufen<small>+${EARLY_BONUS(G.wave)} Gold</small>` : G.waveActive ? `Welle ${G.wave}<small>läuft …</small>` : last ? 'Fertig' : `Welle ${G.wave + 1}<small>Leertaste</small>`;
 }
 function openMenu(t) {
   selected = t;
@@ -1268,6 +1507,7 @@ $('#towers').addEventListener('pointerdown', e => {
   const b = e.target.closest('.tb'); if (!b || !G || G.paused || G.over) return;
   Sound.unlock();
   drag = { type: b.dataset.type, x0: e.clientX, y0: e.clientY, moved: false };
+  if (G.armedAbil) { G.armedAbil = null; updateAbilBar(); }
   e.preventDefault();
 });
 window.addEventListener('pointermove', e => {
@@ -1290,10 +1530,13 @@ window.addEventListener('pointerup', e => {
     if (!armed) ghost = null;
   }
 });
+cv.addEventListener('pointermove', e => { const t = toTile(e.clientX, e.clientY); hoverPos = t ? { x: t.x, y: t.y } : null; });
+cv.addEventListener('pointerleave', () => { hoverPos = null; });
 cv.addEventListener('pointerdown', e => {
   if (!G) return;
   Sound.unlock();
   const t = toTile(e.clientX, e.clientY); if (!t) return;
+  if (G.armedAbil) { if (!G.paused && !G.over) useAbility(G.armedAbil, t.x, t.y); updateAbilBar(); return; }
   const tw = towerAt(t.tx, t.ty);
   if (armed && !tw) {
     if (G.paused) return;
@@ -1334,12 +1577,15 @@ document.addEventListener('keydown', e => {
   if (currentScreen !== 'game' || !G) return;
   if (G.over) return;
   const k = e.key.toLowerCase();
-  if (k === 'escape' || k === 'p') { if (armed && k === 'escape') { armed = null; ghost = null; updateBar(); return; } setPaused(!G.paused); return; }
+  if (k === 'escape' || k === 'p') {
+    if (k === 'escape' && (armed || G.armedAbil)) { armed = null; ghost = null; G.armedAbil = null; updateBar(); updateAbilBar(); return; }
+    setPaused(!G.paused); return;
+  }
   if (G.paused) return;
   if (k === ' ') { e.preventDefault(); startWave(); }
   else if (k === 'f') toggleSpeed();
-  else if (/^[1-8]$/.test(k)) { armed = TOWER_KEYS[+k - 1]; Sound.play('click'); updateBar(); showTip(armed); }
-  else if (k === 'q' || k === 'w' || k === 'e') banner('Fähigkeiten folgen in Phase 2');
+  else if (/^[1-8]$/.test(k)) { armed = TOWER_KEYS[+k - 1]; G.armedAbil = null; Sound.play('click'); updateBar(); updateAbilBar(); showTip(armed); }
+  else if (ABILITY_KEYS.includes(k)) { const id = G.slots[ABILITY_KEYS.indexOf(k)]; if (id) triggerAbility(id); else banner('Keine Fähigkeit auf dieser Taste'); }
   else if (k === 'u' && selected) upgrade(selected);
   else if ((k === 'delete' || k === 's') && selected) sell(selected);
 });
@@ -1364,7 +1610,7 @@ function loop(now) {
     while (acc >= STEP && n < 20) { update(STEP); acc -= STEP; n++; }
     if (selected && !G.towers.includes(selected)) closeMenu();
   } else acc = 0;
-  if (currentScreen === 'game') render();
+  if (currentScreen === 'game') { render(); updateAbilBar(); }
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
@@ -1375,11 +1621,15 @@ requestAnimationFrame(loop);
 function endGame(won) {
   if (G.over) return;
   G.over = true; closeMenu(); armed = null; ghost = null; updateBar(); clearBoss();
-  let stars = 0;
+  let stars = 0, newAbils = [];
   if (won) {
+    const before = Object.keys(ABILITY).filter(abilUnlocked);
     stars = G.lives >= G.maxLives ? 3 : G.lives > G.maxLives / 2 ? 2 : 1;
     const ms = SV.stars[G.map.id] || (SV.stars[G.map.id] = {});
-    ms[G.diff] = Math.max(ms[G.diff] || 0, stars); persist();
+    ms[G.diff] = Math.max(ms[G.diff] || 0, stars);
+    newAbils = Object.keys(ABILITY).filter(id => abilUnlocked(id) && !before.includes(id));
+    const lo = loadout(); for (const id of newAbils) if (lo.length < 3) lo.push(id);
+    persist();
   }
   Sound.play(won ? 'win' : 'lose');
   const next = G.mapIdx + 1 < MAPS.length;
@@ -1387,6 +1637,7 @@ function endGame(won) {
     <h2>${won ? 'Burg gehalten!' : 'Die Burg ist gefallen'}</h2>
     ${won ? '<div class="bigstars" id="bigstars"></div>' : ''}
     <p>${G.map.name} · ${DIFF[G.diff].name}<br>${won ? `${G.lives} von ${G.maxLives} Leben übrig` : `Welle ${G.wave} von ${G.map.waves.length}`}</p>
+    ${newAbils.map(id => `<p style="color:var(--gold);margin-top:-6px">Neue Fähigkeit: <b>${ABILITY[id].name}</b> – ${ABILITY[id].desc}</p>`).join('')}
     <div class="btns">
       ${won && next ? '<button class="btn green" data-e="next">Nächste Karte</button>' : ''}
       <button class="btn ${won ? '' : 'green'}" data-e="retry">${won ? 'Nochmal' : 'Nochmal versuchen'}</button>
@@ -1415,41 +1666,138 @@ $('#ov-end').addEventListener('click', e => {
 // ============================================================
 let currentScreen = 'menu', menuMap = 0;
 function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id)); currentScreen = id; }
-const previewCache = {};
+// ----- Kampagnenkarte (Pixel-Weltkarte) -----
+let worldLayer = null;
+const worldSegs = () => WORLD_NODES.slice(1).map((n, i) => [WORLD_NODES[i].x, WORLD_NODES[i].y, n.x, n.y, i + 1]);
+function buildWorldLayer() {
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x2 = c.getContext('2d'), img = x2.createImageData(W, H), Dt = img.data;
+  const river = [[196, -10], [208, 50], [188, 110], [204, 170], [186, 240], [200, 300]];
+  const lake = { cx: 100, cy: 262, rx: 30, ry: 14 };
+  const segs = worldSegs(), sum = PALETTES.summer, moor = PALETTES.moor;
+  const cache = {}, rgb = s => cache[s] || (cache[s] = [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16)]);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const n = hash(x, y);
+    let e = Infinity;
+    for (let i = 0; i < river.length - 1; i++) e = Math.min(e, dseg(x, y, ...river[i], ...river[i + 1]) - 7);
+    e = Math.min(e, (Math.hypot((x - lake.cx) / lake.rx, (y - lake.cy) / lake.ry) - 1) * lake.ry);
+    e += (hash(x >> 2, y >> 2) - 0.5) * 2;
+    let dt = Infinity, segIdx = 0;
+    for (const s of segs) { const d = dseg(x, y, s[0], s[1], s[2], s[3]); if (d < dt) { dt = d; segIdx = s[4]; } }
+    const playable = segIdx < MAPS.length;
+    const isMoor = Math.hypot(x - 246, y - 214) < 46 + hash(x >> 3, y >> 3) * 8;
+    const snow = Math.hypot(x - 404, (y - 30) * 1.5) < 76 + hash(x >> 3, y >> 3) * 10;
+    const pal = isMoor ? moor : sum;
+    let col;
+    if (e < 0) col = dt < 2.5 ? ((x % 3 === 0) ? '#6b4426' : '#a06a3c') : (e > -3 ? pal.w[2] : (n < 0.5 ? pal.w[0] : pal.w[1]));
+    else if (e < 2) col = pal.sand[0];
+    else if (dt < 2.6) col = playable ? (n < 0.2 ? pal.dirt[1] : pal.dirt[0]) : ((((x + y) >> 2) & 1) ? '#c9b78f' : pal.g[0]);
+    else if (snow) col = n < 0.3 ? '#dfe8ee' : n > 0.9 ? '#b9c8d2' : '#eef4f6';
+    else { col = n < 0.25 ? pal.g[1] : n > 0.86 ? pal.g[2] : pal.g[0]; if (!isMoor && n < 0.006) col = '#f2d04a'; else if (!isMoor && n < 0.01) col = '#fff3d6'; }
+    const [r, g, b] = rgb(col), i = (y * W + x) * 4; Dt[i] = r; Dt[i + 1] = g; Dt[i + 2] = b; Dt[i + 3] = 255;
+  }
+  x2.putImageData(img, 0, 0);
+  dctx = x2;
+  // Berge
+  const mountain = (cx, by, h, snowy) => {
+    for (let r = 0; r < h; r++) {
+      const half = Math.round((r + 1) / h * h * 0.9);
+      D(cx - half, by - h + r, half, 1, r < h * 0.3 ? '#eef4f6' : '#9a958c');
+      D(cx, by - h + r, half, 1, r < h * 0.3 ? (snowy ? '#cfdbe2' : '#dfe8ee') : '#7a756c');
+    }
+    D(cx - Math.round(h * 0.9), by, Math.round(h * 1.8), 1, '#5f5c58');
+  };
+  [[26, 70, 30], [62, 56, 36], [104, 72, 26], [150, 60, 30], [240, 66, 28], [282, 50, 24]].forEach(([x, y, h]) => mountain(x, y, h));
+  [[396, 92, 30, 1], [470, 96, 26, 1]].forEach(([x, y, h, s]) => mountain(x, y, h, s));
+  const objs = [];
+  [['P', 20, 150], ['R', 40, 186], ['P', 116, 206], ['P', 236, 120], ['R', 276, 172], ['P', 316, 186], ['R', 404, 168], ['P', 462, 196], ['R', 332, 254], ['P', 424, 258], ['R', 466, 262], ['P', 18, 112], ['R', 108, 104], ['P', 272, 98], ['R', 160, 252], ['P', 300, 276]]
+    .forEach(([t, x, y]) => objs.push({ y, f: () => t === 'P' ? drawPine(x, y, false) : drawRound(x, y, 0.75) }));
+  [[222, 194], [272, 240], [214, 236]].forEach(([x, y]) => objs.push({ y, f: () => drawDead(x, y) }));
+  [[118, 136], [176, 140]].forEach(([x, y]) => objs.push({ y, f: () => drawHouse(x, y) }));
+  objs.sort((a, b) => a.y - b.y).forEach(o => o.f());
+  return c;
+}
+function drawWorld(sel) {
+  const c = $('#worldcv'); if (!c) return;
+  if (!worldLayer) worldLayer = buildWorldLayer();
+  const x = c.getContext('2d'); x.drawImage(worldLayer, 0, 0);
+  dctx = x;
+  WORLD_NODES.forEach((nd, i) => {
+    const real = i < MAPS.length, un = real && mapUnlocked(i);
+    const st = real ? Math.max(0, ...Object.values(mapStars(MAPS[i].id))) : 0;
+    if (i === sel) { x.strokeStyle = '#ffe680'; x.lineWidth = 1.5; x.setLineDash([3, 2]); x.beginPath(); x.ellipse(nd.x, nd.y + 2, 17, 9, 0, 0, Math.PI * 2); x.stroke(); x.setLineDash([]); }
+    D(nd.x - 9, nd.y - 1, 18, 5, '#5f5c58'); D(nd.x - 8, nd.y - 2, 16, 4, '#9a958c'); D(nd.x - 7, nd.y - 2, 14, 1, '#b8b0a3');
+    if (real) {
+      D(nd.x - 1, nd.y - 22, 2, 21, '#5c3a20');
+      const fc = !un ? '#6f6a62' : st ? '#e8b04a' : '#b5473a';
+      D(nd.x + 1, nd.y - 22, 10, 6, fc); D(nd.x + 1, nd.y - 16, 7, 1, fc); D(nd.x + 1, nd.y - 22, 10, 1, 'rgba(255,255,255,.3)');
+      x.font = '8px "Pixelify Sans", monospace'; x.textAlign = 'center'; x.fillStyle = '#241c1c'; x.fillText(String(i + 1), nd.x + 6, nd.y - 16);
+      for (let s = 0; s < 3; s++) { const sx = nd.x - 7 + s * 6, sy = nd.y + 7, on = s < st; D(sx, sy - 1, 1, 3, on ? '#ffd36a' : '#3a4a32'); D(sx - 1, sy, 3, 1, on ? '#ffd36a' : '#3a4a32'); }
+      if (!un) { D(nd.x - 3, nd.y - 9, 6, 5, '#3a3a3a'); D(nd.x - 2, nd.y - 12, 4, 3, '#3a3a3a'); D(nd.x - 1, nd.y - 11, 2, 2, '#9a958c'); }
+    } else {
+      D(nd.x - 1, nd.y - 16, 2, 15, '#6b4426');
+      D(nd.x - 7, nd.y - 18, 14, 8, '#a06a3c'); D(nd.x - 7, nd.y - 18, 14, 1, '#c99a5f'); D(nd.x - 7, nd.y - 11, 14, 1, '#6b4426');
+      x.font = '8px "Pixelify Sans", monospace'; x.textAlign = 'center'; x.fillStyle = '#3b2414'; x.fillText('?', nd.x, nd.y - 11);
+    }
+  });
+}
 function renderMenu() {
-  const diff = SV.diff;
+  const diff = SV.diff, i = menuMap, real = i < MAPS.length, m = real ? MAPS[i] : null;
+  const un = real && mapUnlocked(i), st = real ? mapStars(m.id) : {};
+  const lo = loadout();
+  let detail;
+  if (!real) detail = `<h3>${WORLD_NODES[i].name}</h3><div class="sub">Dieser Ort ist noch im Nebel – kommt in Phase 3 mit neuen Karten und Bossen.</div>`;
+  else if (!un) detail = `<h3>${i + 1}. ${m.name}</h3><div class="sub">Gesperrt – schaffe zuerst „${MAPS[i - 1].name}“ auf beliebiger Schwierigkeit.</div>`;
+  else detail = `<h3>${i + 1}. ${m.name}</h3><div class="sub">${m.sub} · ${m.waves.length} Wellen</div>
+      <div class="diffstars">${Object.keys(DIFF).map(d => `<span>${DIFF[d].name} <b style="color:var(--gold)">${'★'.repeat(st[d] || 0)}</b><span style="color:var(--ink3)">${'★'.repeat(3 - (st[d] || 0))}</span></span>`).join('')}</div>
+      <div class="seg">${Object.keys(DIFF).map(d => `<button class="btn small ${d === diff ? 'on' : ''}" data-diff="${d}">${DIFF[d].name}</button>`).join('')}</div>
+      <button class="btn green" data-start style="min-height:54px;font-size:1.2rem">Spielen: ${m.name}</button>`;
   $('#menu').innerHTML = `
-    <div class="top-links"><a class="btn small stone" href="kopfsache.html">‹ Kopfsache</a><span class="hint">Phase 1 · spielbarer Kern</span></div>
+    <div class="top-links"><a class="btn small stone" href="kopfsache.html">‹ Kopfsache</a><span class="hint">★ ${totalStars()} / ${maxStars()}</span></div>
     <div class="title"><h1>Burgwacht</h1><p>Halte die Burg. Baue Türme, rüste sie auf, lass keinen durch.</p></div>
-    <div class="maps">${MAPS.map((m, i) => {
-      const st = mapStars(m.id), un = mapUnlocked(i);
-      return `<button class="panel mapcard ${i === menuMap ? 'sel' : ''} ${un ? '' : 'locked'}" data-map="${i}">
-        <canvas width="480" height="288" data-prev="${i}"></canvas>
-        ${un ? '' : '<div class="lock">Gesperrt – vorherige Karte schaffen</div>'}
-        <h3>${i + 1}. ${m.name}</h3><div class="sub">${m.sub} · ${m.waves.length} Wellen</div>
-        <div class="diffstars">${Object.keys(DIFF).map(d => `<span>${DIFF[d].name} <b style="color:var(--gold)">${'★'.repeat(st[d] || 0)}</b><span style="color:var(--ink3)">${'★'.repeat(3 - (st[d] || 0))}</span></span>`).join('')}</div>
-      </button>`;
-    }).join('')}</div>
-    <div class="seg">${Object.keys(DIFF).map(d => `<button class="btn small ${d === diff ? 'on' : ''}" data-diff="${d}">${DIFF[d].name}</button>`).join('')}</div>
-    <button class="btn green" data-start style="min-height:56px;font-size:1.25rem">Spielen: ${MAPS[menuMap].name}</button>
+    <div class="panel world"><canvas id="worldcv" width="480" height="288" aria-label="Kampagnenkarte"></canvas></div>
+    <div class="panel detail">${detail}</div>
+    <div class="panel abil-list">
+      <h3><span>Fähigkeiten</span><span style="font-size:.85rem;color:var(--ink2)">bis zu 3 auf Q / W / E</span></h3>
+      ${Object.keys(ABILITY).map(id => {
+        const a = ABILITY[id], ok = abilUnlocked(id), slot = lo.indexOf(id);
+        return `<button class="abrow ${slot >= 0 ? 'on' : ''} ${ok ? '' : 'locked'}" data-abil="${id}">
+          <canvas width="12" height="12" data-abicon="${id}"></canvas>
+          <span class="txt"><b>${a.name}</b>${a.desc} · Abklingzeit ${a.cd} s</span>
+          <span class="slot">${!ok ? '★ ' + a.stars : slot >= 0 ? ABILITY_KEYS[slot].toUpperCase() : '–'}</span>
+        </button>`;
+      }).join('')}
+      <p class="hint" style="text-align:left">Sterne gibt es auf jeder Schwierigkeit einzeln – auch Wiederholen lohnt sich.</p>
+    </div>
     <div class="panel settings">
       <div class="row"><label>Effekte</label><input type="range" min="0" max="100" value="${Math.round(SV.settings.sfx * 100)}" data-set="sfx"><output>${Math.round(SV.settings.sfx * 100)}</output></div>
       <div class="row"><label>Musik</label><input type="range" min="0" max="100" value="${Math.round(SV.settings.music * 100)}" data-set="music"><output>${Math.round(SV.settings.music * 100)}</output></div>
     </div>
-    <p class="hint">PC: 1–8 Turm wählen · Leertaste nächste Welle · F Tempo · P Pause · U ausbauen · S verkaufen<br>Handy: Türme aus der Leiste aufs Gras ziehen – im Querformat spielt es sich am besten.</p>`;
-  document.querySelectorAll('[data-prev]').forEach(c => {
-    const i = +c.dataset.prev;
-    if (!previewCache[i]) previewCache[i] = buildMapLayer(MAPS[i]).canvas;
-    c.getContext('2d').drawImage(previewCache[i], 0, 0);
-  });
+    <p class="hint">PC: 1–8 Turm wählen · Q/W/E Fähigkeiten · Leertaste Welle (läuft eine, ruft sie die nächste früher) · F Tempo · P Pause · U ausbauen · S verkaufen<br>Handy: Türme aus der Leiste aufs Gras ziehen – im Querformat spielt es sich am besten.</p>`;
+  drawWorld(i);
+  document.querySelectorAll('[data-abicon]').forEach(c => c.getContext('2d').drawImage(ABIL_ICONS[c.dataset.abicon], 0, 0));
   document.querySelectorAll('[data-set]').forEach(inp => {
     inp.addEventListener('input', () => { SV.settings[inp.dataset.set] = inp.value / 100; inp.nextElementSibling.textContent = inp.value; Sound.unlock(); Sound.apply(); });
     inp.addEventListener('change', () => { persist(); if (inp.dataset.set === 'sfx') Sound.play('coin'); });
   });
+  $('#worldcv').addEventListener('pointerdown', e => {
+    const r = e.currentTarget.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height;
+    let best = -1, bd = 22;
+    WORLD_NODES.forEach((nd, k) => { const d = Math.hypot(nd.x - x, nd.y - 8 - y); if (d < bd) { bd = d; best = k; } });
+    if (best >= 0) { menuMap = best; Sound.unlock(); Sound.play('click'); renderMenu(); }
+  });
 }
 $('#menu').addEventListener('click', e => {
-  const m = e.target.closest('[data-map]'); if (m) { menuMap = +m.dataset.map; Sound.unlock(); Sound.play('click'); renderMenu(); return; }
   const d = e.target.closest('[data-diff]'); if (d) { SV.diff = d.dataset.diff; persist(); Sound.play('click'); renderMenu(); return; }
+  const ab = e.target.closest('[data-abil]');
+  if (ab) {
+    const id = ab.dataset.abil; if (!abilUnlocked(id)) { Sound.play('deny'); return; }
+    const lo = loadout();
+    if (lo.includes(id)) SV.loadout = lo.filter(x => x !== id);
+    else if (lo.length < 3) SV.loadout = [...lo, id];
+    else { Sound.play('deny'); const n = ab.querySelector('.slot'); n.textContent = 'voll'; setTimeout(() => renderMenu(), 900); return; }
+    persist(); Sound.play('click'); renderMenu(); return;
+  }
   if (e.target.closest('[data-start]')) { Sound.unlock(); Sound.play('click'); startGame(menuMap, SV.diff); }
 });
 function openMenuScreen() { G = null; closeMenu(); Sound.setBoss(false); $('#bossbar').hidden = true; show('menu'); renderMenu(); }

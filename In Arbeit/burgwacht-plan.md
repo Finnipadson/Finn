@@ -67,6 +67,6 @@ Weitere Kartenideen (Phase 3): Brücke einreißen, Nebel, Fluss mit Fähre, Burg
 Stand: Phase 1 fertig (`burgwacht.html`). Balance per simuliertem Spieler geprüft: Leicht und Normal auf allen 3 Karten gewonnen, Schwer auf Karte 1 und 2 knapp gewonnen, Schwer auf Karte 3 vom einfachen Testspieler nicht geschafft (bewusst knackig).
 
 1. ✅ **Spielbarer Kern** – Karten 1–3, Raster/Wege/Hindernisse, Wellen-System, Gold, Burg-Leben, Drag-&-Drop-Bauen, Turm-Menü, 8 Türme × 3 Stufen, alle 7 Gegner, Troll-Boss, Sterne, Schwierigkeit wählbar, Pause, Tempo 2×, Tasten. Canvas mit Fixed Timestep.
-2. **Fähigkeiten & Fortschritt** – Feuerregen, Eiszeit, Steuer, Mauer, Burg heilen (freischaltbar), Kampagnen-Karte, Bonusgold.
+2. ✅ **Fähigkeiten & Fortschritt** – umgesetzt: Freischaltung über Sterne (Feuerregen 1★, Eiszeit 3★, Steuer 6★, Mauer 10★, Burg heilen 15★; Sterne zählen pro Karte und Schwierigkeit, max. 27), bis zu 3 auf Q/W/E ausrüstbar auf der Kampagnenkarte; neu freigeschaltete werden einmalig automatisch eingesetzt. „Früher rufen“ geht, sobald alle Gegner einer Welle erschienen sind (Wellenbonus sofort + Extragold). Ursprünglicher Plan: – Feuerregen, Eiszeit, Steuer, Mauer, Burg heilen (freischaltbar), Kampagnen-Karte, Bonusgold.
 3. **Kampagne & Endlos** – Karten 4–8, Hexe/Nekromant/Steingolem, Endlosmodus mit Highscore.
 4. **Feinschliff** – Musik und Sounds, Einstellungen, Statistik, Balance per simulierter Durchläufe, Verknüpfung im Kopfsache-Menü.
