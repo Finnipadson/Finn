@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Burgwacht Prototypen</title>
+<style>
+:root { --bg: #1b2a1a; --card: #24362a; --text: #f0ead8; --muted: #b9c2a8; --radius: 8px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.5; }
+main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.6rem; margin-bottom: 4px; }
+h2 { font-size: 1.15rem; margin: 28px 0 10px; }
+p { color: var(--muted); }
+.card { background: var(--card); border-radius: 12px; padding: 12px 14px; }
+.grid { display: grid; gap: 12px; }
+.tag { font-size: 12px; padding: 2px 10px; border-radius: var(--radius); background: #33473a; color: var(--muted); }
+.tag.boss { background: #5a2626; color: #f3b3a8; }
+.tag.fly { background: #24405a; color: #a8cdf0; }
+canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Burgwacht – Pixel-Art-Prototypen</h1>
+  <p>Entwürfe für Look, Gegner und Türme. Alles wird im Code gezeichnet, keine Bilddateien. Bauplan: burgwacht-plan.md</p>
+
+  <h2>Karte 1 – Mühlbach</h2>
+  <canvas id="map" width="336" height="208" style="width:100%;border-radius:12px"></canvas>
+
+  <h2>Gegner</h2>
+  <div id="enemies" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))"></div>
+
+  <h2>Türme in drei Ausbaustufen</h2>
+  <div id="towers" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))"></div>
+</main>
+
+<script>
+"use strict";
+function hash(x, y) { let h = (x * 374761393 + y * 668265263) ^ 0x5bd1e995; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+
+// ============================================================
+// KARTE
+// ============================================================
+(() => {
+  const cv = document.getElementById('map'), ctx = cv.getContext('2d'), W = 336, H = 208;
+  const hx = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+  const segs = [[0, 72, 88, 72], [88, 72, 88, 120], [88, 120, 216, 120], [216, 0, 216, 120], [216, 120, 280, 120], [280, 120, 280, 168], [280, 168, 300, 168]];
+  function dseg(px, py, [x1, y1, x2, y2]) { const dx = x2 - x1, dy = y2 - y1, t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy || 1))); return Math.hypot(px - x1 - t * dx, py - y1 - t * dy); }
+  const dPath = (x, y) => Math.min(...segs.map(s => dseg(x, y, s)));
+  const riverX = y => 152 + Math.sin(y * 0.035) * 14 + Math.sin(y * 0.11) * 3, HW = 15;
+  const blobs = [[38, 128, 17], [186, 58, 15], [62, 200, 14], [318, 205, 16], [250, 200, 12]];
+  const img = ctx.createImageData(W, H), D = img.data, water = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const n = hash(x, y), d = Math.abs(x - riverX(y) + (hash(x >> 2, y >> 2) - .5) * 2), dp = dPath(x, y), pw = 9 + Math.sin(x * 0.3 + y * 0.2) * 1.3;
+    let c;
+    if (d < HW) { c = d > HW - 4 ? '#57bcd8' : (n < 0.5 ? '#3ea6c8' : '#3a9fc2'); if (n < 0.035) c = '#8fd8ea'; water.push([x, y]); }
+    else if (d < HW + 1.2) c = '#b98546';
+    else if (d < HW + 4) c = n < 0.2 ? '#d19d52' : '#e3b46a';
+    else if (dp < pw) c = dp > pw - 1.5 ? '#b98a4a' : n < 0.03 ? '#a87436' : n < 0.18 ? '#c48d43' : '#d8a456';
+    else {
+      const inBlob = blobs.some(([bx, by, r]) => Math.hypot(x - bx, y - by) < r + hash(x >> 1, y >> 1) * 4);
+      if (inBlob) { c = ((x + (y >> 2)) % 3 === 0) ? '#3f7f2a' : '#56a03a'; if (n < 0.06) c = '#e39a35'; else if (n > 0.93) c = '#78bf4a'; }
+      else { c = n < 0.25 ? '#5c9a33' : n > 0.86 ? '#7cbc45' : '#6aa83a'; const t = hash(x >> 1, (y + 1) >> 2); if (t < 0.05 && (y & 3) < 2) c = '#4e8a2c'; if (n < 0.004) c = '#f2d04a'; else if (n < 0.007) c = '#fff3d6'; else if (n < 0.012) c = '#e0902f'; }
+    }
+    const [r, g, b] = hx(c), i = (y * W + x) * 4; D[i] = r; D[i + 1] = g; D[i + 2] = b; D[i + 3] = 255;
+  }
+  const P = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
+  function shadow(x, y, rx, ry) { ctx.fillStyle = 'rgba(25,55,20,.38)'; for (let j = -ry; j <= ry; j++) { const w = Math.round(rx * Math.sqrt(1 - (j / ry) ** 2)); ctx.fillRect(x - w, y + j, w * 2, 1); } }
+  function pine(x, y) {
+    shadow(x, y + 1, 9, 3); P(x - 2, y - 7, 4, 8, '#7a4a26'); P(x - 2, y - 7, 1, 8, '#5c3519');
+    for (let i = 0; i < 4; i++) { const w = 18 - i * 4, top = y - 12 - i * 7; for (let r = 0; r < 9; r++) { const half = Math.round((r + 1) / 9 * w / 2); P(x - half, top + r, half * 2, 1, '#173f24'); if (half > 1) { P(x - half + 1, top + r, half * 2 - 2, 1, r % 3 === 0 ? '#2a6e3d' : '#2f7a43'); P(x - half + 1, top + r, Math.max(1, half - 2), 1, '#48985a'); } } }
+  }
+  function round(x, y, s = 1) {
+    shadow(x, y + 1, 11 * s, 3); P(x - 2, y - 10 * s, 4, 11 * s, '#8a5a2e'); P(x - 2, y - 10 * s, 1, 11 * s, '#6a3f1e');
+    const cx = x, cy = y - 20 * s, R = 12 * s;
+    for (let j = -R - 1; j <= R + 1; j++) for (let i = -R - 1; i <= R + 1; i++) {
+      const bump = Math.sin(Math.atan2(j, i) * 6) * 1.6, dd = Math.hypot(i, j) - bump;
+      if (dd > R + 1) continue;
+      let c; if (dd > R) c = '#1f4a1f'; else { const l = i + j; c = l < -8 ? '#6dbb4e' : l < -2 ? '#55a443' : l < 7 ? '#43903a' : '#2f6b2a'; if (hash(cx + i, cy + j) < 0.05) c = '#e0902f'; }
+      P(cx + i, cy + j, 1, 1, c);
+    }
+  }
+  function rock(x, y) { P(x - 3, y - 3, 7, 4, '#5f5c58'); P(x - 3, y - 4, 6, 3, '#8d8a85'); P(x - 2, y - 4, 3, 1, '#b5b2ab'); }
+  function tower(x, y) { shadow(x, y + 1, 8, 3); P(x - 5, y - 16, 10, 17, '#8a5a33'); for (let r = y - 14; r < y; r += 4) P(x - 5, r, 10, 1, '#6b4426'); P(x - 5, y - 16, 1, 17, '#5c3a20'); P(x - 7, y - 19, 14, 3, '#6b4426'); for (const dx of [-7, -3, 1, 5]) P(x + dx, y - 20, 2, 1, '#6b4426'); P(x - 1, y - 25, 3, 4, '#3e6fb0'); P(x - 1, y - 27, 3, 2, '#f1c9a0'); P(x + 2, y - 26, 1, 4, '#7a4a26'); }
+  function goblin(x, y, f) { shadow(x, y + 1, 3, 1); P(x - 3, y - 6, 6, 6, '#2c4a1c'); P(x - 2, y - 6, 4, 5, '#6fbf4a'); P(x - 4, y - 5, 1, 2, '#6fbf4a'); P(x + 3, y - 5, 1, 2, '#6fbf4a'); P(x - 1, y - 5, 1, 1, '#fff'); P(x + 1, y - 5, 1, 1, '#fff'); P(x - 2, y - 1, 4, 1, '#7a4a26'); P(x + (f ? 3 : -4), y - 8, 1, 8, '#c9c2b5'); }
+  function bat(x, y, f) { P(x - 1, y - 1, 3, 3, '#3b2a3a'); const wy = f ? -2 : 1; P(x - 5, y + wy, 4, 1, '#4a344a'); P(x + 2, y + wy, 4, 1, '#4a344a'); P(x - 3, y + wy - 1, 2, 1, '#4a344a'); P(x + 2, y + wy - 1, 2, 1, '#4a344a'); P(x, y, 1, 1, '#e24b4a'); }
+  function cave(x, y, vert) { if (vert) { P(x - 12, y, 24, 8, '#7a756c'); P(x - 9, y, 18, 6, '#1f1620'); P(x - 12, y + 8, 24, 2, '#5f5c58'); } else { P(x, y - 12, 8, 24, '#7a756c'); P(x, y - 9, 6, 18, '#1f1620'); P(x + 8, y - 12, 2, 24, '#5f5c58'); } }
+  function bridge() { const y = 120, a = Math.round(riverX(y) - HW - 3), b = Math.round(riverX(y) + HW + 3); for (let x = a; x <= b; x++) P(x, y - 9, 1, 18, x % 3 === 0 ? '#6b4426' : '#a06a3c'); P(a, y - 10, b - a + 1, 2, '#5c3a20'); P(a, y + 8, b - a + 1, 2, '#5c3a20'); }
+  function castle(f) {
+    const x0 = 298, y0 = 132; shadow(317, 186, 22, 4); P(x0, y0, 36, 52, '#b8b0a3');
+    for (let r = y0 + 3; r < y0 + 52; r += 4) { P(x0, r, 36, 1, '#9a9286'); for (let c = x0 + ((r >> 2) % 2 ? 2 : 5); c < x0 + 36; c += 7) P(c, r - 3, 1, 3, '#9a9286'); }
+    for (const tx of [x0 - 4, x0 + 28]) { P(tx, y0 - 10, 12, 62, '#c9c2b5'); P(tx, y0 - 10, 1, 62, '#8d8576'); for (let i = 0; i < 12; i += 3) P(tx + i, y0 - 13, 2, 3, '#c9c2b5'); for (let r = 0; r < 8; r++) P(tx + 5 - Math.round(r * 0.8), y0 - 21 + r, 2 + Math.round(r * 1.6), 1, r < 2 ? '#8a3229' : '#b5473a'); }
+    for (let i = 0; i < 36; i += 4) P(x0 + i, y0 - 3, 2, 3, '#b8b0a3');
+    P(x0 + 12, y0 + 34, 12, 18, '#3b2a20'); P(x0 + 13, y0 + 33, 10, 1, '#3b2a20'); P(x0 + 17, y0 - 16, 1, 16, '#5c3a20'); P(x0 + 18, y0 - 16, 7, 4, f ? '#e2a64a' : '#d9952f'); P(x0 + 25, y0 - 15, f ? 2 : 1, 2, '#e2a64a');
+  }
+  const objs = [['p', 20, 34], ['r', 52, 44], ['p', 112, 34], ['r', 100, 190], ['p', 30, 182], ['r', 100, 166, .8], ['p', 200, 194], ['r', 244, 186], ['r', 254, 44], ['p', 272, 64], ['r', 322, 42], ['p', 310, 96], ['p', 8, 110], ['r', 196, 160, .8]];
+  function draw(t) {
+    ctx.putImageData(img, 0, 0); const f = t % 2;
+    for (let k = 0; k < 26; k++) { const w = water[(hash(k, t) * water.length) | 0]; P(w[0], w[1], 1, 1, '#c8eef7'); }
+    bridge(); cave(0, 72, false); cave(216, 0, true);
+    [[120, 95], [190, 100], [264, 150], [12, 140], [300, 112]].forEach(([x, y]) => rock(x, y));
+    const items = objs.map(o => ({ y: o[2], f: () => o[0] === 'p' ? pine(o[1], o[2]) : round(o[1], o[2], o[3] || 1) }));
+    [[60, 106], [250, 100], [184, 146]].forEach(([x, y]) => items.push({ y, f: () => tower(x, y) }));
+    [[30, 74], [88, 100], [216, 52], [150, 123], [280, 146]].forEach(([x, y], i) => items.push({ y, f: () => goblin(x, y + (f && i % 2 ? -1 : 0), f) }));
+    items.push({ y: 999, f: () => castle(f) });
+    items.sort((a, b) => a.y - b.y).forEach(o => o.f());
+    bat(118, 22 + (f ? -1 : 0), f); bat(132, 30 + (f ? 1 : 0), !f);
+  }
+  let t = 0; draw(0); setInterval(() => draw(++t), 450);
+})();
+
+// ============================================================
+// GEGNER
+// ============================================================
+(() => {
+  const PAL = { o: '#241c1c', w: '#ffffff', G: '#6fbf4a', g: '#4e9a33', B: '#8a5a33', b: '#6b4426', s: '#c9c2b5', m: '#8a3229', O: '#9aa86a', A: '#8d8a85', a: '#5f5c58', C: '#7a4a26', V: '#4a344a', v: '#6b4f6b', r: '#e24b4a', R: '#e0902f', P: '#7a4b8f', p: '#5a3570', Y: '#e2a64a', Q: '#8fd8ea', M: '#c9c2b5', S: '#a8643a', L: '#5ec27a', l: '#3e9a5a', h: '#c8f0d0', H: '#2e2540', e: '#b8a6ff', T: '#6f8fa0', t: '#4f6f80' };
+  const E = [
+    { n: 'Kobold', d: 'Schnell, wenig Leben', tag: 'Boden', walk: 1, f: ['..o........o..', '..oGo.oooo.oGo.', '...oGoGGGGoGo..', '....oGwGGwGo...', '....oGoGGoGo...', '....oGGmmGGo...', '.....oooooo....', '....oBBBBBBos..', '...oGBbBBbBGs..', '...oGoBBBBoGs..', '....ooBBBBoos..', '.....oBo.oBo...', '.....oo..oo....'] },
+    { n: 'Oger', d: 'Langsam, schwer gepanzert', tag: 'Boden', walk: 1, f: ['....oooooooo....', '...oOOOOOOOOo...', '..oOOwoOOwoOOo..', '..oOOOOOOOOOOo..', '..oOOOmmmmOOOo..', '...oOOOOOOOOo...', '.ooAAAAAAAAAAoo.', 'oOoAaAAAAAAaAoOo', 'oOoAAAAAAAAAAoOo', 'oOooAAAAAAAAooOo', '.oo.oBBBBBBo.oCo', '....oBBooBBo.oCo', '....oOOo.oOOooCo', '....ooo...ooo.oo'] },
+    { n: 'Fledermaus', d: 'Fliegt direkt zur Burg', tag: 'Flieger', fly: 1, f: ['..............', '.o..........o.', 'oVo........oVo', 'oVVo..oo..oVVo', 'oVVVooVVooVVVo', '.oVVVVVVVVVVo.', '..ooVrVVrVoo..', '....oVVVVo....', '.....o..o.....'], f2: ['..............', '......oo......', '....ooVVoo....', '..ooVrVVrVoo..', '.oVVVVVVVVVVo.', 'oVVVoVVVVoVVVo', 'oVVo.oVVo.oVVo', 'oVo...oo...oVo', '.o..........o.'] },
+    { n: 'Schamane', d: 'Heilt Gegner in der Nähe', tag: 'Boden', walk: 1, f: ['...o.R.o......', '..oRoRoRo.....', '..oGGGGGo..oo.', '..oGwGwGo.oQQo', '..oGGGGGo.oQQo', '...ommmo...oo.', '..oPPPPPo..oC.', '.oPPpPPPPooCo.', '.oGPPPPPPGoC..', '..oPPpPPPo.C..', '..oPPPPPPo.C..', '..oPPPPPPo.C..', '...oooooo..o..'] },
+    { n: 'Schildträger', d: 'Blockt Schüsse von vorn', tag: 'Boden', walk: 1, f: ['.....oooo.....', '....oMMMMo....', '...oMMMMMMo...', '...oGwGGwGo...', '...oGGGGGGo...', '....oGmmGo....', '..ooooooooo...', '.oMoSSSSoBBo..', '.oMSSSoSSoBBo.', '.oMSSoYoSSoBo.', '.oMSSSoSSoBBo.', '.oMoSSSSoBBo..', '..ooooooooo...', '....oBo.oBo...', '....oo..oo....'] },
+    { n: 'Schleim', d: 'Zerfällt in zwei kleine', tag: 'Boden', slime: 1, f: ['......oooo......', '....ooLLLLoo....', '...oLLhhLLLLo...', '..oLLhLLLLLLLo..', '..oLLwoLLwoLLo..', '.oLLLLLLLLLLLLo.', '.oLLLLLmmLLLLLo.', '.olLLLLLLLLLLlo.', '..ollllllllllo..', '...oooooooooo...'] },
+    { n: 'Schatten', d: 'Getarnt, nur nahe Glocken sichtbar', tag: 'Boden', ghost: 1, f: ['.....oooo.....', '....oHHHHo....', '...oHHHHHHo...', '..oHHoooHHHo..', '..oHHeooeHHo..', '..oHHoooooHo..', '..oHHHHHHHHo..', '.oHHvHHHHvHHo.', '.oHvHHHHHHvHo.', '.oHHHHHHHHHHo.', '..oHHvHHvHHo..', '..oHo.oHo.oHo.', '...o...o...o..'] },
+    { n: 'Trollhäuptling', d: 'Boss, betäubt Türme', tag: 'Boss', walk: 1, f: ['.......oYoYoYo......', '.......oYYYYYYo.....', '......oTTTTTTTo.....', '.....oTTTTTTTTTo....', '....oTTwoTTwoTTo....', '....oTTTTTTTTTTo....', '....oTwTmmmmTwTo....', '.....oTTTTTTTTo.....', '...ooTTTTTTTTTToo...', '..oTTotTTTTTTtoTTo..', '.oTTo.oTTTTTTo.oTTo.', '.oTTo.oTTTTTTo.oTTo.', '.oTo..oBBBBBBo..oCCo', '.oTo..oBBbbBBo..oCCo', '..oo..oBBBBBBo.oCCCo', '.....oTTo..oTTooCCCo', '.....oTTo..oTTo.oCo.', '....ooooo..ooooo.o..'] }
+  ];
+  const grid = document.getElementById('enemies'), S = 24;
+  const cards = E.map(e => {
+    const c = document.createElement('div'); c.className = 'card';
+    c.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px';
+    const cv = document.createElement('canvas'); cv.width = S; cv.height = S; cv.style.cssText = 'width:96px;height:96px;border-radius:8px';
+    c.appendChild(cv);
+    c.insertAdjacentHTML('beforeend', `<div style="font-weight:600">${e.n}</div><div style="font-size:13px;color:var(--muted);text-align:center;line-height:1.4">${e.d}</div><span class="tag ${e.tag === 'Boss' ? 'boss' : e.tag === 'Flieger' ? 'fly' : ''}">${e.tag}</span>`);
+    grid.appendChild(c); return { e, ctx: cv.getContext('2d') };
+  });
+  function drawCard({ e, ctx }, t) {
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const n = hash(x, y); ctx.fillStyle = n < 0.25 ? '#5c9a33' : n > 0.86 ? '#7cbc45' : '#6aa83a'; if (n < 0.01) ctx.fillStyle = '#e0902f'; ctx.fillRect(x, y, 1, 1); }
+    const fr = (e.fly && t % 2) ? e.f2 : e.f, h = fr.length, w = Math.max(...fr.map(r => r.length));
+    const ox = Math.floor((S - w) / 2); let oy = Math.floor((S - h) / 2) + (e.fly ? -2 : 1);
+    if (!e.fly && !e.ghost) { ctx.fillStyle = 'rgba(25,55,20,.4)'; const sw = Math.round(w * 0.7); ctx.fillRect(Math.floor((S - sw) / 2), oy + h, sw, 1); ctx.fillRect(Math.floor((S - sw) / 2) + 1, oy + h + 1, sw - 2, 1); }
+    if (e.fly) { ctx.fillStyle = 'rgba(25,55,20,.35)'; ctx.fillRect(9, 21, 6, 1); }
+    if (e.walk && t % 2) oy -= 1;
+    const squish = e.slime && t % 2;
+    ctx.globalAlpha = e.ghost ? (t % 2 ? 0.55 : 0.8) : 1;
+    fr.forEach((row, y) => { [...row].forEach((ch, x) => {
+      if (ch === '.' || !PAL[ch]) return;
+      let px = ox + x, py = oy + y;
+      if (e.walk && y >= h - 2 && t % 2) px += (x < w / 2 ? 1 : -1);
+      if (squish) { if (y === 0) return; py += 1; }
+      ctx.fillStyle = PAL[ch]; ctx.fillRect(px, py, 1, 1);
+    }); });
+    ctx.globalAlpha = 1;
+  }
+  let t = 0; const tick = () => { cards.forEach(c => drawCard(c, t)); t++; }; tick(); setInterval(tick, 420);
+})();
+
+// ============================================================
+// TÜRME
+// ============================================================
+(() => {
+  const C = { o: '#241c1c', wd: '#8a5a33', wd2: '#6b4426', wd3: '#5c3a20', st: '#b8b0a3', st2: '#9a9286', st3: '#7d7568', gold: '#e2a64a', gold2: '#b98030', blue: '#3e6fb0', blue2: '#2c5288', red: '#b5473a', red2: '#8a3229', skin: '#f1c9a0', ice: '#8fd8ea', ice2: '#e6fbff', green: '#7ae04a', green2: '#3e9a2a', dark: '#33302e', iron: '#5f5c58', purple: '#6b3f86', white: '#e4ecf0', white2: '#b9c8d2' };
+  let ctx;
+  const P = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
+  function ground() { for (let y = 0; y < 40; y++) for (let x = 0; x < 32; x++) { const n = hash(x, y); P(x, y, 1, 1, n < 0.25 ? '#5c9a33' : n > 0.86 ? '#7cbc45' : '#6aa83a'); if (n < 0.008) P(x, y, 1, 1, '#f2d04a'); } }
+  function shadow(cx, y, w) { ctx.fillStyle = 'rgba(25,55,20,.42)'; ctx.fillRect(cx - w, y, w * 2, 2); ctx.fillRect(cx - w + 2, y + 2, w * 2 - 4, 1); }
+  function wood(x, y, w, h) { P(x, y, w, h, C.wd); for (let r = y + 2; r < y + h; r += 3) P(x, r, w, 1, C.wd2); P(x, y, 1, h, C.wd3); P(x + w - 1, y, 1, h, C.wd2); }
+  function stone(x, y, w, h, c1 = C.st, c2 = C.st2) { P(x, y, w, h, c1); for (let r = y + 3, k = 0; r < y + h; r += 4, k++) { P(x, r, w, 1, c2); for (let c = x + (k % 2 ? 2 : 5); c < x + w - 1; c += 6) P(c, r - 3, 1, 3, c2); } P(x, y, 1, h, C.st3); P(x + w - 1, y, 1, h, c2); }
+  function roof(cx, top, w, h, c, c2) { for (let r = 0; r < h; r++) { const half = Math.max(1, Math.round((r + 1) / h * w / 2)); P(cx - half, top + r, half * 2, 1, c); P(cx - half, top + r, 1, 1, c2); P(cx + half - 1, top + r, 1, 1, c2); if (r % 3 === 2) P(cx - half + 1, top + r, half * 2 - 2, 1, c2); } }
+  function crenel(x, y, w, c, tip) { for (let i = 0; i < w; i += 3) { P(x + i, y - 2, 2, 2, c); if (tip) P(x + i, y - 2, 2, 1, tip); } }
+  function flag(x, y, c, t) { P(x, y, 1, 9, C.wd3); P(x + 1, y, 5, 3, c); P(x + (t ? 6 : 5), y + (t ? 1 : 0), 1, 2, c); P(x + 1, y + 3, 4, 1, c); }
+  function person(x, y, c) { P(x, y, 3, 2, C.skin); P(x, y + 2, 3, 3, c); }
+  function windowArcher(x, y, c) { P(x, y, 4, 4, C.dark); P(x + 1, y + 1, 2, 1, C.skin); P(x + 1, y + 2, 2, 2, c); }
+  function sparkle(x, y, on) { if (!on) return; P(x, y - 1, 1, 3, '#fff8d6'); P(x - 1, y, 3, 1, '#fff8d6'); }
+  function mound(cx, base, w, h, c, c2) { for (let r = 0; r < h; r++) { const half = Math.round(w * Math.sqrt(1 - ((h - r) / h) ** 2)); P(cx - half, base - h + r, half * 2, 1, r < 2 ? c2 : c); } }
+  const T = {
+    archer(l, t) {
+      if (l === 1) { shadow(16, 35, 8); wood(11, 21, 10, 16); P(9, 19, 14, 2, C.wd2); crenel(9, 19, 14, C.wd2); person(15, 13, C.blue); P(18, 12, 1, 6, C.wd3); }
+      else if (l === 2) { shadow(16, 35, 9); stone(10, 24, 12, 13); wood(11, 13, 10, 11); windowArcher(14, 15, C.blue); roof(16, 3, 18, 10, C.blue, C.blue2); }
+      else { shadow(16, 35, 10); stone(9, 19, 14, 18); P(9, 19, 14, 1, C.gold); stone(10, 11, 12, 8); windowArcher(11, 22, C.blue); windowArcher(17, 22, C.blue); windowArcher(14, 12, C.blue); roof(16, 1, 18, 10, C.blue, C.blue2); P(15, 0, 2, 2, C.gold); P(14, 29, 4, 7, C.blue); P(15, 31, 2, 2, C.gold); }
+    },
+    cannon(l, t) {
+      const smoke = on => { if (on) { P(27, 10, 3, 3, '#e8e8e8'); P(29, 8, 2, 2, '#cfcfcf'); } };
+      if (l === 1) { shadow(16, 35, 10); wood(6, 30, 20, 6); P(11, 25, 13, 4, C.dark); P(23, 24, 2, 6, C.iron); P(9, 28, 5, 5, C.wd3); P(10, 29, 3, 3, C.wd); }
+      else if (l === 2) { shadow(16, 35, 11); stone(5, 23, 22, 14); crenel(5, 23, 22, C.st); P(12, 17, 13, 5, C.dark); P(24, 16, 2, 7, C.iron); P(11, 20, 4, 3, C.iron); smoke(t); }
+      else { shadow(16, 35, 12); stone(3, 20, 26, 17); P(3, 20, 26, 1, C.gold); crenel(3, 20, 26, C.st, C.gold); P(11, 11, 15, 4, C.dark); P(25, 10, 2, 6, C.gold2); P(11, 16, 15, 3, C.dark); P(25, 15, 2, 5, C.gold2); P(9, 12, 4, 7, C.iron); P(14, 25, 4, 6, C.red); P(15, 27, 2, 2, C.gold); smoke(t); }
+    },
+    frost(l, t) {
+      const b = t ? -1 : 0;
+      if (l === 1) { shadow(16, 35, 8); wood(10, 26, 12, 11); roof(16, 18, 16, 8, C.wd2, C.wd3); P(14, 29, 4, 8, C.dark); P(15, 12 + b, 3, 6, C.ice); P(16, 11 + b, 1, 1, C.ice2); }
+      else if (l === 2) { shadow(16, 35, 8); stone(11, 20, 10, 17); P(14, 27, 4, 10, C.dark); roof(16, 12, 14, 8, C.blue2, C.blue); P(14, 3 + b, 4, 7, C.ice); P(15, 2 + b, 2, 1, C.ice); P(15, 4 + b, 1, 4, C.ice2); }
+      else { shadow(16, 35, 9); stone(11, 16, 10, 21, C.white, C.white2); P(11, 16, 10, 1, C.gold); P(14, 26, 4, 11, '#8fb8d6'); roof(16, 9, 12, 8, '#8fb8d6', '#5f8fb8'); P(15, 8, 2, 1, C.gold); P(13, 0 + b, 6, 7, C.ice); P(14, -1 + b, 4, 1, C.ice); P(15, 1 + b, 2, 5, C.ice2); sparkle(8, 6, t); sparkle(24, 3, !t); sparkle(23, 12, t); }
+    },
+    crossbow(l, t) {
+      const xb = (y, big) => { P(8, y, 16, 2, C.wd2); P(15, y - 4, 2, big ? 11 : 9, C.iron); P(8, y + 2, 1, 1, C.wd3); P(23, y + 2, 1, 1, C.wd3); P(15, y - 5, 2, 1, '#c9c2b5'); };
+      if (l === 1) { shadow(16, 35, 8); P(10, 24, 2, 13, C.wd3); P(20, 24, 2, 13, C.wd3); P(11, 30, 10, 1, C.wd2); wood(8, 21, 16, 3); xb(17, 0); }
+      else if (l === 2) { shadow(16, 35, 9); stone(9, 22, 14, 15); crenel(9, 22, 14, C.st); xb(15, 1); }
+      else { shadow(16, 35, 10); stone(9, 16, 14, 21); P(9, 16, 14, 1, C.gold); crenel(9, 16, 14, C.st, C.gold); xb(9, 1); P(14, 22, 4, 9, C.red); P(15, 25, 2, 2, C.gold); flag(23, 3, C.red, t); }
+    },
+    poison(l, t) {
+      const pot = (x, y, w) => { P(x, y, w, 6, C.dark); P(x + 1, y + 6, w - 2, 1, C.dark); P(x + 1, y - 1, w - 2, 2, C.green); if (t) P(x + 2, y - 2, 2, 1, C.green); else P(x + w - 4, y - 3, 2, 2, C.green); P(x + 1, y + 7, w - 2, 1, t ? '#e0902f' : '#f2d04a'); };
+      if (l === 1) { shadow(16, 35, 9); pot(9, 27, 14); }
+      else if (l === 2) { shadow(14, 35, 11); wood(5, 20, 13, 17); roof(11, 12, 17, 9, C.wd2, C.wd3); P(9, 27, 4, 10, C.dark); P(14, 8, 3, 6, C.st3); P(14 + (t ? 1 : 0), 5, 3, 2, '#9be07a'); pot(19, 27, 10); }
+      else { shadow(16, 35, 11); stone(9, 14, 14, 23); P(9, 14, 14, 1, C.gold); P(12, 18, 3, 4, t ? C.green : '#5fc03a'); P(17, 18, 3, 4, t ? '#5fc03a' : C.green); roof(16, 3, 16, 11, C.purple, '#4a2a60'); P(15, 2, 2, 2, C.gold); P(5, 31, 2, 3, C.green); P(5, 30, 2, 1, '#dfe8ee'); P(25, 31, 2, 3, '#b07ad0'); P(25, 30, 2, 1, '#dfe8ee'); pot(12, 29, 9); P(20 + (t ? 1 : 0), 0, 3, 2, '#9be07a'); }
+    },
+    ballista(l, t) {
+      const bl = (y, dbl) => { P(7, y, 18, 2, C.wd2); P(7, y + 2, 2, 1, C.wd3); P(23, y + 2, 2, 1, C.wd3); P(15, y - 8, 2, 12, C.wd3); P(15, y - 10, 2, 2, '#c9c2b5'); if (dbl) { P(12, y - 6, 2, 10, C.wd3); P(12, y - 8, 2, 2, '#c9c2b5'); P(18, y - 6, 2, 10, C.wd3); P(18, y - 8, 2, 2, '#c9c2b5'); } P(11, y + 2, 10, 3, C.wd); };
+      if (l === 1) { shadow(16, 35, 9); bl(28, 0); }
+      else if (l === 2) { shadow(16, 35, 11); stone(6, 29, 20, 8); bl(22, 0); }
+      else { shadow(16, 35, 11); stone(8, 24, 16, 13); P(8, 24, 16, 1, C.gold); crenel(8, 24, 16, C.st, C.gold); bl(17, 1); flag(25, 4, C.blue, t); }
+    },
+    bell(l, t) {
+      const bl = (x, y, c, c2) => { const s = t ? 1 : 0; P(x + s, y, 4, 4, c); P(x - 1 + s, y + 4, 6, 1, c2); P(x + 1 + s, y + 5, 2, 1, C.dark); };
+      if (l === 1) { shadow(16, 35, 8); P(10, 18, 2, 19, C.wd3); P(20, 18, 2, 19, C.wd3); P(9, 16, 14, 2, C.wd2); bl(14, 19, '#b98030', '#8a5a20'); }
+      else if (l === 2) { shadow(16, 35, 8); stone(10, 22, 12, 15); P(10, 11, 2, 11, C.st2); P(20, 11, 2, 11, C.st2); P(12, 21, 8, 1, C.st3); roof(16, 3, 16, 9, C.red, C.red2); bl(14, 13, C.gold2, '#8a5a20'); }
+      else { shadow(16, 35, 9); stone(10, 20, 12, 17); P(10, 20, 12, 1, C.gold); P(14, 28, 4, 9, C.dark); P(10, 9, 2, 11, C.st); P(20, 9, 2, 11, C.st); roof(16, 0, 14, 9, C.red2, C.red); P(15, 0, 2, 1, C.gold); bl(14, 11, C.gold, C.gold2); if (t) { P(5, 12, 1, 4, '#fff8d6'); P(26, 12, 1, 4, '#fff8d6'); P(4, 11, 1, 1, '#fff8d6'); P(27, 11, 1, 1, '#fff8d6'); } }
+    },
+    mine(l, t) {
+      const cart = (x, y, gold) => { P(x, y, 8, 4, C.iron); P(x, y, 8, 1, '#7d7a75'); P(x + 1, y + 4, 2, 2, C.dark); P(x + 5, y + 4, 2, 2, C.dark); P(x + 1, y - 1, 6, 1, gold); P(x + 2, y - 2, 3, 1, gold); };
+      if (l === 1) { mound(13, 37, 12, 14, '#8d7a5c', '#a8946f'); P(9, 27, 8, 10, C.dark); P(8, 26, 10, 2, C.wd2); P(8, 26, 2, 11, C.wd3); P(16, 26, 2, 11, C.wd3); cart(20, 31, C.gold); }
+      else if (l === 2) { mound(12, 37, 12, 15, '#8d7a5c', '#a8946f'); P(8, 26, 8, 11, C.dark); P(6, 22, 12, 3, C.wd); roof(12, 17, 16, 6, C.wd2, C.wd3); P(7, 25, 2, 12, C.wd3); P(15, 25, 2, 12, C.wd3); P(2, 36, 28, 1, C.iron); cart(19, 31, C.gold); P(26, 26, 4, 4, C.gold); P(27, 25, 2, 1, C.gold); P(4, 22, 2, 3, t ? '#f2d04a' : '#e0902f'); }
+      else { mound(12, 37, 13, 16, C.st2, C.st); P(7, 25, 10, 12, C.dark); P(5, 22, 14, 3, C.st); P(5, 22, 14, 1, C.gold); P(5, 25, 2, 12, C.st3); P(17, 25, 2, 12, C.st3); P(10, 19, 4, 3, C.gold); P(2, 36, 28, 1, C.iron); cart(19, 31, C.gold); cart(9, 31, C.gold); P(24, 24, 7, 6, C.gold); P(25, 22, 5, 2, C.gold); P(26, 21, 3, 1, C.gold); P(24, 29, 7, 1, C.gold2); sparkle(26, 23, t); sparkle(14, 28, !t); }
+    }
+  };
+  const names = [['archer', 'Bogenschütze'], ['cannon', 'Kanone'], ['frost', 'Frostmagier'], ['crossbow', 'Armbrust'], ['poison', 'Giftküche'], ['ballista', 'Ballista'], ['bell', 'Glockenturm'], ['mine', 'Goldmine']];
+  const g = document.getElementById('towers'), cvs = [];
+  names.forEach(([k, n]) => {
+    const card = document.createElement('div'); card.className = 'card';
+    card.innerHTML = `<div style="font-weight:600;margin-bottom:8px">${n}</div>`;
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:flex-end;justify-content:space-between;gap:6px';
+    [1, 2, 3].forEach(l => {
+      const w = document.createElement('div'); w.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px';
+      const cv = document.createElement('canvas'); cv.width = 32; cv.height = 40; cv.style.cssText = 'width:80px;height:100px;border-radius:8px';
+      w.appendChild(cv); w.insertAdjacentHTML('beforeend', `<span style="font-size:12px;color:var(--muted)">Stufe ${l}</span>`);
+      row.appendChild(w); cvs.push({ cv, k, l });
+      if (l < 3) row.insertAdjacentHTML('beforeend', '<span style="color:var(--muted);align-self:center;margin-bottom:18px">›</span>');
+    });
+    card.appendChild(row); g.appendChild(card);
+  });
+  let t = 0;
+  function tick() { cvs.forEach(({ cv, k, l }) => { ctx = cv.getContext('2d'); ctx.clearRect(0, 0, 32, 40); ground(); T[k](l, t % 2); }); t++; }
+  tick(); setInterval(tick, 450);
+})();
+</script>
+</body>
+</html>
