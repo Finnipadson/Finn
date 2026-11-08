@@ -134,9 +134,11 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 /* ============================================================
    MAP
    ============================================================ */
-.map-wrap { position: relative; flex: 1; min-height: 640px; margin: 4px 0 8px; }
-.map-wrap svg.path { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 3px; }
+/* feste Höhe: SVG-Pfad (viewBox) und Knoten (px) müssen exakt dieselbe Höhe teilen */
+.map-wrap { position: relative; flex: 0 0 auto; margin: 4px 0 8px; }
+.map-wrap svg.path { position: absolute; left: 0; top: 0; width: 100%; overflow: visible; }
+/* Ankerpunkt = Kreismitte (nicht Mitte von Kreis + Sterne), damit der Pfad exakt durchläuft */
+.node { position: absolute; transform: translate(-50%, -28px); display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .node .disc {
   width: 56px; height: 56px; border-radius: 50%;
   border: 2px solid var(--ink); background: var(--card); box-shadow: 3px 3px 0 var(--shadow);
@@ -145,7 +147,8 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
   transition: transform .1s, box-shadow .1s;
 }
 .node:active .disc { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
-.node.boss .disc { width: 72px; height: 72px; border-radius: 18px; transform: rotate(45deg); }
+.node.boss { transform: translate(-50%, -32px); }
+.node.boss .disc { width: 64px; height: 64px; border-radius: 16px; transform: rotate(45deg); }
 .node.boss .disc > * { transform: rotate(-45deg); }
 .node.boss:active .disc { transform: rotate(45deg) translate(2px, 2px); }
 .node.done .disc { background: var(--accent); color: var(--on-accent); }
@@ -2215,11 +2218,11 @@ function renderMap() {
   setAccent(w);
   let sum = 0;
   for (let l = 0; l < 10; l++) sum += S.stars[(w - 1) * 10 + l] || 0;
-  const STEP = 78, TOP = 52, H = TOP * 2 + STEP * 9 + 20;
+  const STEP = 94, TOP = 56, H = TOP * 2 + STEP * 9 + 48;
   const pts = [];
   for (let i = 0; i < 10; i++) {
     const x = 50 + 28 * Math.sin(i * 1.05 + w * 0.7);
-    pts.push([i === 9 ? clamp(x, 34, 66) : clamp(x, 22, 78), TOP + i * STEP]);
+    pts.push([i === 9 ? clamp(x, 34, 66) : clamp(x, 22, 78), TOP + i * STEP + (i === 9 ? 18 : 0)]);
   }
   let d = `M${pts[0][0]} ${pts[0][1]}`;
   for (let i = 1; i < 10; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; d += ` C${x0} ${y0 + STEP / 2} ${x1} ${y1 - STEP / 2} ${x1} ${y1}`; }
@@ -2241,8 +2244,8 @@ function renderMap() {
       <div class="world-sum">${starsHTML(1, 1)} <b>${sum}</b> / 30 Sterne</div>
       <button class="btn small" data-wn="1" ${w >= maxW ? 'disabled' : ''} aria-label="Nächste Welt">${icon('next')}</button>
     </div>
-    <div class="map-wrap" style="min-height:${H}px">
-      <svg class="path" viewBox="0 0 100 ${H}" preserveAspectRatio="none"><path d="${d}" fill="none" stroke="var(--ink3)" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+    <div class="map-wrap" style="height:${H}px">
+      <svg class="path" viewBox="0 0 100 ${H}" preserveAspectRatio="none" style="height:${H}px"><path d="${d}" fill="none" stroke="var(--ink3)" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
       ${nodes}
     </div>`;
 }
