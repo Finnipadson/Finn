@@ -68,5 +68,20 @@ Stand: Phase 1 fertig (`burgwacht.html`). Balance per simuliertem Spieler geprü
 
 1. ✅ **Spielbarer Kern** – Karten 1–3, Raster/Wege/Hindernisse, Wellen-System, Gold, Burg-Leben, Drag-&-Drop-Bauen, Turm-Menü, 8 Türme × 3 Stufen, alle 7 Gegner, Troll-Boss, Sterne, Schwierigkeit wählbar, Pause, Tempo 2×, Tasten. Canvas mit Fixed Timestep.
 2. ✅ **Fähigkeiten & Fortschritt** – umgesetzt: Freischaltung über Sterne (Feuerregen 1★, Eiszeit 3★, Steuer 6★, Mauer 10★, Burg heilen 15★; Sterne zählen pro Karte und Schwierigkeit, max. 27), bis zu 3 auf Q/W/E ausrüstbar auf der Kampagnenkarte; neu freigeschaltete werden einmalig automatisch eingesetzt. „Früher rufen“ geht, sobald alle Gegner einer Welle erschienen sind (Wellenbonus sofort + Extragold). Ursprünglicher Plan: – Feuerregen, Eiszeit, Steuer, Mauer, Burg heilen (freischaltbar), Kampagnen-Karte, Bonusgold.
-3. **Kampagne & Endlos** – Karten 4–8, Hexe/Nekromant/Steingolem, Endlosmodus mit Highscore.
-4. **Feinschliff** – Musik und Sounds, Einstellungen, Statistik, Balance per simulierter Durchläufe, Verknüpfung im Kopfsache-Menü.
+3. ✅ **Kampagne & Endlos** – Karten 4–8 (Fährfurt: Furt bremst; Nebelhain: Nebel −30 % Reichweite, Glocken lichten ihn; Hexenweiher: Matsch, 3 Wege; Steinbrücke: Schlucht mit 3 Brücken; Königsburg: Winter, 4 Wege zum Burgplatz, alle Bosse), Hexe (Kürbis-Fluch), Nekromant (Skelette aus Gräbern), Steingolem (zerfällt in 3 Splitter), Endlosmodus pro Karte und Schwierigkeit mit Rekord, Boss alle 10 Wellen.
+4. ✅ **Feinschliff** – Statistik, Fortschritt zurücksetzen, Kartenhinweise, Schatten-Regel entschärft (sichtbar auch direkt an Türmen und 3 s nach Treffer), Balance per simuliertem Spieler (inkl. Fähigkeiten).
+
+### Balance-Stand (simulierter Spieler mit Feuerregen/Eiszeit/Mauer)
+
+| Karte | Leicht | Normal | Schwer |
+|---|---|---|---|
+| Mühlbach | 30/30 | 20/20 | 10/12 |
+| Dreiweg | 30/30 | 20/20 | 10/12 |
+| Moorpfade | 30/30 | 20/20 | 12/12 |
+| Fährfurt | 30/30 | 20/20 | 9/12 |
+| Nebelhain | 30/30 | 18/20 | 9/12 |
+| Hexenweiher | 30/30 | 20/20 | 9/12 |
+| Steinbrücke | 30/30 | 17/20 | 8/12 |
+| Königsburg | 40/40 | 19/30 | 1/22 |
+
+Endlos: gute Läufe enden bei etwa 24–30 Wellen.
