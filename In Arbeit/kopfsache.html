@@ -127,6 +127,10 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 12px; margin-top: 16px; }
 .menu-grid .btn { justify-content: flex-start; min-height: 58px; position: relative; }
 .badge { position: absolute; right: 10px; top: 8px; min-width: 10px; height: 10px; border-radius: 6px; background: var(--bad); border: 2px solid var(--card); }
+.tdlink { margin-top: 12px; justify-content: flex-start; min-height: 62px; text-decoration: none; background: #3f5a32; color: #f3ecd8; }
+.tdlink:hover { background: #4a6a3a; }
+.tdlink span { flex: 1; display: flex; flex-direction: column; line-height: 1.2; }
+.tdlink small { font-weight: 500; font-size: .8rem; opacity: .8; }
 .menu-foot { display: flex; gap: 10px; margin-top: 12px; }
 .menu-foot .btn { flex: 1; }
 .colophon { margin-top: auto; padding-top: 26px; text-align: center; font-size: .78rem; color: var(--ink3); }
@@ -1631,6 +1635,7 @@ const ICONS = {
   t_math: '<path d="M4.5 8h6M7.5 5v6"/><path d="M13.5 8h6"/><path d="M5.2 14.7l4.6 4.6M9.8 14.7l-4.6 4.6"/><path d="M13.5 15.5h6M13.5 18.5h6"/>',
   t_sudoku: '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>',
   t_shape: '<path d="M4 9.5h5.5V4H15v5.5h5.5V15H15v5.5H9.5V15H4z"/><path d="M9.5 9.5H15V15H9.5z"/>',
+  castle: '<path d="M4 20.5V8.5h3v2h2.5v-2h3v2H15v-2h3v2h2.5v10z"/><path d="M10 20.5v-4a2 2 0 014 0v4"/><path d="M12.2 8.5V3.5l3 1.2-3 1.2"/>',
 };
 const icon = (n, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 const typeIcon = t => t === 'chess' ? '<span class="glyph">♞︎</span>' : icon('t_' + t);
@@ -2203,6 +2208,7 @@ function renderMenu() {
       <button class="btn" data-nav="training">${icon('target')} Training</button>
       <button class="btn" data-nav="achievements">${icon('trophy')} Erfolge <span style="margin-left:auto;color:var(--ink2);font-weight:500">${achN}/${ACH.length}</span></button>
     </div>
+    <a class="btn tdlink" href="burgwacht.html">${icon('castle')} <span><b>Burgwacht</b><small>Turmverteidigung · eigener Modus</small></span> ${icon('next')}</a>
     <div class="menu-foot">
       <button class="btn ghost" data-nav="stats">${icon('chart')} Statistik</button>
       <button class="btn ghost" data-nav="settings">${icon('gear')} Einstellungen</button>
