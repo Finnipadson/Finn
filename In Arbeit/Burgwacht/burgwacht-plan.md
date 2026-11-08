@@ -9,7 +9,7 @@ Pixel-Art-Entwürfe für Karte, Gegner und Türme: [burgwacht-prototypen.html](b
 | Thema | Entscheidung |
 |---|---|
 | Name | Burgwacht |
-| Einbindung | Eigene Datei `In Arbeit/burgwacht.html`, Knopf im Kopfsache-Hauptmenü verlinkt dorthin |
+| Einbindung | Eigene Datei `In Arbeit/Burgwacht/burgwacht.html`, Knopf im Kopfsache-Hauptmenü verlinkt dorthin |
 | Look | Pixel-Art von oben im Stil gemütlicher Farm-/Abenteuerspiele: sattes Grün, gezeichnete Laubbäume und Tannen, warme Erdwege, Wasser mit Sandufer. Alles prozedural im Code gezeichnet, keine Bilddateien, keine kopierten Assets |
 | Rundenlänge | 1–5 Minuten pro Karte |
 | Spielgefühl | Mischung aus Planen und Tempo |

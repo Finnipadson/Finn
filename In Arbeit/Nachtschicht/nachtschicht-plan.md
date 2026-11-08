@@ -1,6 +1,6 @@
 # Nachtschicht – Bauplan
 
-3D-Grusel-Shooter im Browser, eigenständiges Spiel (`In Arbeit/nachtschicht.html`).
+3D-Grusel-Shooter im Browser, eigenständiges Spiel (`In Arbeit/Nachtschicht/nachtschicht.html`).
 
 ## Entscheidungen (aus der Fragerunde)
 

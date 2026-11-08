@@ -2047,7 +2047,7 @@ function renderMenu() {
         ? `<button class="btn stone" data-endless>Endlosmodus · Rekord ${((SV.endless[m.id] || {})[diff]) || 0} Wellen</button>`
         : '<div class="sub">Endlosmodus: schaffe diese Karte einmal.</div>'}`;
   $('#menu').innerHTML = `
-    <div class="top-links"><a class="btn small stone" href="kopfsache.html">‹ Kopfsache</a><span class="hint">★ ${totalStars()} / ${maxStars()}</span></div>
+    <div class="top-links"><a class="btn small stone" href="../Kopfsache/kopfsache.html">‹ Kopfsache</a><span class="hint">★ ${totalStars()} / ${maxStars()}</span></div>
     <div class="title"><h1>Burgwacht</h1><p>Halte die Burg. Baue Türme, rüste sie auf, lass keinen durch.</p></div>
     <div class="panel world"><canvas id="worldcv" width="480" height="288" aria-label="Kampagnenkarte"></canvas></div>
     <div class="panel detail">${detail}</div>
