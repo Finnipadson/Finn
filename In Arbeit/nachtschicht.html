@@ -43,6 +43,9 @@ canvas#view { position: fixed; inset: 0; width: 100%; height: 100%; display: blo
 #note small { display: block; margin-top: 18px; font-family: "IBM Plex Mono", monospace; font-size: 11px; color: #6a5e48; letter-spacing: .1em; }
 .stats { color: var(--ink2); font-size: 14px; line-height: 1.9; }
 .stats b { color: var(--ink); }
+#donetext { white-space: pre-line; font-family: "Special Elite", monospace; color: #cfc6b2; font-size: 16px; }
+#levelpick { flex-wrap: wrap; justify-content: center; max-width: 560px; }
+#levelpick .btn { padding: 8px 12px; font-size: 12px; letter-spacing: .08em; }
 </style>
 </head>
 <body>
@@ -62,9 +65,11 @@ canvas#view { position: fixed; inset: 0; width: 100%; height: 100%; display: blo
   <h1>Nachtschicht</h1>
   <p>Anwesen Falkenried, 23:10 Uhr. Du übernimmst die Nachtschicht als Wachmann. Der Kollege der Tagschicht meldet sich nicht mehr.</p>
   <button class="btn" id="b-start">Schicht beginnen</button>
+  <button class="btn" id="b-continue" hidden></button>
+  <div class="row" id="levelpick" hidden></div>
   <div class="row"><span>Maus</span><input type="range" id="sens" min="20" max="300" value="100"><span id="sensv">100</span></div>
   <div class="row"><span>Lautstärke</span><input type="range" id="vol" min="0" max="100" value="70"><span id="volv">70</span></div>
-  <div class="keyshelp">WASD laufen · Maus zielen · Linksklick schießen · Shift rennen · 1/2 Waffe wechseln · E lesen · Esc Pause<br>Kopfhörer empfohlen.</div>
+  <div class="keyshelp">WASD laufen · Maus zielen · Linksklick schießen · Shift rennen · 1–4 Waffe wechseln · E lesen · Esc Pause<br>Kopfhörer empfohlen.</div>
 </div>
 <div class="screen" id="s-pause" hidden>
   <h2>Pause</h2>
@@ -77,10 +82,12 @@ canvas#view { position: fixed; inset: 0; width: 100%; height: 100%; display: blo
   <button class="btn" id="b-retry">Nochmal</button>
 </div>
 <div class="screen" id="s-done" hidden>
-  <h2>Ausgang erreicht</h2>
+  <h2 id="donetitle">Ausgang erreicht</h2>
   <div class="stats" id="donestats"></div>
-  <p>Fortsetzung folgt – weitere Level kommen in Phase 2.</p>
+  <p id="donetext"></p>
+  <button class="btn" id="b-next">Weiter</button>
   <button class="btn" id="b-again">Level wiederholen</button>
+  <button class="btn" id="b-title">Zum Titel</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -94,45 +101,196 @@ const SPEED = 3.3, SPRINT = 5.4;
 const WEAPONS = {
   pistol:  { name: 'Pistole',      ammo: 'bullets', dmg: 26, rate: 0.32, pellets: 1, spread: 0.008, recoil: 0.04 },
   shotgun: { name: 'Schrotflinte', ammo: 'shells',  dmg: 13, rate: 0.85, pellets: 8, spread: 0.075, recoil: 0.12 },
+  rifle:   { name: 'Gewehr',       ammo: 'rounds',  dmg: 62, rate: 0.6,  pellets: 1, spread: 0.002, recoil: 0.09 },
+  flare:   { name: 'Signalwerfer', ammo: 'flares',  dmg: 160, rate: 1.1, pellets: 1, spread: 0.004, recoil: 0.16, blast: 3.2 },
 };
+const WEAPON_KEYS = ['pistol', 'shotgun', 'rifle', 'flare'];
+const AMMO_NAME = { bullets: 'Munition', shells: 'Schrotpatronen', rounds: 'Gewehrpatronen', flares: 'Leuchtgranaten' };
 const ENEMIES = {
   s: { name: 'Schatten', hp: 70,  speed: 2.7, dmg: 14, reach: 1.15, rate: 1.0, radius: 0.45, height: 1.0 },
   p: { name: 'Puppe',    hp: 130, speed: 6.5, dmg: 34, reach: 1.0,  rate: 1.2, radius: 0.4,  height: 0.9 },
   c: { name: 'Kriecher', hp: 28,  speed: 4.6, dmg: 9,  reach: 0.9,  rate: 0.7, radius: 0.35, height: 0.3 },
+  B: { name: 'Der Puppenspieler', hp: 1400, speed: 2.0, dmg: 26, reach: 1.7, rate: 1.3, radius: 0.8, height: 1.8 },
 };
 const SAVE_KEY = 'nachtschicht_v1';
 
 // ============================================================
-// LEVEL 1 – Herrenhaus
+// LEVEL
+// Zeichen: # Wand, W zweite Wandart (Hütte), . Boden, S Start, E Ausgang, D Tür, R rote Tür,
+// k roter Schlüssel, a Munition, h Medizin, g Schrotflinte, w Gewehr, v Signalwerfer,
+// n Notiz, l Lampe, x Schreckmoment, s/p/c Gegner, B Endgegner
 // ============================================================
-const LEVELS = [{
-  name: 'Herrenhaus Falkenried',
-  map: [
-    '########################',
-    '#S..l.#.......#.....n..#',
-    '#.....#...s...#........#',
-    '#..a..D.......D....p...#',
-    '#.....#...l...#........#',
-    '###D###.......####D#####',
-    '#.....#.......#.....#..#',
-    '#..n..###D#####..c..D.a#',
-    '#.....#.......#.....#..#',
-    '#..h..#...x...#..l..#.k#',
-    '#.....#.......#.....####',
-    '###.###...s...###D#....#',
-    '#.....#...g...#........#',
-    '#.c...D.......D...p..l.#',
-    '#..l..#...a...#........#',
-    '#.....####R######h.....#',
-    '##########E#############',
-    '########################',
-  ],
-  notes: [
-    'Wachbuch, 22:40\n\nDie Lichter im Ostflügel gehen wieder von selbst aus. Ich habe die Puppensammlung mit Tüchern abgedeckt.\n\nMorgen frage ich, wer die Tücher jede Nacht wieder abnimmt.',
-    'Funkspruch, 23:02 (stark verrauscht)\n\n„… wenn du das hörst … lass sie nicht aus den Augen … die Puppen … nur wenn keiner hinsieht …\n… und die Schatten folgen dem Strom …“',
-  ],
-  palette: { wall: 'wallpaper', floor: 'wood', fog: 0x050607, fogD: 0.085, lamp: 0xffb46a },
-}];
+const LEVELS = [
+  {
+    name: 'Herrenhaus Falkenried', intro: '23:10 – Erste Runde durchs Haus.',
+    weapons: ['pistol'],
+    map: [
+      '########################',
+      '#S..l.#.......#.....n..#',
+      '#.....#...s...#........#',
+      '#..a..D.......D....p...#',
+      '#.....#...l...#........#',
+      '###D###.......####D#####',
+      '#.....#.......#.....#..#',
+      '#..n..###D#####..c..D.a#',
+      '#.....#.......#.....#..#',
+      '#..h..#...x...#..l..#.k#',
+      '#.....#.......#.....####',
+      '###.###...s...###D#....#',
+      '#.....#...g...#........#',
+      '#.c...D.......D...p..l.#',
+      '#..l..#...a...#........#',
+      '#.....####R######h.....#',
+      '##########E#############',
+      '########################',
+    ],
+    notes: [
+      'Wachbuch, 22:40\n\nDie Lichter im Ostflügel gehen wieder von selbst aus. Ich habe die Puppensammlung mit Tüchern abgedeckt.\n\nMorgen frage ich, wer die Tücher jede Nacht wieder abnimmt.',
+      'Funkspruch, 23:02 (stark verrauscht)\n\n„… wenn du das hörst … lass sie nicht aus den Augen … die Puppen … nur wenn keiner hinsieht …\n… und die Schatten folgen dem Strom …“',
+    ],
+    scares: [{ t: 'lights', spawn: 's', n: 2 }],
+    palette: { wall: 'wallpaper', floor: 'wood', ceil: 'ceiling', fog: 0x050607, fogD: 0.085, lamp: 0xffb46a },
+  },
+  {
+    name: 'Keller und Katakomben', intro: '00:40 – Der Strom ist weg. Unten riecht es nach Erde.',
+    weapons: ['pistol', 'shotgun'],
+    map: [
+      '######################',
+      '#S....#.........#....#',
+      '#.....D....c....D.n..#',
+      '#..l..#.........#....#',
+      '###.###...l.....###D##',
+      '#.....#.........#....#',
+      '#.c...####D######..c.#',
+      '#.....#.....#...D..l.#',
+      '#..a..#..x..#...#....#',
+      '#.....D.....#.k.#.h..#',
+      '###D###..l..#####....#',
+      '#.....#.........#....#',
+      '#..n..#....c....D..a.#',
+      '#..h..#.........#.c..#',
+      '###R##################',
+      '###E##################',
+      '######################',
+    ],
+    notes: [
+      'Inventarliste Keller\n\n41 Puppen, Herkunft unbekannt. Ankauf durch Graf Falkenried, 1911.\n\nAm Rand, mit Bleistift: „Sie stehen jeden Morgen anders.“',
+      'Funkspruch, 23:51\n\n„Hier Tagschicht, Markus. Der Strom fällt immer dann aus, wenn sie näher kommen. Ich gehe raus zur Hütte im Wald, da steht der Notgenerator. Komm nach.“',
+    ],
+    scares: [{ t: 'swarm', n: 4 }],
+    palette: { wall: 'stone', floor: 'stoneFloor', ceil: 'stoneCeil', fog: 0x060706, fogD: 0.1, lamp: 0xff8a3a },
+  },
+  {
+    name: 'Der Wald hinter dem Anwesen', intro: '01:25 – Draußen. Nebel bis zu den Knien.',
+    weapons: ['pistol', 'shotgun'],
+    map: [
+      '########################',
+      '#S......###.....##.....#',
+      '#....l....#..s...#..n..#',
+      '#..........#......#....#',
+      '##..a.......#..........#',
+      '###.........x....c.....#',
+      '#....##..........###..##',
+      '#.c..##...WWDWW...#...##',
+      '#.........W...W.......##',
+      '#....l....W.wnW...p...##',
+      '#.........WWWWW....l..##',
+      '##...s..........##...###',
+      '###..........h..##.k.###',
+      '####....a...#####...R###',
+      '########...#########E###',
+      '########################',
+    ],
+    notes: [
+      'Zettel an der Hüttentür\n\nGenerator läuft wieder. Wenn das Licht brennt, bleiben die Schatten weg.\n\nNICHT AUSGEHEN LASSEN.',
+      'Markus’ Tagebuch\n\nSie kommen aus dem Bunker unter dem Hügel. Der Graf hat dort im Krieg etwas gebaut.\n\nIch habe sein altes Jagdgewehr gefunden. Ich gehe hinunter.',
+    ],
+    scares: [{ t: 'lights', spawn: 's', n: 3 }],
+    palette: { wall: 'hedge', wallAlt: 'planks', floor: 'grass', ceil: null, fog: 0x0b0e12, fogD: 0.11, lamp: 0xffd28a },
+  },
+  {
+    name: 'Bunker unter dem Hügel', intro: '02:10 – Notbeleuchtung. Irgendwo tropft Wasser.',
+    weapons: ['pistol', 'shotgun', 'rifle'],
+    map: [
+      '######################',
+      '#S...#......#.......n#',
+      '#....D..l...D...s....#',
+      '#.a..#......#........#',
+      '##D###..x...####D#####',
+      '#....#......#.......h#',
+      '#.c..#..s...D...l....#',
+      '#....####D###....c...#',
+      '#..l.#.......#####D###',
+      '#....D...a...#.....k.#',
+      '#.n..#..c....#..p...l#',
+      '#....#...l...#.......#',
+      '###R###########.....c#',
+      '###E##################',
+      '######################',
+    ],
+    notes: [
+      'Versuchsprotokoll, 1944 – Reihe „Nachtschicht“\n\nObjekte reagieren auf Beobachtung.\nOhne Beobachtung: Bewegung.\nOhne Licht: Vermehrung.\n\nVersuch abgebrochen. Objekte eingelagert.',
+      'Funkspruch, kaum hörbar\n\n„… die Werkstatt … dort macht er neue … ich höre ihn singen … er braucht noch einen …“',
+    ],
+    scares: [{ t: 'alarm', spawn: 's', n: 3 }],
+    palette: { wall: 'concrete', floor: 'metal', ceil: 'concreteDark', fog: 0x070505, fogD: 0.08, lamp: 0xff3a2a },
+  },
+  {
+    name: 'Die Puppenwerkstatt', intro: '03:05 – Hobelspäne. Glasaugen in Schubladen. Ein Lied.',
+    weapons: ['pistol', 'shotgun', 'rifle'],
+    map: [
+      '######################',
+      '#S..#.......p......n.#',
+      '#...D....l...........#',
+      '#.a.#..p.....###D#####',
+      '##D##........#.......#',
+      '#....###x#####...p...#',
+      '#.p..#.......D.......#',
+      '#....D...l...#..l..h.#',
+      '#..l.#.......#########',
+      '###.##..p.c..#....k..#',
+      '#....#.......D..p....#',
+      '#.n..####D####.....c.#',
+      '#.h......a....#..l...#',
+      '#########R############',
+      '#########E############',
+      '######################',
+    ],
+    notes: [
+      'Auftragsbuch des Puppenmachers\n\nNr. 41 – Erwachsener, Uniform der Tagschicht. Fertig.\nNr. 42 – Erwachsener, Uniform der Nachtschicht.\nFertig bis Sonnenaufgang.',
+      'Mit zittriger Hand, auf die Werkbank geritzt\n\n„Ich bin Nummer 41. Ich war die Tagschicht.\nHalt ihn auf, bevor du Nummer 42 wirst.\nDie Bühne liegt unter dem Haus.“ – M.',
+    ],
+    scares: [{ t: 'puppetBehind' }],
+    palette: { wall: 'planks', floor: 'wood', ceil: 'ceiling', fog: 0x080604, fogD: 0.085, lamp: 0xffc070 },
+  },
+  {
+    name: 'Die Bühne', intro: '04:30 – Ein Theater unter dem Anwesen. Der Vorhang ist offen.',
+    weapons: ['pistol', 'shotgun', 'rifle'], boss: true,
+    map: [
+      '######################',
+      '#S.....#######......n#',
+      '#..a...D.....D....v..#',
+      '#......###.###.......#',
+      '##D#######.#######D###',
+      '#....................#',
+      '#..l......l......l...#',
+      '#....................#',
+      '#.......#.....#......#',
+      '#...h...#..B..#...a..#',
+      '#.......#.....#......#',
+      '#..l..............l..#',
+      '#....................#',
+      '##########E###########',
+      '######################',
+    ],
+    notes: [
+      'Theaterzettel, vergilbt\n\nHEUTE NACHT\nDer Puppenspieler\nEinzige Vorstellung\n\nEintritt: ein Wachmann.',
+    ],
+    scares: [],
+    ending: 'Der Puppenspieler zerfällt in Fäden und Staub. Irgendwo über dir schlägt eine Uhr fünf.\n\nAls du aus dem Keller steigst, geht über Falkenried die Sonne auf. In der Eingangshalle stehen 41 Puppen – still, mit Tüchern bedeckt.\n\nIm Wachbuch trägst du ein: „Keine besonderen Vorkommnisse.“',
+    palette: { wall: 'curtain', floor: 'stage', ceil: 'black', fog: 0x060304, fogD: 0.06, lamp: 0xffd0a0 },
+  },
+];
 
 // ============================================================
 // TEXTUREN (prozedurale Pixel-Texturen)
@@ -165,6 +323,36 @@ const TEX = {
     x.fillStyle = '#5a3820'; x.fillRect(3, 3, 11, 12); x.fillRect(18, 3, 11, 12); x.fillRect(3, 18, 11, 11); x.fillRect(18, 18, 11, 11);
     x.fillStyle = '#c8a040'; x.fillRect(26, 16, 2, 2);
   }),
+  stone: () => canvasTex(64, (x, s) => {
+    x.fillStyle = '#2e2a26'; x.fillRect(0, 0, s, s);
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) { const ox = (r % 2) * 10; x.fillStyle = ['#3a342e', '#35302a', '#403830'][(r + c) % 3]; x.fillRect(c * 22 + ox - 10, r * 16 + 1, 20, 14); }
+    for (let i = 0; i < 300; i++) { x.fillStyle = 'rgba(0,0,0,' + rnd(0, .25) + ')'; x.fillRect(rnd(0, s) | 0, rnd(0, s) | 0, 2, 2); }
+    x.fillStyle = 'rgba(40,60,30,.4)'; x.fillRect(0, s - 8, s, 8);
+  }),
+  stoneFloor: () => canvasTex(32, (x, s) => { x.fillStyle = '#24211d'; x.fillRect(0, 0, s, s); for (let i = 0; i < 120; i++) { x.fillStyle = 'rgba(' + (rnd(40, 70) | 0) + ',' + (rnd(36, 60) | 0) + ',' + (rnd(30, 50) | 0) + ',.6)'; x.fillRect(rnd(0, s) | 0, rnd(0, s) | 0, rnd(1, 4) | 0, rnd(1, 3) | 0); } }),
+  stoneCeil: () => canvasTex(32, (x, s) => { x.fillStyle = '#151311'; x.fillRect(0, 0, s, s); for (let i = 0; i < 60; i++) { x.fillStyle = 'rgba(255,255,255,.03)'; x.fillRect(rnd(0, s) | 0, rnd(0, s) | 0, 3, 2); } }),
+  hedge: () => canvasTex(64, (x, s) => {
+    x.fillStyle = '#0e1a10'; x.fillRect(0, 0, s, s);
+    for (let i = 0; i < 260; i++) { x.fillStyle = ['#1a2e1a', '#22381e', '#142414', '#2a4224'][i % 4]; x.fillRect(rnd(0, s) | 0, rnd(0, s) | 0, rnd(3, 8) | 0, rnd(2, 5) | 0); }
+    for (const tx of [10, 38, 54]) { x.fillStyle = '#241a12'; x.fillRect(tx, 20, 4, s - 20); x.fillStyle = '#1a120c'; x.fillRect(tx, 20, 1, s - 20); }
+  }),
+  planks: () => canvasTex(64, (x, s) => {
+    for (let c = 0; c < 8; c++) { x.fillStyle = ['#4a3420', '#42301c', '#503824'][c % 3]; x.fillRect(c * 8, 0, 8, s); x.fillStyle = '#20160c'; x.fillRect(c * 8, 0, 1, s); x.fillStyle = '#6a5a40'; x.fillRect(c * 8 + 3, 10 + (c * 13) % 40, 1, 1); }
+    for (let i = 0; i < 200; i++) { x.fillStyle = 'rgba(0,0,0,' + rnd(0, .2) + ')'; x.fillRect(rnd(0, s) | 0, rnd(0, s) | 0, 1, rnd(2, 8) | 0); }
+  }),
+  grass: () => canvasTex(32, (x, s) => { x.fillStyle = '#1c2416'; x.fillRect(0, 0, s, s); for (let i = 0; i < 160; i++) { x.fillStyle = ['#26301c', '#2e3a20', '#171e12', '#3a3424'][i % 4]; x.fillRect(rnd(0, s) | 0, rnd(0, s) | 0, 1, rnd(1, 4) | 0); } }),
+  concrete: () => canvasTex(64, (x, s) => {
+    x.fillStyle = '#3c3e3c'; x.fillRect(0, 0, s, s);
+    for (let i = 0; i < 500; i++) { x.fillStyle = Math.random() < .5 ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.04)'; x.fillRect(rnd(0, s) | 0, rnd(0, s) | 0, 2, 2); }
+    x.fillStyle = '#2a2c2a'; x.fillRect(0, 31, s, 2);
+    x.fillStyle = '#7a6a20'; x.fillRect(0, s - 6, s, 3); x.fillStyle = '#1a1a1a'; for (let i = 0; i < s; i += 8) x.fillRect(i, s - 6, 4, 3);
+    x.fillStyle = 'rgba(80,40,20,.35)'; x.fillRect(40, 33, 3, 24);
+  }),
+  concreteDark: () => canvasTex(32, (x, s) => { x.fillStyle = '#1c1d1c'; x.fillRect(0, 0, s, s); x.fillStyle = '#121312'; x.fillRect(0, 15, s, 2); x.fillRect(15, 0, 2, s); }),
+  metal: () => canvasTex(32, (x, s) => { x.fillStyle = '#2a2c2e'; x.fillRect(0, 0, s, s); x.fillStyle = '#34373a'; for (let y = 2; y < s; y += 6) for (let xx = (y / 6 % 2) * 3 + 1; xx < s; xx += 6) x.fillRect(xx, y, 3, 1); x.fillStyle = '#1a1b1c'; x.fillRect(0, 0, s, 1); x.fillRect(0, 0, 1, s); }),
+  curtain: () => canvasTex(64, (x, s) => { for (let c = 0; c < s; c++) { const v = Math.sin(c / 3) * 0.5 + 0.5; x.fillStyle = 'rgb(' + (70 + v * 50 | 0) + ',' + (8 + v * 10 | 0) + ',' + (14 + v * 10 | 0) + ')'; x.fillRect(c, 0, 1, s); } x.fillStyle = '#b08a30'; x.fillRect(0, 0, s, 3); x.fillStyle = 'rgba(0,0,0,.4)'; x.fillRect(0, s - 6, s, 6); }),
+  stage: () => canvasTex(64, (x, s) => { for (let r = 0; r < 8; r++) { x.fillStyle = r % 2 ? '#2e2014' : '#281a10'; x.fillRect(0, r * 8, s, 8); x.fillStyle = '#140c06'; x.fillRect(0, r * 8, s, 1); } }),
+  black: () => canvasTex(8, (x, s) => { x.fillStyle = '#050505'; x.fillRect(0, 0, s, s); }),
   redDoor: () => canvasTex(32, (x, s) => {
     x.fillStyle = '#5a1410'; x.fillRect(0, 0, s, s); x.fillStyle = '#7a2018'; x.fillRect(3, 3, 26, 26);
     x.fillStyle = '#d8b040'; x.fillRect(14, 14, 4, 5); x.fillStyle = '#1a0a08'; x.fillRect(15, 16, 2, 2);
@@ -227,6 +415,13 @@ const Sound = (() => {
     death() { tone(90, 1.2, { type: 'sawtooth', vol: .2, glide: 30 }); noise(0.8, { freq: 400, q: 1, vol: .4 }); },
     enemyDie(pan) { noise(0.5, { freq: 300, q: 1, vol: .3, pan }); tone(200, .5, { type: 'triangle', vol: .1, glide: 60, pan }); },
     heartbeat() { tone(55, .12, { vol: .5 }); tone(50, .14, { vol: .4, delay: .18 }); },
+    rifle() { noise(0.35, { freq: 1100, q: .6, vol: 1 }); tone(70, .3, { vol: .6, glide: 35 }); noise(0.4, { freq: 300, q: .5, vol: .25, delay: .08, type: 'lowpass' }); },
+    flare() { noise(0.6, { freq: 2500, q: .4, vol: .5 }); tone(400, .5, { type: 'sawtooth', vol: .08, glide: 1200 }); },
+    blast() { noise(1.1, { freq: 250, q: .3, vol: 1.2, type: 'lowpass' }); tone(45, .9, { vol: .7, glide: 25 }); },
+    siren() { for (let i = 0; i < 6; i++) { tone(620, .35, { type: 'square', vol: .05, delay: i * .7 }); tone(460, .35, { type: 'square', vol: .05, delay: i * .7 + .35 }); } },
+    swarm() { for (let i = 0; i < 24; i++) noise(0.025, { freq: 3000 + Math.random() * 2000, q: 5, vol: .1, delay: i * 0.05, pan: Math.random() * 2 - 1 }); },
+    whisper() { noise(1.6, { freq: 1800, q: 6, vol: .14, pan: Math.random() * 2 - 1 }); },
+    roar() { tone(60, 1.6, { type: 'sawtooth', vol: .35, glide: 38 }); noise(1.4, { freq: 180, q: .6, vol: .7, type: 'lowpass' }); tone(90, 1.2, { type: 'square', vol: .06, glide: 55, delay: .1 }); },
     done() { [196, 262, 330, 392].forEach((f, i) => tone(f, 1.4, { type: 'triangle', vol: .08, delay: i * .2 })); },
   };
   return {
@@ -242,7 +437,9 @@ const Sound = (() => {
 // ============================================================
 let settings = { sens: 100, vol: 70 };
 try { const raw = localStorage.getItem(SAVE_KEY); if (raw) Object.assign(settings, JSON.parse(raw).settings || {}); } catch (e) { }
-function saveSettings() { try { const raw = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); raw.settings = settings; localStorage.setItem(SAVE_KEY, JSON.stringify(raw)); } catch (e) { } }
+let unlocked = 0;   // höchstes freigeschaltetes Level (Index)
+try { const raw = localStorage.getItem(SAVE_KEY); if (raw) unlocked = JSON.parse(raw).unlocked || 0; } catch (e) { }
+function saveSettings() { try { const raw = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); raw.settings = settings; raw.unlocked = unlocked; localStorage.setItem(SAVE_KEY, JSON.stringify(raw)); } catch (e) { } }
 
 // ============================================================
 // RENDERER / SZENE
@@ -287,9 +484,6 @@ const center = (cx, cz) => new THREE.Vector3(cx * CELL + CELL / 2, 0, cz * CELL 
 // ----- Mesh-Bausteine -----
 const MAT = {};
 function mats() {
-  MAT.wall = new THREE.MeshLambertMaterial({ map: TEX.wallpaper() });
-  MAT.floor = new THREE.MeshLambertMaterial({ map: TEX.wood() });
-  MAT.ceil = new THREE.MeshLambertMaterial({ map: TEX.ceiling() });
   MAT.door = new THREE.MeshLambertMaterial({ map: TEX.door() });
   MAT.redDoor = new THREE.MeshLambertMaterial({ map: TEX.redDoor() });
   MAT.black = new THREE.MeshLambertMaterial({ color: 0x050505 });
@@ -315,6 +509,11 @@ function mats() {
   MAT.red = new THREE.MeshBasicMaterial({ color: 0xc8302a });
   MAT.lampGlow = new THREE.MeshBasicMaterial({ color: 0xffd8a0 });
   MAT.exit = new THREE.MeshBasicMaterial({ color: 0x3aff8a, transparent: true, opacity: .35 });
+  MAT.exitLocked = new THREE.MeshBasicMaterial({ color: 0xff3a2a, transparent: true, opacity: .22 });
+  MAT.bossEye = new THREE.MeshBasicMaterial({ color: 0xff2a1a });
+  MAT.string = new THREE.MeshBasicMaterial({ color: 0x8a8070 });
+  MAT.flareGun = new THREE.MeshBasicMaterial({ color: 0xc85a1a });
+  MAT.flareGunLit = new THREE.MeshLambertMaterial({ color: 0xc85a1a, emissive: 0x401808 });
 }
 const box = (w, h, d, m) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
 
@@ -327,6 +526,18 @@ function makeShadowMonster() {
     const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 4), MAT.eye); eye.position.set(s * 0.08, 1.95, -0.16); g.add(eye);
     const leg = box(0.14, 0.7, 0.14, MAT.black); leg.position.set(s * 0.13, 0.35, 0); g.add(leg); g.userData['leg' + s] = leg;
   }
+  return g;
+}
+function makeBoss() {
+  const g = makeShadowMonster();
+  g.scale.setScalar(1.55);
+  g.traverse(o => { if (o.material === MAT.eye) o.material = MAT.bossEye; });
+  const mask = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), MAT.porcelain); mask.scale.set(1, 1.2, 0.6); mask.position.set(0, 1.92, -0.12); g.add(mask);
+  for (const s of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 4), MAT.bossEye); eye.position.set(s * 0.07, 1.96, -0.24); g.add(eye);
+    const str = box(0.008, 1.6, 0.008, MAT.string); str.position.set(s * 0.4, 2.3, 0); g.add(str);
+  }
+  const str2 = box(0.008, 1.2, 0.008, MAT.string); str2.position.set(0, 2.6, 0); g.add(str2);
   return g;
 }
 function makePuppet() {
@@ -360,6 +571,17 @@ function makeGun(type, view = true) {
     const sight = box(0.006, 0.012, 0.01, M.dark); sight.position.set(0, 0.046, -0.15); g.add(sight);
     const grip = box(0.032, 0.1, 0.05, M.wood); grip.position.set(0, -0.055, 0.02); grip.rotation.x = 0.28; g.add(grip);
     const hand = box(0.06, 0.07, 0.08, M.skin); hand.position.set(0, -0.07, 0.05); hand.rotation.x = 0.28; g.add(hand);
+  } else if (type === 'rifle') {
+    const barrel = box(0.025, 0.025, 0.7, M.gun); barrel.position.set(0, 0.035, -0.35); g.add(barrel);
+    const body = box(0.045, 0.06, 0.3, M.wood); body.position.set(0, 0, -0.12); g.add(body);
+    const scope = box(0.035, 0.035, 0.22, M.dark); scope.position.set(0, 0.075, -0.12); g.add(scope);
+    const stock = box(0.045, 0.09, 0.24, M.wood); stock.position.set(0, -0.03, 0.14); g.add(stock);
+    const hand = box(0.07, 0.06, 0.08, M.skin); hand.position.set(0, -0.04, -0.28); g.add(hand);
+  } else if (type === 'flare') {
+    const barrel = box(0.07, 0.07, 0.3, view ? MAT.flareGun : MAT.flareGunLit); barrel.position.set(0, 0.03, -0.14); g.add(barrel);
+    const muzzle = box(0.08, 0.08, 0.04, M.dark); muzzle.position.set(0, 0.03, -0.3); g.add(muzzle);
+    const grip = box(0.04, 0.12, 0.06, M.dark); grip.position.set(0, -0.06, 0.0); grip.rotation.x = 0.3; g.add(grip);
+    const hand = box(0.065, 0.075, 0.085, M.skin); hand.position.set(0, -0.075, 0.03); hand.rotation.x = 0.3; g.add(hand);
   } else {
     const barrel = box(0.035, 0.035, 0.55, M.gun); barrel.position.set(0, 0.03, -0.25); g.add(barrel);
     const tube = box(0.03, 0.03, 0.45, M.dark); tube.position.set(0, -0.005, -0.22); g.add(tube);
@@ -367,76 +589,89 @@ function makeGun(type, view = true) {
     const stock = box(0.05, 0.08, 0.22, M.wood); stock.position.set(0, -0.02, 0.1); g.add(stock);
     const hand = box(0.07, 0.06, 0.08, M.skin); hand.position.set(0, -0.04, -0.3); g.add(hand);
   }
-  const flashL = new THREE.PointLight(0xffc070, 0, 6, 2); flashL.position.set(0, 0.04, type === 'pistol' ? -0.22 : -0.6); g.add(flashL); g.userData.flash = flashL;
+  const flashL = new THREE.PointLight(0xffc070, 0, 6, 2); flashL.position.set(0, 0.04, { pistol: -0.22, shotgun: -0.6, rifle: -0.72, flare: -0.34 }[type]); g.add(flashL); g.userData.flash = flashL;
   return g;
 }
 
 // ============================================================
 // LEVEL AUFBAUEN
 // ============================================================
+const matCache = {};
+function levelMat(key) { if (!key) return null; if (!matCache[key]) matCache[key] = new THREE.MeshLambertMaterial({ map: TEX[key]() }); return matCache[key]; }
 function buildLevel(idx) {
   if (world) scene.remove(world);
   world = new THREE.Group(); scene.add(world);
-  const def = LEVELS[idx];
+  const def = LEVELS[idx], pal = def.palette;
   const grid = def.map.map(r => r.split(''));
   const H = grid.length, W = Math.max(...grid.map(r => r.length));
-  L = { def, grid, W, H, doors: new Map(), lamps: [], items: [], enemies: [], scares: [], exit: null, noteIdx: 0, start: null, lightsOutUntil: 0, flow: null, flowT: 0, kills: 0, notesFound: 0, time: 0 };
-  scene.fog = new THREE.FogExp2(def.palette.fog, def.palette.fogD);
-  renderer.setClearColor(def.palette.fog);
+  L = { def, grid, W, H, doors: new Map(), lamps: [], items: [], enemies: [], scares: [], exit: null, exitMesh: null, exitLight: null, exitLocked: !!def.boss, boss: null,
+        start: null, lightsOutUntil: 0, flow: null, flowT: 0, kills: 0, notesFound: 0, time: 0, blasts: [], bossSummonT: 8 };
+  scene.fog = new THREE.FogExp2(pal.fog, pal.fogD);
+  renderer.setClearColor(pal.fog);
   // Boden & Decke
-  const fl = new THREE.Mesh(new THREE.PlaneGeometry(W * CELL, H * CELL), MAT.floor); fl.rotation.x = -Math.PI / 2; fl.position.set(W * CELL / 2, 0, H * CELL / 2);
-  MAT.floor.map.repeat.set(W, H); world.add(fl);
-  const ce = new THREE.Mesh(new THREE.PlaneGeometry(W * CELL, H * CELL), MAT.ceil); ce.rotation.x = Math.PI / 2; ce.position.set(W * CELL / 2, WALL_H, H * CELL / 2);
-  MAT.ceil.map.repeat.set(W, H); world.add(ce);
-  // Wände (nur sichtbare Randwände als Instanzen)
-  const wallCells = [];
-  for (let z = 0; z < H; z++) for (let x = 0; x < W; x++) if (grid[z][x] === '#') {
-    const open = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => { const c = (grid[z + dz] || [])[x + dx]; return c && c !== '#'; });
-    if (open) wallCells.push([x, z]);
+  const floorMat = levelMat(pal.floor); floorMat.map.repeat.set(W, H);
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(W * CELL, H * CELL), floorMat); fl.rotation.x = -Math.PI / 2; fl.position.set(W * CELL / 2, 0, H * CELL / 2); world.add(fl);
+  if (pal.ceil) {
+    const ceilMat = levelMat(pal.ceil); ceilMat.map.repeat.set(W, H);
+    const ce = new THREE.Mesh(new THREE.PlaneGeometry(W * CELL, H * CELL), ceilMat); ce.rotation.x = Math.PI / 2; ce.position.set(W * CELL / 2, WALL_H, H * CELL / 2); world.add(ce);
+  } else world.add(new THREE.HemisphereLight(0x3a4a66, 0x0a0806, 0.35));   // draußen: schwaches Mondlicht
+  // Wände: zwei Arten (# und W), nur sichtbare Randwände als Instanzen
+  const isWall = c => c === '#' || c === 'W';
+  const cells = { '#': [], W: [] };
+  for (let z = 0; z < H; z++) for (let x = 0; x < W; x++) if (isWall(grid[z][x])) {
+    const open = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => { const c = (grid[z + dz] || [])[x + dx]; return c && !isWall(c); });
+    if (open) cells[grid[z][x]].push([x, z]);
   }
-  const wallMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(CELL, WALL_H, CELL), MAT.wall, wallCells.length);
-  const m4 = new THREE.Matrix4();
-  wallCells.forEach(([x, z], i) => { m4.makeTranslation(x * CELL + 1, WALL_H / 2, z * CELL + 1); wallMesh.setMatrixAt(i, m4); });
-  world.add(wallMesh);
+  for (const [ch, list] of Object.entries(cells)) {
+    if (!list.length) continue;
+    const wm = new THREE.InstancedMesh(new THREE.BoxGeometry(CELL, WALL_H, CELL), levelMat(ch === 'W' ? (pal.wallAlt || pal.wall) : pal.wall), list.length);
+    const m4 = new THREE.Matrix4();
+    list.forEach(([x, z], i) => { m4.makeTranslation(x * CELL + 1, WALL_H / 2, z * CELL + 1); wm.setMatrixAt(i, m4); });
+    world.add(wm);
+  }
+  for (let z = 0; z < H; z++) for (let x = 0; x < W; x++) if (grid[z][x] === 'W') grid[z][x] = '#';
   // Inhalt
-  let noteN = 0;
+  let noteN = 0, scareN = 0;
   for (let z = 0; z < H; z++) for (let x = 0; x < W; x++) {
     const ch = grid[z][x], c = center(x, z);
     if (ch === 'S') L.start = c;
     else if (ch === 'D' || ch === 'R') {
-      const horiz = (grid[z][x - 1] === '#' && grid[z][x + 1] === '#');
+      const horiz = grid[z][x - 1] === '#' || grid[z][x + 1] === '#';
       const mesh = box(horiz ? CELL : 0.18, WALL_H, horiz ? 0.18 : CELL, ch === 'R' ? MAT.redDoor : MAT.door);
       mesh.position.set(c.x, WALL_H / 2, c.z); world.add(mesh);
       L.doors.set(x + ',' + z, { mesh, open: false, locked: ch === 'R', anim: 0, x, z });
     }
     else if (ch === 'l') {
-      const light = new THREE.PointLight(def.palette.lamp, 1.1, 8, 1.6); light.position.set(c.x, WALL_H - 0.4, c.z); world.add(light);
-      const bulb = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.2, 0.18, 8), MAT.lampGlow); bulb.position.set(c.x, WALL_H - 0.1, c.z); world.add(bulb);
-      L.lamps.push({ light, bulb, base: 1.1, phase: Math.random() * 10 });
+      const light = new THREE.PointLight(pal.lamp, 1.1, 8, 1.6); light.position.set(c.x, WALL_H - 0.4, c.z); world.add(light);
+      const bulbMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(pal.lamp).lerp(new THREE.Color(0xffffff), 0.3) });
+      const bulb = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.2, 0.18, 8), bulbMat); bulb.position.set(c.x, pal.ceil ? WALL_H - 0.1 : 2.2, c.z); world.add(bulb);
+      if (!pal.ceil) { const pole = box(0.06, 2.2, 0.06, MAT.gunDark); pole.position.set(c.x, 1.1, c.z); world.add(pole); }
+      L.lamps.push({ light, bulb, bulbMat, base: 1.1, phase: Math.random() * 10 });
     }
     else if (ch === 'E') {
-      const m = box(CELL * 0.9, WALL_H * 0.95, CELL * 0.9, MAT.exit); m.position.set(c.x, WALL_H / 2, c.z); world.add(m);
-      const gl = new THREE.PointLight(0x5aff9a, 0.8, 5, 2); gl.position.set(c.x, 1.5, c.z); world.add(gl);
-      L.exit = { x, z };
+      const m = box(CELL * 0.9, WALL_H * 0.95, CELL * 0.9, L.exitLocked ? MAT.exitLocked : MAT.exit); m.position.set(c.x, WALL_H / 2, c.z); world.add(m);
+      const gl = new THREE.PointLight(L.exitLocked ? 0xff3a2a : 0x5aff9a, 0.8, 5, 2); gl.position.set(c.x, 1.5, c.z); world.add(gl);
+      L.exit = { x, z }; L.exitMesh = m; L.exitLight = gl;
     }
-    else if (ch === 'x') L.scares.push({ x, z, done: false });
-    else if ('akhgn'.includes(ch)) {
+    else if (ch === 'x') L.scares.push({ x, z, done: false, def: def.scares[scareN++] || { t: 'lights', spawn: 's', n: 2 } });
+    else if ('akhgnwv'.includes(ch)) {
       let mesh;
       if (ch === 'a') { mesh = box(0.35, 0.22, 0.25, MAT.ammo); }
-      else if (ch === 'h') { mesh = new THREE.Group(); mesh.add(box(0.35, 0.25, 0.25, MAT.health)); const r1 = box(0.2, 0.06, 0.26, MAT.red); r1.position.y = 0.0; const r2 = box(0.06, 0.2, 0.26, MAT.red); mesh.add(r1, r2); }
+      else if (ch === 'h') { mesh = new THREE.Group(); mesh.add(box(0.35, 0.25, 0.25, MAT.health)); const r1 = box(0.2, 0.06, 0.26, MAT.red); const r2 = box(0.06, 0.2, 0.26, MAT.red); mesh.add(r1, r2); }
       else if (ch === 'k') { mesh = new THREE.Group(); const ring = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.025, 6, 12), MAT.red); const shaft = box(0.25, 0.04, 0.04, MAT.red); shaft.position.x = 0.15; mesh.add(ring, shaft); const kl = new THREE.PointLight(0xff4030, 0.6, 3, 2); mesh.add(kl); }
-      else if (ch === 'g') { mesh = makeGun('shotgun', false); mesh.rotation.y = 0.8; mesh.userData.flash.intensity = 0; }
+      else if (ch === 'g' || ch === 'w' || ch === 'v') { mesh = makeGun({ g: 'shotgun', w: 'rifle', v: 'flare' }[ch], false); mesh.rotation.y = 0.8; mesh.userData.flash.intensity = 0; const gl = new THREE.PointLight(0xffd8a0, 0.5, 2.5, 2); mesh.add(gl); }
       else { mesh = box(0.3, 0.02, 0.4, MAT.paper); }
       mesh.position.set(c.x, ch === 'n' ? 0.75 : 0.6, c.z); world.add(mesh);
       if (ch === 'n') { const table = box(0.8, 0.72, 0.6, MAT.gunWood); table.position.set(c.x, 0.36, c.z); world.add(table); }
       L.items.push({ type: ch, mesh, x: c.x, z: c.z, taken: false, note: ch === 'n' ? noteN++ : -1 });
     }
     else if ('spc'.includes(ch)) spawnEnemy(ch, c.x, c.z, false);
+    else if (ch === 'B') L.boss = spawnEnemy('B', c.x, c.z, false);
     if (ch !== '#') grid[z][x] = (ch === 'D' || ch === 'R') ? ch : '.';
   }
 }
 function spawnEnemy(type, x, z, awake) {
-  const mesh = type === 's' ? makeShadowMonster() : type === 'p' ? makePuppet() : makeCrawler();
+  const mesh = type === 's' ? makeShadowMonster() : type === 'p' ? makePuppet() : type === 'B' ? makeBoss() : makeCrawler();
   mesh.position.set(x, 0, z); mesh.rotation.y = Math.random() * 6; world.add(mesh);
   const st = ENEMIES[type];
   const e = { type, mesh, hp: st.hp, x, z, awake, cd: 0, soundCd: rnd(1, 3), dead: false, dieT: 0, seen: false, wobble: Math.random() * 10 };
@@ -448,7 +683,10 @@ function spawnEnemy(type, x, z, awake) {
 // SPIELER
 // ============================================================
 function newPlayer() {
-  P = { x: L.start.x, z: L.start.z, yaw: Math.PI, pitch: 0, hp: 100, bullets: 36, shells: 0, weapons: ['pistol'], weapon: 'pistol', cd: 0, bob: 0, stepT: 0, keyRed: false, hurtT: 0, kick: 0 };
+  const ws = L.def.weapons.slice();
+  const fin = !!L.def.boss;   // im Finale mehr Munition für den Endkampf
+  P = { x: L.start.x, z: L.start.z, yaw: Math.PI, pitch: 0, hp: 100, bullets: fin ? 60 : 36, shells: ws.includes('shotgun') ? (fin ? 20 : 12) : 0, rounds: ws.includes('rifle') ? (fin ? 20 : 10) : 0, flares: 0,
+        weapons: ws, weapon: 'pistol', cd: 0, bob: 0, stepT: 0, keyRed: false, hurtT: 0, kick: 0 };
   camera.position.set(P.x, EYE, P.z);
   if (gunMesh) camera.remove(gunMesh);
   gunMesh = makeGun('pistol'); camera.add(gunMesh);
@@ -540,8 +778,22 @@ function updateEnemies(dt) {
     const pan = clampPan(e);
     // Puppen: frieren ein, sobald man sie ansieht
     let speed = st.speed;
+    if (e.type === 'B') {
+      if (!e.announced) { e.announced = true; Sound.play('roar'); msg('Der Puppenspieler.'); L.flashOffUntil = L.time + 0.8; }
+      const rage = e.hp < ENEMIES.B.hp / 2;
+      if (rage) { speed *= 1.45; if (!e.raged) { e.raged = true; Sound.play('roar'); L.lightsOutUntil = L.time + 3; msg('Er wird wütend.'); } }
+      L.bossSummonT -= dt;
+      if (L.bossSummonT <= 0) {
+        L.bossSummonT = rage ? 6 : 9;
+        const spots = hiddenCellsAround(Math.floor(e.x / CELL), Math.floor(e.z / CELL), rage ? 3 : 2, 1, 4);
+        spots.forEach(c => spawnEnemy(rage && Math.random() < 0.4 ? 's' : 'c', c.x, c.z, true));
+        Sound.play('swarm');
+      }
+      e.soundCd -= dt; if (e.soundCd <= 0) { Sound.play('whisper'); e.soundCd = rnd(3, 5); }
+    }
     if (e.type === 'p') {
       e.seen = isSeenByPlayer(e);
+      if (e.seen && e.scareWatch) { e.scareWatch = false; Sound.play('stinger'); P.hurtT = 0.35; }
       if (e.seen) speed = 0;
       else { e.soundCd -= dt; if (e.soundCd <= 0 && dist < 14) { Sound.play('creak', pan); e.soundCd = rnd(0.6, 1.4); } }
     } else {
@@ -578,7 +830,7 @@ function updateEnemies(dt) {
 function clampPan(e) { const ang = Math.atan2(e.x - P.x, e.z - P.z) - P.yaw; return Math.max(-1, Math.min(1, -Math.sin(ang))); }
 function animateEnemy(e, moving) {
   const u = e.mesh.userData, w = e.walk || 0;
-  if (e.type === 's') { if (u['arm-1']) { u['arm-1'].rotation.x = Math.sin(w) * 0.6 - 0.3; u.arm1.rotation.x = -Math.sin(w) * 0.6 - 0.3; u['leg-1'].rotation.x = Math.sin(w) * 0.5; u.leg1.rotation.x = -Math.sin(w) * 0.5; } e.mesh.position.y = Math.abs(Math.sin(w)) * 0.05; }
+  if (e.type === 's' || e.type === 'B') { if (u['arm-1']) { u['arm-1'].rotation.x = Math.sin(w) * 0.6 - 0.3; u.arm1.rotation.x = -Math.sin(w) * 0.6 - 0.3; u['leg-1'].rotation.x = Math.sin(w) * 0.5; u.leg1.rotation.x = -Math.sin(w) * 0.5; } e.mesh.position.y = Math.abs(Math.sin(w)) * 0.05; }
   else if (e.type === 'c') { for (const s of [-1, 1]) for (let i = 0; i < 3; i++) u['leg' + s + i].rotation.y = Math.sin(w * 2 + i) * 0.4; }
   else if (e.type === 'p' && moving && !e.posed) { u['arm-1'].rotation.x = rnd(-2.5, 0.5); u.arm1.rotation.x = rnd(-2.5, 0.5); u.head.rotation.z = rnd(-0.6, 0.6); e.posed = true; }
   if (e.type === 'p' && !moving) e.posed = false;
@@ -590,7 +842,7 @@ function animateEnemy(e, moving) {
 function shoot() {
   const w = WEAPONS[P.weapon];
   if (P.cd > 0) return;
-  if (P[w.ammo] <= 0) { Sound.play('empty'); P.cd = 0.25; msg(P.weapon === 'shotgun' ? 'Keine Schrotpatronen.' : 'Keine Munition.'); return; }
+  if (P[w.ammo] <= 0) { Sound.play('empty'); P.cd = 0.25; msg('Keine ' + AMMO_NAME[w.ammo] + '.'); return; }
   P[w.ammo]--; P.cd = w.rate; P.kick = w.recoil;
   Sound.play(P.weapon);
   gunMesh.userData.flash.intensity = 3; setTimeout(() => gunMesh && (gunMesh.userData.flash.intensity = 0), 60);
@@ -609,8 +861,10 @@ function shoot() {
       const t = -b - Math.sqrt(disc);
       if (t > 0 && t < bestT) { bestT = t; best = e; }
     }
-    if (best) { damageEnemy(best, w.dmg); hitAny = true; }
-    else spark(origin.clone().add(dir.multiplyScalar(Math.min(bestT, 40) - 0.05)));
+    const hitPoint = origin.clone().add(dir.clone().multiplyScalar(Math.min(bestT, 40) - 0.05));
+    if (w.blast) { blast(hitPoint, w.dmg, w.blast); hitAny = !!best; }
+    else if (best) { damageEnemy(best, w.dmg); hitAny = true; }
+    else spark(hitPoint);
   }
   // Schüsse wecken Gegner in der Nähe
   for (const e of L.enemies) if (!e.awake && Math.hypot(e.x - P.x, e.z - P.z) < 16) e.awake = true;
@@ -623,10 +877,31 @@ function spark(p) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(0.035, 4, 3), MAT.lampGlow); m.position.copy(p); world.add(m);
   sparks.push({ m, t: 0.15 });
 }
+function blast(p, dmg, r) {
+  const light = new THREE.PointLight(0xff7a3a, 5, 12, 1.6); light.position.copy(p); light.position.y = Math.max(0.5, p.y); world.add(light);
+  L.blasts.push({ light, t: 1.4 });
+  for (let i = 0; i < 8; i++) spark(p.clone().add(new THREE.Vector3(rnd(-0.6, 0.6), rnd(-0.3, 0.6), rnd(-0.6, 0.6))));
+  Sound.play('blast');
+  for (const e of L.enemies) {
+    if (e.dead) continue;
+    const d = Math.hypot(e.x - p.x, e.z - p.z);
+    if (d <= r) damageEnemy(e, dmg * (1 - d / r * 0.6));
+  }
+}
 function damageEnemy(e, dmg) {
   e.hp -= dmg; e.awake = true;
-  e.mesh.position.x += (e.x - P.x) * 0.01;
-  if (e.hp <= 0 && !e.dead) { e.dead = true; L.kills++; Sound.play('enemyDie', clampPan(e)); }
+  if (e.type !== 'B') e.mesh.position.x += (e.x - P.x) * 0.01;
+  if (e.hp <= 0 && !e.dead) {
+    e.dead = true; L.kills++; Sound.play('enemyDie', clampPan(e));
+    if (e.type === 'B') bossDefeated();
+  }
+}
+function bossDefeated() {
+  Sound.play('roar'); setTimeout(() => Sound.play('done'), 1200);
+  L.exitLocked = false; L.exitMesh.material = MAT.exit; L.exitLight.color.set(0x5aff9a);
+  for (const e of L.enemies) if (!e.dead && e.type === 'c') { e.dead = true; }
+  L.lightsOutUntil = 0;
+  msg('Der Puppenspieler fällt. Der Ausgang ist frei.');
 }
 function hurtPlayer(dmg) {
   if (state !== 'play') return;
@@ -648,10 +923,12 @@ function updateItems(dt) {
     if (it.type === 'n') { if (d < 1.4 && !it.hinted) { it.hinted = true; msg('[E] Notiz lesen'); } continue; }
     if (d > 0.9) continue;
     it.taken = true; world.remove(it.mesh);
-    if (it.type === 'a') { P.bullets += 14; if (P.weapons.includes('shotgun')) P.shells += 4; msg('Munition'); Sound.play('pickup'); }
+    if (it.type === 'a') { P.bullets += 14; if (P.weapons.includes('shotgun')) P.shells += 4; if (P.weapons.includes('rifle')) P.rounds += 5; if (P.weapons.includes('flare')) P.flares += 3; msg('Munition'); Sound.play('pickup'); }
     else if (it.type === 'h') { P.hp = Math.min(100, P.hp + 35); msg('Verbandskasten +35'); Sound.play('pickup'); }
     else if (it.type === 'k') { P.keyRed = true; msg('Roter Schlüssel'); Sound.play('key'); }
-    else if (it.type === 'g') { P.weapons.push('shotgun'); P.shells += 10; switchWeapon('shotgun'); msg('Schrotflinte – Taste 2'); Sound.play('key'); }
+    else if (it.type === 'g') { if (!P.weapons.includes('shotgun')) P.weapons.push('shotgun'); P.shells += 10; switchWeapon('shotgun'); msg('Schrotflinte – Taste 2'); Sound.play('key'); }
+    else if (it.type === 'w') { if (!P.weapons.includes('rifle')) P.weapons.push('rifle'); P.rounds += 12; switchWeapon('rifle'); msg('Jagdgewehr – Taste 3'); Sound.play('key'); }
+    else if (it.type === 'v') { if (!P.weapons.includes('flare')) P.weapons.push('flare'); P.flares += 10; switchWeapon('flare'); msg('Signalwerfer – Taste 4. Licht ist ihre Schwäche.'); Sound.play('key'); }
     hud();
   }
 }
@@ -664,31 +941,63 @@ function readNote() {
   n.hidden = false; state = 'note'; Sound.play('paper');
 }
 function closeNote() { document.getElementById('note').hidden = true; state = 'play'; }
+function hiddenCellsAround(cx, cz, n, minR = 3, maxR = 7) {
+  const out = [];
+  for (let r = minR; r <= maxR && out.length < n; r++) for (const [dx, dz] of [[r, 0], [-r, 0], [0, r], [0, -r], [r, r], [-r, -r], [r, -r], [-r, r]]) {
+    const x = cx + dx, z = cz + dz;
+    if (out.length >= n || blocked(x, z)) continue;
+    const c = center(x, z), v = new THREE.Vector3(c.x, 1, c.z).project(camera);
+    if (v.z > 1 || Math.abs(v.x) > 1) out.push(c);
+  }
+  return out;
+}
 function updateScares() {
   const cx = Math.floor(P.x / CELL), cz = Math.floor(P.z / CELL);
   for (const s of L.scares) {
     if (s.done || s.x !== cx || s.z !== cz) continue;
     s.done = true;
-    // Licht aus, Stinger, zwei Schatten tauchen hinter dem Spieler auf
-    L.lightsOutUntil = L.time + 5; L.flashOffUntil = L.time + 1.3;
-    Sound.play('lightsOut'); setTimeout(() => Sound.play('stinger'), 900);
-    const behind = [];
-    for (let r = 3; r <= 6 && behind.length < 2; r++) for (const [dx, dz] of [[r, 0], [-r, 0], [0, r], [0, -r]]) {
-      const x = cx + dx, z = cz + dz;
-      if (!blocked(x, z) && behind.length < 2) { const c = center(x, z); const v = new THREE.Vector3(c.x, 1, c.z).project(camera); if (v.z > 1 || Math.abs(v.x) > 1) behind.push(c); }
+    const d = s.def;
+    if (d.t === 'lights') {
+      // Licht aus, Stinger, Schatten tauchen hinter dem Spieler auf
+      L.lightsOutUntil = L.time + 5; L.flashOffUntil = L.time + 1.3;
+      Sound.play('lightsOut'); setTimeout(() => Sound.play('stinger'), 900);
+      const spots = hiddenCellsAround(cx, cz, d.n || 2);
+      setTimeout(() => spots.forEach(c => spawnEnemy(d.spawn || 's', c.x, c.z, true)), 1000);
+      setTimeout(() => msg('Hinter dir.'), 1400);
+    } else if (d.t === 'swarm') {
+      // Krabbeln in den Wänden, dann ein Schwarm Kriecher
+      Sound.play('swarm'); msg('Etwas krabbelt in den Wänden.');
+      L.flashOffUntil = L.time + 0.6;
+      const spots = hiddenCellsAround(cx, cz, d.n || 4, 2, 6);
+      setTimeout(() => { Sound.play('stinger'); spots.forEach(c => spawnEnemy('c', c.x + rnd(-.4, .4), c.z + rnd(-.4, .4), true)); }, 1500);
+    } else if (d.t === 'alarm') {
+      // Sirene, rotes Blinklicht, Schatten strömen herein
+      Sound.play('siren'); L.alarmUntil = L.time + 4.2; L.flashOffUntil = L.time + 2.2;
+      msg('ALARM – Generator ausgefallen.');
+      const spots = hiddenCellsAround(cx, cz, d.n || 3, 3, 8);
+      setTimeout(() => { Sound.play('stinger'); spots.forEach(c => spawnEnemy('s', c.x, c.z, true)); }, 2200);
+    } else if (d.t === 'puppetBehind') {
+      // Eine Puppe steht plötzlich direkt hinter dem Spieler
+      const bx = P.x + Math.sin(P.yaw) * 1.8, bz = P.z + Math.cos(P.yaw) * 1.8;
+      const ok = !blocked(Math.floor(bx / CELL), Math.floor(bz / CELL));
+      const c = ok ? new THREE.Vector3(bx, 0, bz) : (hiddenCellsAround(cx, cz, 1, 1, 3)[0] || center(cx, cz));
+      const p = spawnEnemy('p', c.x, c.z, true); p.scareWatch = true; p.cd = 1.5;
+      Sound.play('whisper'); setTimeout(() => msg('Dreh dich nicht um.'), 600);
     }
-    setTimeout(() => behind.forEach(c => spawnEnemy('s', c.x, c.z, true)), 1000);
-    setTimeout(() => msg('Hinter dir.'), 1400);
   }
 }
 function checkExit() {
   if (!L.exit) return;
-  if (Math.floor(P.x / CELL) === L.exit.x && Math.floor(P.z / CELL) === L.exit.z) {
-    state = 'done'; document.exitPointerLock(); Sound.play('done');
-    const t = Math.round(L.time), m = Math.floor(t / 60);
-    document.getElementById('donestats').innerHTML = `${L.def.name}<br>Zeit <b>${m}:${String(t % 60).padStart(2, '0')}</b> · Gegner besiegt <b>${L.kills}</b> · Notizen <b>${L.notesFound}/${L.def.notes.length}</b>`;
-    show('s-done');
-  }
+  if (Math.floor(P.x / CELL) !== L.exit.x || Math.floor(P.z / CELL) !== L.exit.z) return;
+  if (L.exitLocked) { if (!L.lockWarned) { L.lockWarned = true; msg('Der Ausgang ist versperrt. Erst muss er fallen.'); setTimeout(() => L.lockWarned = false, 3000); } return; }
+  state = 'done'; document.exitPointerLock(); Sound.play('done');
+  unlocked = Math.max(unlocked, Math.min(LEVELS.length - 1, levelIdx + 1)); saveSettings();
+  const t = Math.round(L.time), m = Math.floor(t / 60), last = levelIdx === LEVELS.length - 1;
+  document.getElementById('donetitle').textContent = last ? 'Die Nacht ist vorbei' : 'Ausgang erreicht';
+  document.getElementById('donestats').innerHTML = `${L.def.name}<br>Zeit <b>${m}:${String(t % 60).padStart(2, '0')}</b> · Gegner besiegt <b>${L.kills}</b> · Notizen <b>${L.notesFound}/${L.def.notes.length}</b>`;
+  document.getElementById('donetext').textContent = last ? L.def.ending : 'Nächster Ort: ' + LEVELS[levelIdx + 1].name;
+  document.getElementById('b-next').hidden = last;
+  show('s-done');
 }
 
 // ============================================================
@@ -698,8 +1007,11 @@ function updateLights(dt) {
   const out = L.time < L.lightsOutUntil;
   for (const l of L.lamps) {
     const flick = Math.random() < 0.015 ? 0.2 : 1;
+    const alarm = L.time < (L.alarmUntil || 0);
+    if (alarm) { l.light.color.set(0xff1a10); l.light.intensity = (Math.sin(L.time * 9) > 0 ? 1.8 : 0.1); l.bulb.material = l.light.intensity > 1 ? MAT.red : MAT.dark; continue; }
+    l.light.color.set(L.def.palette.lamp);
     l.light.intensity = out ? 0 : l.base * flick * (0.92 + Math.sin(L.time * 9 + l.phase) * 0.05);
-    l.bulb.material = out || flick < 1 ? MAT.dark : MAT.lampGlow;
+    l.bulb.material = out || flick < 1 ? MAT.dark : l.bulbMat;
   }
   const flashOff = L.time < (L.flashOffUntil || 0);
   flash.intensity = flashOff ? (Math.random() < 0.2 ? 1.5 : 0) : 2.4 * (Math.random() < 0.004 ? 0.3 : 1);
@@ -722,8 +1034,8 @@ function hud() {
   document.getElementById('hpbar').style.width = P.hp + '%';
   const w = WEAPONS[P.weapon];
   document.getElementById('ammo').textContent = P[w.ammo];
-  document.getElementById('ammolbl').textContent = w.ammo === 'shells' ? 'Patronen' : 'Munition';
-  document.getElementById('weapon').textContent = P.weapons.map((k, i) => (k === P.weapon ? '▸ ' : '') + (i + 1) + ' ' + WEAPONS[k].name).join('   ');
+  document.getElementById('ammolbl').textContent = AMMO_NAME[w.ammo];
+  document.getElementById('weapon').textContent = WEAPON_KEYS.filter(k => P.weapons.includes(k)).map(k => (k === P.weapon ? '▸ ' : '') + (WEAPON_KEYS.indexOf(k) + 1) + ' ' + WEAPONS[k].name).join('   ');
   document.getElementById('key-red').classList.toggle('on', P.keyRed);
 }
 
@@ -736,6 +1048,7 @@ function startLevel(idx) {
   sparks.length = 0;
   state = 'play'; show(null); document.getElementById('hud').hidden = false;
   msg(LEVELS[idx].name);
+  setTimeout(() => { if (state === 'play' && L.def === LEVELS[idx]) msg(LEVELS[idx].intro); }, 2600);
   lockPointer();
 }
 function lockPointer() { try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) { } }
@@ -748,6 +1061,17 @@ document.getElementById('b-resume').onclick = resume;
 document.getElementById('b-restart').onclick = () => { Sound.resume(); startLevel(levelIdx); };
 document.getElementById('b-retry').onclick = () => startLevel(levelIdx);
 document.getElementById('b-again').onclick = () => startLevel(levelIdx);
+document.getElementById('b-next').onclick = () => startLevel(levelIdx + 1);
+document.getElementById('b-title').onclick = () => { renderTitle(); show('s-title'); };
+document.getElementById('b-continue').onclick = () => { Sound.init(); startLevel(unlocked); };
+function renderTitle() {
+  const c = document.getElementById('b-continue'), lp = document.getElementById('levelpick');
+  c.hidden = unlocked === 0; c.textContent = 'Fortsetzen: ' + LEVELS[unlocked].name;
+  lp.hidden = unlocked === 0;
+  lp.innerHTML = LEVELS.map((lv, i) => i <= unlocked ? `<button class="btn" data-lv="${i}">${i + 1}. ${lv.name}</button>` : '').join('');
+}
+document.getElementById('levelpick').addEventListener('click', e => { const b = e.target.closest('[data-lv]'); if (b) { Sound.init(); startLevel(+b.dataset.lv); } });
+renderTitle();
 for (const [id, k] of [['sens', 'sens'], ['vol', 'vol']]) {
   const el = document.getElementById(id); el.value = settings[k]; document.getElementById(id + 'v').textContent = settings[k];
   el.oninput = () => { settings[k] = +el.value; document.getElementById(id + 'v').textContent = el.value; Sound.setVol(); saveSettings(); };
@@ -769,6 +1093,8 @@ document.addEventListener('keydown', e => {
   if (state === 'note' && (e.code === 'KeyE' || e.code === 'Escape')) { closeNote(); return; }
   if (state !== 'play') return;
   if (e.code === 'Digit1') switchWeapon('pistol');
+  if (e.code === 'Digit3') switchWeapon('rifle');
+  if (e.code === 'Digit4') switchWeapon('flare');
   if (e.code === 'Digit2') switchWeapon('shotgun');
   if (e.code === 'KeyE') readNote();
 });
@@ -790,6 +1116,8 @@ function update(dt) {
   updateLights(dt);
   for (const d of L.doors.values()) if (d.anim > 0 && d.anim < 1) { d.anim = Math.min(1, d.anim + dt * 1.6); d.mesh.position.y = WALL_H / 2 + d.anim * (WALL_H - 0.1); }
   for (const s of sparks) { s.t -= dt; if (s.t <= 0 && s.m.parent) world.remove(s.m); }
+  for (const b of L.blasts) { b.t -= dt; b.light.intensity = Math.max(0, b.t / 1.4 * 5); if (b.t <= 0 && b.light.parent) world.remove(b.light); }
+  L.blasts = L.blasts.filter(b => b.t > 0);
   updateCamera(dt);
   checkExit();
 }

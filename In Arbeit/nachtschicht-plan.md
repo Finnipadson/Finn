@@ -41,5 +41,5 @@ Du übernimmst die Nachtschicht als Wachmann im Anwesen Falkenried. Der Kollege 
 ## Phasen
 
 1. ✅ **Spielbarer Kern** (fertig, getestet: Schatten 3 Schüsse, Puppe friert ein wenn angesehen / 5 Schüsse, Kriecher 2 Schüsse, Schreckmoment spawnt 2 Schatten hinter dem Spieler, rote Tür nur mit Schlüssel, Ausgang + Abschlussbildschirm). Debug-Schnittstelle `window.NS` für automatisierte Tests (Maus-Fangen geht im Testbrowser nicht). – Bewegung, Taschenlampe, Pistole + Schrotflinte, 3 Gegnertypen, Schreckmoment-Auslöser, HUD, Sounds, Level 1 komplett.
-2. **Alle 6 Level** – Gewehr + Finalwaffe, Geschichte, inszenierte Schreckmomente pro Level.
+2. ✅ **Alle 6 Level** – Herrenhaus, Keller, Wald (mit Hütte, Wandart `W`), Bunker, Puppenwerkstatt, Bühne. Gewehr (Wald), Signalwerfer mit Explosion (Finale). Schreckmomente: `lights`, `swarm`, `alarm`, `puppetBehind` (Puppe steht hinter dir, Schock beim Umdrehen). Endgegner „Der Puppenspieler“ (1400 HP, beschwört Kriecher/Schatten, Wutphase unter 50 %), Ausgang erst nach seinem Fall. Geschichte über 11 Notizen + Abspann. Fortschritt gespeichert, Titel mit Fortsetzen und Levelwahl. Getestet: alle Level lösbar (BFS), alle Schreckmomente, Endkampf bis Abspann.
 3. **Feinschliff** – Menü mit Einstellungen (Maus, Lautstärke, Helligkeit), Speichern, Balance.
