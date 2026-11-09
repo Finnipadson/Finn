@@ -106,6 +106,23 @@ h1,h2,h3{font-family:var(--font-display);font-weight:400;letter-spacing:.01em;ma
 .tag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:99px;background:var(--surface);border:1px solid var(--line)}
 .tag.live{background:var(--glow);color:#3a2a00;border-color:transparent}
 .empty{font-size:14px;color:var(--muted);margin:0}
+.row-item{display:flex;gap:8px;align-items:stretch}
+.row-item .item{flex:1;min-width:0}
+.item-x{appearance:none;border:0;border-radius:14px;background:var(--surface-2);color:var(--muted);font-weight:800;font-size:13px;padding:0 12px;cursor:pointer;flex:none}
+.item-x:active{background:var(--line)}
+.open-row{background:var(--surface-2);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.open-info{display:flex;align-items:center;gap:12px;min-width:0}
+.open-info .code{font-family:var(--font-display);font-size:20px;letter-spacing:.12em;flex:none}
+.open-info .meta{flex:1;min-width:0;font-size:13px;color:var(--muted);font-weight:700}
+.open-info .meta b{color:var(--ink);font-weight:800}
+.open-btns{display:flex;gap:8px}
+.open-btns .btn{flex:1}
+.open-btns .item-x{background:var(--surface)}
+.invite{display:flex;flex-direction:column;gap:10px;width:100%}
+.invite-link{font-size:13px;word-break:break-all;background:var(--surface-2);border-radius:12px;padding:8px 10px;user-select:all;-webkit-user-select:all;text-align:left}
+a.btn{text-decoration:none;text-align:center;display:block}
+.btn.wa{background:#25A35A;box-shadow:0 4px 0 #1B7A43;color:#fff}
+.btn.wa:active{box-shadow:0 1px 0 #1B7A43}
 details.rules summary{cursor:pointer;font-weight:800}
 details.rules ul{margin:10px 0 0;padding-left:20px;line-height:1.55;font-size:14px}
 .notice{background:var(--surface-2);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.45}
@@ -207,12 +224,12 @@ details.rules ul{margin:10px 0 0;padding-left:20px;line-height:1.55;font-size:14
       </div>
     </div>
     <div class="panel">
-      <h2>Deine Tische</h2>
-      <div class="list" id="my-list"><p class="empty">Lädt …</p></div>
-    </div>
-    <div class="panel">
       <h2>Offene Tische</h2>
       <div class="list" id="open-list"><p class="empty">Lädt …</p></div>
+    </div>
+    <div class="panel">
+      <h2>Deine Tische</h2>
+      <div class="list" id="my-list"><p class="empty">Lädt …</p></div>
     </div>
     <div class="panel">
       <details class="rules" id="rules-menu"><summary>So geht's</summary><div class="rules-body"></div></details>
@@ -257,6 +274,9 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const MAX_PLAYERS = 6;
+const ARTIFACT_URL = 'https://claude.ai/artifact/YXGojtKzuX4p4w5RQ7LBqH';
+const STOCK_CHOICES = [5, 10, 15, 20, 25, 30];
+const inviteLink = code => ARTIFACT_URL + '#' + code;
 const FALLBACK_COLORS = ['#EF6C12','#D42E6E','#5A42D9','#1E9C82','#C88A00','#2A7FD4'];
 
 const RULES_HTML = `<ul>
@@ -512,6 +532,7 @@ function applySnap(snap){
   if(S.game && (d.rev || 0) < (S.game.rev || 0)) return;
   if(S.writing && S.game && (d.rev || 0) <= (S.game.rev || 0) && JSON.stringify(d) !== JSON.stringify(S.game)) return;
   S.game = clone(d);
+  if(S.pendingStock != null && S.game.status === 'lobby') S.game.stockSize = S.pendingStock;
   if(S.sel && (!myTurn() || srcCard(S.game, S.sel) === undefined)) S.sel = null;
   ensureNames(S.game.pids || []);
   if(S.wantJoin && S.game.status === 'lobby' && !S.game.pids.includes(S.me)){ S.wantJoin = false; joinLobby(); }
@@ -585,8 +606,10 @@ function openGame(code, join){
 }
 function goMenu(){
   if(S.unsub){ S.unsub(); S.unsub = null; }
-  S.ref = null; S.game = null; S.code = null; S.sel = null;
+  S.ref = null; S.game = null; S.code = null; S.sel = null; S.pendingStock = null;
+  clearTimeout(stockTimer);
   LS.del('sf_current');
+  if(location.hash) try{ location.hash = ''; }catch(e){}
   closeSheet();
   render();
 }
@@ -596,29 +619,51 @@ function joinLobby(){
     if(g.pids.includes(S.me)) return false;
     if(g.pids.length >= MAX_PLAYERS){ toast('Der Tisch ist voll (6 Spieler).'); return false; }
     g.pids.push(S.me);
+    if(!g.host || !g.pids.includes(g.host)) g.host = S.me;
   });
 }
 function leaveLobby(){
+  const code = S.code;
   return withLease(g => {
     if(g.status !== 'lobby') return false;
     g.pids = g.pids.filter(p => p !== S.me);
-    if(g.host === S.me) g.host = g.pids[0] || null;
-  }).then(() => goMenu());
+    if(g.host === S.me || !g.pids.includes(g.host)) g.host = g.pids[0] || null;
+  }).then(async ok => {
+    // The last person to leave takes the empty table with them.
+    if(ok && S.game && S.game.code === code && !S.game.pids.length){ try{ await S.db.doc('games/' + code).delete(); }catch(e){} }
+    goMenu();
+  });
 }
 async function deleteGame(code){
   try{ await S.db.doc('games/' + code).delete(); toast('Tisch ' + code + ' gelöscht.'); }
   catch(e){ toast('Löschen hat nicht geklappt.'); }
   if(S.code === code) goMenu();
 }
-function setStock(n){ withLease(g => { if(g.host !== S.me || g.status !== 'lobby') return false; g.stockSize = n; }); }
+let stockTimer = null;
+function setStock(n){
+  if(!S.game || S.game.status !== 'lobby' || !S.game.pids.includes(S.me)) return;
+  S.pendingStock = n; S.game.stockSize = n; renderLobby();
+  clearTimeout(stockTimer);
+  stockTimer = setTimeout(async () => {
+    const want = S.pendingStock;
+    if(want == null) return;
+    await withLease(g => { if(g.status !== 'lobby') return false; g.stockSize = want; });
+    if(S.pendingStock === want) S.pendingStock = null;
+  }, 350);
+}
 function startGame(){
+  clearTimeout(stockTimer);
+  const want = S.pendingStock; S.pendingStock = null;
   withLease(g => {
-    if(g.host !== S.me) return false;
+    if(!g.pids.includes(S.me)) return false;
     if(g.status !== 'lobby' && g.status !== 'over') return false;
     if(g.pids.length < 2){ toast('Ihr braucht mindestens 2 Spieler.'); return false; }
+    if(want != null && g.status === 'lobby') g.stockSize = want;
     deal(g);
   });
 }
+function hiddenList(){ try{ return JSON.parse(LS.get('sf_hidden') || '[]'); }catch(e){ return []; } }
+function hideGame(code){ const h = hiddenList(); if(!h.includes(code)) h.push(code); LS.set('sf_hidden', JSON.stringify(h.slice(-50))); renderMenu(); }
 function skipTurn(){
   withLease(g => {
     if(g.status !== 'playing' || g.host !== S.me) return false;
@@ -647,48 +692,67 @@ function statusLabel(g){
 }
 function renderMenu(){
   const ids = [];
-  const mine = S.myGames.slice().sort((a, b) => (b.created || 0) - (a.created || 0)).slice(0, 10);
-  const open = S.openGames.filter(g => !g.pids.includes(S.me) && Date.now() - (g.created || 0) < 864e5)
+  const hidden = hiddenList();
+  const mine = S.myGames.filter(g => !hidden.includes(g.code)).sort((a, b) => (b.created || 0) - (a.created || 0)).slice(0, 10);
+  const open = S.openGames.filter(g => g.pids.length > 0 && !g.pids.includes(S.me) && g.pids.length < MAX_PLAYERS && Date.now() - (g.created || 0) < 864e5)
     .sort((a, b) => (b.created || 0) - (a.created || 0)).slice(0, 10);
   mine.concat(open).forEach(g => ids.push(...g.pids));
-  const row = g => {
-    const others = g.pids.map(p => esc(pname(p, g))).join(', ');
-    return `<button class="item" data-act="open" data-code="${esc(g.code)}"><span class="code">${esc(g.code)}</span>
-      <span class="meta"><b>${g.pids.length} Spieler</b> · ${others}</span>${statusLabel(g)}</button>`;
+  const who = g => g.pids.map(p => esc(pname(p, g))).join(', ');
+  const mineRow = g => {
+    // Tables still waiting, and tables you host, can be deleted for everyone; others are only hidden for you.
+    const canDelete = g.status === 'lobby' || g.host === S.me;
+    return `<div class="row-item">
+      <button class="item" data-act="open" data-code="${esc(g.code)}"><span class="code">${esc(g.code)}</span>
+        <span class="meta"><b>${g.pids.length} Spieler</b> · ${who(g)}</span>${statusLabel(g)}</button>
+      <button class="item-x" data-act="${canDelete ? 'ask-delete-row' : 'hide-row'}" data-code="${esc(g.code)}">${canDelete ? 'Löschen' : 'Ausblenden'}</button>
+    </div>`;
   };
-  $('#my-list').innerHTML = mine.length ? mine.map(row).join('') : '<p class="empty">Noch keine. Eröffne einen Tisch oder tritt mit Code bei.</p>';
-  $('#open-list').innerHTML = open.length ? open.map(row).join('') : '<p class="empty">Gerade wartet kein Tisch auf Mitspieler.</p>';
+  const openRow = g => `<div class="open-row">
+      <div class="open-info"><span class="code">${esc(g.code)}</span><span class="meta"><b>${g.pids.length} Spieler</b> · ${who(g)}</span></div>
+      <div class="open-btns">
+        <button class="btn small" data-act="open" data-code="${esc(g.code)}">Mitspielen</button>
+        <button class="item-x" data-act="ask-delete-row" data-code="${esc(g.code)}" aria-label="Tisch ${esc(g.code)} löschen">Löschen</button>
+      </div>
+    </div>`;
+  $('#my-list').innerHTML = mine.length ? mine.map(mineRow).join('') : '<p class="empty">Noch keine. Eröffne einen Tisch oder tritt mit Code bei.</p>';
+  $('#open-list').innerHTML = open.length ? open.map(openRow).join('') : '<p class="empty">Gerade wartet kein Tisch auf Mitspieler. Eröffne einen und schick den Einladungslink an deine Freunde.</p>';
   const missing = ids.filter(id => !(id in S.names));
   if(missing.length) ensureNames(ids);
 }
 
 function renderLobby(){
-  const g = S.game, isHost = g.host === S.me, member = g.pids.includes(S.me);
+  const g = S.game, member = g.pids.includes(S.me);
   const cap = maxStock(g.pids.length);
+  const cur = Math.min(g.stockSize || 30, cap);
+  const enough = g.pids.length >= 2;
+  const link = inviteLink(g.code);
+  const waText = 'Komm an meinen Stapelfieber-Tisch! Code ' + g.code + ': ' + link;
   const pl = g.pids.map(p => `<div class="pl">${avatarHTML(p, g, 30)}<span>${esc(pname(p, g))}</span>${p === g.host ? '<small>Gastgeber</small>' : ''}</div>`).join('');
-  const chips = [10, 20, 30].map(n => `<button class="chip ${Math.min(g.stockSize, cap) === n ? 'on' : ''}" data-act="stock" data-n="${n}" ${!isHost || n > cap ? 'disabled' : ''}>${n} Karten</button>`).join('');
+  const chips = STOCK_CHOICES.map(n => `<button class="chip ${cur === n ? 'on' : ''}" data-act="stock" data-n="${n}" ${!member || n > cap ? 'disabled' : ''}>${n}</button>`).join('');
   $('#scr-lobby').innerHTML = `
-    <div class="topbar"><h1>Tisch</h1><button class="btn ghost small" data-act="to-menu">Zum Menü</button></div>
-    <div class="panel" style="align-items:center;text-align:center">
-      <p class="muted" style="margin:0;font-weight:700">Deine Freunde öffnen diese Seite und geben den Code ein:</p>
-      <div class="code-big" aria-label="Code ${esc(g.code)}">${g.code.split('').map(ch => `<span>${esc(ch)}</span>`).join('')}</div>
-      <button class="btn ghost small" data-act="copy">Code kopieren</button>
-    </div>
+    <div class="topbar"><h1>Tisch ${esc(g.code)}</h1><button class="btn ghost small" data-act="to-menu">Zum Menü</button></div>
+    ${member && enough ? `<button class="btn" data-act="start">Spiel starten (${g.pids.length} Spieler, ${cur} Karten)</button>` : ''}
     <div class="panel">
       <h2>Am Tisch (${g.pids.length}/${MAX_PLAYERS})</h2>
       <div class="players">${pl}</div>
+      ${member ? '' : `<button class="btn" data-act="join-lobby">Mitspielen</button>`}
+      ${member && !enough ? '<p class="empty">Sobald jemand beitritt, erscheint hier der Start-Knopf.</p>' : ''}
+    </div>
+    <div class="panel" style="align-items:center;text-align:center">
+      <h2>Freunde einladen</h2>
+      <div class="invite">
+        <a class="btn wa" href="https://wa.me/?text=${encodeURIComponent(waText)}" target="_blank" rel="noopener">Per WhatsApp einladen</a>
+        <button class="btn ghost" data-act="copy-link">Einladungslink kopieren</button>
+        <div class="invite-link">${esc(link)}</div>
+        <p class="empty">Wer den Link öffnet, sitzt direkt an diesem Tisch. Ohne Link geht es mit dem Code <b>${esc(g.code)}</b>.</p>
+      </div>
     </div>
     <div class="panel">
-      <h2>Vorrat pro Spieler</h2>
+      <h2>Karten im Vorrat</h2>
       <div class="chips">${chips}</div>
-      <p class="empty">${isHost ? 'Originalregel: 30 Karten, bei 5–6 Spielern 20. Weniger Karten = kürzere Runde.' : 'Der Gastgeber legt das fest.'}</p>
+      <p class="empty">Jeder am Tisch kann das ändern. Originalregel: 30, bei 5–6 Spielern höchstens 20. Weniger Karten = kürzere Runde.</p>
     </div>
-    <div class="row-btns">
-      ${member ? `<button class="btn ghost" data-act="leave">Tisch verlassen</button>` : `<button class="btn" data-act="join-lobby">Mitspielen</button>`}
-      ${isHost ? `<button class="btn" data-act="start" ${g.pids.length < 2 ? 'disabled' : ''}>Spiel starten</button>` : ''}
-    </div>
-    ${isHost && g.pids.length < 2 ? '<p class="empty" style="text-align:center">Warte auf mindestens einen Mitspieler.</p>' : ''}
-    ${!isHost && member ? '<p class="empty" style="text-align:center">Warte, bis der Gastgeber startet.</p>' : ''}`;
+    ${member ? `<button class="btn ghost" data-act="leave">Tisch verlassen</button>` : ''}`;
 }
 
 function logText(e, g){
@@ -816,7 +880,7 @@ function renderOverlay(){
   if(sheetHTML){ o.innerHTML = `<div class="veil" data-act="veil"><div class="sheet" role="dialog" aria-modal="true">${sheetHTML}</div></div>`; return; }
   const g = S.game;
   if(S.code && g && g.status === 'over'){
-    const isHost = g.host === S.me;
+    const isHost = g.pids.includes(S.me);
     const ranks = g.pids.map(p => ({ p, n: g.P && g.P[p] ? g.P[p].stock.length : 0 })).sort((a, b) => a.n - b.n);
     o.innerHTML = `<div class="veil center"><div class="sheet" role="dialog" aria-modal="true" style="text-align:center">
       <div class="win-cards">${cardHTML(10)}${cardHTML(11)}${cardHTML(12)}</div>
@@ -826,7 +890,6 @@ function renderOverlay(){
         <button class="btn ghost" data-act="to-menu">Zum Menü</button>
         ${isHost ? '<button class="btn" data-act="start">Nochmal spielen</button>' : ''}
       </div>
-      ${isHost ? '' : '<p class="muted" style="font-size:13px">Der Gastgeber kann eine neue Runde starten.</p>'}
     </div></div>`;
     return;
   }
@@ -880,10 +943,23 @@ function handle(el, ev){
     case 'leave': leaveLobby(); break;
     case 'stock': setStock(+el.dataset.n); break;
     case 'start': startGame(); break;
-    case 'copy': {
-      const code = S.game && S.game.code;
-      try{ navigator.clipboard.writeText(code).then(() => toast('Code ' + code + ' kopiert.'), () => toast('Code: ' + code)); }
-      catch(e){ toast('Code: ' + code); }
+    case 'copy-link': {
+      const code = S.game && S.game.code; if(!code) break;
+      const link = inviteLink(code);
+      const fallback = () => {
+        const n = document.querySelector('.invite-link');
+        if(n){ const r = document.createRange(); r.selectNodeContents(n); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+        toast('Kopieren ging nicht. Der Link ist markiert, halte ihn gedrückt zum Kopieren.', 4000);
+      };
+      try{ navigator.clipboard.writeText(link).then(() => toast('Link kopiert. Schick ihn deinen Freunden.'), fallback); }
+      catch(e){ fallback(); }
+      break;
+    }
+    case 'hide-row': hideGame(el.dataset.code); break;
+    case 'ask-delete-row': {
+      const c = el.dataset.code;
+      openSheet(`<h2>Tisch ${esc(c)} löschen?</h2><p>Der Tisch verschwindet für alle. Das lässt sich nicht rückgängig machen.</p>
+        <div class="row-btns"><button class="btn ghost" data-act="sheet-close">Abbrechen</button><button class="btn" data-act="do-delete" data-code="${esc(c)}">Löschen</button></div>`);
       break;
     }
     case 'to-menu': goMenu(); break;
@@ -897,7 +973,7 @@ function handle(el, ev){
     case 'skip': skipTurn(); break;
     case 'ask-delete': openSheet(`<h2>Tisch beenden?</h2><p>Der Tisch ${esc(S.code)} wird für alle gelöscht. Das lässt sich nicht rückgängig machen.</p>
       <div class="row-btns"><button class="btn ghost" data-act="sheet-close">Abbrechen</button><button class="btn" data-act="do-delete">Löschen</button></div>`); break;
-    case 'do-delete': { const c = S.code; closeSheet(); deleteGame(c); break; }
+    case 'do-delete': { const c = el.dataset.code || S.code; closeSheet(); deleteGame(c); break; }
   }
 }
 document.addEventListener('click', e => {
@@ -953,9 +1029,32 @@ async function start(){
   }
 
   const col = db.collection('games');
-  col.where('pids', 'array-contains', S.me).onSnapshot(q => { S.myGames = q.docs.map(d => d.data()).filter(Boolean); if(!S.code) renderMenu(); }, () => {});
-  col.where('status', '==', 'lobby').onSnapshot(q => { S.openGames = q.docs.map(d => d.data()).filter(Boolean); if(!S.code) renderMenu(); }, () => {});
+  const qMine = col.where('pids', 'array-contains', S.me), qOpen = col.where('status', '==', 'lobby');
+  const onMine = q => { S.myGames = q.docs.map(d => d.data()).filter(Boolean); if(!S.code) renderMenu(); };
+  const onOpen = q => { S.openGames = q.docs.map(d => d.data()).filter(Boolean); if(!S.code) renderMenu(); };
+  qMine.onSnapshot(onMine, () => {});
+  qOpen.onSnapshot(onOpen, () => {});
 
+  // Live updates can lag on some connections, so re-read every few seconds while
+  // someone is waiting: on the menu, in the lobby, or while another player moves.
+  setInterval(() => {
+    if(document.visibilityState === 'hidden' || S.writing) return;
+    if(!S.code){ qMine.get().then(onMine).catch(() => {}); qOpen.get().then(onOpen).catch(() => {}); return; }
+    if(S.ref && (!S.game || S.game.status !== 'playing' || !myTurn())) S.ref.get().then(applySnap).catch(() => {});
+  }, 3500);
+
+  // An invite link ends in #CODE and seats the opener at that table.
+  const fromHash = () => {
+    const h = (location.hash || '').replace('#', '').toUpperCase();
+    if(/^[A-Z]{4}$/.test(h)){
+      if(S.code !== h) openGame(h, true);
+      else if(S.game && S.game.status === 'lobby' && !S.game.pids.includes(S.me)) joinLobby();
+      return true;
+    }
+    return false;
+  };
+  window.addEventListener('hashchange', fromHash);
+  if(fromHash()) return;
   const last = LS.get('sf_current');
   if(last) openGame(last, false); else render();
 }
