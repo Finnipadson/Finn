@@ -24,7 +24,8 @@ Die App startet **ohne Adminrechte**. Nur zwei Dinge fragen gezielt per UAC nach
 | **Treiber** | Wichtige Treiber mit Version und Datum. NVIDIA wird mit der neuesten Version verglichen. Mit „Über Windows Update prüfen“ siehst du angebotene Treiber-Updates. Die App **installiert nichts**. |
 | **Scan** | Ordner auswählen, Ausschlüsse festlegen, Kategorien an- oder abschalten, „Scan starten“. Der Scan löscht nichts. |
 | **Ergebnisse** | Liste nach Kategorie gruppiert, Vorschau rechts (Video, Bild, Text, PDF). Häkchen setzen → „In den Papierkorb“. |
-| **Protokoll** | Jede Löschung mit Datum, Pfad und Größe, als CSV exportierbar. Darunter steht das Fehlerprotokoll. |
+| **Desktop aufräumen** | Ordnet App-Symbole nach Kategorien in Gruppen an und packt lose Dateien in passende Ordner. Mit Vorher/Nachher-Vorschau, Verlauf und „Rückgängig machen“. |
+| **Protokoll** | Jede Löschung und jede Desktop-Aufräumaktion mit Datum, Pfad und Größe, als CSV exportierbar. Darunter steht das Fehlerprotokoll. |
 | **Einstellungen** | Zeiträume, Kategorien, Mindestgröße, Ausschluss- und Ausnahmeliste, Dark/Light Mode. |
 
 ### Typischer Ablauf
@@ -40,6 +41,30 @@ Die App startet **ohne Adminrechte**. Nur zwei Dinge fragen gezielt per UAC nach
 - **Doppelte Dateien**: Die App filtert zuerst nach Größe, prüft dann Anfang und Ende der Datei und bestätigt am Ende per Inhalts-Hash (xxHash128). Pro Gruppe schlägt sie eine Kopie zum **Behalten** vor (grünes „BLEIBT“). Sie bevorzugt dabei Kopien, die nicht in Downloads/Temp liegen und kein „Kopie“ oder „(1)“ im Namen haben, sonst die älteste. Mit „Diese Kopie behalten“ änderst du den Vorschlag. Mindestens eine Kopie bleibt **immer** erhalten.
 - **Temp-/Cache-Dateien**: `%TEMP%`, `C:\Windows\Temp`, Chrome-, Edge- und Firefox-Cache, Miniaturansichten, Windows-Update-Reste. Sie werden als eigener Bereich angezeigt, unabhängig von der Ordnerauswahl. Diese Dateien werden **direkt** gelöscht (kein Papierkorb), aber erst nach einer eigenen Bestätigung mit Pflicht-Häkchen. Browser-Caches lassen sich nur bei geschlossenem Browser leeren.
 - **Alte Downloads/Installer**: `.exe`, `.msi`, `.zip`, `.rar`, `.7z`, `.iso` usw. im Downloads-Ordner, die älter sind als der eingestellte Zeitraum (Standard: 6 Monate).
+
+### Desktop aufräumen
+1. Seite **Desktop aufräumen** öffnen. Die App liest deinen Desktop (auch einen per OneDrive umgeleiteten) und den öffentlichen Desktop. Dabei wird **nichts verändert**.
+2. **Vorher | Nachher** vergleichen. Mit dem Pfeil-Knopf oben rechts siehst du die Vorschau groß.
+3. In der Liste **„Geplante Änderungen“** kannst du:
+   - einzelne Änderungen abwählen,
+   - für ein Symbol eine andere Gruppe wählen (oder es im Nachher-Bild per **Drag & Drop** bzw. Rechtsklick in eine andere Gruppe ziehen; die App merkt sich das),
+   - für eine Datei einen anderen Zielordner wählen oder einen neuen Namen eintippen.
+4. **Übernehmen …** → Bestätigung → fertig.
+5. **Verlauf** rechts: Jede Aktion lässt sich mit **Rückgängig** einzeln wiederherstellen. Dateien kommen zurück, Symbole an ihre alten Plätze, und neu angelegte Ordner werden nur entfernt, wenn sie leer sind. Die App behält die letzten 20 Aktionen.
+
+Was passiert genau:
+- **App-Symbole** (Verknüpfungen, Steam-/Epic-Links …) bleiben als Symbole auf dem Desktop. Sie werden nur **neu angeordnet**: jede Kategorie in eigenen Spalten, von links nach rechts in der Reihenfolge aus den Einstellungen.
+- **Lose Dateien** kommen in Ordner auf dem Desktop: Bilder, Screenshots, Dokumente, Videos, Musik, Archive, Installer, Sonstiges. Ein vorhandener passender Ordner (z. B. „Fotos“ für Bilder) wird genutzt. Gleichnamige Dateien werden zu „Name (2)“, **nichts wird überschrieben**. Geöffnete Dateien werden übersprungen.
+- **Ordner** werden nicht verändert, nur rechts mit einsortiert.
+- **Papierkorb, Dieser PC** und alles auf deiner „Nie anfassen“-Liste bleiben, wo sie sind.
+- **Öffentlicher Desktop** (`C:\Users\Public\Desktop`): Diese Symbole werden nur neu angeordnet, nie verschoben.
+- **Monitore:** Symbole auf anderen Monitoren bleiben dort. Mit dem Häkchen oben holst du sie auf den Hauptmonitor.
+- **Es wird nie etwas gelöscht.**
+
+Gut zu wissen:
+- Ist **„Symbole automatisch anordnen“** eingeschaltet (Rechtsklick auf den Desktop → Ansicht), sortiert Windows selbst um und eigene Positionen halten nicht. Die App zeigt das an und kann es ausschalten.
+- Windows speichert die Positionen selbst. Ändert sich die Bildschirmauflösung, kann Windows Symbole verschieben. Dafür gibt es den Verlauf mit „Rückgängig“.
+- In den **Einstellungen → Desktop aufräumen** verwaltest du Kategorien (hinzufügen, umbenennen, löschen, Reihenfolge), die Regeln „Programm → Kategorie“ und „Dateityp → Ordner“ sowie die „Nie anfassen“-Liste.
 
 ### „Zuletzt geöffnet“: wie zuverlässig ist das?
 Windows aktualisiert das Datum „Letzter Zugriff“ nicht immer. Die App liest die Einstellung `NtfsDisableLastAccessUpdate` aus der Registry und zeigt sie auf der Scan-Seite an. Die Ausgabe von `fsutil behavior query disablelastaccess` steht dort ebenfalls, falls Windows sie ohne Adminrechte liefert. Ist die Aktualisierung aus, nutzt die App das **Änderungsdatum**. In der Spalte **Grundlage** steht bei jeder Datei, welches Datum verwendet wurde.
@@ -77,6 +102,7 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 - `fehler.log`: Fehlerprotokoll
 - `letztes-ergebnis.json`: letzte Ergebnisliste (wird beim Start automatisch geladen)
 - `Ergebnisse\`: deine mit „Speichern unter …“ gesicherten Ergebnislisten
+- `Desktop-Verlauf\`: gespeicherte Zustände vor jeder Desktop-Aufräumaktion (Grundlage für „Rückgängig“)
 
 ---
 
@@ -90,7 +116,7 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 ```bash
 cd "Games/In Arbeit/PCAufraeumer"
 dotnet build
-dotnet test                       # 34 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
+dotnet test                       # 43 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
 dotnet run --project src/PCAufraeumer
 ```
 
@@ -134,3 +160,8 @@ Für Admin-Bereiche startet die App sich selbst mit `--admin-clean <job> <ergebn
 
 ### Test-Datenordner
 Mit der Umgebungsvariable `PCA_DATADIR` nutzt die App einen anderen Datenordner, damit deine echten Einstellungen beim Testen unberührt bleiben.
+
+### Desktop aufräumen: Technik
+- **Symbolpositionen:** `IShellWindows.FindWindowSW(SWC_DESKTOP)` → `IShellBrowser` → `IFolderView2` (`GetItemPosition`, `SelectAndPositionItems`, `GetCurrentFolderFlags`/`SetCurrentFolderFlags` für „Automatisch anordnen“). Es werden keine Dateien verschoben, um Symbole anzuordnen. Koordinaten sind physische Pixel der Desktop-Ansicht; Monitore kommen über `EnumDisplayMonitors` + `ScreenToClient` (DPI-bewusst, mehrere Monitore).
+- **Verknüpfungen:** `.lnk` über `IShellLinkW` (Ziel, Argumente, Hersteller/Produkt aus der Versionsinfo), `.url` als Textdatei (`steam://`, `com.epicgames.launcher://` …).
+- **Testmodus:** `PCA_DESKTOP_TEST=<Ordner>` nutzt statt des Desktops ein offenes Explorer-Fenster dieses Ordners. Windows-11-Ordnerfenster ordnen immer automatisch an. Dort lässt sich also das Verschieben von Dateien und das Rückgängigmachen testen, nicht aber freie Positionen. Den echten Desktop prüft der Test `Real_desktop_single_icon_position_and_restore` (nur mit `PCA_REAL_DESKTOP_TEST=1`): Er bewegt ein einziges Symbol und stellt danach alle Positionen wieder her.

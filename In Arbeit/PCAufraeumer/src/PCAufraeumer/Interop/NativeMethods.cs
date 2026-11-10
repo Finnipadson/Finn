@@ -26,6 +26,28 @@ public static class KnownFolders
         }
     }
 
+    /// <summary>Echter Desktop-Pfad des Benutzers (kann per OneDrive umgeleitet sein).</summary>
+    public static string Desktop => Get(new Guid("B4BFCC3A-DB2C-424C-B029-7FE99A87C641"))
+                                    ?? Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+
+    /// <summary>Öffentlicher Desktop (C:\Users\Public\Desktop).</summary>
+    public static string PublicDesktop => Get(new Guid("C4AA340D-F20F-4863-AFEF-F87EF2E6BA25"))
+                                          ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory);
+
+    private static string? Get(Guid id)
+    {
+        try
+        {
+            if (SHGetKnownFolderPath(id, 0, IntPtr.Zero, out var p) == 0)
+            {
+                try { return Marshal.PtrToStringUni(p); }
+                finally { Marshal.FreeCoTaskMem(p); }
+            }
+        }
+        catch { }
+        return null;
+    }
+
     private static string Fallback() =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
 }

@@ -130,6 +130,112 @@
                     </Border>
                 </StackPanel>
             </Grid>
+
+            <!-- ───── Desktop aufräumen ───── -->
+            <TextBlock Text="Desktop aufräumen" Style="{StaticResource H1}" FontSize="20" Margin="0,10,0,4"/>
+            <TextBlock Style="{StaticResource Muted}" Margin="0,0,14,12"
+                       Text="Wie Symbole gruppiert und lose Dateien in Ordner einsortiert werden. Änderungen gelten ab der nächsten Analyse."/>
+            <Grid DataContext="{Binding Desktop}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Kategorien -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Kategorien für App-Symbole (Reihenfolge = von links nach rechts)" Style="{StaticResource H2}"/>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Margin="8,0,0,0">
+                                <Button Command="{Binding MoveCategoryUpCommand}" Margin="0,0,0,6" ToolTip="Nach oben (weiter links)"><TextBlock Text="&#xE70E;" Style="{StaticResource Icon}" FontSize="12"/></Button>
+                                <Button Command="{Binding MoveCategoryDownCommand}" Margin="0" ToolTip="Nach unten (weiter rechts)"><TextBlock Text="&#xE70D;" Style="{StaticResource Icon}" FontSize="12"/></Button>
+                            </StackPanel>
+                            <ListBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Height="200"/>
+                        </DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBox Text="{Binding CategoryName, UpdateSourceTrigger=PropertyChanged}" Width="190" Margin="0,0,8,0"/>
+                            <Button Command="{Binding AddCategoryCommand}"><TextBlock Text="Hinzufügen"/></Button>
+                            <Button Command="{Binding RenameCategoryCommand}"><TextBlock Text="Umbenennen"/></Button>
+                            <Button Command="{Binding DeleteCategoryCommand}"><TextBlock Text="Löschen"/></Button>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <TextBlock Text="Leere Spalten zwischen den Gruppen:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox Text="{Binding GapColumns, UpdateSourceTrigger=LostFocus}" Width="50"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Nie anfassen -->
+                <Border Grid.Column="1" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Nie anfassen (Desktop-Elemente)" Style="{StaticResource H2}"/>
+                        <TextBlock Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,6"
+                                   Text="Name wie auf dem Desktop (z. B. „Steam“) oder vollständiger Pfad. Diese Elemente werden weder verschoben noch umgestellt."/>
+                        <ListBox ItemsSource="{Binding NeverTouch}" SelectedItem="{Binding SelectedNeverTouch}" Height="150"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBox Text="{Binding NeverTouchName, UpdateSourceTrigger=PropertyChanged}" Width="220" Margin="0,0,8,0"/>
+                            <Button Command="{Binding AddNeverTouchCommand}"><TextBlock Text="Hinzufügen"/></Button>
+                            <Button Command="{Binding RemoveNeverTouchCommand}"><TextBlock Text="Entfernen"/></Button>
+                        </StackPanel>
+                        <Button Command="{Binding ResetDesktopDefaultsCommand}" HorizontalAlignment="Left" Margin="0,16,0,0">
+                            <TextBlock Text="Kategorien &amp; Regeln auf Standard zurücksetzen"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Programm → Kategorie -->
+                <Border Grid.Row="1" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Zuordnung Programm → Kategorie" Style="{StaticResource H2}"/>
+                        <TextBlock Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,6"
+                                   Text="Das Muster wird im Ziel der Verknüpfung, im Programmnamen, Hersteller, Link und Symbolnamen gesucht. Die erste passende Regel (von oben) gewinnt."/>
+                        <DataGrid ItemsSource="{Binding AppRules}" SelectedItem="{Binding SelectedAppRule}" Height="260"
+                                  IsReadOnly="False" CanUserAddRows="False" RowHeight="34">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Muster" Binding="{Binding Pattern, UpdateSourceTrigger=LostFocus}" Width="*"/>
+                                <DataGridTemplateColumn Header="Kategorie" Width="190">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding DataContext.Categories, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                      SelectedItem="{Binding Category, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button Command="{Binding AddAppRuleCommand}"><TextBlock Text="Regel hinzufügen"/></Button>
+                            <Button Command="{Binding RemoveAppRuleCommand}"><TextBlock Text="Ausgewählte entfernen"/></Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Dateityp → Ordner -->
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Zuordnung Dateityp → Ordner" Style="{StaticResource H2}"/>
+                        <TextBlock Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,6"
+                                   Text="Endungen mit Leerzeichen trennen. „Name beginnt mit“ und „Andere Ordnernamen“ mit „;“. Eine Regel ohne Endungen fängt alles Übrige auf."/>
+                        <DataGrid ItemsSource="{Binding FolderRules}" SelectedItem="{Binding SelectedFolderRule}" Height="260"
+                                  IsReadOnly="False" CanUserAddRows="False" RowHeight="34">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Ordner" Binding="{Binding Folder, UpdateSourceTrigger=LostFocus}" Width="110"/>
+                                <DataGridTextColumn Header="Endungen" Binding="{Binding Extensions, UpdateSourceTrigger=LostFocus}" Width="*"/>
+                                <DataGridTextColumn Header="Name beginnt mit" Binding="{Binding NamePrefixes, UpdateSourceTrigger=LostFocus}" Width="130"/>
+                                <DataGridTextColumn Header="Andere Ordnernamen" Binding="{Binding Aliases, UpdateSourceTrigger=LostFocus}" Width="130"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button Command="{Binding AddFolderRuleCommand}"><TextBlock Text="Regel hinzufügen"/></Button>
+                            <Button Command="{Binding RemoveFolderRuleCommand}"><TextBlock Text="Ausgewählte entfernen"/></Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

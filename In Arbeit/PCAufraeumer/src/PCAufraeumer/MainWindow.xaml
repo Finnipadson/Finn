@@ -15,6 +15,7 @@
         <DataTemplate DataType="{x:Type vm:ResultsViewModel}"><v:ResultsView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:LogViewModel}"><v:LogView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:SettingsViewModel}"><v:SettingsView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DesktopViewModel}"><v:DesktopView/></DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -47,6 +48,8 @@
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=scan, Mode=TwoWay}"/>
                     <RadioButton Style="{StaticResource NavButton}" Tag="&#xE8FD;" Content="Ergebnisse" GroupName="nav"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=results, Mode=TwoWay}"/>
+                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE7F4;" Content="Desktop aufräumen" GroupName="nav"
+                                 IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=desktop, Mode=TwoWay}"/>
                     <RadioButton Style="{StaticResource NavButton}" Tag="&#xE81C;" Content="Protokoll" GroupName="nav"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=log, Mode=TwoWay}"/>
                     <TextBlock Text="APP" Style="{StaticResource Label}" Margin="22,18,0,4" FontSize="11"/>

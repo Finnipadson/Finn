@@ -29,7 +29,7 @@
                 </Button>
             </StackPanel>
             <StackPanel>
-                <TextBlock Text="Löschprotokoll" Style="{StaticResource H1}"/>
+                <TextBlock Text="Protokoll" Style="{StaticResource H1}"/>
                 <TextBlock Text="{Binding Summary}" Style="{StaticResource Muted}"/>
             </StackPanel>
         </DockPanel>
@@ -66,7 +66,7 @@
                 <DataGridTextColumn Header="Größe" Binding="{Binding Size, Converter={StaticResource Bytes}}" SortMemberPath="Size" Width="90"/>
                 <DataGridTextColumn Header="Methode" Binding="{Binding Method}" Width="180"/>
                 <DataGridTextColumn Header="Kategorie" Binding="{Binding Category}" Width="170"/>
-                <DataGridTextColumn Header="Fehler" Binding="{Binding Error}" Width="2*"/>
+                <DataGridTextColumn Header="Hinweis / Fehler" Binding="{Binding Error}" Width="2*"/>
             </DataGrid.Columns>
         </DataGrid>
 

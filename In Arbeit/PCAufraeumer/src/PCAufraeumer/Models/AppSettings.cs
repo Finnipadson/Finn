@@ -33,4 +33,7 @@ public sealed class AppSettings
 
     /// <summary>NVIDIA-Treiberversion online prüfen (einzige Internetverbindung neben Windows Update).</summary>
     public bool NvidiaOnlineCheck { get; set; } = true;
+
+    /// <summary>„Desktop aufräumen“. Fehlt in alten Einstellungsdateien → Standardwerte.</summary>
+    public DesktopSettings Desktop { get; set; } = new();
 }

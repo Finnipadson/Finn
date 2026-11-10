@@ -1,0 +1,194 @@
+<UserControl x:Class="PCAufraeumer.Views.DesktopView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="24,20,24,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="330"/>
+            <RowDefinition Height="*" MinHeight="160"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Kopf -->
+        <DockPanel Margin="0,0,0,10">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Command="{Binding OpenDesktopFolderCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE838;" Style="{StaticResource Icon}" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBlock Text="Desktop-Ordner öffnen"/>
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding AnalyzeCommand}" Margin="0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE72C;" Style="{StaticResource Icon}" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBlock Text="Neu analysieren"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Desktop aufräumen" Style="{StaticResource H1}"/>
+                    <Border Style="{StaticResource Badge}" Background="{DynamicResource DangerSoft}" Margin="12,0,0,4"
+                            Visibility="{Binding IsTestMode, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="TESTMODUS" FontSize="11" FontWeight="SemiBold"/>
+                    </Border>
+                </StackPanel>
+                <TextBlock Text="{Binding InfoText}" Style="{StaticResource Muted}" FontSize="12"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Hinweise -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+            <Border Background="{DynamicResource DangerSoft}" CornerRadius="8" Padding="12,8" Margin="0,0,0,8"
+                    Visibility="{Binding AutoArrangeOn, Converter={StaticResource BoolToVis}}">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Command="{Binding DisableAutoArrangeCommand}" Margin="0" Padding="10,4">
+                        <TextBlock Text="Automatisch anordnen ausschalten"/>
+                    </Button>
+                    <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
+                               Text="„Symbole automatisch anordnen“ ist eingeschaltet. Dann sortiert Windows die Symbole selbst und eigene Positionen halten nicht."/>
+                </DockPanel>
+            </Border>
+            <CheckBox IsChecked="{Binding AllOnPrimary}"
+                      Content="Symbole von anderen Monitoren auch auf den Hauptmonitor holen (sonst bleiben sie dort, wo sie sind)"/>
+        </StackPanel>
+
+        <!-- Vorher / Nachher -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="10" Padding="10">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="2,0,0,6">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Padding="6,2" Margin="0" Click="ZoomBefore_Click" ToolTip="Groß anzeigen">
+                            <TextBlock Text="&#xE740;" Style="{StaticResource Icon}" FontSize="12"/>
+                        </Button>
+                        <TextBlock Text="Vorher – dein Desktop jetzt" FontWeight="SemiBold"/>
+                    </DockPanel>
+                    <Viewbox Stretch="Uniform">
+                        <Canvas x:Name="BeforeCanvas"/>
+                    </Viewbox>
+                </DockPanel>
+            </Border>
+            <Border Grid.Column="2" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Accent}" BorderThickness="1" CornerRadius="10" Padding="10">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="2,0,0,6">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Padding="6,2" Margin="0" Click="ZoomAfter_Click" ToolTip="Groß anzeigen">
+                            <TextBlock Text="&#xE740;" Style="{StaticResource Icon}" FontSize="12"/>
+                        </Button>
+                        <TextBlock FontWeight="SemiBold">
+                            <Run Text="Nachher – geplant"/>
+                            <Run Text="  (Symbole per Drag &amp; Drop in eine andere Gruppe ziehen)" FontWeight="Normal" Foreground="{DynamicResource TextMuted}" FontSize="11"/>
+                        </TextBlock>
+                    </DockPanel>
+                    <Viewbox Stretch="Uniform">
+                        <Canvas x:Name="AfterCanvas" AllowDrop="True" Drop="AfterCanvas_Drop" DragOver="AfterCanvas_DragOver" Background="Transparent"/>
+                    </Viewbox>
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <!-- Änderungen + Verlauf -->
+        <Grid Grid.Row="3" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="330"/>
+            </Grid.ColumnDefinitions>
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="Geplante Änderungen" Style="{StaticResource H2}" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                    <Button Command="{Binding SelectAllCommand}" Padding="8,3" FontSize="12"><TextBlock Text="Alle an"/></Button>
+                    <Button Command="{Binding SelectNoneCommand}" Padding="8,3" FontSize="12"><TextBlock Text="Alle aus"/></Button>
+                    <Button Command="{Binding SelectNoneCommand}" CommandParameter="files" Padding="8,3" FontSize="12"><TextBlock Text="Keine Dateien verschieben"/></Button>
+                </StackPanel>
+                <DataGrid ItemsSource="{Binding Changes}" IsReadOnly="True" RowHeight="36">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="" Width="40" SortMemberPath="IsEnabled">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEnable}" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Element" Width="220" SortMemberPath="Item.DisplayName">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="{Binding Item.Icon}" Width="22" Height="22" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding Item.DisplayName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Path}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Art" Binding="{Binding KindLabel}" Width="70"/>
+                        <DataGridTemplateColumn Header="Gruppe / Zielordner" Width="190" SortMemberPath="Target">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ComboBox ItemsSource="{Binding Options}" Text="{Binding Target, UpdateSourceTrigger=PropertyChanged}"
+                                              IsEditable="{Binding IsFile}" IsEnabled="{Binding CanEnable}" VerticalAlignment="Center"
+                                              ToolTip="Für Dateien kannst du auch einen neuen Ordnernamen eintippen"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Änderung" Width="*" MinWidth="240" SortMemberPath="Description">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Description}"/>
+                                        <TextBlock Text="{Binding Note}" Foreground="{DynamicResource Warn}" FontSize="11" TextTrimming="CharacterEllipsis"
+                                                   Visibility="{Binding Note, Converter={StaticResource NullToVis}}" ToolTip="{Binding Note}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+
+            <DockPanel Grid.Column="2">
+                <TextBlock DockPanel.Dock="Top" Text="Verlauf" Style="{StaticResource H2}" Margin="0,4,0,8"/>
+                <ListBox ItemsSource="{Binding History}" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel Margin="0,2">
+                                <Button DockPanel.Dock="Right" Padding="8,3" Margin="6,0,0,0" FontSize="12" VerticalAlignment="Center"
+                                        Command="{Binding DataContext.UndoCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                        CommandParameter="{Binding}" IsEnabled="{Binding Undone, Converter={StaticResource Not}}">
+                                    <TextBlock Text="Rückgängig"/>
+                                </Button>
+                                <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontSize="12"/>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Grid>
+
+        <!-- Fußleiste -->
+        <Border Grid.Row="4" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="16,12">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Command="{Binding ApplyCommand}" Style="{StaticResource PrimaryButton}" Margin="0" Padding="22,10" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE73E;" Style="{StaticResource Icon}" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBlock Text="Übernehmen …" FontSize="14"/>
+                    </StackPanel>
+                </Button>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock Text="{Binding Summary}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Warnings}" Foreground="{DynamicResource Warn}" FontSize="12" TextWrapping="Wrap"
+                               Visibility="{Binding Warnings, Converter={StaticResource NullToVis}}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <ProgressBar IsIndeterminate="True" Width="80" Height="4" Margin="0,0,8,0"
+                                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

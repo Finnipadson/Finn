@@ -55,7 +55,7 @@ public sealed class DeleteLogService
     {
         var de = CultureInfo.GetCultureInfo("de-DE");
         var sb = new StringBuilder();
-        sb.AppendLine("Datum;Uhrzeit;Dateipfad;Größe (Bytes);Größe;Methode;Kategorie;Erfolgreich;Fehler");
+        sb.AppendLine("Datum;Uhrzeit;Dateipfad;Größe (Bytes);Größe;Methode;Kategorie;Erfolgreich;Hinweis/Fehler");
         foreach (var e in entries)
         {
             sb.Append(e.Timestamp.ToString("dd.MM.yyyy", de)).Append(';')

@@ -41,9 +41,13 @@ public sealed partial class LogViewModel : ObservableObject
         foreach (var e in _log.ReadAll()) Entries.Add(e);
         Errors.Clear();
         foreach (var e in ErrorLog.ReadRecent()) Errors.Add(e);
-        var ok = Entries.Where(e => e.Success).ToList();
+        // Löschungen und Desktop-Aktionen getrennt zählen
+        var deletes = Entries.Where(e => !e.Method.StartsWith("Desktop", StringComparison.Ordinal)).ToList();
+        var ok = deletes.Where(e => e.Success).ToList();
+        int desktop = Entries.Count - deletes.Count;
         Summary = $"{ok.Count:N0} erfolgreiche Löschungen, zusammen {Format.Bytes(ok.Sum(e => e.Size))} · " +
-                  $"{Entries.Count - ok.Count:N0} nicht durchgeführt";
+                  $"{deletes.Count - ok.Count:N0} nicht durchgeführt" +
+                  (desktop > 0 ? $" · {desktop:N0} Desktop-Aufräumaktionen" : "");
     }
 
     [RelayCommand]

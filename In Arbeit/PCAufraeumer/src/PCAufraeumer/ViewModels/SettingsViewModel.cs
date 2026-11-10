@@ -63,8 +63,12 @@ public sealed partial class SettingsViewModel : ObservableObject
                             "OneDrive-Dateien „Nur online verfügbar“ (werden beim Scan nicht heruntergeladen)",
                             "Programm-, Spiele- und Entwicklerordner (steamapps, Epic Games, WindowsApps, .git, node_modules …)" })
             .ToList();
+        Desktop = new DesktopSettingsViewModel(svc);
         Reload();
     }
+
+    /// <summary>Bereich „Desktop aufräumen“.</summary>
+    public DesktopSettingsViewModel Desktop { get; }
 
     public void Reload()
     {
