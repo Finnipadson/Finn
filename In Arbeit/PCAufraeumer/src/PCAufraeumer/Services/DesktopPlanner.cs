@@ -187,7 +187,7 @@ public sealed class DesktopPlanner
     }
 
     /// <summary>Berechnet Zielordner, Dateinamen und die neue Anordnung.</summary>
-    public DesktopPlan Plan(List<DesktopItem> items, List<DesktopChange> changes, IReadOnlyList<ViewMonitor> monitors, POINT spacing)
+    public DesktopPlan Plan(List<DesktopItem> items, List<DesktopChange> changes, IReadOnlyList<ViewMonitor> monitors, POINT spacing, DesktopLayout? layout = null)
     {
         var plan = new DesktopPlan();
         var reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -265,29 +265,77 @@ public sealed class DesktopPlanner
             .OrderBy(f => f.Item2, StringComparer.CurrentCultureIgnoreCase).ToList();
         if (folders.Count > 0) groups.Add((FolderGroup, folders));
 
+        var style = layout ?? _s.Layout;
         int gap = Math.Max(0, _s.GapColumns);
-        int needed = groups.Sum(g => (int)Math.Ceiling(g.members.Count / (double)rows)) + gap * Math.Max(0, groups.Count - 1);
-        if (needed > cols && gap > 0)
+        if (style == DesktopLayout.Spalten)
         {
-            gap = 0;
-            plan.Warnings.Add("Nicht genug Platz für Abstände zwischen den Gruppen – Gruppen stehen direkt nebeneinander.");
+            int needed = groups.Sum(g => (int)Math.Ceiling(g.members.Count / (double)rows)) + gap * Math.Max(0, groups.Count - 1);
+            if (needed > cols && gap > 0)
+            {
+                gap = 0;
+                plan.Warnings.Add("Nicht genug Platz für Abstände zwischen den Gruppen – Gruppen stehen direkt nebeneinander.");
+            }
         }
 
-        int col = 0;
+        // Nächste freie Zelle aus einer gewünschten Reihenfolge holen (feste Elemente werden übersprungen).
+        (int c, int r) Take(IEnumerator<(int c, int r)> cells)
+        {
+            while (cells.MoveNext())
+                if (!occupied.Contains(cells.Current)) { occupied.Add(cells.Current); return cells.Current; }
+            throw new InvalidOperationException("Kein Platz gefunden.");
+        }
+        IEnumerable<(int, int)> ColumnFlow(int col0)
+        {
+            for (int c = col0; c < col0 + 4000; c++) for (int r = 0; r < rows; r++) yield return (c, r);
+        }
+        IEnumerable<(int, int)> RowFlow(int row0)
+        {
+            for (int r = row0; r < row0 + 4000; r++) for (int c = 0; c < cols; c++) yield return (c, r);
+        }
+        IEnumerable<(int, int)> BlockFlow(int col0, int row0, int w)
+        {
+            for (int r = row0; r < row0 + 4000; r++) for (int c = col0; c < col0 + w; c++) yield return (c, r);
+        }
+
+        var compact = ColumnFlow(0).GetEnumerator();
+        int nextCol = 0, nextRow = 0, shelfRight = -1;
+        bool overflow = false;
         foreach (var (name, members) in groups)
         {
-            int row = 0, firstCol = col, lastCol = col;
+            int n = members.Count;
+            IEnumerator<(int c, int r)> cells;
+            switch (style)
+            {
+                case DesktopLayout.Kompakt:
+                    cells = compact;
+                    break;
+                case DesktopLayout.Zeilen:
+                    cells = RowFlow(nextRow).GetEnumerator();
+                    break;
+                case DesktopLayout.Bloecke:
+                {
+                    int h = Math.Min(rows, Math.Max(2, (int)Math.Ceiling(Math.Sqrt(n))));
+                    int w = (int)Math.Ceiling(n / (double)h);
+                    if (nextRow > 0 && nextRow + h > rows) { nextCol = shelfRight + 1 + gap; nextRow = 0; }
+                    cells = BlockFlow(nextCol, nextRow, w).GetEnumerator();
+                    break;
+                }
+                case DesktopLayout.Raender when name == FolderGroup:
+                    cells = ColumnFlow(Math.Max(nextCol, cols - (int)Math.Ceiling(n / (double)rows))).GetEnumerator();
+                    break;
+                default: // Spalten, Ränder (Apps links)
+                    cells = ColumnFlow(nextCol).GetEnumerator();
+                    break;
+            }
+
+            int minC = int.MaxValue, maxC = int.MinValue, minR = int.MaxValue, maxR = int.MinValue;
             foreach (var mbr in members)
             {
-                while (occupied.Contains((col, row)))
-                {
-                    row++;
-                    if (row >= rows) { row = 0; col++; }
-                }
-                var pt = new POINT(ox + col * sx, oy + row * sy);
+                var (c, r) = Take(cells);
+                minC = Math.Min(minC, c); maxC = Math.Max(maxC, c); minR = Math.Min(minR, r); maxR = Math.Max(maxR, r);
+                if (c >= cols || r >= rows) overflow = true;
+                var pt = new POINT(ox + c * sx, oy + r * sy);
                 plan.Positions[mbr.path] = pt;
-                occupied.Add((col, row));
-                lastCol = col;
                 plan.After.Add(new PreviewIcon
                 {
                     Path = mbr.path, Name = mbr.name, X = pt.X, Y = pt.Y, IsNewFolder = mbr.isNew, Group = name, Change = mbr.change,
@@ -298,17 +346,22 @@ public sealed class DesktopPlanner
                         ? $"Ordner „{mbr.name}“ → bei den Ordnern einsortiert"
                         : $"Symbol „{mbr.name}“ → Gruppe {name}";
                 }
-                row++;
-                if (row >= rows) { row = 0; col++; }
             }
             plan.Groups.Add(new PreviewGroup
             {
-                Name = name, X = ox + firstCol * sx, Y = oy, Width = (lastCol - firstCol + 1) * sx,
-                Height = Math.Min(rows, members.Count + 1) * sy, IsCategory = name != FolderGroup,
+                Name = name, X = ox + minC * sx, Y = oy + minR * sy,
+                Width = (maxC - minC + 1) * sx, Height = (maxR - minR + 1) * sy, IsCategory = name != FolderGroup,
             });
-            col = lastCol + 1 + gap;
+
+            switch (style)
+            {
+                case DesktopLayout.Zeilen: nextRow = maxR + 1 + Math.Min(1, gap); break;
+                case DesktopLayout.Bloecke: shelfRight = Math.Max(shelfRight, maxC); nextRow = maxR + 2; break;
+                case DesktopLayout.Kompakt: break;
+                default: nextCol = maxC + 1 + gap; break;
+            }
         }
-        if (col - gap > cols) plan.Warnings.Add("Der Hauptmonitor ist zu schmal für alle Symbole – einige liegen außerhalb des sichtbaren Bereichs.");
+        if (overflow) plan.Warnings.Add("Nicht alle Symbole passen auf den Hauptmonitor – einige liegen außerhalb des sichtbaren Bereichs. Probier einen anderen Vorschlag.");
 
         // Abgewählte Symbole: Beschreibung
         foreach (var c in changes.Where(c => c.Kind == DesktopChangeKind.Position && !c.IsEnabled))

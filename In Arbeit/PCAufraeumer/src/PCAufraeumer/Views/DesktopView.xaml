@@ -5,7 +5,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="330"/>
+            <RowDefinition Height="260"/>
             <RowDefinition Height="*" MinHeight="160"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -52,6 +52,8 @@
             </Border>
             <CheckBox IsChecked="{Binding AllOnPrimary}"
                       Content="Symbole von anderen Monitoren auch auf den Hauptmonitor holen (sonst bleiben sie dort, wo sie sind)"/>
+            <TextBlock Text="Anordnungs-Vorschläge – klicke einen an:" FontWeight="SemiBold" Margin="0,12,0,6"/>
+            <UniformGrid x:Name="LayoutPanel" Rows="1"/>
         </StackPanel>
 
         <!-- Vorher / Nachher -->

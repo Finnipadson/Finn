@@ -148,6 +148,60 @@ public class DesktopTests : IDisposable
         Assert.Contains(plan.Groups, g => g.Name == "Spiele");
     }
 
+    [Theory]
+    [InlineData(DesktopLayout.Spalten)]
+    [InlineData(DesktopLayout.Kompakt)]
+    [InlineData(DesktopLayout.Zeilen)]
+    [InlineData(DesktopLayout.Bloecke)]
+    [InlineData(DesktopLayout.Raender)]
+    public void Every_layout_places_all_icons_without_overlap(DesktopLayout layout)
+    {
+        var desk = Path.Combine(_t.Root, "Desk");
+        Directory.CreateDirectory(Path.Combine(desk, "Projekte"));
+        var s = new DesktopSettings();
+        var planner = new DesktopPlanner(s, desk, null);
+        var items = new List<DesktopItem>
+        {
+            new() { Path = "::{645FF040-5081-101B-9F08-00AA002F954E}", DisplayName = "Papierkorb", Kind = DesktopItemKind.System, X = 2, Y = 2 },
+            new() { Path = Path.Combine(desk, "Projekte"), DisplayName = "Projekte", Kind = DesktopItemKind.Folder, X = 700, Y = 700 },
+        };
+        for (int i = 0; i < 14; i++) items.Add(new DesktopItem { Path = $@"C:\d\Spiel{i}.url", DisplayName = $"Spiel{i}", Kind = DesktopItemKind.AppIcon, DetectedCategory = "Spiele", X = 500, Y = 500 });
+        for (int i = 0; i < 4; i++) items.Add(new DesktopItem { Path = $@"C:\d\Browser{i}.lnk", DisplayName = $"Browser{i}", Kind = DesktopItemKind.AppIcon, DetectedCategory = "Browser & Internet", X = 900, Y = 500 });
+        for (int i = 0; i < 3; i++) items.Add(new DesktopItem { Path = $@"C:\d\Tool{i}.lnk", DisplayName = $"Tool{i}", Kind = DesktopItemKind.AppIcon, DetectedCategory = "System & Tools", X = 900, Y = 600 });
+        var changes = planner.BuildChanges(items, OneMonitor);
+        var plan = planner.Plan(items, changes, OneMonitor, new POINT(100, 100), layout);
+
+        Assert.Equal(22, plan.Positions.Count);                                        // alle Apps + Ordner
+        Assert.Equal(22, plan.Positions.Values.Select(p => (p.X, p.Y)).Distinct().Count()); // keine Überlappung
+        Assert.DoesNotContain(plan.Positions.Values, p => p.X == 2 && p.Y == 2);        // Papierkorb-Platz frei
+        Assert.All(plan.Positions.Values, p => Assert.True(p.X < 1920 && p.Y < 1040, $"{layout}: {p.X},{p.Y} außerhalb"));
+        Assert.Empty(plan.Warnings);
+
+        var games = plan.Positions.Where(p => p.Key.Contains("Spiel")).Select(p => p.Value).ToList();
+        var browsers = plan.Positions.Where(p => p.Key.Contains("Browser")).Select(p => p.Value).ToList();
+        var folder = plan.Positions[Path.Combine(desk, "Projekte")];
+        switch (layout)
+        {
+            case DesktopLayout.Spalten:
+                Assert.True(browsers.Min(b => b.X) - games.Max(g => g.X) >= 200); // Leerspalte
+                break;
+            case DesktopLayout.Kompakt:
+                Assert.True(plan.Positions.Values.Max(p => p.X) <= 300);             // alles in den ersten Spalten
+                break;
+            case DesktopLayout.Zeilen:
+                Assert.True(browsers.Min(b => b.Y) > games.Max(g => g.Y));            // Browser-Reihe unter den Spielen
+                Assert.Single(games.Select(g => g.Y).Distinct());                     // alle Spiele in einer Reihe
+                break;
+            case DesktopLayout.Bloecke:
+                Assert.True(games.Select(g => g.X).Distinct().Count() >= 3);          // fast quadratischer Block
+                break;
+            case DesktopLayout.Raender:
+                Assert.True(folder.X >= 1700, "Ordner gehören an den rechten Rand");
+                Assert.True(games.Max(g => g.X) < 500);
+                break;
+        }
+    }
+
     [Fact]
     public async Task Apply_moves_files_and_undo_restores_everything()
     {

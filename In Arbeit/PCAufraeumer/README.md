@@ -44,13 +44,21 @@ Die App startet **ohne Adminrechte**. Nur zwei Dinge fragen gezielt per UAC nach
 
 ### Desktop aufräumen
 1. Seite **Desktop aufräumen** öffnen. Die App liest deinen Desktop (auch einen per OneDrive umgeleiteten) und den öffentlichen Desktop. Dabei wird **nichts verändert**.
-2. **Vorher | Nachher** vergleichen. Mit dem Pfeil-Knopf oben rechts siehst du die Vorschau groß.
-3. In der Liste **„Geplante Änderungen“** kannst du:
+2. Einen **Anordnungs-Vorschlag** anklicken. Jede Karte zeigt eine Mini-Vorschau:
+   - **Spalten**: jede Kategorie in eigenen Spalten, mit Abstand dazwischen (Standard)
+   - **Kompakt**: alles dicht am linken Rand, maximal viel freie Fläche
+   - **Zeilen**: jede Kategorie als waagerechte Reihe oben, eine unter der anderen
+   - **Blöcke**: jede Kategorie als kleiner, fast quadratischer Block
+   - **Ränder**: Apps links, Ordner ganz rechts, die Mitte bleibt frei fürs Hintergrundbild
+
+   Passt ein Vorschlag nicht ganz auf den Bildschirm, steht das auf der Karte. Die App merkt sich deine Wahl.
+3. **Vorher | Nachher** vergleichen. Mit dem Pfeil-Knopf oben rechts siehst du die Vorschau groß.
+4. In der Liste **„Geplante Änderungen“** kannst du:
    - einzelne Änderungen abwählen,
    - für ein Symbol eine andere Gruppe wählen (oder es im Nachher-Bild per **Drag & Drop** bzw. Rechtsklick in eine andere Gruppe ziehen; die App merkt sich das),
    - für eine Datei einen anderen Zielordner wählen oder einen neuen Namen eintippen.
-4. **Übernehmen …** → Bestätigung → fertig.
-5. **Verlauf** rechts: Jede Aktion lässt sich mit **Rückgängig** einzeln wiederherstellen. Dateien kommen zurück, Symbole an ihre alten Plätze, und neu angelegte Ordner werden nur entfernt, wenn sie leer sind. Die App behält die letzten 20 Aktionen.
+5. **Übernehmen …** → Bestätigung → fertig.
+6. **Verlauf** rechts: Jede Aktion lässt sich mit **Rückgängig** einzeln wiederherstellen. Dateien kommen zurück, Symbole an ihre alten Plätze, und neu angelegte Ordner werden nur entfernt, wenn sie leer sind. Die App behält die letzten 20 Aktionen.
 
 Was passiert genau:
 - **App-Symbole** (Verknüpfungen, Steam-/Epic-Links …) bleiben als Symbole auf dem Desktop. Sie werden nur **neu angeordnet**: jede Kategorie in eigenen Spalten, von links nach rechts in der Reihenfolge aus den Einstellungen.
@@ -116,7 +124,7 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 ```bash
 cd "Games/In Arbeit/PCAufraeumer"
 dotnet build
-dotnet test                       # 43 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
+dotnet test                       # 48 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
 dotnet run --project src/PCAufraeumer
 ```
 

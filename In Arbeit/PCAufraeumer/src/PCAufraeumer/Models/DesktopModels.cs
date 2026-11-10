@@ -6,6 +6,23 @@ namespace PCAufraeumer.Models;
 
 public enum DesktopItemKind { AppIcon, File, Folder, System }
 
+/// <summary>Anordnungs-Vorschläge für die App-Symbole.</summary>
+public enum DesktopLayout { Spalten, Kompakt, Zeilen, Bloecke, Raender }
+
+public sealed record LayoutOption(DesktopLayout Layout, string Name, string Description);
+
+public static class LayoutOptions
+{
+    public static readonly IReadOnlyList<LayoutOption> All = new[]
+    {
+        new LayoutOption(DesktopLayout.Spalten, "Spalten", "Jede Kategorie in eigenen Spalten, von links nach rechts, mit Abstand dazwischen."),
+        new LayoutOption(DesktopLayout.Kompakt, "Kompakt", "Alles dicht am linken Rand, Kategorien folgen direkt aufeinander – maximal viel freie Fläche."),
+        new LayoutOption(DesktopLayout.Zeilen, "Zeilen", "Jede Kategorie als waagerechte Reihe oben am Bildschirm, eine unter der anderen."),
+        new LayoutOption(DesktopLayout.Bloecke, "Blöcke", "Jede Kategorie als kleiner, fast quadratischer Block – wie Kacheln."),
+        new LayoutOption(DesktopLayout.Raender, "Ränder", "Apps links, Ordner ganz rechts – die Mitte bleibt frei fürs Hintergrundbild."),
+    };
+}
+
 /// <summary>Regel „Programm → Kategorie“: Muster wird (ohne Groß/Klein) in Ziel, Programmname, Hersteller, URL und Symbolname gesucht.</summary>
 public sealed partial class AppRule : ObservableObject
 {
@@ -52,6 +69,8 @@ public sealed class DesktopSettings
     public bool AllOnPrimary { get; set; }
     /// <summary>Leere Spalten zwischen den Kategorie-Gruppen.</summary>
     public int GapColumns { get; set; } = 1;
+    /// <summary>Zuletzt gewählter Anordnungs-Vorschlag.</summary>
+    public DesktopLayout Layout { get; set; } = DesktopLayout.Spalten;
 
     public static List<string> DefaultCategories() => new()
     {

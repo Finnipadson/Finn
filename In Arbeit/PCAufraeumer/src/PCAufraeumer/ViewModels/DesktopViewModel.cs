@@ -11,6 +11,17 @@ using PCAufraeumer.Views;
 
 namespace PCAufraeumer.ViewModels;
 
+/// <summary>Ein Anordnungs-Vorschlag mit vorberechneter Mini-Vorschau.</summary>
+public sealed class LayoutCard
+{
+    public LayoutCard(LayoutOption option) => Option = option;
+    public LayoutOption Option { get; }
+    public IReadOnlyList<PreviewIcon> Icons { get; set; } = Array.Empty<PreviewIcon>();
+    public IReadOnlyList<PreviewGroup> Groups { get; set; } = Array.Empty<PreviewGroup>();
+    public bool Fits { get; set; } = true;
+    public bool IsSelected { get; set; }
+}
+
 /// <summary>Seite „Desktop aufräumen“: Analyse → Vorschau (Vorher/Nachher + Änderungsliste) → Übernehmen → Rückgängig.</summary>
 public sealed partial class DesktopViewModel : ObservableObject
 {
@@ -169,10 +180,35 @@ public sealed partial class DesktopViewModel : ObservableObject
 
     private DesktopPlan? _plan;
 
+    /// <summary>Alle Anordnungs-Vorschläge mit eigener Mini-Vorschau.</summary>
+    public List<LayoutCard> LayoutCards { get; } = LayoutOptions.All.Select(o => new LayoutCard(o)).ToList();
+
+    public DesktopLayout SelectedLayout => S.Layout;
+
+    [RelayCommand]
+    private void SelectLayout(DesktopLayout layout)
+    {
+        if (S.Layout == layout) return;
+        S.Layout = layout;
+        _settings.Save();
+        OnPropertyChanged(nameof(SelectedLayout));
+        Replan();
+    }
+
     private void Replan()
     {
         if (_planner == null) return;
-        _plan = _planner.Plan(_items, Changes.ToList(), _monitors, _spacing);
+        var changes = Changes.ToList();
+        // Erst alle Vorschläge für die Mini-Vorschauen, zuletzt den gewählten (bestimmt Beschreibungen und Zielpfade).
+        foreach (var card in LayoutCards)
+        {
+            var p = _planner.Plan(_items, changes, _monitors, _spacing, card.Option.Layout);
+            card.Icons = p.After;
+            card.Groups = p.Groups;
+            card.Fits = !p.Warnings.Any(w => w.StartsWith("Nicht alle"));
+            card.IsSelected = card.Option.Layout == S.Layout;
+        }
+        _plan = _planner.Plan(_items, changes, _monitors, _spacing, S.Layout);
         AfterIcons = _plan.After;
         AfterGroups = _plan.Groups;
         Warnings = string.Join("\n", _plan.Warnings);

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
@@ -30,6 +31,43 @@ public partial class DesktopView : UserControl
         if (_vm == null) return;
         DesktopRenderer.Render(BeforeCanvas, _vm, after: false, this);
         DesktopRenderer.Render(AfterCanvas, _vm, after: true, this);
+        RenderLayoutCards();
+    }
+
+    /// <summary>Karten mit den Anordnungs-Vorschlägen (Mini-Vorschau + Name). Klick wählt den Vorschlag.</summary>
+    private void RenderLayoutCards()
+    {
+        if (_vm == null) return;
+        LayoutPanel.Children.Clear();
+        foreach (var card in _vm.LayoutCards)
+        {
+            var canvas = new Canvas();
+            DesktopRenderer.Render(canvas, _vm, card.Icons, card.Groups, null, mini: true);
+            var title = new TextBlock { FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 4, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis };
+            title.Inlines.Add(card.Option.Name);
+            if (!card.Fits)
+                title.Inlines.Add(new System.Windows.Documents.Run("  · passt nicht ganz") { Foreground = (Brush)FindResource("Warn"), FontWeight = FontWeights.Normal, FontSize = 11 });
+            var border = new Border
+            {
+                Margin = new Thickness(0, 0, 10, 0), Padding = new Thickness(8, 6, 8, 6), CornerRadius = new CornerRadius(10), Cursor = Cursors.Hand,
+                Background = (Brush)FindResource(card.IsSelected ? "AccentSoft" : "CardBg"),
+                BorderBrush = (Brush)FindResource(card.IsSelected ? "Accent" : "Border"),
+                BorderThickness = new Thickness(card.IsSelected ? 2 : 1),
+                ToolTip = card.Option.Description,
+                Child = new StackPanel
+                {
+                    Children =
+                    {
+                        new Viewbox { Height = 54, Stretch = Stretch.Uniform, Child = canvas },
+                        title,
+                    },
+                },
+            };
+            var layout = card.Option.Layout;
+            border.MouseLeftButtonUp += (_, _) => _vm.SelectLayoutCommand.Execute(layout);
+            AutomationProperties.SetName(border, "Vorschlag " + card.Option.Name);
+            LayoutPanel.Children.Add(border);
+        }
     }
 
     // ── Drag & Drop in der Nachher-Ansicht ──
@@ -105,26 +143,31 @@ internal static class DesktopRenderer
     private static ImageSource? _folderIcon;
 
     /// <summary>Sichtbarer Ausschnitt: nur der Bereich mit Symbolen (+ Rand), damit die Vorschau groß genug bleibt.</summary>
-    public static (int minX, int minY, int maxX, int maxY) Extent(DesktopViewModel vm, bool after = true)
+    public static (int minX, int minY, int maxX, int maxY) Extent(DesktopViewModel vm, IReadOnlyList<PreviewIcon>? after = null)
     {
         int sx = vm.Spacing.X, sy = vm.Spacing.Y;
-        if (vm.BeforeIcons.Count + vm.AfterIcons.Count == 0)
+        // Vorher und Nachher mit demselben Ausschnitt, damit man sie vergleichen kann.
+        var all = vm.BeforeIcons.Concat(after ?? vm.AfterIcons).ToList();
+        if (all.Count == 0)
         {
             var mons = vm.Monitors;
             if (mons.Count == 0) return (0, 0, 1920, 1080);
             return (mons.Min(m => m.Left), mons.Min(m => m.Top), mons.Max(m => m.Left + m.Width), mons.Max(m => m.Top + m.Height));
         }
-        // Vorher und Nachher mit demselben Ausschnitt, damit man sie vergleichen kann.
-        var all = vm.BeforeIcons.Concat(vm.AfterIcons).ToList();
         int minX = all.Min(i => i.X) - sx / 2, minY = all.Min(i => i.Y) - 48; // Platz für die Gruppen-Etiketten
         int maxX = all.Max(i => i.X) + sx + sx / 2, maxY = all.Max(i => i.Y) + sy + sy / 2;
         return (minX, minY, maxX, maxY);
     }
 
-    public static void Render(Canvas canvas, DesktopViewModel vm, bool after, DesktopView? owner)
+    public static void Render(Canvas canvas, DesktopViewModel vm, bool after, DesktopView? owner) =>
+        Render(canvas, vm, after ? vm.AfterIcons : vm.BeforeIcons, after ? vm.AfterGroups : null, owner, mini: false);
+
+    /// <param name="mini">Kleine Vorschlags-Karte: nur Symbole und Gruppenflächen, keine Texte.</param>
+    public static void Render(Canvas canvas, DesktopViewModel vm, IReadOnlyList<PreviewIcon> icons,
+        IReadOnlyList<PreviewGroup>? groups, DesktopView? owner, bool mini)
     {
         canvas.Children.Clear();
-        var (minX, minY, maxX, maxY) = Extent(vm, after);
+        var (minX, minY, maxX, maxY) = Extent(vm, groups != null ? icons : null);
         canvas.Width = Math.Max(100, maxX - minX);
         canvas.Height = Math.Max(100, maxY - minY);
         canvas.ClipToBounds = true;
@@ -142,7 +185,7 @@ internal static class DesktopRenderer
             Canvas.SetLeft(b, m.Left - minX);
             Canvas.SetTop(b, m.Top - minY);
             canvas.Children.Add(b);
-            if (vm.Monitors.Count > 1)
+            if (vm.Monitors.Count > 1 && !mini)
             {
                 var label = new TextBlock
                 {
@@ -155,49 +198,55 @@ internal static class DesktopRenderer
             }
         }
 
-        if (after)
+        foreach (var g in groups ?? Array.Empty<PreviewGroup>())
         {
-            foreach (var g in vm.AfterGroups)
+            var accent = g.IsCategory ? Color.FromArgb(0x30, 0x4C, 0x9A, 0xFF) : Color.FromArgb(0x30, 0xF2, 0xC1, 0x4E);
+            var r = new Border
             {
-                var accent = g.IsCategory ? Color.FromArgb(0x30, 0x4C, 0x9A, 0xFF) : Color.FromArgb(0x30, 0xF2, 0xC1, 0x4E);
-                var r = new Border
+                Width = g.Width - 6, Height = g.Height, CornerRadius = new CornerRadius(12),
+                Background = new SolidColorBrush(mini ? Color.FromArgb(0x60, accent.R, accent.G, accent.B) : accent),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(0x90, accent.R, accent.G, accent.B)), BorderThickness = new Thickness(mini ? 8 : 3),
+            };
+            Canvas.SetLeft(r, g.X - minX - 3);
+            Canvas.SetTop(r, g.Y - minY - 4);
+            canvas.Children.Add(r);
+            if (mini) continue;
+            // Beschriftung als „Etikett“ über der Gruppe (verdeckt keine Symbole)
+            var t = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(0xE6, accent.R, accent.G, accent.B)),
+                CornerRadius = new CornerRadius(8), Padding = new Thickness(10, 2, 10, 4),
+                MaxWidth = Math.Max(g.Width + sx * Math.Max(0, vm.GapColumns) - 10, sx * 2),
+                ToolTip = g.Name,
+                Child = new TextBlock
                 {
-                    Width = g.Width - 6, Height = g.Height, CornerRadius = new CornerRadius(12),
-                    Background = new SolidColorBrush(accent),
-                    BorderBrush = new SolidColorBrush(Color.FromArgb(0x90, accent.R, accent.G, accent.B)), BorderThickness = new Thickness(3),
-                };
-                Canvas.SetLeft(r, g.X - minX - 3);
-                Canvas.SetTop(r, g.Y - minY - 4);
-                canvas.Children.Add(r);
-                // Beschriftung als „Etikett“ über der Gruppe (verdeckt keine Symbole)
-                var t = new Border
-                {
-                    Background = new SolidColorBrush(Color.FromArgb(0xE6, accent.R, accent.G, accent.B)),
-                    CornerRadius = new CornerRadius(8), Padding = new Thickness(10, 2, 10, 4),
-                    MaxWidth = g.Width + sx * Math.Max(0, vm.GapColumns) - 10,
-                    ToolTip = g.Name,
-                    Child = new TextBlock
-                    {
-                        Text = g.Name, FontSize = 22, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White,
-                        TextTrimming = TextTrimming.CharacterEllipsis,
-                    },
-                };
-                Canvas.SetLeft(t, g.X - minX - 3);
-                Canvas.SetTop(t, g.Y - minY - 40);
-                Panel.SetZIndex(t, 10);
-                canvas.Children.Add(t);
-            }
+                    Text = g.Name, FontSize = 22, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                },
+            };
+            Canvas.SetLeft(t, g.X - minX - 3);
+            Canvas.SetTop(t, g.Y - minY - 40);
+            Panel.SetZIndex(t, 10);
+            canvas.Children.Add(t);
         }
 
-        var icons = after ? vm.AfterIcons : vm.BeforeIcons;
-        var iconByPath = vm.Changes.Select(c => c.Item).Concat(Array.Empty<DesktopItem>())
+        var iconByPath = vm.Changes.Select(c => c.Item)
             .GroupBy(i => i.Path, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Icon, StringComparer.OrdinalIgnoreCase);
+        bool interactive = groups != null && owner != null && !mini;
 
         foreach (var ic in icons)
         {
             if (!iconByPath.TryGetValue(ic.Path, out var img) || img == null)
                 img = ic.IsNewFolder ? (_folderIcon ??= ShellIcons.Get(Path.GetTempPath(), 48)) : ShellIcons.Get(ic.Path, 48);
-            var panel = new StackPanel { Width = sx - 4, Cursor = after && ic.Change?.IsAppIcon == true ? Cursors.Hand : Cursors.Arrow };
+            if (mini)
+            {
+                var im = new Image { Source = img, Width = 64, Height = 64 };
+                Canvas.SetLeft(im, ic.X - minX + (sx - 64) / 2);
+                Canvas.SetTop(im, ic.Y - minY + 4);
+                canvas.Children.Add(im);
+                continue;
+            }
+            var panel = new StackPanel { Width = sx - 4, Cursor = interactive && ic.Change?.IsAppIcon == true ? Cursors.Hand : Cursors.Arrow };
             panel.Children.Add(new Image { Source = img, Width = 48, Height = 48, Margin = new Thickness(0, 4, 0, 2) });
             panel.Children.Add(new TextBlock
             {
@@ -206,14 +255,12 @@ internal static class DesktopRenderer
                 Effect = new DropShadowEffect { ShadowDepth = 1, BlurRadius = 3, Opacity = 0.9 },
             });
             panel.ToolTip = ic.Name + (ic.Change != null ? "\n" + ic.Change.Description : "");
-            if (ic.IsNewFolder) panel.Opacity = 0.95;
-            if (after && owner != null && ic.Change is { IsAppIcon: true } ch)
+            if (interactive && ic.Change is { IsAppIcon: true } ch)
             {
                 panel.Tag = ch;
                 panel.Background = Brushes.Transparent; // trifft Mausklicks auch zwischen Bild und Text
-                panel.PreviewMouseLeftButtonDown += owner.IconMouseDown;
+                panel.PreviewMouseLeftButtonDown += owner!.IconMouseDown;
                 panel.PreviewMouseMove += owner.IconMouseMove;
-                panel.ContextMenuOpening += (_, _) => panel.ContextMenu = owner.CategoryMenu(ch);
                 panel.ContextMenu = owner.CategoryMenu(ch);
             }
             Canvas.SetLeft(panel, ic.X - minX + 2);
