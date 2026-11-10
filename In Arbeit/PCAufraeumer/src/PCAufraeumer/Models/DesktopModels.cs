@@ -7,7 +7,7 @@ namespace PCAufraeumer.Models;
 public enum DesktopItemKind { AppIcon, File, Folder, System }
 
 /// <summary>Anordnungs-Vorschläge für die App-Symbole.</summary>
-public enum DesktopLayout { Spalten, Kompakt, Zeilen, Bloecke, Raender }
+public enum DesktopLayout { Spalten, Kompakt, Zeilen, Bloecke, Raender, Vorlage }
 
 public sealed record LayoutOption(DesktopLayout Layout, string Name, string Description);
 
@@ -15,6 +15,8 @@ public static class LayoutOptions
 {
     public static readonly IReadOnlyList<LayoutOption> All = new[]
     {
+        new LayoutOption(DesktopLayout.Vorlage, "Mein Layout",
+            "Deine jetzige Anordnung bleibt die Vorlage. Es wird nur aufgeräumt: Dateien in Ordner, Lücken schließen, Überlappungen lösen, neue Ordner zu deinen Ordnern."),
         new LayoutOption(DesktopLayout.Spalten, "Spalten", "Jede Kategorie in eigenen Spalten, von links nach rechts, mit Abstand dazwischen."),
         new LayoutOption(DesktopLayout.Kompakt, "Kompakt", "Alles dicht am linken Rand, Kategorien folgen direkt aufeinander – maximal viel freie Fläche."),
         new LayoutOption(DesktopLayout.Zeilen, "Zeilen", "Jede Kategorie als waagerechte Reihe oben am Bildschirm, eine unter der anderen."),

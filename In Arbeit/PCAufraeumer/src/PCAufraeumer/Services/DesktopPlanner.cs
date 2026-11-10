@@ -300,7 +300,90 @@ public sealed class DesktopPlanner
         var compact = ColumnFlow(0).GetEnumerator();
         int nextCol = 0, nextRow = 0, shelfRight = -1;
         bool overflow = false;
-        foreach (var (name, members) in groups)
+        if (style == DesktopLayout.Vorlage)
+        {
+            // „Eigenes Layout“: die jetzige Anordnung ist die Vorlage. Jedes Symbol bleibt auf seiner Rasterzelle,
+            // aufgeräumt wird nur: Überlappungen lösen, Lücken verschobener Dateien schließen, neue Ordner zu den Ordnern.
+            (int c, int r) CellOf(int x, int y) =>
+                (Math.Clamp((int)Math.Round((x - ox) / (double)sx), 0, cols - 1), Math.Clamp((int)Math.Round((y - oy) / (double)sy), 0, rows - 1));
+            (int c, int r) NearestFree((int c, int r) p)
+            {
+                for (int d = 0; d < cols + rows; d++)
+                    for (int dc = -d; dc <= d; dc++)
+                        for (int dr = -d; dr <= d; dr++)
+                        {
+                            if (Math.Max(Math.Abs(dc), Math.Abs(dr)) != d) continue;
+                            var q = (p.c + dc, p.r + dr);
+                            if (q.Item1 < 0 || q.Item2 < 0 || q.Item1 >= cols || q.Item2 >= rows) continue;
+                            if (!occupied.Contains(q)) return q;
+                        }
+                overflow = true;
+                return (cols, 0);
+            }
+
+            var cellOf = new Dictionary<string, (int c, int r)>(StringComparer.OrdinalIgnoreCase);
+            var startCell = new Dictionary<string, (int c, int r)>(StringComparer.OrdinalIgnoreCase);
+            var info = new Dictionary<string, (string name, DesktopChange? change, bool isNew)>(StringComparer.OrdinalIgnoreCase);
+            foreach (var p in placed.OrderBy(p => CellOf(p.item.X, p.item.Y).r).ThenBy(p => CellOf(p.item.X, p.item.Y).c))
+            {
+                var want = CellOf(p.item.X, p.item.Y);
+                var got = NearestFree(want);
+                occupied.Add(got);
+                cellOf[p.item.Path] = got;
+                startCell[p.item.Path] = want;
+                info[p.item.Path] = (p.item.DisplayName, p.change, false);
+            }
+
+            // Lücken schließen, die verschobene Dateien hinterlassen: Symbole direkt darunter rücken nach oben.
+            var holes = plan.Moves.Select(m => m.Item).Where(i => primary.Contains(i.X, i.Y))
+                .Select(i => CellOf(i.X, i.Y)).Where(h => !occupied.Contains(h)).Distinct()
+                .OrderBy(h => h.c).ThenBy(h => h.r).ToList();
+            foreach (var hole in holes)
+            {
+                int cur = hole.r;
+                while (!occupied.Contains((hole.c, cur)))
+                {
+                    var below = cellOf.FirstOrDefault(kv => kv.Value == (hole.c, cur + 1));
+                    if (below.Key == null) break;
+                    occupied.Remove((hole.c, cur + 1));
+                    occupied.Add((hole.c, cur));
+                    cellOf[below.Key] = (hole.c, cur);
+                    cur++;
+                }
+            }
+
+            // Neue Ordner neben die vorhandenen Ordner (sonst oben rechts).
+            var folderCells = placed.Where(p => p.group == FolderGroup).Select(p => cellOf[p.item.Path]).ToList();
+            (int c, int r) anchor = folderCells.Count > 0
+                ? ((int)Math.Round(folderCells.Average(f => f.c)), folderCells.Max(f => f.r) + 1)
+                : (cols - 1, 0);
+            foreach (var f in plan.NewFolders.OrderBy(f => f, StringComparer.CurrentCultureIgnoreCase))
+            {
+                var got = NearestFree((Math.Clamp(anchor.c, 0, cols - 1), Math.Clamp(anchor.r, 0, rows - 1)));
+                occupied.Add(got);
+                cellOf[f] = got;
+                info[f] = (Path.GetFileName(f), null, true);
+            }
+
+            foreach (var (path, cell) in cellOf)
+            {
+                var (name, change, isNew) = info[path];
+                var pt = new POINT(ox + cell.c * sx, oy + cell.r * sy);
+                plan.Positions[path] = pt;
+                plan.After.Add(new PreviewIcon { Path = path, Name = name, X = pt.X, Y = pt.Y, IsNewFolder = isNew, Change = change });
+                if (change != null)
+                {
+                    bool same = startCell.TryGetValue(path, out var s0) && s0 == cell &&
+                                Math.Abs(change.Item.X - pt.X) <= sx / 4 && Math.Abs(change.Item.Y - pt.Y) <= sy / 4;
+                    var what = change.Item.Kind == DesktopItemKind.Folder ? "Ordner" : "Symbol";
+                    change.Description = same
+                        ? $"{what} „{name}“ bleibt an seinem Platz"
+                        : $"{what} „{name}“ → aufgeräumt (rückt ins Raster / in eine Lücke)";
+                }
+            }
+        }
+
+        foreach (var (name, members) in style == DesktopLayout.Vorlage ? new() : groups)
         {
             int n = members.Count;
             IEnumerator<(int c, int r)> cells;

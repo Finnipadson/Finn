@@ -154,6 +154,7 @@ public class DesktopTests : IDisposable
     [InlineData(DesktopLayout.Zeilen)]
     [InlineData(DesktopLayout.Bloecke)]
     [InlineData(DesktopLayout.Raender)]
+    [InlineData(DesktopLayout.Vorlage)]
     public void Every_layout_places_all_icons_without_overlap(DesktopLayout layout)
     {
         var desk = Path.Combine(_t.Root, "Desk");
@@ -200,6 +201,43 @@ public class DesktopTests : IDisposable
                 Assert.True(games.Max(g => g.X) < 500);
                 break;
         }
+    }
+
+    [Fact]
+    public void My_layout_keeps_positions_and_only_tidies_up()
+    {
+        var desk = Path.Combine(_t.Root, "Desk");
+        Directory.CreateDirectory(Path.Combine(desk, "Projekte"));
+        var shot = _t.File(@"Desk\Screenshot 1.png", new byte[1]);
+        var s = new DesktopSettings();
+        var planner = new DesktopPlanner(s, desk, null);
+        // Raster 100x100, Ursprung (2,2). Eigene Anordnung: eine Spalte bei x=302 mit einer Datei in der Mitte.
+        var items = new List<DesktopItem>
+        {
+            new() { Path = "::{645FF040-5081-101B-9F08-00AA002F954E}", DisplayName = "Papierkorb", Kind = DesktopItemKind.System, X = 2, Y = 2 },
+            new() { Path = @"C:\d\A.lnk", DisplayName = "A", Kind = DesktopItemKind.AppIcon, DetectedCategory = "Spiele", X = 302, Y = 2 },
+            new() { Path = shot, DisplayName = "Screenshot 1", Kind = DesktopItemKind.File, X = 302, Y = 102 },
+            new() { Path = @"C:\d\B.lnk", DisplayName = "B", Kind = DesktopItemKind.AppIcon, DetectedCategory = "Spiele", X = 302, Y = 202 },
+            new() { Path = @"C:\d\C.lnk", DisplayName = "C", Kind = DesktopItemKind.AppIcon, DetectedCategory = "Browser & Internet", X = 302, Y = 302 },
+            new() { Path = @"C:\d\D.lnk", DisplayName = "D", Kind = DesktopItemKind.AppIcon, DetectedCategory = "Medien", X = 902, Y = 502 },
+            new() { Path = @"C:\d\E.lnk", DisplayName = "E", Kind = DesktopItemKind.AppIcon, DetectedCategory = "Medien", X = 905, Y = 498 }, // liegt fast auf D
+            new() { Path = Path.Combine(desk, "Projekte"), DisplayName = "Projekte", Kind = DesktopItemKind.Folder, X = 1702, Y = 2 },
+        };
+        var changes = planner.BuildChanges(items, OneMonitor);
+        var plan = planner.Plan(items, changes, OneMonitor, new POINT(100, 100), DesktopLayout.Vorlage);
+        POINT P(string p) => plan.Positions[p];
+
+        Assert.Equal(new POINT(302, 2), P(@"C:\d\A.lnk"));        // bleibt
+        Assert.Equal(new POINT(302, 102), P(@"C:\d\B.lnk"));      // rückt in die Lücke der verschobenen Datei
+        Assert.Equal(new POINT(302, 202), P(@"C:\d\C.lnk"));      // rückt mit nach
+        Assert.Equal(new POINT(902, 502), P(@"C:\d\D.lnk"));      // bleibt
+        Assert.NotEqual(P(@"C:\d\D.lnk"), P(@"C:\d\E.lnk"));      // Überlappung gelöst
+        Assert.True(Math.Abs(P(@"C:\d\E.lnk").X - 902) <= 100 && Math.Abs(P(@"C:\d\E.lnk").Y - 502) <= 100); // direkt daneben
+        Assert.Equal(new POINT(1702, 2), P(Path.Combine(desk, "Projekte")));
+        var newFolder = P(Path.Combine(desk, "Screenshots"));     // neuer Ordner bei den Ordnern
+        Assert.True(Math.Abs(newFolder.X - 1702) <= 100 && newFolder.Y <= 202, $"{newFolder.X},{newFolder.Y}");
+        Assert.Empty(plan.Groups);                                 // keine Kategorie-Gruppen in diesem Modus
+        Assert.Contains("bleibt an seinem Platz", changes.First(c => c.Item.Path == @"C:\d\A.lnk").Description);
     }
 
     [Fact]

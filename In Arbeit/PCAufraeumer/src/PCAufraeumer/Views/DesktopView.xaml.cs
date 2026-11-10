@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -31,14 +32,14 @@ public partial class DesktopView : UserControl
         if (_vm == null) return;
         DesktopRenderer.Render(BeforeCanvas, _vm, after: false, this);
         DesktopRenderer.Render(AfterCanvas, _vm, after: true, this);
-        RenderLayoutCards();
+        RenderLayoutCards(LayoutPanel, 54);
     }
 
     /// <summary>Karten mit den Anordnungs-Vorschlägen (Mini-Vorschau + Name). Klick wählt den Vorschlag.</summary>
-    private void RenderLayoutCards()
+    private void RenderLayoutCards(Panel target, double previewHeight)
     {
         if (_vm == null) return;
-        LayoutPanel.Children.Clear();
+        target.Children.Clear();
         foreach (var card in _vm.LayoutCards)
         {
             var canvas = new Canvas();
@@ -58,7 +59,7 @@ public partial class DesktopView : UserControl
                 {
                     Children =
                     {
-                        new Viewbox { Height = 54, Stretch = Stretch.Uniform, Child = canvas },
+                        new Viewbox { Height = previewHeight, Stretch = Stretch.Uniform, Child = canvas },
                         title,
                     },
                 },
@@ -66,7 +67,7 @@ public partial class DesktopView : UserControl
             var layout = card.Option.Layout;
             border.MouseLeftButtonUp += (_, _) => _vm.SelectLayoutCommand.Execute(layout);
             AutomationProperties.SetName(border, "Vorschlag " + card.Option.Name);
-            LayoutPanel.Children.Add(border);
+            target.Children.Add(border);
         }
     }
 
@@ -119,20 +120,41 @@ public partial class DesktopView : UserControl
     private void ZoomBefore_Click(object sender, RoutedEventArgs e) => ShowLarge(false);
     private void ZoomAfter_Click(object sender, RoutedEventArgs e) => ShowLarge(true);
 
+    /// <summary>Große Ansicht. Bei „Nachher“ stehen die Vorschläge oben – Wechseln geht, ohne das Fenster zu schließen.</summary>
     private void ShowLarge(bool after)
     {
         if (_vm == null) return;
+        var vm = _vm;
         var canvas = new Canvas();
-        DesktopRenderer.Render(canvas, _vm, after, null);
+        var root = new DockPanel { Margin = new Thickness(16) };
+        UniformGrid? cards = null;
+        if (after)
+        {
+            cards = new UniformGrid { Rows = 1, Margin = new Thickness(0, 0, 0, 12) };
+            DockPanel.SetDock(cards, Dock.Top);
+            root.Children.Add(cards);
+        }
+        root.Children.Add(new Viewbox { Child = canvas, Stretch = Stretch.Uniform });
+
+        void Redraw()
+        {
+            DesktopRenderer.Render(canvas, vm, after, null);
+            if (cards != null) RenderLayoutCards(cards, 80);
+        }
+        Redraw();
+        EventHandler onChanged = (_, _) => Redraw();
+        vm.PreviewChanged += onChanged;
+
         var w = new Window
         {
-            Title = after ? "Nachher – geplant" : "Vorher – dein Desktop jetzt",
+            Title = after ? "Nachher – geplant (Vorschlag oben wählen, Esc schließt)" : "Vorher – dein Desktop jetzt",
             Owner = Window.GetWindow(this), WindowState = WindowState.Maximized,
-            Background = (Brush)FindResource("WindowBg"),
-            Content = new Viewbox { Child = canvas, Stretch = Stretch.Uniform, Margin = new Thickness(16) },
+            Background = (Brush)FindResource("WindowBg"), Foreground = (Brush)FindResource("Text"),
+            Content = root,
         };
         w.SourceInitialized += (_, _) => ThemeManager.ApplyTitleBar(w);
         w.KeyDown += (_, k) => { if (k.Key == Key.Escape) w.Close(); };
+        w.Closed += (_, _) => vm.PreviewChanged -= onChanged;
         w.ShowDialog();
     }
 }
