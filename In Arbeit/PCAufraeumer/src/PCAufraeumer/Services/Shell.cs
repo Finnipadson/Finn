@@ -36,6 +36,22 @@ public static class ThemeManager
 {
     public static bool IsDark { get; private set; }
 
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+    /// <summary>Windows-Titelleiste passend zum Design (dunkel/hell) einfärben.</summary>
+    public static void ApplyTitleBar(Window w)
+    {
+        try
+        {
+            var hwnd = new System.Windows.Interop.WindowInteropHelper(w).Handle;
+            if (hwnd == IntPtr.Zero) return;
+            int dark = IsDark ? 1 : 0;
+            DwmSetWindowAttribute(hwnd, 20, ref dark, sizeof(int));
+        }
+        catch { /* ältere Windows-Version */ }
+    }
+
     public static void Apply(bool dark)
     {
         IsDark = dark;

@@ -17,7 +17,17 @@
     <PlatformTarget>x64</PlatformTarget>
     <InvariantGlobalization>false</InvariantGlobalization>
     <SatelliteResourceLanguages>de;en</SatelliteResourceLanguages>
+    <!-- Nur 64-Bit-VLC mitliefern und ungenutzte VLC-Module weglassen (Oberflächen, Lua, Visualisierungen) -->
+    <VlcWindowsX86Enabled>false</VlcWindowsX86Enabled>
   </PropertyGroup>
+
+  <!-- Ungenutzte VLC-Module (eigene VLC-Oberflächen, Visualisierungen) nach dem Veröffentlichen entfernen: spart ~20 MB -->
+  <Target Name="TrimVlcPlugins" AfterTargets="Publish">
+    <ItemGroup>
+      <_VlcUnused Include="$(PublishDir)libvlc\win-x64\plugins\gui\**;$(PublishDir)libvlc\win-x64\plugins\visualization\**" />
+    </ItemGroup>
+    <Delete Files="@(_VlcUnused)" />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />

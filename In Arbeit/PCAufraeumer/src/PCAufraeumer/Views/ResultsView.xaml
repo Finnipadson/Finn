@@ -55,15 +55,15 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" MinWidth="420"/>
                 <ColumnDefinition Width="8"/>
-                <ColumnDefinition Width="400" MinWidth="300"/>
+                <ColumnDefinition Width="380" MinWidth="300"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="*" MinHeight="220"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <DataGrid x:Name="Grid" ItemsSource="{Binding View}" SelectedItem="{Binding SelectedItem}"
-                      LoadingRow="Grid_LoadingRow" RowHeight="46" CanUserResizeColumns="True" CanUserSortColumns="True"
+                      LoadingRow="Grid_LoadingRow" RowHeight="46" CanUserResizeColumns="True" CanUserSortColumns="True" IsReadOnly="True"
                       CanUserReorderColumns="True">
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
@@ -84,17 +84,17 @@
                                         <ControlTemplate TargetType="GroupItem">
                                             <StackPanel>
                                                 <Border Background="{DynamicResource GroupBg}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Padding="10,6">
-                                                    <DockPanel>
-                                                        <Button DockPanel.Dock="Right" Padding="10,3" Margin="0" FontSize="12"
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" MinWidth="260">
+                                                            <Run Text="{Binding Name, Mode=OneWay}"/>
+                                                            <Run Text="{Binding ItemCount, Mode=OneWay, StringFormat='({0} Dateien)'}" Foreground="{DynamicResource TextMuted}" FontWeight="Normal"/>
+                                                        </TextBlock>
+                                                        <Button Padding="10,3" Margin="12,0,0,0" FontSize="12"
                                                                 Command="{Binding DataContext.ToggleGroupCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                                 CommandParameter="{Binding Items}">
                                                             <TextBlock Text="Alle in dieser Gruppe auswählen / abwählen"/>
                                                         </Button>
-                                                        <TextBlock VerticalAlignment="Center" FontWeight="SemiBold">
-                                                            <Run Text="{Binding Name, Mode=OneWay}"/>
-                                                            <Run Text="{Binding ItemCount, Mode=OneWay, StringFormat='({0} Dateien)'}" Foreground="{DynamicResource TextMuted}" FontWeight="Normal"/>
-                                                        </TextBlock>
-                                                    </DockPanel>
+                                                    </StackPanel>
                                                 </Border>
                                                 <ItemsPresenter/>
                                             </StackPanel>
@@ -156,7 +156,7 @@
                     <DataGridTextColumn Header="Zuletzt geöffnet" Binding="{Binding LastAccess, Converter={StaticResource Date}}" SortMemberPath="LastAccess" Width="118"/>
                     <DataGridTextColumn Header="Zuletzt geändert" Binding="{Binding LastWrite, Converter={StaticResource Date}}" SortMemberPath="LastWrite" Width="118"/>
                     <DataGridTextColumn Header="Grundlage" Binding="{Binding BasisLabel}" SortMemberPath="Basis" Width="110"/>
-                    <DataGridTemplateColumn Header="Grund des Vorschlags" Width="*" MinWidth="200" SortMemberPath="Reason">
+                    <DataGridTemplateColumn Header="Grund des Vorschlags" Width="340" SortMemberPath="Reason">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Reason}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Reason}"/>
@@ -174,16 +174,16 @@
             <v:PreviewPanel Grid.Column="2" Grid.RowSpan="2" Item="{Binding SelectedItem}"/>
 
             <!-- Temp / Cache -->
-            <Expander Grid.Row="1" IsExpanded="True" Margin="0,10,0,0" Foreground="{DynamicResource Text}">
+            <Expander Grid.Row="1" IsExpanded="False" Margin="0,10,0,0" Foreground="{DynamicResource Text}">
                 <Expander.Header>
                     <TextBlock FontWeight="SemiBold" FontSize="14">
                         <Run Text="Temp-/Cache-Dateien"/>
-                        <Run Text="– eigener Bereich, wird direkt gelöscht (nicht Papierkorb)" FontWeight="Normal" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
+                        <Run Text="{Binding TempHeader, Mode=OneWay}" FontWeight="Normal" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
                     </TextBlock>
                 </Expander.Header>
                 <Border Style="{StaticResource Card}" Margin="0,6,0,0" Padding="6">
                     <StackPanel>
-                        <ItemsControl ItemsSource="{Binding TempTargets}" MaxHeight="230">
+                        <ItemsControl ItemsSource="{Binding TempTargets}" MaxHeight="150">
                             <ItemsControl.Template>
                                 <ControlTemplate TargetType="ItemsControl">
                                     <ScrollViewer VerticalScrollBarVisibility="Auto"><ItemsPresenter/></ScrollViewer>

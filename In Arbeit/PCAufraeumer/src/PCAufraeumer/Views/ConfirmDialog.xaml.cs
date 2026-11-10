@@ -11,6 +11,7 @@ public partial class ConfirmDialog : Window
         string okText, string? checkboxText)
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => Services.ThemeManager.ApplyTitleBar(this);
         Title = headline;
         Headline.Text = headline;
         SummaryText.Text = summary;

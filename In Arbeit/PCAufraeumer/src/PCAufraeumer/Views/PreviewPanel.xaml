@@ -84,7 +84,7 @@
                                        HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20" Visibility="Collapsed"/>
                         </Grid>
                     </Border>
-                    <TextBox x:Name="TextPreview" IsReadOnly="True" FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                    <TextBox x:Name="TextPreview" IsReadOnly="True" FontFamily="Cascadia Mono, Consolas" FontSize="12" Height="Auto" Padding="8"
                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap"
                              VerticalContentAlignment="Top" Visibility="Collapsed"/>
                     <Border x:Name="PdfHost" Visibility="Collapsed"/>

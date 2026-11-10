@@ -60,6 +60,16 @@ public sealed class LastAccessService
                        (disabled ? "Aktualisierung AUS" : "Aktualisierung AN");
     }
 
+    private static System.Text.Encoding OemEncoding()
+    {
+        try
+        {
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            return System.Text.Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+        }
+        catch { return System.Text.Encoding.UTF8; }
+    }
+
     private static string QueryFsutil()
     {
         try
@@ -70,6 +80,8 @@ public sealed class LastAccessService
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                // Konsolenprogramme schreiben in der OEM-Codepage (z. B. 850) – sonst fehlen Umlaute.
+                StandardOutputEncoding = OemEncoding(),
             };
             using var p = Process.Start(psi)!;
             var output = p.StandardOutput.ReadToEnd().Trim();

@@ -30,7 +30,7 @@ public static class Format
 
     public static string Duration(TimeSpan t)
     {
-        if (t.TotalDays >= 1) return $"{(int)t.TotalDays} T {t.Hours} Std {t.Minutes} Min";
+        if (t.TotalDays >= 1) { int d = (int)t.TotalDays; return $"{d} {(d == 1 ? "Tag" : "Tage")} {t.Hours} Std {t.Minutes} Min"; }
         if (t.TotalHours >= 1) return $"{t.Hours} Std {t.Minutes} Min";
         return $"{t.Minutes} Min";
     }

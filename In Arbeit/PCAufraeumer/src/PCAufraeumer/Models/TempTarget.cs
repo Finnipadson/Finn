@@ -30,7 +30,7 @@ public sealed partial class TempTarget : ObservableObject
     [ObservableProperty] private bool _browserRunning;
     [ObservableProperty] private string _status = "";
 
-    [JsonIgnore] public bool CanSelect => !BrowserRunning && FileCount > 0;
+    [JsonIgnore] public bool CanSelect => !BrowserRunning && (FileCount > 0 || Incomplete);
 
     partial void OnBrowserRunningChanged(bool value)
     {

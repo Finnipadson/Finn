@@ -14,7 +14,7 @@ public static class AppPaths
     {
         get
         {
-            var dir = _baseOverride ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PCAufraeumer");
+            var dir = _baseOverride ?? Environment.GetEnvironmentVariable("PCA_DATADIR") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PCAufraeumer");
             System.IO.Directory.CreateDirectory(dir);
             return dir;
         }

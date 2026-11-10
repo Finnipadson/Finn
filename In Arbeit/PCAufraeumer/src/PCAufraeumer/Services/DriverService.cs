@@ -103,6 +103,11 @@ public sealed class DriverService
         return unique;
     }
 
+    /// <summary>Mit Windows mitgelieferte Treiber (Datum oft symbolisch 2006) – Ampel „älter als 1 Jahr“ wäre irreführend.</summary>
+    internal static bool IsInbox(DriverItem d) =>
+        d.Manufacturer.Equals("Microsoft", StringComparison.OrdinalIgnoreCase) ||
+        d.Manufacturer.StartsWith("(Standard", StringComparison.OrdinalIgnoreCase);
+
     private static int CategoryOrder(string c) => c switch
     {
         "Grafik" => 0, "Chipsatz/System" => 1, "Netzwerk" => 2, "Audio" => 3, "USB" => 4, _ => 5,
@@ -111,7 +116,12 @@ public sealed class DriverService
     /// <summary>Status ohne Online-Prüfung: nur „älter als 1 Jahr“ ist sicher bekannt.</summary>
     private static void ApplyOffline(DriverItem d)
     {
-        if (d.OlderThanYear) { d.Status = Ampel.Gelb; d.StatusText = "Älter als 1 Jahr – noch nicht online geprüft"; }
+        if (IsInbox(d))
+        {
+            d.Status = Ampel.Grau;
+            d.StatusText = "Windows-Standardtreiber – wird mit Windows selbst aktualisiert";
+        }
+        else if (d.OlderThanYear) { d.Status = Ampel.Gelb; d.StatusText = "Älter als 1 Jahr – noch nicht online geprüft"; }
         else { d.Status = Ampel.Grau; d.StatusText = "Noch nicht geprüft"; }
     }
 
@@ -163,7 +173,12 @@ public sealed class DriverService
                  (d.HardwareId.StartsWith(u.HardwareId, StringComparison.OrdinalIgnoreCase) ||
                   u.HardwareId.StartsWith(d.HardwareId, StringComparison.OrdinalIgnoreCase))) ||
                 (u.Model.Length > 0 && string.Equals(u.Model, d.DeviceName, StringComparison.OrdinalIgnoreCase)));
-            if (match != null)
+            if (match == null && IsInbox(d))
+            {
+                d.Status = Ampel.Grau;
+                d.StatusText = "Windows-Standardtreiber – wird mit Windows selbst aktualisiert";
+            }
+            else if (match != null)
             {
                 unmatched.Remove(match);
                 d.Status = Ampel.Gelb;
@@ -215,7 +230,8 @@ public sealed class DriverService
             var wanted = NormalizeGpuName(gpuName);
             bool laptop = gpuName.Contains("Laptop", StringComparison.OrdinalIgnoreCase);
             (string psid, string pfid)? hit = null;
-            foreach (Match m in Regex.Matches(xml, "<LookupValue ParentID=\"(\\d+)\"><Name>([^<]+)</Name><Value>(\\d+)</Value>"))
+            // NVIDIA liefert Zeilenumbrüche (\r) zwischen den Tags → \s* zulassen.
+            foreach (Match m in Regex.Matches(xml, "<LookupValue ParentID=\"(\\d+)\">\\s*<Name>([^<]+)</Name>\\s*<Value>(\\d+)</Value>"))
             {
                 var name = m.Groups[2].Value;
                 if (name.Contains("Laptop", StringComparison.OrdinalIgnoreCase) != laptop) continue;

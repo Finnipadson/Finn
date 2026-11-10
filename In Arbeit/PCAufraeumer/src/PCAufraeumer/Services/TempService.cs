@@ -170,6 +170,10 @@ public sealed class TempService
         catch (OperationCanceledException) { throw; }
         catch (Exception ex) { incomplete = true; ErrorLog.Write($"Temp-Bereich konnte nicht gemessen werden: {t.Name}", ex); }
 
+        // IgnoreInaccessible verschluckt „Zugriff verweigert“ still → bei Admin-Bereichen explizit prüfen,
+        // sonst stünde dort fälschlich „0 B – nichts zu löschen“.
+        if (t.RequiresAdmin && !IsAdmin && !CanList(t)) incomplete = true;
+
         t.Size = size;
         t.FileCount = count;
         t.Incomplete = incomplete && t.RequiresAdmin && !IsAdmin;
@@ -177,12 +181,24 @@ public sealed class TempService
         t.Status = BuildStatus(t);
     }
 
+    private static bool CanList(TempTarget t)
+    {
+        foreach (var root in t.Paths.Where(System.IO.Directory.Exists))
+        {
+            try { using var e = System.IO.Directory.EnumerateFileSystemEntries(root).GetEnumerator(); e.MoveNext(); }
+            catch (UnauthorizedAccessException) { return false; }
+            catch { }
+        }
+        return true;
+    }
+
     public static string BuildStatus(TempTarget t)
     {
         if (t.Paths.Count == 0 || !t.Paths.Any(System.IO.Directory.Exists)) return "Nicht vorhanden";
         if (t.BrowserRunning) return "Browser ist geöffnet – bitte erst schließen";
-        if (t.FileCount == 0) return "Nichts zu löschen";
+        if (t.Incomplete && t.FileCount == 0) return "Ohne Adminrechte nicht messbar – Löschen fragt nach Adminrechten";
         if (t.Incomplete) return "Größe evtl. unvollständig (Adminrechte nötig)";
+        if (t.FileCount == 0) return "Nichts zu löschen";
         return t.RequiresAdmin && !IsAdmin ? "Bereit – Löschen fragt nach Adminrechten" : "Bereit";
     }
 

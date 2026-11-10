@@ -52,6 +52,15 @@ public sealed partial class ResultsViewModel : ObservableObject
     [ObservableProperty] private double _workPercent;
     [ObservableProperty] private bool _hasResult;
     [ObservableProperty] private string _totalSummary = "";
+    [ObservableProperty] private string _tempHeader = "– eigener Bereich, wird direkt gelöscht (nicht Papierkorb)";
+
+    private void UpdateTempHeader()
+    {
+        long size = TempTargets.Sum(t => t.Size);
+        TempHeader = TempTargets.Count == 0
+            ? "– nicht gescannt"
+            : $"– {Format.Bytes(size)} · eigener Bereich, wird direkt gelöscht (kein Papierkorb)";
+    }
 
     public IReadOnlyList<CategoryFilter> CategoryFilters => CategoryFilterList;
     public ObservableCollection<string> TypeFilters { get; } = new() { "Alle Typen" };
@@ -107,6 +116,7 @@ public sealed partial class ResultsViewModel : ObservableObject
                  $" · {Items.Count:N0} Funde";
         TotalSummary = $"Möglich: {Format.Bytes(total)} in Funden (ohne behaltene Kopien) · " +
                        $"{Format.Bytes(TempTargets.Sum(t => t.Size))} in Temp/Cache";
+        UpdateTempHeader();
         View.Refresh();
         UpdateSummary();
         AutoSave();
@@ -427,6 +437,7 @@ public sealed partial class ResultsViewModel : ObservableObject
         var copy = TempTargets.ToList();
         TempTargets.Clear();
         foreach (var t in copy) TempTargets.Add(t);
+        UpdateTempHeader();
     }
 
     [RelayCommand]
