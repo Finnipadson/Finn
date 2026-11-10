@@ -1,0 +1,116 @@
+<UserControl x:Class="PCAufraeumer.Views.PreviewPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF">
+    <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="10">
+        <Grid>
+            <!-- Nichts ausgewählt -->
+            <StackPanel x:Name="EmptyState" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24">
+                <TextBlock Text="&#xE8FF;" Style="{StaticResource Icon}" FontSize="34" HorizontalAlignment="Center" Foreground="{DynamicResource TextMuted}"/>
+                <TextBlock Text="Vorschau" Style="{StaticResource H2}" HorizontalAlignment="Center" Margin="0,10,0,4"/>
+                <TextBlock Text="Klicke links auf eine Datei, um sie vor der Freigabe anzusehen." Style="{StaticResource Muted}"
+                           TextAlignment="Center" MaxWidth="260"/>
+            </StackPanel>
+
+            <DockPanel x:Name="ContentArea" Visibility="Collapsed" Margin="14">
+                <!-- Kopf -->
+                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                    <TextBlock x:Name="TitleText" FontWeight="SemiBold" FontSize="15" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="SubText" Style="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <!-- Aktionen -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                    <TextBlock x:Name="ReasonText" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="PathText" Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <WrapPanel>
+                        <Button x:Name="BtnExplorer" Click="Explorer_Click" Margin="0,0,6,6" Padding="10,5">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE838;" Style="{StaticResource Icon}" FontSize="12" Margin="0,0,6,0"/>
+                                <TextBlock Text="Im Explorer anzeigen" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnOpen" Click="OpenDefault_Click" Margin="0,0,6,6" Padding="10,5">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8A7;" Style="{StaticResource Icon}" FontSize="12" Margin="0,0,6,0"/>
+                                <TextBlock Text="Mit Standardprogramm öffnen" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnKeepCopy" Click="KeepCopy_Click" Margin="0,0,6,6" Padding="10,5"
+                                ToolTip="Bei Duplikaten: genau diese Kopie behalten statt der vorgeschlagenen">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE840;" Style="{StaticResource Icon}" FontSize="12" Margin="0,0,6,0"/>
+                                <TextBlock Text="Diese Kopie behalten" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnNever" Click="Never_Click" Margin="0,0,6,6" Padding="10,5"
+                                ToolTip="Datei kommt auf die Ausnahmeliste (in den Einstellungen bearbeitbar)">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8F8;" Style="{StaticResource Icon}" FontSize="12" Margin="0,0,6,0"/>
+                                <TextBlock Text="Behalten / nie wieder vorschlagen" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnExcludeFolder" Click="ExcludeFolder_Click" Margin="0,0,6,6" Padding="10,5">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8D8;" Style="{StaticResource Icon}" FontSize="12" Margin="0,0,6,0"/>
+                                <TextBlock Text="Ordner ausschließen" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                </StackPanel>
+
+                <!-- Vorschaufläche -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Border Background="Black" CornerRadius="6" x:Name="MediaArea">
+                        <Grid>
+                            <Image x:Name="PreviewImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                            <vlc:VideoView x:Name="Video" Visibility="Collapsed"/>
+                            <Button x:Name="BigPlay" Click="Play_Click" Style="{StaticResource PrimaryButton}" Width="64" Height="64"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" Padding="0" Margin="0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#CC1F6FE5" CornerRadius="32">
+                                            <TextBlock Text="&#xE768;" Style="{StaticResource Icon}" FontSize="26" Foreground="White"
+                                                       HorizontalAlignment="Center" Margin="4,0,0,0"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                            <TextBlock x:Name="MediaMessage" Foreground="#C8CDD6" TextWrapping="Wrap" TextAlignment="Center"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20" Visibility="Collapsed"/>
+                        </Grid>
+                    </Border>
+                    <TextBox x:Name="TextPreview" IsReadOnly="True" FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap"
+                             VerticalContentAlignment="Top" Visibility="Collapsed"/>
+                    <Border x:Name="PdfHost" Visibility="Collapsed"/>
+                    <Border x:Name="InfoPanel" Visibility="Collapsed" Background="{DynamicResource InputBg}" CornerRadius="6" Padding="16">
+                        <StackPanel x:Name="InfoStack" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Videosteuerung -->
+                    <DockPanel x:Name="VideoControls" Grid.Row="1" Margin="0,8,0,0" Visibility="Collapsed">
+                        <Button x:Name="BtnPlayPause" Click="PlayPause_Click" DockPanel.Dock="Left" Padding="10,6" Margin="0,0,6,0" ToolTip="Abspielen/Pause (Leertaste)">
+                            <TextBlock x:Name="PlayIcon" Text="&#xE768;" Style="{StaticResource Icon}" FontSize="13"/>
+                        </Button>
+                        <Button Click="Fullscreen_Click" DockPanel.Dock="Right" Padding="10,6" Margin="6,0,0,0" ToolTip="Vollbild (Esc zum Beenden)">
+                            <TextBlock Text="&#xE740;" Style="{StaticResource Icon}" FontSize="13"/>
+                        </Button>
+                        <Slider x:Name="VolumeSlider" DockPanel.Dock="Right" Width="70" Minimum="0" Maximum="100" Value="70"
+                                VerticalAlignment="Center" ValueChanged="Volume_Changed" ToolTip="Lautstärke"/>
+                        <Button Click="Mute_Click" DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Padding="6,4" Margin="6,0,2,0" ToolTip="Ton an/aus">
+                            <TextBlock x:Name="MuteIcon" Text="&#xE767;" Style="{StaticResource Icon}" FontSize="13"/>
+                        </Button>
+                        <TextBlock x:Name="TimeText" DockPanel.Dock="Right" Style="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="6,0,0,0" Text="0:00 / 0:00"/>
+                        <Slider x:Name="PositionSlider" Minimum="0" Maximum="1" VerticalAlignment="Center"
+                                IsMoveToPointEnabled="True" PreviewMouseLeftButtonUp="Position_MouseUp" PreviewMouseLeftButtonDown="Position_MouseDown"/>
+                    </DockPanel>
+                </Grid>
+            </DockPanel>
+        </Grid>
+    </Border>
+</UserControl>

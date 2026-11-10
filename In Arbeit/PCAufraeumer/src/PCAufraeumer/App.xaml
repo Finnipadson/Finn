@@ -1,0 +1,26 @@
+<Application x:Class="PCAufraeumer.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:PCAufraeumer.Converters"
+             ShutdownMode="OnMainWindowClose">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/PCAufraeumer;component/Themes/Colors.Dark.xaml"/>
+                <ResourceDictionary Source="/PCAufraeumer;component/Themes/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <conv:BoolToVisibility x:Key="BoolToVis"/>
+            <conv:BoolToVisibility x:Key="BoolToVisInv" Invert="True"/>
+            <conv:InverseBool x:Key="Not"/>
+            <conv:NullToVisibility x:Key="NullToVis"/>
+            <conv:NullToVisibility x:Key="NullToVisInv" Invert="True"/>
+            <conv:BytesConverter x:Key="Bytes"/>
+            <conv:DateConverter x:Key="Date"/>
+            <conv:EqualsConverter x:Key="Equals"/>
+            <conv:StatusBrush x:Key="StatusBrush"/>
+            <conv:AmpelText x:Key="AmpelText"/>
+            <conv:PercentBrush x:Key="PercentBrush"/>
+            <conv:TypeGlyph x:Key="TypeGlyph"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

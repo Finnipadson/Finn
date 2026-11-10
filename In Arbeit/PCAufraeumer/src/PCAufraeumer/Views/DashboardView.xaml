@@ -1,0 +1,175 @@
+<UserControl x:Class="PCAufraeumer.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,24,14,14">
+        <StackPanel>
+            <DockPanel Margin="0,0,14,16">
+                <Button DockPanel.Dock="Right" Command="{Binding RefreshLiveCommand}" VerticalAlignment="Center" Margin="0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE72C;" Style="{StaticResource Icon}" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBlock Text="Aktualisieren"/>
+                    </StackPanel>
+                </Button>
+                <StackPanel>
+                    <TextBlock Text="Systemübersicht" Style="{StaticResource H1}"/>
+                    <TextBlock Text="Live-Werte aktualisieren sich alle 3 Sekunden." Style="{StaticResource Muted}"/>
+                </StackPanel>
+            </DockPanel>
+
+            <WrapPanel ItemWidth="380">
+                <!-- CPU -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="&#xE950;" Style="{StaticResource Icon}" Foreground="{DynamicResource Accent}" Margin="0,0,10,0"/>
+                            <TextBlock Text="Prozessor (CPU)" Style="{StaticResource H2}" Margin="0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding CpuName}" Style="{StaticResource Value}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding CpuCores}" Style="{StaticResource Muted}" Margin="0,2,0,10"/>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Style="{StaticResource BigValue}">
+                                <Run Text="{Binding CpuLoad, StringFormat={}{0:0}, Mode=OneWay}"/><Run Text=" %" FontSize="16"/>
+                            </TextBlock>
+                            <TextBlock Text="Auslastung" Style="{StaticResource Label}" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <ProgressBar Value="{Binding CpuLoad, Mode=OneWay}" Maximum="100" Foreground="{Binding CpuLoad, Converter={StaticResource PercentBrush}}" Margin="0,4,0,10"/>
+                        <UniformGrid Columns="2">
+                            <StackPanel>
+                                <TextBlock Text="Aktueller Takt" Style="{StaticResource Label}"/>
+                                <TextBlock Text="{Binding CpuClock}" Style="{StaticResource Value}"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Temperatur" Style="{StaticResource Label}"/>
+                                <TextBlock Text="{Binding CpuTemp}" Style="{StaticResource Value}"/>
+                            </StackPanel>
+                        </UniformGrid>
+                        <TextBlock Text="{Binding CpuTempHint}" Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0"
+                                   Visibility="{Binding CpuTempHint, Converter={StaticResource NullToVis}}"/>
+                        <Button Command="{Binding RestartAsAdminCommand}" HorizontalAlignment="Left" Margin="0,8,0,0" Padding="10,5"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisInv}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xEA18;" Style="{StaticResource Icon}" FontSize="12" Foreground="{DynamicResource Warn}" Margin="0,0,6,0"/>
+                                <TextBlock Text="Mit Adminrechten neu starten" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- GPU -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="&#xE7F4;" Style="{StaticResource Icon}" Foreground="{DynamicResource Accent}" Margin="0,0,10,0"/>
+                            <TextBlock Text="Grafikkarte (GPU)" Style="{StaticResource H2}" Margin="0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding GpuName}" Style="{StaticResource Value}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding GpuVram}" Style="{StaticResource Muted}" Margin="0,2,0,10"/>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Style="{StaticResource BigValue}">
+                                <Run Text="{Binding GpuLoad, StringFormat={}{0:0}, Mode=OneWay}"/><Run Text=" %" FontSize="16"/>
+                            </TextBlock>
+                            <TextBlock Text="Auslastung" Style="{StaticResource Label}" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <ProgressBar Value="{Binding GpuLoad, Mode=OneWay}" Maximum="100" Margin="0,4,0,10"/>
+                        <UniformGrid Columns="2">
+                            <StackPanel>
+                                <TextBlock Text="Temperatur" Style="{StaticResource Label}"/>
+                                <TextBlock Text="{Binding GpuTemp}" Style="{StaticResource Value}"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Treiberdatum" Style="{StaticResource Label}"/>
+                                <TextBlock Text="{Binding GpuDriverDate}" Style="{StaticResource Value}"/>
+                            </StackPanel>
+                        </UniformGrid>
+                        <TextBlock Text="Treiberversion" Style="{StaticResource Label}"/>
+                        <TextBlock Text="{Binding GpuDriver}" Style="{StaticResource Value}"/>
+                        <TextBlock Text="{Binding GpuHint}" Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- RAM -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="&#xEEA0;" Style="{StaticResource Icon}" Foreground="{DynamicResource Accent}" Margin="0,0,10,0"/>
+                            <TextBlock Text="Arbeitsspeicher (RAM)" Style="{StaticResource H2}" Margin="0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding RamModules}" Style="{StaticResource Muted}" Margin="0,0,0,10"/>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Style="{StaticResource BigValue}">
+                                <Run Text="{Binding RamPercent, StringFormat={}{0:0}, Mode=OneWay}"/><Run Text=" %" FontSize="16"/>
+                            </TextBlock>
+                            <TextBlock Text="Belegt" Style="{StaticResource Label}" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <ProgressBar Value="{Binding RamPercent, Mode=OneWay}" Maximum="100" Foreground="{Binding RamPercent, Converter={StaticResource PercentBrush}}" Margin="0,4,0,10"/>
+                        <UniformGrid Columns="3">
+                            <StackPanel>
+                                <TextBlock Text="Gesamt" Style="{StaticResource Label}"/>
+                                <TextBlock Text="{Binding RamTotal}" Style="{StaticResource Value}"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Belegt" Style="{StaticResource Label}"/>
+                                <TextBlock Text="{Binding RamUsed}" Style="{StaticResource Value}"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Frei" Style="{StaticResource Label}"/>
+                                <TextBlock Text="{Binding RamFree}" Style="{StaticResource Value}"/>
+                            </StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
+                <!-- System -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="&#xE7F8;" Style="{StaticResource Icon}" Foreground="{DynamicResource Accent}" Margin="0,0,10,0"/>
+                            <TextBlock Text="System" Style="{StaticResource H2}" Margin="0"/>
+                        </StackPanel>
+                        <TextBlock Text="Windows" Style="{StaticResource Label}"/>
+                        <TextBlock Text="{Binding OsName}" Style="{StaticResource Value}"/>
+                        <TextBlock Text="{Binding OsBuild}" Style="{StaticResource Muted}"/>
+                        <TextBlock Text="Mainboard" Style="{StaticResource Label}"/>
+                        <TextBlock Text="{Binding Board}" Style="{StaticResource Value}"/>
+                        <TextBlock Text="BIOS-Version" Style="{StaticResource Label}"/>
+                        <TextBlock Text="{Binding Bios}" Style="{StaticResource Value}"/>
+                        <TextBlock Text="Betriebszeit seit letztem Start" Style="{StaticResource Label}"/>
+                        <TextBlock Text="{Binding Uptime}" Style="{StaticResource Value}"/>
+                    </StackPanel>
+                </Border>
+            </WrapPanel>
+
+            <TextBlock Text="Laufwerke" Style="{StaticResource H2}" Margin="0,6,0,10"/>
+            <ItemsControl ItemsSource="{Binding Drives}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel ItemWidth="380"/></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Border DockPanel.Dock="Right" Style="{StaticResource Badge}" Background="Transparent"
+                                            BorderBrush="{Binding HealthLevel, Converter={StaticResource StatusBrush}}" BorderThickness="1">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Fill="{Binding HealthLevel, Converter={StaticResource StatusBrush}}" Margin="0,0,6,0"/>
+                                            <TextBlock Text="{Binding Health}" FontSize="11"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <TextBlock Text="&#xEDA2;" Style="{StaticResource Icon}" Foreground="{DynamicResource Accent}" Margin="0,0,10,0"/>
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </DockPanel>
+                                <TextBlock Text="{Binding Details}" Style="{StaticResource Muted}" Margin="0,6,0,8" FontSize="12"/>
+                                <ProgressBar Value="{Binding UsedPercent, Mode=OneWay}" Maximum="100" Height="10"
+                                             Foreground="{Binding UsedPercent, Converter={StaticResource PercentBrush}}"/>
+                                <TextBlock Text="{Binding SizeText}" Style="{StaticResource Muted}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,0,14,0"
+                       Text="Der Gesundheitsstatus kommt aus der Windows-Speicherverwaltung (wertet u. a. SMART aus). Detaillierte SMART-Rohwerte brauchen Adminrechte und werden nicht angezeigt."/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
