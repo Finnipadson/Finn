@@ -68,6 +68,7 @@ Die App startet **ohne Adminrechte**. Nur diese Dinge fragen gezielt per UAC nac
 Was passiert genau:
 - **App-Symbole** (Verknüpfungen, Steam-/Epic-Links …) bleiben als Symbole auf dem Desktop. Sie werden nur **neu angeordnet**: jede Kategorie in eigenen Spalten, von links nach rechts in der Reihenfolge aus den Einstellungen.
 - **Lose Dateien** kommen in Ordner auf dem Desktop: Bilder, Screenshots, Dokumente, Videos, Musik, Archive, Installer, Sonstiges. Ein vorhandener passender Ordner (z. B. „Fotos“ für Bilder) wird genutzt. Gleichnamige Dateien werden zu „Name (2)“, **nichts wird überschrieben**. Geöffnete Dateien werden übersprungen.
+- **Programm-Starter als .exe** (z. B. legt Firefox statt einer Verknüpfung `Firefox.exe` ab) gelten als App-Symbol und werden nur angeordnet. Echte Installer (Setup, Install, Update …) kommen weiter in den Ordner „Installer“.
 - **Ordner** werden nicht verändert, nur rechts mit einsortiert.
 - **Papierkorb, Dieser PC** und alles auf deiner „Nie anfassen“-Liste bleiben, wo sie sind.
 - **Öffentlicher Desktop** (`C:\Users\Public\Desktop`): Diese Symbole werden nur neu angeordnet, nie verschoben.
@@ -158,7 +159,7 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 ```bash
 cd "Games/In Arbeit/PCAufraeumer"
 dotnet build
-dotnet test                       # 67 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
+dotnet test                       # 68 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
 dotnet run --project src/PCAufraeumer
 ```
 

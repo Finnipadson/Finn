@@ -72,6 +72,7 @@ public sealed class DesktopPlanner
             if (!s.IsFileSystem || s.ParsingPath.StartsWith("::") || s.ParsingPath.Length < 3) it.Kind = DesktopItemKind.System;
             else if (Directory.Exists(s.ParsingPath)) it.Kind = DesktopItemKind.Folder;
             else if (IconExt.Contains(Path.GetExtension(s.ParsingPath))) it.Kind = DesktopItemKind.AppIcon;
+            else if (ShortcutResolver.IsAppLauncher(s.ParsingPath)) it.Kind = DesktopItemKind.AppIcon; // z. B. Firefox-Starter
             else it.Kind = DesktopItemKind.File;
 
             it.NeverTouch = _s.NeverTouch.Any(n =>

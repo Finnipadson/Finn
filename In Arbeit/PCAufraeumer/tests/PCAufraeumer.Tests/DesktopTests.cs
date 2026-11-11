@@ -148,6 +148,34 @@ public class DesktopTests : IDisposable
         Assert.Contains(plan.Groups, g => g.Name == "Spiele");
     }
 
+    [Fact]
+    public void Exe_launcher_on_desktop_is_app_icon_but_setup_stays_installer()
+    {
+        var desk = Path.Combine(_t.Root, "DeskL");
+        Directory.CreateDirectory(desk);
+        var setup = _t.File(@"DeskL\FirefoxSetup.exe", new byte[200]);   // keine Versionsinfo, „Setup“ im Namen
+        Assert.False(ShortcutResolver.IsAppLauncher(setup));
+        var s = new DesktopSettings();
+        var planner = new DesktopPlanner(s, desk, null);
+        Assert.Equal(DesktopItemKind.File, planner.Classify(new[] { SI(setup) })[0].Kind);
+
+        // Echter Firefox-Starter (desktop-launcher.exe), falls auf diesem PC vorhanden – nur eine Kopie wird geprüft.
+        var real = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Firefox.exe");
+        if (!File.Exists(real)) return;
+        var copy = Path.Combine(desk, "Firefox.exe");
+        File.Copy(real, copy, true);
+        Assert.True(ShortcutResolver.IsAppLauncher(copy));
+        var items = planner.Classify(new[] { SI(copy) });
+        Assert.Equal(DesktopItemKind.AppIcon, items[0].Kind);
+        planner.Categorize(items);
+        Assert.Equal("Browser & Internet", items[0].DetectedCategory);     // Standardregel
+        s.AppRules.Insert(0, new AppRule("Firefox", "Medien"));            // eigene Regel hat Vorrang
+        planner.Categorize(items);
+        Assert.Equal("Medien", items[0].DetectedCategory);
+        var change = planner.BuildChanges(items, OneMonitor).Single();
+        Assert.Equal(DesktopChangeKind.Position, change.Kind);              // wird nur angeordnet, nie verschoben
+    }
+
     [Theory]
     [InlineData(DesktopLayout.Spalten, FolderPlacement.UntenLinks)]
     [InlineData(DesktopLayout.Zeilen, FolderPlacement.UntenLinks)]

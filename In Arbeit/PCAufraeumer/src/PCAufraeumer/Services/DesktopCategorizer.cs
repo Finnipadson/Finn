@@ -18,6 +18,13 @@ public static class ShortcutResolver
         {
             if (ext is ".url" or ".website") return ResolveUrl(path);
             if (ext == ".lnk") return ResolveLnk(path);
+            if (ext == ".exe")
+            {
+                // Programm-Starter direkt auf dem Desktop (z. B. Firefox „desktop-launcher.exe“)
+                // Nur der Dateiname zählt – der Ordnerpfad (z. B. „…\OneDrive\Desktop“) würde sonst falsche Regeln treffen.
+                var vi = FileVersionInfo.GetVersionInfo(path);
+                return new Info(Path.GetFileName(path), "", vi.FileDescription ?? "", vi.CompanyName ?? "", vi.ProductName ?? "");
+            }
         }
         catch (Exception ex) { ErrorLog.Write($"Verknüpfung nicht lesbar: {path}", ex); }
         return new Info("", "", "", "", "");
@@ -67,6 +74,30 @@ public static class ShortcutResolver
             return new Info(target, args, desc, company, product);
         }
         finally { Marshal.ReleaseComObject(link); }
+    }
+
+    private static readonly string[] InstallerWords = { "setup", "install", "installer", "update", "uninst", "redist", "bootstrap" };
+
+    /// <summary>
+    /// Ist eine .exe auf dem Desktop ein Programm-Starter (wie eine Verknüpfung) statt eines Installers?
+    /// Beispiel: Firefox legt statt einer Verknüpfung „Firefox.exe“ ab (Originalname desktop-launcher.exe).
+    /// Installer (Setup, Install, Update …) bleiben Dateien und kommen weiter in den Ordner „Installer“.
+    /// </summary>
+    public static bool IsAppLauncher(string path)
+    {
+        try
+        {
+            if (!path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || !File.Exists(path)) return false;
+            // „Nur online“-Dateien nicht anfassen (Lesen würde sie herunterladen)
+            if (ProtectionService.IsCloudOnly(File.GetAttributes(path))) return false;
+            var vi = FileVersionInfo.GetVersionInfo(path);
+            var orig = vi.OriginalFilename ?? "";
+            var hay = string.Join(" ", Path.GetFileName(path), vi.ProductName, vi.FileDescription, orig, vi.InternalName);
+            if (InstallerWords.Any(w => hay.Contains(w, StringComparison.OrdinalIgnoreCase))) return false;
+            return orig.Contains("launcher", StringComparison.OrdinalIgnoreCase)
+                || (vi.FileDescription ?? "").Contains("launcher", StringComparison.OrdinalIgnoreCase);
+        }
+        catch { return false; }
     }
 
     /// <summary>Legt eine .lnk-Datei an (nur für Tests mit Dummy-Verknüpfungen).</summary>
