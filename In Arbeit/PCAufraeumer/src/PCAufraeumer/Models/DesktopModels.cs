@@ -11,6 +11,23 @@ public enum DesktopLayout { Spalten, Kompakt, Zeilen, Bloecke, Raender, Vorlage 
 
 public sealed record LayoutOption(DesktopLayout Layout, string Name, string Description);
 
+/// <summary>Wo die Ordner hinkommen – unabhängig vom gewählten Anordnungs-Vorschlag.</summary>
+public enum FolderPlacement { WieVorschlag, UntenLinks, UntenRechts, RechterRand, ObenRechts }
+
+public sealed record FolderPlacementOption(FolderPlacement Value, string Name);
+
+public static class FolderPlacementOptions
+{
+    public static readonly IReadOnlyList<FolderPlacementOption> All = new[]
+    {
+        new FolderPlacementOption(FolderPlacement.WieVorschlag, "Wie im Vorschlag"),
+        new FolderPlacementOption(FolderPlacement.UntenLinks, "Unten links → nach rechts"),
+        new FolderPlacementOption(FolderPlacement.UntenRechts, "Unten rechts → nach links"),
+        new FolderPlacementOption(FolderPlacement.RechterRand, "Rechter Rand, von oben nach unten"),
+        new FolderPlacementOption(FolderPlacement.ObenRechts, "Oben rechts → nach links"),
+    };
+}
+
 public static class LayoutOptions
 {
     public static readonly IReadOnlyList<LayoutOption> All = new[]
@@ -92,6 +109,8 @@ public sealed class DesktopSettings
     }
     /// <summary>Zuletzt gewählter Anordnungs-Vorschlag.</summary>
     public DesktopLayout Layout { get; set; } = DesktopLayout.Spalten;
+    /// <summary>Wo die Ordner hinkommen (gilt für alle Vorschläge außer „Mein Layout“).</summary>
+    public FolderPlacement FolderPlacement { get; set; } = FolderPlacement.WieVorschlag;
 
     public static List<string> DefaultCategories() => new()
     {

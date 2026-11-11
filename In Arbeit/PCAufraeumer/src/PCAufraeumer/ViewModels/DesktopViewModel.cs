@@ -185,6 +185,22 @@ public sealed partial class DesktopViewModel : ObservableObject
 
     public DesktopLayout SelectedLayout => S.Layout;
 
+    /// <summary>Wo die Ordner hinkommen (z. B. unten links nach rechts) – gilt für alle Vorschläge außer „Mein Layout“.</summary>
+    public IReadOnlyList<FolderPlacementOption> FolderPlacements => FolderPlacementOptions.All;
+
+    public FolderPlacementOption SelectedFolderPlacement
+    {
+        get => FolderPlacements.FirstOrDefault(o => o.Value == S.FolderPlacement) ?? FolderPlacements[0];
+        set
+        {
+            if (value == null || S.FolderPlacement == value.Value) return;
+            S.FolderPlacement = value.Value;
+            _settings.Save();
+            OnPropertyChanged();
+            Replan();
+        }
+    }
+
     [RelayCommand]
     private void SelectLayout(DesktopLayout layout)
     {

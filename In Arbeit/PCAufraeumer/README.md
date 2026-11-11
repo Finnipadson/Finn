@@ -55,6 +55,8 @@ Die App startet **ohne Adminrechte**. Nur diese Dinge fragen gezielt per UAC nac
    - **Ränder**: Apps links, Ordner ganz rechts, die Mitte bleibt frei fürs Hintergrundbild
 
    Passt ein Vorschlag nicht ganz auf den Bildschirm, steht das auf der Karte. Die App merkt sich deine Wahl.
+
+   Rechts daneben legst du mit **„Ordner platzieren“** fest, wo die Ordner hinkommen: wie im Vorschlag, **unten links → nach rechts**, unten rechts → nach links, am rechten Rand von oben nach unten oder oben rechts → nach links. Das gilt für alle Vorschläge außer „Mein Layout“, die App-Gruppen ordnen sich um die Ordner herum an.
 3. **Vorher | Nachher** vergleichen. Mit dem Pfeil-Knopf oben rechts siehst du die Vorschau groß. In der großen Nachher-Ansicht stehen die Vorschläge oben, dort kannst du direkt wechseln (Esc schließt).
 4. In der Liste **„Geplante Änderungen“** kannst du:
    - einzelne Änderungen abwählen,
@@ -156,7 +158,7 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 ```bash
 cd "Games/In Arbeit/PCAufraeumer"
 dotnet build
-dotnet test                       # 62 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
+dotnet test                       # 67 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
 dotnet run --project src/PCAufraeumer
 ```
 

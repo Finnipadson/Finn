@@ -149,6 +149,58 @@ public class DesktopTests : IDisposable
     }
 
     [Theory]
+    [InlineData(DesktopLayout.Spalten, FolderPlacement.UntenLinks)]
+    [InlineData(DesktopLayout.Zeilen, FolderPlacement.UntenLinks)]
+    [InlineData(DesktopLayout.Bloecke, FolderPlacement.UntenRechts)]
+    [InlineData(DesktopLayout.Kompakt, FolderPlacement.RechterRand)]
+    [InlineData(DesktopLayout.Raender, FolderPlacement.ObenRechts)]
+    public void Folder_placement_puts_folders_at_chosen_edge(DesktopLayout layout, FolderPlacement placement)
+    {
+        var desk = Path.Combine(_t.Root, "DeskF");
+        foreach (var n in new[] { "Alpha", "Beta", "Gamma" }) Directory.CreateDirectory(Path.Combine(desk, n));
+        var s = new DesktopSettings();
+        var planner = new DesktopPlanner(s, desk, null);
+        var items = new List<DesktopItem>
+        {
+            new() { Path = "::{645FF040-5081-101B-9F08-00AA002F954E}", DisplayName = "Papierkorb", Kind = DesktopItemKind.System, X = 2, Y = 2 },
+        };
+        foreach (var n in new[] { "Gamma", "Alpha", "Beta" })
+            items.Add(new DesktopItem { Path = Path.Combine(desk, n), DisplayName = n, Kind = DesktopItemKind.Folder, X = 700, Y = 700 });
+        for (int i = 0; i < 25; i++) items.Add(new DesktopItem { Path = $@"C:\d\Spiel{i}.url", DisplayName = $"Spiel{i}", Kind = DesktopItemKind.AppIcon, DetectedCategory = "Spiele", X = 500, Y = 500 });
+        for (int i = 0; i < 4; i++) items.Add(new DesktopItem { Path = $@"C:\d\Tool{i}.lnk", DisplayName = $"Tool{i}", Kind = DesktopItemKind.AppIcon, DetectedCategory = "System & Tools", X = 900, Y = 600 });
+        var changes = planner.BuildChanges(items, OneMonitor);
+        var plan = planner.Plan(items, changes, OneMonitor, new POINT(100, 100), layout, placement);
+
+        Assert.Equal(32, plan.Positions.Count);
+        Assert.Equal(32, plan.Positions.Values.Select(p => (p.X, p.Y)).Distinct().Count()); // keine Überlappung
+        Assert.All(plan.Positions.Values, p => Assert.True(p.X < 1920 && p.Y < 1040, $"{p.X},{p.Y} außerhalb"));
+        Assert.Empty(plan.Warnings);
+
+        var f = new[] { "Alpha", "Beta", "Gamma" }.Select(n => plan.Positions[Path.Combine(desk, n)]).ToList();
+        // Raster: 100 px ab 0/0 (Systemsymbole zählen nicht), 10 Reihen (y bis 900), 19 Spalten (x bis 1800)
+        switch (placement)
+        {
+            case FolderPlacement.UntenLinks:   // unterste Reihe, von links nach rechts in Namensreihenfolge
+                Assert.All(f, p => Assert.Equal(900, p.Y));
+                Assert.Equal(new[] { 0, 100, 200 }, f.Select(p => p.X));
+                break;
+            case FolderPlacement.UntenRechts:
+                Assert.All(f, p => Assert.Equal(900, p.Y));
+                Assert.Equal(new[] { 1800, 1700, 1600 }, f.Select(p => p.X));
+                break;
+            case FolderPlacement.RechterRand:
+                Assert.All(f, p => Assert.Equal(1800, p.X));
+                Assert.Equal(new[] { 0, 100, 200 }, f.Select(p => p.Y));
+                break;
+            case FolderPlacement.ObenRechts:
+                Assert.All(f, p => Assert.Equal(0, p.Y));
+                Assert.Equal(new[] { 1800, 1700, 1600 }, f.Select(p => p.X));
+                break;
+        }
+        Assert.Contains(plan.Groups, g => g.Name == DesktopPlanner.FolderGroup && !g.IsCategory);
+    }
+
+    [Theory]
     [InlineData(DesktopLayout.Spalten)]
     [InlineData(DesktopLayout.Kompakt)]
     [InlineData(DesktopLayout.Zeilen)]

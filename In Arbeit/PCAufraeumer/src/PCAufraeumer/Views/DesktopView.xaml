@@ -52,7 +52,15 @@
             </Border>
             <CheckBox IsChecked="{Binding AllOnPrimary}"
                       Content="Symbole von anderen Monitoren auch auf den Hauptmonitor holen (sonst bleiben sie dort, wo sie sind)"/>
-            <TextBlock Text="Anordnungs-Vorschläge – klicke einen an:" FontWeight="SemiBold" Margin="0,12,0,6"/>
+            <DockPanel Margin="0,10,0,6">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center"
+                            ToolTip="Gilt für alle Vorschläge außer „Mein Layout“. Die App-Gruppen ordnen sich um die Ordner herum an.">
+                    <TextBlock Text="Ordner platzieren:" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource TextMuted}"/>
+                    <ComboBox ItemsSource="{Binding FolderPlacements}" SelectedItem="{Binding SelectedFolderPlacement}"
+                              DisplayMemberPath="Name" Width="250"/>
+                </StackPanel>
+                <TextBlock Text="Anordnungs-Vorschläge – klicke einen an:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </DockPanel>
             <UniformGrid x:Name="LayoutPanel" Rows="1"/>
         </StackPanel>
 

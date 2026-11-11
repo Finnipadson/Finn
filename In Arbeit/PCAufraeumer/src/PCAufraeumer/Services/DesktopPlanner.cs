@@ -187,7 +187,8 @@ public sealed class DesktopPlanner
     }
 
     /// <summary>Berechnet Zielordner, Dateinamen und die neue Anordnung.</summary>
-    public DesktopPlan Plan(List<DesktopItem> items, List<DesktopChange> changes, IReadOnlyList<ViewMonitor> monitors, POINT spacing, DesktopLayout? layout = null)
+    public DesktopPlan Plan(List<DesktopItem> items, List<DesktopChange> changes, IReadOnlyList<ViewMonitor> monitors, POINT spacing,
+        DesktopLayout? layout = null, FolderPlacement? folderPlacement = null)
     {
         var plan = new DesktopPlan();
         var reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -266,10 +267,14 @@ public sealed class DesktopPlanner
         if (folders.Count > 0) groups.Add((FolderGroup, folders));
 
         var style = layout ?? _s.Layout;
+        var placement = folderPlacement ?? _s.FolderPlacement;
+        // Eigene Ordner-Position gilt für alle Vorschläge außer „Mein Layout“ (dort bleibt alles an seinem Platz)
+        bool customFolders = placement != FolderPlacement.WieVorschlag && style != DesktopLayout.Vorlage
+                             && groups.Any(g => g.name == FolderGroup);
         int gap = Math.Max(0, _s.GapColumns);
         if (style == DesktopLayout.Spalten)
         {
-            int needed = groups.Sum(g => (int)Math.Ceiling(g.members.Count / (double)rows)) + gap * Math.Max(0, groups.Count - 1);
+            int needed = groups.Where(g => !customFolders || g.name != FolderGroup).Sum(g => (int)Math.Ceiling(g.members.Count / (double)rows)) + gap * Math.Max(0, groups.Count - 1);
             if (needed > cols && gap > 0)
             {
                 gap = 0;
@@ -295,6 +300,27 @@ public sealed class DesktopPlanner
         IEnumerable<(int, int)> BlockFlow(int col0, int row0, int w)
         {
             for (int r = row0; r < row0 + 4000; r++) for (int c = col0; c < col0 + w; c++) yield return (c, r);
+        }
+        // Ordner an einer festen Stelle: z. B. unterste Reihe von links nach rechts, reicht sie nicht, die Reihe darüber.
+        IEnumerable<(int, int)> FolderFlow(FolderPlacement p)
+        {
+            switch (p)
+            {
+                case FolderPlacement.UntenLinks:
+                    for (int r = rows - 1; r >= 0; r--) for (int c = 0; c < cols; c++) yield return (c, r);
+                    break;
+                case FolderPlacement.UntenRechts:
+                    for (int r = rows - 1; r >= 0; r--) for (int c = cols - 1; c >= 0; c--) yield return (c, r);
+                    break;
+                case FolderPlacement.RechterRand:
+                    for (int c = cols - 1; c >= 0; c--) for (int r = 0; r < rows; r++) yield return (c, r);
+                    break;
+                case FolderPlacement.ObenRechts:
+                    for (int r = 0; r < rows; r++) for (int c = cols - 1; c >= 0; c--) yield return (c, r);
+                    break;
+            }
+            // Bildschirm voll: außerhalb weiter (wird als Warnung gemeldet)
+            for (int c = cols; c < cols + 4000; c++) for (int r = 0; r < rows; r++) yield return (c, r);
         }
 
         var compact = ColumnFlow(0).GetEnumerator();
@@ -383,7 +409,47 @@ public sealed class DesktopPlanner
             }
         }
 
-        foreach (var (name, members) in style == DesktopLayout.Vorlage ? new() : groups)
+        // Eine Gruppe in die angebotenen Zellen legen und als Rahmen für die Vorschau merken.
+        (int minC, int maxC, int minR, int maxR) PlaceGroup(string name, List<(string path, string name, DesktopChange? change, bool isNew)> members,
+                                                            IEnumerator<(int c, int r)> cells)
+        {
+            int minC = int.MaxValue, maxC = int.MinValue, minR = int.MaxValue, maxR = int.MinValue;
+            foreach (var mbr in members)
+            {
+                var (c, r) = Take(cells);
+                minC = Math.Min(minC, c); maxC = Math.Max(maxC, c); minR = Math.Min(minR, r); maxR = Math.Max(maxR, r);
+                if (c >= cols || r >= rows) overflow = true;
+                var pt = new POINT(ox + c * sx, oy + r * sy);
+                plan.Positions[mbr.path] = pt;
+                plan.After.Add(new PreviewIcon
+                {
+                    Path = mbr.path, Name = mbr.name, X = pt.X, Y = pt.Y, IsNewFolder = mbr.isNew, Group = name, Change = mbr.change,
+                });
+                if (mbr.change != null)
+                {
+                    mbr.change.Description = mbr.change.Item.Kind == DesktopItemKind.Folder
+                        ? $"Ordner „{mbr.name}“ → bei den Ordnern einsortiert"
+                        : $"Symbol „{mbr.name}“ → Gruppe {name}";
+                }
+            }
+            plan.Groups.Add(new PreviewGroup
+            {
+                Name = name, X = ox + minC * sx, Y = oy + minR * sy,
+                Width = (maxC - minC + 1) * sx, Height = (maxR - minR + 1) * sy, IsCategory = name != FolderGroup,
+            });
+            return (minC, maxC, minR, maxR);
+        }
+
+        var flowGroups = style == DesktopLayout.Vorlage ? new() : groups;
+        if (customFolders)
+        {
+            // Ordner zuerst an ihre feste Stelle – die App-Gruppen fließen danach um sie herum.
+            var fg = groups.First(g => g.name == FolderGroup);
+            PlaceGroup(FolderGroup, fg.members, FolderFlow(placement).GetEnumerator());
+            flowGroups = groups.Where(g => g.name != FolderGroup).ToList();
+        }
+
+        foreach (var (name, members) in flowGroups)
         {
             int n = members.Count;
             IEnumerator<(int c, int r)> cells;
@@ -411,30 +477,7 @@ public sealed class DesktopPlanner
                     break;
             }
 
-            int minC = int.MaxValue, maxC = int.MinValue, minR = int.MaxValue, maxR = int.MinValue;
-            foreach (var mbr in members)
-            {
-                var (c, r) = Take(cells);
-                minC = Math.Min(minC, c); maxC = Math.Max(maxC, c); minR = Math.Min(minR, r); maxR = Math.Max(maxR, r);
-                if (c >= cols || r >= rows) overflow = true;
-                var pt = new POINT(ox + c * sx, oy + r * sy);
-                plan.Positions[mbr.path] = pt;
-                plan.After.Add(new PreviewIcon
-                {
-                    Path = mbr.path, Name = mbr.name, X = pt.X, Y = pt.Y, IsNewFolder = mbr.isNew, Group = name, Change = mbr.change,
-                });
-                if (mbr.change != null)
-                {
-                    mbr.change.Description = mbr.change.Item.Kind == DesktopItemKind.Folder
-                        ? $"Ordner „{mbr.name}“ → bei den Ordnern einsortiert"
-                        : $"Symbol „{mbr.name}“ → Gruppe {name}";
-                }
-            }
-            plan.Groups.Add(new PreviewGroup
-            {
-                Name = name, X = ox + minC * sx, Y = oy + minR * sy,
-                Width = (maxC - minC + 1) * sx, Height = (maxR - minR + 1) * sy, IsCategory = name != FolderGroup,
-            });
+            var (_, maxC, _, maxR) = PlaceGroup(name, members, cells);
 
             switch (style)
             {
