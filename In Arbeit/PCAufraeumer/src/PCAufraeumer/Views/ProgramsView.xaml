@@ -395,6 +395,98 @@
                         </DataGrid>
                     </DockPanel>
                 </TabItem>
+
+                <!-- ═══════════ Tab 5: Updates (winget) ═══════════ -->
+                <TabItem Header="Updates">
+                    <DockPanel DataContext="{Binding Updates}">
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                            <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" MaxWidth="760" Margin="0,0,16,6" VerticalAlignment="Center"
+                                       Text="Neuere Versionen deiner Programme über winget (gehört zu Windows). Standardmäßig ist nichts ausgewählt – nur angehakte Programme werden aktualisiert, nach deiner Bestätigung."/>
+                            <Button Command="{Binding ReloadCommand}" Margin="0,0,0,6" Padding="10,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE72C;" Style="{StaticResource Icon}" FontSize="12" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Neu suchen"/>
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+                        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,10,0,0" Padding="14,10">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Command="{Binding SelectAllCommand}"><TextBlock Text="Alle auswählen"/></Button>
+                                    <Button Command="{Binding SelectNoneCommand}"><TextBlock Text="Auswahl aufheben"/></Button>
+                                    <Button Command="{Binding CancelCommand}" Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVis}}"
+                                            ToolTip="Bricht nach dem gerade laufenden Update ab"><TextBlock Text="Abbrechen"/></Button>
+                                    <Button Command="{Binding UpdateCheckedCommand}" Style="{StaticResource PrimaryButton}" Margin="0" Padding="16,8">
+                                        <TextBlock>
+                                            <Run Text="Ausgewählte aktualisieren"/><Run Text="{Binding CheckedCount, Mode=OneWay, StringFormat=' ({0})'}"/>
+                                        </TextBlock>
+                                    </Button>
+                                </StackPanel>
+                                <DockPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="80" Height="4" Margin="0,0,10,0"
+                                                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
+                                    <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="80" Height="4" Margin="0,0,10,0"
+                                                 Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+                                </DockPanel>
+                            </DockPanel>
+                        </Border>
+                        <DataGrid ItemsSource="{Binding Updates}" SelectedItem="{Binding Selected}" IsReadOnly="True" EnableColumnVirtualization="False" RowHeight="32">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="" Width="34" SortMemberPath="IsChecked">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanCheck}"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Name" Width="290" SortMemberPath="Name">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding Name}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Installiert" Binding="{Binding Version}" Width="130" ElementStyle="{StaticResource Mono}"/>
+                                <DataGridTemplateColumn Header="Verfügbar" Width="130" SortMemberPath="Available">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Available}" Style="{StaticResource Mono}" Foreground="{DynamicResource Accent}" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Paket-ID" Binding="{Binding Id}" Width="270" ElementStyle="{StaticResource Mono}"/>
+                                <DataGridTemplateColumn Header="Ergebnis" Width="*" MinWidth="260" SortMemberPath="State">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock x:Name="ic" Style="{StaticResource Icon}" FontSize="12" Margin="0,0,6,0" Text=""/>
+                                                <TextBlock Text="{Binding Result}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Result}"/>
+                                                <TextBlock Text="{Binding Note}" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis"
+                                                           Visibility="{Binding Blocked, Converter={StaticResource BoolToVis}}"/>
+                                            </StackPanel>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding State}" Value="Fertig">
+                                                    <Setter TargetName="ic" Property="Text" Value="&#xE73E;"/>
+                                                    <Setter TargetName="ic" Property="Foreground" Value="{DynamicResource Good}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding State}" Value="Fehler">
+                                                    <Setter TargetName="ic" Property="Text" Value="&#xE711;"/>
+                                                    <Setter TargetName="ic" Property="Foreground" Value="{DynamicResource Danger}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding State}" Value="Laeuft">
+                                                    <Setter TargetName="ic" Property="Text" Value="&#xE895;"/>
+                                                    <Setter TargetName="ic" Property="Foreground" Value="{DynamicResource Warn}"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
             </TabControl>
         </DockPanel>
 

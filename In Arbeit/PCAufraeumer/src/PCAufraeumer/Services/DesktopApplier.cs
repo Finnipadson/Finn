@@ -4,27 +4,36 @@ using PCAufraeumer.Models;
 
 namespace PCAufraeumer.Services;
 
-/// <summary>Verlauf der Aufräumaktionen (je eine JSON-Datei, die neuesten 20 werden behalten).</summary>
+/// <summary>Verlauf der Aufräumaktionen (je eine JSON-Datei, die neuesten 20 werden behalten).
+/// Desktop und Downloads haben getrennte Ordner („Desktop-Verlauf“, „Downloads-Verlauf“).</summary>
 public static class DesktopHistory
 {
     public const int Keep = 20;
-    public static string Dir
+    public const string DesktopArea = "Desktop";
+    public const string DownloadsArea = "Downloads";
+
+    public static string Dir => DirFor(DesktopArea);
+
+    public static string DirFor(string area)
     {
-        get { var d = Path.Combine(AppPaths.BaseDir, "Desktop-Verlauf"); Directory.CreateDirectory(d); return d; }
+        var d = Path.Combine(AppPaths.BaseDir, $"{(string.IsNullOrEmpty(area) ? DesktopArea : area)}-Verlauf");
+        Directory.CreateDirectory(d);
+        return d;
     }
 
     public static void Save(DesktopSnapshot s)
     {
-        Json.WriteAtomic(Path.Combine(Dir, $"{s.Date:yyyyMMdd-HHmmss}-{s.Id[..8]}.json"), s);
+        var dir = DirFor(s.Area);
+        Json.WriteAtomic(Path.Combine(dir, $"{s.Date:yyyyMMdd-HHmmss}-{s.Id[..8]}.json"), s);
         // Nur eigene Verlaufsdateien über dem Limit entfernen (älteste zuerst).
-        foreach (var old in Directory.GetFiles(Dir, "*.json").OrderByDescending(f => f).Skip(Keep))
+        foreach (var old in Directory.GetFiles(dir, "*.json").OrderByDescending(f => f).Skip(Keep))
             try { File.Delete(old); } catch { }
     }
 
-    public static List<DesktopSnapshot> Load()
+    public static List<DesktopSnapshot> Load(string area = DesktopArea)
     {
         var list = new List<DesktopSnapshot>();
-        foreach (var f in Directory.GetFiles(Dir, "*.json").OrderByDescending(f => f))
+        foreach (var f in Directory.GetFiles(DirFor(area), "*.json").OrderByDescending(f => f))
         {
             try
             {
@@ -38,7 +47,7 @@ public static class DesktopHistory
 
     public static void Update(DesktopSnapshot s)
     {
-        var file = Directory.GetFiles(Dir, $"*-{s.Id[..8]}.json").FirstOrDefault();
+        var file = Directory.GetFiles(DirFor(s.Area), $"*-{s.Id[..8]}.json").FirstOrDefault();
         if (file != null) Json.WriteAtomic(file, s); else Save(s);
     }
 }
@@ -64,12 +73,13 @@ public sealed class DesktopApplier
     /// <summary>Wartezeit, bis der Explorer Dateiänderungen anzeigt (für Tests verkürzbar).</summary>
     public TimeSpan RefreshTimeout { get; set; } = TimeSpan.FromSeconds(6);
 
-    /// <param name="view">Symbolansicht (null = nur Dateien, z. B. in Tests). Aufruf auf dem UI-Thread.</param>
+    /// <param name="view">Symbolansicht (null = nur Dateien, z. B. in Tests oder beim Downloads-Ordner). Aufruf auf dem UI-Thread.</param>
+    /// <param name="area">„Desktop“ oder „Downloads“ – bestimmt Verlauf und Protokolltexte.</param>
     public async Task<(DesktopApplyResult result, DesktopSnapshot snapshot)> ApplyAsync(
-        DesktopShellView? view, DesktopPlan plan, string viewKind, IProgress<string>? progress = null)
+        DesktopShellView? view, DesktopPlan plan, string viewKind, IProgress<string>? progress = null, string area = DesktopHistory.DesktopArea)
     {
         var result = new DesktopApplyResult();
-        var snap = new DesktopSnapshot { ViewKind = viewKind, Description = "Desktop aufgeräumt" };
+        var snap = new DesktopSnapshot { ViewKind = viewKind, Area = area, Description = $"{area} aufgeräumt" };
 
         // 1) Alten Zustand sichern
         if (view != null)
@@ -87,7 +97,7 @@ public sealed class DesktopApplier
             {
                 var src = c.Item.Path;
                 var folder = Path.GetDirectoryName(c.FinalPath)!;
-                var e = new DeleteLogEntry { Timestamp = DateTime.Now, Path = src, Method = "Desktop: verschoben", Category = "Desktop aufräumen" };
+                var e = new DeleteLogEntry { Timestamp = DateTime.Now, Path = src, Method = $"{area}: verschoben", Category = $"{area} aufräumen" };
                 try
                 {
                     progress?.Report($"Verschiebe {c.Item.FileName} …");
@@ -148,6 +158,7 @@ public sealed class DesktopApplier
     {
         var result = new DesktopApplyResult();
         var renamed = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var area = string.IsNullOrEmpty(snap.Area) ? DesktopHistory.DesktopArea : snap.Area;
 
         await Task.Run(() =>
         {
@@ -155,7 +166,7 @@ public sealed class DesktopApplier
             var reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var m in Enumerable.Reverse(snap.Moves))
             {
-                var e = new DeleteLogEntry { Timestamp = DateTime.Now, Path = m.From, Method = "Desktop: zurückgeholt", Category = "Desktop aufräumen" };
+                var e = new DeleteLogEntry { Timestamp = DateTime.Now, Path = m.From, Method = $"{area}: zurückgeholt", Category = $"{area} aufräumen" };
                 try
                 {
                     progress?.Report($"Hole {Path.GetFileName(m.From)} zurück …");
@@ -217,7 +228,7 @@ public sealed class DesktopApplier
         {
             new DeleteLogEntry
             {
-                Timestamp = DateTime.Now, Path = snap.ViewKind, Method = "Desktop: rückgängig", Category = "Desktop aufräumen",
+                Timestamp = DateTime.Now, Path = snap.ViewKind, Method = $"{area}: rückgängig", Category = $"{area} aufräumen",
                 Success = result.Problems.Count == 0, Error = $"{result.Moved} Dateien zurück, {result.Positioned} Positionen wiederhergestellt",
             },
         });

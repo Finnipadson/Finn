@@ -25,8 +25,10 @@ Die App startet **ohne Adminrechte**. Nur diese Dinge fragen gezielt per UAC nac
 | **Treiber** | Wichtige Treiber mit Version und Datum. NVIDIA wird mit der neuesten Version verglichen. Mit „Über Windows Update prüfen“ siehst du angebotene Treiber-Updates. Die App **installiert nichts**. |
 | **Scan** | Ordner auswählen, Ausschlüsse festlegen, Kategorien an- oder abschalten, „Scan starten“. Der Scan löscht nichts. |
 | **Ergebnisse** | Liste nach Kategorie gruppiert, Vorschau rechts (Video, Bild, Text, PDF). Häkchen setzen → „In den Papierkorb“. |
+| **Speicher** | Speicherplatz-Karte: Laufwerk oder Ordner analysieren, jede Kachel ist so groß wie ihr Platzbedarf. Klick zoomt hinein. Liest nur, ändert nichts. |
 | **Desktop aufräumen** | Ordnet App-Symbole nach Kategorien in Gruppen an und packt lose Dateien in passende Ordner. Mit Vorher/Nachher-Vorschau, Verlauf und „Rückgängig machen“. |
-| **Programme** | Programme, Store-Apps und Spiele deinstallieren und danach Reste suchen. Tabs: Deinstallieren, Erzwungene Deinstallation, Installationen überwachen, Autostart. |
+| **Downloads** | Sortiert lose Dateien im Downloads-Ordner in Unterordner (gleiche Regeln wie beim Desktop). Mit Vorschau, Verlauf und „Rückgängig“. Löscht nichts. |
+| **Programme** | Programme, Store-Apps und Spiele deinstallieren und danach Reste suchen. Tabs: Deinstallieren, Erzwungene Deinstallation, Installationen überwachen, Autostart, Updates. |
 | **Protokoll** | Jede Löschung, jede Deinstallation und jede Desktop-Aufräumaktion mit Datum, Pfad und Größe, als CSV exportierbar. Darunter steht das Fehlerprotokoll. |
 | **Einstellungen** | Zeiträume, Kategorien, Mindestgröße, Ausschluss- und Ausnahmeliste, Dark/Light Mode. |
 
@@ -107,6 +109,22 @@ Die Spalten lassen sich sortieren. Oben gibt es Suche, Typ- und Kategorie-Filter
 
 **Tab „Autostart“**: funktioniert wie im Task-Manager. Ein- und Ausschalten ändert nur den Schalter von Windows (`StartupApproved`). **Nichts wird gelöscht**, alles ist umkehrbar. Gezeigt werden Registry (Run/RunOnce), Autostart-Ordner, Store-Apps, geplante Aufgaben bei Anmeldung/Start und unter „Fortgeschritten“ auch Dienste. Die Spalten „Signiert“ und „Datei da“ helfen beim Einschätzen. Einträge, deren Datei fehlt, lassen sich nach Bestätigung entfernen. Windows- und Sicherheitseinträge sind gesperrt (🔒).
 
+**Tab „Updates“**: zeigt, für welche Programme es neuere Versionen gibt. Die Liste kommt von **winget** (gehört zu Windows 10/11, „App-Installer“ aus dem Store). **Standardmäßig ist nichts ausgewählt.** Angehakte Programme werden nach einer Bestätigung nacheinander mit `winget upgrade --id … --exact --silent` aktualisiert. Programme vorher schließen. Manche Installer fragen selbst nach Adminrechten (🛡). „Abbrechen“ stoppt erst nach dem gerade laufenden Update, nie mitten in einem Installer. Das Ergebnis steht pro Zeile und im Protokoll. winget selbst (App-Installer) wird über den Store aktualisiert und ist deshalb gesperrt.
+
+### Speicher
+„Analysieren“ liest das gewählte Laufwerk oder einen Ordner ein (C: mit rund 650.000 Dateien dauert wenige Sekunden) und zeigt eine **Kachelkarte**: Jede Kachel ist so groß, wie der Ordner oder die Datei Platz braucht. Große Ordner zeigen ihren Inhalt eine Ebene tiefer gleich mit. **Klick auf eine Kachel zoomt hinein**, die Pfadleiste oben und der Pfeil führen zurück. Rechts stehen die größten Einträge mit Anteil-Balken; Doppelklick zoomt, Rechtsklick → „Im Explorer zeigen“.
+- Gelöscht wird hier nichts – zum Aufräumen gibt es Scan/Ergebnisse.
+- Verknüpfte Ordner (Junctions/Symlinks) werden nicht verfolgt, damit nichts doppelt zählt.
+- „Nur online“-Dateien von OneDrive belegen keinen Platz und zählen deshalb mit 0.
+- Pro Ordner werden die 40 größten Dateien einzeln gezeigt, der Rest als „n weitere Dateien“.
+- Bei ganzen Laufwerken erscheint, was Windows als belegt meldet, aber nicht lesbar war, als „Nicht erfasst (System, kein Zugriff, Schattenkopien)“.
+
+### Downloads aufräumen
+Lose Dateien direkt im Downloads-Ordner kommen in Unterordner (Bilder, Dokumente, Installer, Archive …). Es gelten dieselben Regeln „Dateityp → Ordner“ wie beim Desktop (Optionen). Vorhandene Ordner werden erkannt, auch unter anderem Namen (z. B. „Fotos“ statt „Bilder“). Der Zielordner lässt sich pro Datei ändern oder neu eintippen.
+- **Bleiben liegen:** laufende/unfertige Downloads (`.crdownload`, `.part` …), versteckte und Systemdateien (`desktop.ini`), geöffnete Dateien und – je nach Auswahl „Was verschieben“ – Dateien von heute bzw. der letzten 7/30 Tage (einzeln einschaltbar).
+- Unterordner und ihr Inhalt werden nicht angefasst. Es wird nichts überschrieben: Ist ein Name im Zielordner schon vergeben, heißt die Datei „Name (2)“.
+- „Übernehmen“ → Bestätigung → verschieben. Im **Verlauf** rechts macht „Rückgängig“ alles wieder rückgängig (neu angelegte, leere Ordner werden entfernt). Der Verlauf ist getrennt vom Desktop-Verlauf.
+
 ### „Zuletzt geöffnet“: wie zuverlässig ist das?
 Windows aktualisiert das Datum „Letzter Zugriff“ nicht immer. Die App liest die Einstellung `NtfsDisableLastAccessUpdate` aus der Registry und zeigt sie auf der Scan-Seite an. Die Ausgabe von `fsutil behavior query disablelastaccess` steht dort ebenfalls, falls Windows sie ohne Adminrechte liefert. Ist die Aktualisierung aus, nutzt die App das **Änderungsdatum**. In der Spalte **Grundlage** steht bei jeder Datei, welches Datum verwendet wurde.
 
@@ -144,6 +162,7 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 - `letztes-ergebnis.json`: letzte Ergebnisliste (wird beim Start automatisch geladen)
 - `Ergebnisse\`: deine mit „Speichern unter …“ gesicherten Ergebnislisten
 - `Desktop-Verlauf\`: gespeicherte Zustände vor jeder Desktop-Aufräumaktion (Grundlage für „Rückgängig“)
+- `Downloads-Verlauf\`: dasselbe für „Downloads aufräumen“
 - `Registry-Sicherungen\`: `.reg`-Sicherung jedes gelöschten Registry-Rests (Doppelklick stellt ihn wieder her)
 - `Aufzeichnungen\`: Installationsaufzeichnungen (Ordner in den Einstellungen änderbar)
 
@@ -159,7 +178,7 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 ```bash
 cd "Games/In Arbeit/PCAufraeumer"
 dotnet build
-dotnet test                       # 68 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
+dotnet test                       # 76 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
 dotnet run --project src/PCAufraeumer
 ```
 
@@ -196,11 +215,12 @@ PCAufraeumer/
 │  │                 SystemInfoService, DriverService (WMI/WU/NVIDIA), ThumbnailService, Storage …
 │  │                 Programme: ProgramInventory (Registry/Appx/Launcher), UninstallRunner, LeftoverScanner,
 │  │                 LeftoverDeleter, InstallRecorder, AutostartService, AdminHelper (UAC-Aufgaben)
+│  │                 DiskMapService + TreemapLayout (Speicher), WingetService (Updates), DownloadsPlanner
 │  ├─ ViewModels/    eine pro Seite + MainViewModel (Navigation)
 │  ├─ Views/         XAML-Seiten, PreviewPanel (Video/Bild/Text/PDF), ConfirmDialog, Vollbild
 │  ├─ Themes/        Colors.Dark/Light.xaml, Styles.xaml
 │  └─ Interop/       Windows-API (SHFileOperation, Shell-Thumbnails, Known Folders)
-└─ tests/PCAufraeumer.Tests/   xUnit-Tests (Scan-Regeln, Schutz, Duplikate, Papierkorb, Temp, CSV, Treiber, Desktop, Programme)
+└─ tests/PCAufraeumer.Tests/   xUnit-Tests (Scan-Regeln, Schutz, Duplikate, Papierkorb, Temp, CSV, Treiber, Desktop, Programme, Speicher, Updates, Downloads)
 ```
 
 ### Admin-Helfer
@@ -216,7 +236,12 @@ Die Seite **Programme** nutzt einen zweiten, allgemeineren Helfer: `--admin-job 
 - **Tests** laufen mit den harmlosen Testprogrammen „PCA-Testprogramm“ und „PCA-Nachbarprogramm“. Sie werden nur im Benutzerbereich (HKCU + AppData) installiert und danach komplett entfernt.
 
 ### Test-Datenordner
-Mit der Umgebungsvariable `PCA_DATADIR` nutzt die App einen anderen Datenordner, damit deine echten Einstellungen beim Testen unberührt bleiben.
+Mit der Umgebungsvariable `PCA_DATADIR` nutzt die App einen anderen Datenordner, damit deine echten Einstellungen beim Testen unberührt bleiben. `PCA_DOWNLOADS_TEST=<Ordner>` nutzt für „Downloads aufräumen“ einen Testordner statt des echten Downloads-Ordners.
+
+### Speicher, Updates, Downloads: Technik
+- **Speicher:** `DiskMapService` liest mit `FileSystemEnumerable` (die oberen zwei Ebenen parallel). Reparse-Ordner mit `LinkTarget` (Junction/Symlink) werden übersprungen, OneDrive-Platzhalter nicht. Die Karte (`TreemapControl`) zeichnet per `OnRender` eine „squarified treemap“ (`TreemapLayout`).
+- **Updates:** `WingetService` liest die Tabelle von `winget upgrade --include-unknown`. Die Spaltenpositionen kommen aus der Kopfzeile, deshalb ist die Sprache von winget egal; Fortschrittszeichen (`\r`, `\b`) werden entfernt, abgeschnittene IDs („…“) gesperrt.
+- **Downloads:** `DownloadsPlanner` erzeugt dieselben `DesktopChange`-Einträge wie der Desktop und nutzt `DesktopApplier` ohne Symbolansicht. Verlauf und Protokolltexte hängen am Bereich (`Area` = „Desktop“/„Downloads“); alte Verlaufsdateien ohne `Area` gelten als Desktop.
 
 ### Desktop aufräumen: Technik
 - **Symbolpositionen:** `IShellWindows.FindWindowSW(SWC_DESKTOP)` → `IShellBrowser` → `IFolderView2` (`GetItemPosition`, `SelectAndPositionItems`, `GetCurrentFolderFlags`/`SetCurrentFolderFlags` für „Automatisch anordnen“). Es werden keine Dateien verschoben, um Symbole anzuordnen. Koordinaten sind physische Pixel der Desktop-Ansicht; Monitore kommen über `EnumDisplayMonitors` + `ScreenToClient` (DPI-bewusst, mehrere Monitore).

@@ -39,6 +39,16 @@ public sealed class AppSettings
 
     /// <summary>„Programme“. Fehlt in alten Einstellungsdateien → Standardwerte.</summary>
     public ProgramSettings Programs { get; set; } = new();
+
+    /// <summary>„Downloads aufräumen“. Fehlt in alten Einstellungsdateien → Standardwerte.
+    /// Die Ordnerregeln (Dateityp → Ordner) werden mit „Desktop aufräumen“ geteilt.</summary>
+    public DownloadsSettings Downloads { get; set; } = new();
+}
+
+public sealed class DownloadsSettings
+{
+    /// <summary>Nur Dateien verschieben, die älter als so viele Tage sind (0 = alle). Standard: Dateien von heute bleiben liegen.</summary>
+    public int MinAgeDays { get; set; } = 1;
 }
 
 public enum LeftoverMode { Sicher, Moderat, Erweitert }

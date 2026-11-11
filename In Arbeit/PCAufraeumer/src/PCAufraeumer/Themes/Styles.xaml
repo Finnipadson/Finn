@@ -8,6 +8,7 @@
     <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
     <conv:UpperConverter x:Key="Upper"/>
     <conv:SizeBarConverter x:Key="SizeBar"/>
+    <conv:ShareWidthConverter x:Key="ShareWidth"/>
 
     <Style x:Key="Mono" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource MonoFont}"/>

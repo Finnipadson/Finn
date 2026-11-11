@@ -184,6 +184,9 @@ public sealed class DesktopItem
     /// <summary>Aufgelöstes Ziel/URL einer Verknüpfung (für Anzeige und Kategorie).</summary>
     public string Target { get; set; } = "";
     public string DetectedCategory { get; set; } = "";
+    /// <summary>Nur Downloads: Größe und Datum (später von Erstellt/Geändert).</summary>
+    public long Size { get; set; }
+    public DateTime? Modified { get; set; }
     public bool NeverTouch { get; set; }
     public bool Locked { get; set; }
     [JsonIgnore] public ImageSource? Icon { get; set; }
@@ -222,7 +225,9 @@ public sealed class DesktopSnapshot
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public DateTime Date { get; set; } = DateTime.Now;
     public string Description { get; set; } = "";
-    public string ViewKind { get; set; } = "Desktop"; // „Desktop“ oder Pfad eines Testordners
+    public string ViewKind { get; set; } = "Desktop"; // „Desktop“ oder Pfad eines Testordners / des Downloads-Ordners
+    /// <summary>„Desktop“ oder „Downloads“ (fehlt in alten Verlaufsdateien → Desktop).</summary>
+    public string Area { get; set; } = "Desktop";
     public List<SnapshotPosition> Positions { get; set; } = new();
     public List<SnapshotMove> Moves { get; set; } = new();
     public List<string> CreatedFolders { get; set; } = new();
@@ -230,7 +235,8 @@ public sealed class DesktopSnapshot
     public DateTime? UndoneDate { get; set; }
 
     [JsonIgnore] public string Summary =>
-        $"{Date:dd.MM.yyyy HH:mm} · {Moves.Count} Dateien verschoben, {CreatedFolders.Count} Ordner neu, {Positions.Count} Symbolpositionen gesichert" +
+        $"{Date:dd.MM.yyyy HH:mm} · {Moves.Count} Dateien verschoben, {CreatedFolders.Count} Ordner neu" +
+        (Positions.Count > 0 || Area == "Desktop" ? $", {Positions.Count} Symbolpositionen gesichert" : "") +
         (Undone ? $" · rückgängig gemacht am {UndoneDate:dd.MM. HH:mm}" : "");
 }
 

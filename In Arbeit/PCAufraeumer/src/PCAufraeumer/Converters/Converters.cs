@@ -140,3 +140,15 @@ public sealed class SizeBarConverter : IValueConverter
     }
     public object ConvertBack(object value, Type t, object p, CultureInfo c) => throw new NotSupportedException();
 }
+
+/// <summary>Anteil (0–1) → Breite in Pixeln (Parameter = volle Breite). Für Anteil-Balken.</summary>
+public sealed class ShareWidthConverter : IValueConverter
+{
+    public object Convert(object? value, Type t, object p, CultureInfo c)
+    {
+        double share = value is double d ? d : 0;
+        double full = double.TryParse(p?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var f) ? f : 100;
+        return Math.Clamp(share, 0, 1) * full;
+    }
+    public object ConvertBack(object value, Type t, object p, CultureInfo c) => throw new NotSupportedException();
+}
