@@ -61,7 +61,8 @@ public static class UninstallRunner
 
         var (exe, args) = BuildCommand(p);
         if (exe.Length == 0) return new UninstallResult { Outcome = UninstallOutcome.KeinDeinstaller, Message = "Kein Deinstaller eingetragen." };
-        if (!exe.Equals("msiexec.exe", StringComparison.OrdinalIgnoreCase) && !File.Exists(exe))
+        // Nicht absolute Programme (msiexec, cmd, rundll32 …) findet Windows selbst über den Suchpfad.
+        if (Path.IsPathRooted(exe) && !File.Exists(exe))
             return new UninstallResult { Outcome = UninstallOutcome.KeinDeinstaller, Message = $"Deinstaller nicht gefunden: {exe}" };
 
         progress.Report("Deinstaller läuft – bitte im Fenster des Deinstallers bestätigen …");

@@ -64,8 +64,12 @@ public sealed partial class SettingsViewModel : ObservableObject
                             "Programm-, Spiele- und Entwicklerordner (steamapps, Epic Games, WindowsApps, .git, node_modules …)" })
             .ToList();
         Desktop = new DesktopSettingsViewModel(svc);
+        Programs = new ProgramSettingsViewModel(svc);
         Reload();
     }
+
+    /// <summary>Bereich „Programme“.</summary>
+    public ProgramSettingsViewModel Programs { get; }
 
     /// <summary>Bereich „Desktop aufräumen“.</summary>
     public DesktopSettingsViewModel Desktop { get; }

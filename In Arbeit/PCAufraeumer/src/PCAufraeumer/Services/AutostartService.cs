@@ -115,7 +115,7 @@ public static class AutostartService
         {
             foreach (var (name, data) in ReadValues(runKey))
             {
-                var exe = ProgramInventory.ExeFromCommand(data);
+                var exe = ProgramInventory.ResolveExe(ProgramInventory.ExeFromCommand(data));
                 list.Add(new AutostartEntry
                 {
                     Name = name, Command = data, Exe = exe, Location = label, Source = AutostartSource.RunKey,
@@ -136,7 +136,7 @@ public static class AutostartService
             foreach (var (name, data) in ReadValues(key))
                 list.Add(new AutostartEntry
                 {
-                    Name = name, Command = data, Exe = ProgramInventory.ExeFromCommand(data), Location = label, Source = AutostartSource.RunOnce,
+                    Name = name, Command = data, Exe = ProgramInventory.ResolveExe(ProgramInventory.ExeFromCommand(data)), Location = label, Source = AutostartSource.RunOnce,
                     RegKey = key, ValueName = name, NeedsAdmin = admin, Enabled = true, CanToggle = false,
                 });
     }
@@ -236,7 +236,7 @@ public static class AutostartService
                         if (!startup) continue;
                         string exe = "", args = "";
                         foreach (dynamic a in task.Definition.Actions)
-                            if ((int)a.Type == 0) { exe = Environment.ExpandEnvironmentVariables((string)a.Path).Trim('"'); args = a.Arguments ?? ""; break; }
+                            if ((int)a.Type == 0) { exe = ProgramInventory.ResolveExe(Environment.ExpandEnvironmentVariables((string)a.Path).Trim('"')); args = a.Arguments ?? ""; break; }
                         list.Add(new AutostartEntry
                         {
                             Name = (string)task.Name, Command = (exe + " " + args).Trim(), Exe = exe, Location = "Geplante Aufgabe",
@@ -303,7 +303,7 @@ public static class AutostartService
             int start = s.GetValue("Start") is int st ? st : 4;
             if ((type & 0x30) == 0) continue; // nur Win32-Dienste (keine Treiber)
             var img = Environment.ExpandEnvironmentVariables(s.GetValue("ImagePath") as string ?? "");
-            var exe = ProgramInventory.ExeFromCommand(img);
+            var exe = ProgramInventory.ResolveExe(ProgramInventory.ExeFromCommand(img));
             if (exe.Length == 0 || ProtectionService.IsUnder(exe, win)) continue; // Windows-Dienste ausblenden
             if (start != 2 && !disabledByUs.Contains(name)) continue;
             var display = s.GetValue("DisplayName") as string ?? name;

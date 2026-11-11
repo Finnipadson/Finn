@@ -96,7 +96,7 @@
 
                         <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,10,0,0" Padding="14,10">
                             <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button Command="{Binding SelectNoneCommand}"><TextBlock Text="Auswahl aufheben"/></Button>
                                     <Button Command="{Binding UninstallSelectedCommand}" CommandParameter="{Binding Selected}">
                                         <TextBlock Text="🛡 Markiertes deinstallieren"/>
@@ -107,15 +107,15 @@
                                         </TextBlock>
                                     </Button>
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <ProgressBar IsIndeterminate="True" Width="80" Height="4" Margin="0,0,10,0"
+                                <DockPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="80" Height="4" Margin="0,0,10,0"
                                                  Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
-                                    <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" VerticalAlignment="Center"/>
-                                </StackPanel>
+                                    <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+                                </DockPanel>
                             </DockPanel>
                         </Border>
 
-                        <DataGrid x:Name="ProgramGrid" ItemsSource="{Binding View}" SelectedItem="{Binding Selected}" IsReadOnly="True" RowHeight="34"
+                        <DataGrid x:Name="ProgramGrid" ItemsSource="{Binding View}" SelectedItem="{Binding Selected}" IsReadOnly="True" EnableColumnVirtualization="False" RowHeight="34"
                                   LoadingRow="ProgramGrid_LoadingRow">
                             <DataGrid.GroupStyle>
                                 <GroupStyle>
@@ -182,7 +182,7 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Installationsort" Width="*" MinWidth="200" SortMemberPath="InstallLocation">
+                                <DataGridTemplateColumn Header="Installationsort" Width="320" SortMemberPath="InstallLocation">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding InstallLocation}" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis"
@@ -207,7 +207,17 @@
                                     <TextBlock Text="Programmname" Style="{StaticResource Label}"/>
                                     <TextBox Text="{Binding Query, UpdateSourceTrigger=PropertyChanged, Delay=200}" Width="420" HorizontalAlignment="Left"/>
                                     <ListBox ItemsSource="{Binding Matches}" SelectedItem="{Binding SelectedMatch}" MaxHeight="160" Margin="0,6,0,0" Width="420" HorizontalAlignment="Left"
-                                             DisplayMemberPath="Name"/>
+                                             DisplayMemberPath="Name">
+                                        <ListBox.Style>
+                                            <Style TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}">
+                                                <Style.Triggers>
+                                                    <Trigger Property="HasItems" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ListBox.Style>
+                                    </ListBox>
                                     <TextBlock Text="… oder Ordner bzw. Programmdatei" Style="{StaticResource Label}" Margin="0,12,0,4"/>
                                     <StackPanel Orientation="Horizontal">
                                         <Button Command="{Binding PickFolderCommand}"><TextBlock Text="Ordner wählen …"/></Button>
@@ -278,7 +288,7 @@
                                 <Button Command="{Binding DeleteCommand}"><TextBlock Text="Aufzeichnung löschen"/></Button>
                             </StackPanel>
                         </DockPanel>
-                        <DataGrid ItemsSource="{Binding Recordings}" SelectedItem="{Binding Selected}" IsReadOnly="True" RowHeight="30">
+                        <DataGrid ItemsSource="{Binding Recordings}" SelectedItem="{Binding Selected}" IsReadOnly="True" EnableColumnVirtualization="False" RowHeight="30">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Programm" Binding="{Binding Name}" Width="260"/>
                                 <DataGridTextColumn Header="Datum" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
@@ -286,7 +296,7 @@
                                 <DataGridTextColumn Header="Dateien neu" Binding="{Binding NewFiles.Count}" Width="90"/>
                                 <DataGridTextColumn Header="Registry neu" Binding="{Binding NewKeys.Count}" Width="100"/>
                                 <DataGridTextColumn Header="Art" Binding="{Binding Kind}" Width="120"/>
-                                <DataGridTextColumn Header="Setup" Binding="{Binding SetupFile}" Width="*"/>
+                                <DataGridTextColumn Header="Setup" Binding="{Binding SetupFile}" Width="360"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>
@@ -315,7 +325,7 @@
                                 </StackPanel>
                             </DockPanel>
                         </Border>
-                        <DataGrid ItemsSource="{Binding View}" SelectedItem="{Binding Selected}" IsReadOnly="True" RowHeight="32">
+                        <DataGrid ItemsSource="{Binding View}" SelectedItem="{Binding Selected}" IsReadOnly="True" EnableColumnVirtualization="False" RowHeight="32">
                             <DataGrid.GroupStyle>
                                 <GroupStyle>
                                     <GroupStyle.HeaderTemplate>
@@ -370,7 +380,7 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Befehl / Pfad" Width="*" MinWidth="240" SortMemberPath="Command">
+                                <DataGridTemplateColumn Header="Befehl / Pfad" Width="420" SortMemberPath="Command">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Command}" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis"

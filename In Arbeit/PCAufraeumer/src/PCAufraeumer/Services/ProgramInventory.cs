@@ -129,7 +129,7 @@ public sealed class ProgramInventory
         // Verwaist: weder Deinstaller noch Installationsordner vorhanden
         var uninstExe = ExeFromCommand(p.UninstallString);
         bool uninstMissing = p.UninstallString.Length == 0 ||
-                             (uninstExe.Length > 0 && !uninstExe.Contains("msiexec", StringComparison.OrdinalIgnoreCase) && !File.Exists(uninstExe));
+                             (uninstExe.Length > 0 && Path.IsPathRooted(uninstExe) && !File.Exists(uninstExe));
         bool locMissing = p.InstallLocation.Length == 0 || !Directory.Exists(p.InstallLocation);
         p.IsOrphaned = p.Kind != ProgramKind.Spiel && uninstMissing && locMissing && p.ProductCode.Length == 0;
         return p;
@@ -166,6 +166,28 @@ public sealed class ProgramInventory
         }
         var m = Regex.Match(cmd, @"^(.+?\.(exe|cmd|bat|com))(\s|$)", RegexOptions.IgnoreCase);
         return m.Success ? m.Groups[1].Value : cmd.Split(' ')[0];
+    }
+
+    /// <summary>„cmd.exe“ → „C:\Windows\System32\cmd.exe“ (über System32, Windows-Ordner und PATH). Absolute Pfade unverändert.</summary>
+    public static string ResolveExe(string exe)
+    {
+        if (string.IsNullOrWhiteSpace(exe) || Path.IsPathRooted(exe)) return exe;
+        var candidates = new List<string>
+        {
+            Environment.GetFolderPath(Environment.SpecialFolder.System), Environment.GetFolderPath(Environment.SpecialFolder.Windows),
+        };
+        candidates.AddRange((Environment.GetEnvironmentVariable("PATH") ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries));
+        foreach (var dir in candidates)
+        {
+            try
+            {
+                var p = Path.Combine(dir.Trim(), exe);
+                if (File.Exists(p)) return p;
+                if (!Path.HasExtension(exe) && File.Exists(p + ".exe")) return p + ".exe";
+            }
+            catch { }
+        }
+        return exe;
     }
 
     private static string GuessMainExe(string dir, string name)

@@ -104,13 +104,18 @@ public sealed class LeftoverScanner
     {
         var name = CleanName(f.Name);
         var m = new Matcher { Name = Compact(name), Publisher = Compact(CleanPublisher(f.Publisher)) };
+        m.Words = Regex.Split(name, @"[^\p{L}\p{N}]+").Select(w => w.ToLowerInvariant())
+            .Where(w => w.Length >= 4 && !Generic.Contains(w)).Distinct().ToList();
+        // Nur .exe-Namen als Erkennungsmerkmal, die zum Programm passen (Haupt-.exe oder Name/Wort darin) –
+        // Hilfsprogramme wie updater.exe oder maintenanceservice.exe würden sonst Fremdes treffen.
+        var main = Compact(Path.GetFileNameWithoutExtension(f.MainExe));
         foreach (var e in f.ExeNames)
         {
             var x = Compact(Path.GetFileNameWithoutExtension(e));
-            if (x.Length >= 4 && !Generic.Contains(x) && !x.StartsWith("unins")) m.Exes.Add(x);
+            if (x.Length < 4 || Generic.Contains(x) || x.StartsWith("unins")) continue;
+            if (x == main || x == m.Name || (m.Name.Length >= 4 && x.Contains(m.Name)) || m.Words.Any(w => x.Contains(w) || w.Contains(x)))
+                m.Exes.Add(x);
         }
-        m.Words = Regex.Split(name, @"[^\p{L}\p{N}]+").Select(w => w.ToLowerInvariant())
-            .Where(w => w.Length >= 4 && !Generic.Contains(w)).Distinct().ToList();
         if (m.Publisher == m.Name) m.Publisher = ""; // z. B. „Wispr Flow“ von „Wispr Flow“
         return m;
     }
@@ -186,9 +191,28 @@ public sealed class LeftoverScanner
     private bool PublisherShared(string publisherCompact, ProgramFootprint f) =>
         _stillInstalled.Any(o => o.Id != f.Id && o.Publisher.Length > 0 && Compact(CleanPublisher(o.Publisher)) == publisherCompact);
 
-    private bool NameUsedByOther(string candidateCompact, ProgramFootprint f) =>
-        _stillInstalled.Any(o => o.Id != f.Id && (Compact(CleanName(o.Name)) == candidateCompact ||
-                                                 (o.MainExe.Length > 0 && Compact(Path.GetFileNameWithoutExtension(o.MainExe)) == candidateCompact)));
+    private List<(string id, string name, string exe, string publisher)>? _others;
+
+    private List<(string id, string name, string exe, string publisher)> Others() => _others ??= _stillInstalled
+        .Select(o => (o.Id, Compact(CleanName(o.Name)), Compact(Path.GetFileNameWithoutExtension(o.MainExe)), Compact(CleanPublisher(o.Publisher))))
+        .ToList();
+
+    /// <summary>
+    /// Gehört ein Ordner-/Schlüsselname (auch) einem anderen installierten Programm?
+    /// Gleicher Name, gleiche Haupt-.exe, gleicher Hersteller – oder der Name eines anderen, längeren Programms steckt darin
+    /// (z. B. „Firefox Developer Edition“, wenn „Firefox“ deinstalliert wird).
+    /// </summary>
+    private bool NameUsedByOther(string candidateCompact, ProgramFootprint f, Matcher? m = null)
+    {
+        if (candidateCompact.Length < 3) return false;
+        foreach (var (id, name, exe, publisher) in Others())
+        {
+            if (id == f.Id) continue;
+            if (candidateCompact == name || (exe.Length >= 4 && candidateCompact == exe) || (publisher.Length >= 3 && candidateCompact == publisher)) return true;
+            if (m != null && name.Length >= 5 && name.Length > m.Name.Length && candidateCompact.Contains(name)) return true;
+        }
+        return false;
+    }
 
     public string? RegistryBlockReason(string keyPath, bool isValue, ProgramFootprint f)
     {
@@ -353,15 +377,17 @@ public sealed class LeftoverScanner
         foreach (var e in entries)
         {
             ct.ThrowIfCancellationRequested();
-            var name = Path.GetFileName(e);
             bool isDir = Directory.Exists(e);
+            var name = isDir ? Path.GetFileName(e) : Path.GetFileNameWithoutExtension(e);
             if (isDir && SharedFolderNames.Contains(name)) continue;
             int score = m.Score(name);
             var cn = Compact(name);
+            bool foreign = score > 0 && NameUsedByOther(cn, f, m);
 
-            if (score == 3) add(e, Confidence.Sicher, $"{label}: Name passt genau zum Programm");
-            else if (score == 2 && !NameUsedByOther(cn, f)) add(e, Confidence.Wahrscheinlich, $"{label}: Name enthält den Programmnamen");
-            else if (score == 1 && mode == LeftoverMode.Erweitert && !NameUsedByOther(cn, f))
+            if (foreign) { /* gehört (auch) einem anderen installierten Programm → nie vorschlagen */ }
+            else if (score == 3) add(e, Confidence.Sicher, $"{label}: Name passt genau zum Programm");
+            else if (score == 2) add(e, Confidence.Wahrscheinlich, $"{label}: Name enthält den Programmnamen");
+            else if (score == 1 && mode == LeftoverMode.Erweitert)
                 add(e, Confidence.Unsicher, $"{label}: Name enthält ein Wort aus dem Programmnamen");
 
             // Hersteller-Ordner: hineinschauen (Programm-Unterordner) – den Herstellerordner selbst nur, wenn ihn sonst niemand nutzt
@@ -442,15 +468,18 @@ public sealed class LeftoverScanner
                     name.Equals("WOW6432Node", StringComparison.OrdinalIgnoreCase) || name.Equals("Policies", StringComparison.OrdinalIgnoreCase)) continue;
                 int score = m.Score(name);
                 var cn = Compact(name);
-                if (score == 3) Key(path, Confidence.Sicher, "Registry-Schlüssel mit genau dem Programmnamen");
-                else if (score == 2 && !NameUsedByOther(cn, f)) Key(path, Confidence.Wahrscheinlich, "Registry-Schlüssel enthält den Programmnamen");
-                else if (score == 1 && mode == LeftoverMode.Erweitert && !NameUsedByOther(cn, f)) Key(path, Confidence.Unsicher, "Registry-Schlüssel enthält ein Wort aus dem Programmnamen");
+                bool foreign = score > 0 && NameUsedByOther(cn, f, m);
+                if (foreign) { }
+                else if (score == 3) Key(path, Confidence.Sicher, "Registry-Schlüssel mit genau dem Programmnamen");
+                else if (score == 2) Key(path, Confidence.Wahrscheinlich, "Registry-Schlüssel enthält den Programmnamen");
+                else if (score == 1 && mode == LeftoverMode.Erweitert) Key(path, Confidence.Unsicher, "Registry-Schlüssel enthält ein Wort aus dem Programmnamen");
 
                 if (m.IsPublisher(name))
                 {
                     foreach (var (n2, p2) in SubKeys(path))
                     {
                         int s2 = m.Score(n2);
+                        if (s2 > 0 && NameUsedByOther(Compact(n2), f, m)) continue;
                         if (s2 == 3) Key(p2, Confidence.Sicher, $"Schlüssel des Programms unter dem Hersteller „{name}“");
                         else if (s2 == 2) Key(p2, Confidence.Wahrscheinlich, $"Schlüssel unter dem Hersteller „{name}“");
                         else if (s2 == 1 && mode == LeftoverMode.Erweitert) Key(p2, Confidence.Unsicher, $"Schlüssel unter dem Hersteller „{name}“");
@@ -481,7 +510,7 @@ public sealed class LeftoverScanner
                  })
             foreach (var (valueName, data) in Values(root))
             {
-                var exe = ProgramInventory.ExeFromCommand(data);
+                var exe = ProgramInventory.ResolveExe(ProgramInventory.ExeFromCommand(data));
                 bool into = loc.Length > 3 && ProtectionService.IsUnder(exe, loc);
                 bool exeMatch = m.Exes.Contains(Compact(Path.GetFileNameWithoutExtension(exe)));
                 if ((into || exeMatch) && !File.Exists(exe)) Val(root + "|" + valueName, Confidence.Sicher, "Autostart-Eintrag zeigt auf eine gelöschte Programmdatei");
@@ -610,7 +639,7 @@ public sealed class LeftoverScanner
         {
             ct.ThrowIfCancellationRequested();
             var img = Values(path).FirstOrDefault(v => v.name.Equals("ImagePath", StringComparison.OrdinalIgnoreCase)).data ?? "";
-            var exe = ProgramInventory.ExeFromCommand(img);
+            var exe = ProgramInventory.ResolveExe(ProgramInventory.ExeFromCommand(img));
             if (!Points(exe) || File.Exists(exe)) continue; // nur verwaiste Dienste
             add(new Leftover
             {
@@ -675,7 +704,7 @@ public sealed class LeftoverScanner
                     try
                     {
                         foreach (dynamic action in task.Definition.Actions)
-                            if ((int)action.Type == 0) list.Add(((string)task.Path, Environment.ExpandEnvironmentVariables((string)action.Path).Trim('"')));
+                            if ((int)action.Type == 0) list.Add(((string)task.Path, ProgramInventory.ResolveExe(Environment.ExpandEnvironmentVariables((string)action.Path).Trim('"'))));
                     }
                     catch { }
                 }

@@ -22,6 +22,8 @@ public sealed partial class QueueItem : ObservableObject
     [ObservableProperty] private bool _waitsForUser;
     /// <summary>Restesuche für dieses Programm durchführen?</summary>
     [ObservableProperty] private bool _scanLeftovers = true;
+    /// <summary>Erzwungene Deinstallation: Restesuche auch dann, wenn der Deinstaller nichts entfernt hat.</summary>
+    public bool Forced { get; init; }
     public TaskCompletionSource<bool>? UserDone { get; set; }
 }
 
@@ -84,7 +86,7 @@ public sealed partial class UninstallViewModel : ObservableObject
     /// <summary>Erzwungene Deinstallation (Teil C): optional Deinstaller, dann direkt Restesuche.</summary>
     public async Task StartForcedAsync(ProgramFootprint footprint, InstalledProgram? withUninstaller)
     {
-        var item = new QueueItem { Program = withUninstaller, Footprint = footprint };
+        var item = new QueueItem { Program = withUninstaller, Footprint = footprint, Forced = true };
         await RunWizardAsync(new List<QueueItem> { item }, $"Erzwungene Deinstallation: {footprint.Name}", runUninstallers: withUninstaller != null);
     }
 
@@ -251,9 +253,12 @@ public sealed partial class UninstallViewModel : ObservableObject
                 UninstallOutcome.KeinDeinstaller => "kein Deinstaller",
                 _ => "fehlgeschlagen",
             };
-            q.Detail = res.Message;
-            // Bei Abbruch keine Restesuche vorschlagen (Programm ist ja noch da)
-            q.ScanLeftovers = res.Outcome != UninstallOutcome.Abgebrochen && !(res.Outcome == UninstallOutcome.Fehlgeschlagen && UninstallRunner.StillInstalled(p));
+            // Bei Abbruch keine Restesuche vorschlagen (Programm ist ja noch da) – außer bei der erzwungenen Deinstallation
+            q.ScanLeftovers = q.Forced || (res.Outcome != UninstallOutcome.Abgebrochen && !(res.Outcome == UninstallOutcome.Fehlgeschlagen && UninstallRunner.StillInstalled(p)));
+            q.Detail = q.Forced && res.Outcome != UninstallOutcome.Erfolgreich
+                ? (res.Message.Length > 0 ? res.Message + " " : "") + "Erzwungen: Es wird trotzdem nach Resten gesucht."
+                : res.Message;
+            if (!q.ScanLeftovers) q.Detail += " Keine Restesuche, weil das Programm noch installiert ist.";
             Log("Deinstallation: " + q.State + (res.Message.Length > 0 ? " – " + res.Message : ""), res.Outcome == UninstallOutcome.Erfolgreich, p.Name);
         }
         q.IsRunning = false;
@@ -298,7 +303,9 @@ public sealed partial class UninstallViewModel : ObservableObject
             }
             BuildTrees();
             int safe = Found.Count(f => f.IsSafe);
-            ResultInfo = Found.Count == 0
+            ResultInfo = !Queue.Any(q => q.ScanLeftovers)
+                ? "Keine Restesuche: Das Programm ist noch installiert (Deinstallation abgebrochen oder fehlgeschlagen). Tipp: „Erzwungene Deinstallation“."
+                : Found.Count == 0
                 ? "Keine Reste gefunden – sauber!"
                 : $"{Found.Count} Funde ({safe} sicher). Nichts ist ausgewählt – wähle aus, was weg soll. Fett = sicher, grau = unsicher (Grund steht dabei).";
             Status = "";
@@ -350,7 +357,7 @@ public sealed partial class UninstallViewModel : ObservableObject
         if (!ConfirmDialog.Show(Owner, $"{sel.Count} Reste entfernen?",
                 $"{sel.Count(s => s.IsFileSystem)} Dateien/Ordner ({Format.Bytes(sel.Sum(s => s.Size))}) · {sel.Count(s => !s.IsFileSystem)} Registry-Einträge/Systemobjekte",
                 "Dateien und Ordner kommen in den Papierkorb. Registry-Einträge werden gelöscht – vorher wird jeder als .reg-Datei gesichert " +
-                "(zusätzlich zum Wiederherstellungspunkt). " + (needsAdmin ? "🛡 Für Einträge außerhalb deines Benutzerbereichs fragt Windows nach Adminrechten." : ""),
+                (RestoreInfo.StartsWith("✔") ? "(zusätzlich zum Wiederherstellungspunkt). " : "(es wurde kein Wiederherstellungspunkt erstellt). ") + (needsAdmin ? "🛡 Für Einträge außerhalb deines Benutzerbereichs fragt Windows nach Adminrechten." : ""),
                 lines, "Entfernen", requireCheckbox: null)) return;
 
         IsBusy = true;

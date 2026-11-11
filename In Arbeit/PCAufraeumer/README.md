@@ -12,9 +12,10 @@ Windows-11-App (C# / .NET 8 / WPF), komplett auf Deutsch. Sie findet unnötige D
 
 > Der ganze Ordner gehört zusammen (die VLC-Dateien für den Videoplayer liegen im Unterordner `libvlc`). Wenn du die App verschieben willst, verschiebe immer den **ganzen Ordner**.
 
-Die App startet **ohne Adminrechte**. Nur zwei Dinge fragen gezielt per UAC nach Adminrechten (in der App mit 🛡 *Admin* markiert):
+Die App startet **ohne Adminrechte**. Nur diese Dinge fragen gezielt per UAC nach Adminrechten (in der App mit 🛡 markiert):
 - Leeren von `C:\Windows\Temp` und den Windows-Update-Resten
 - optional „Mit Adminrechten neu starten“ für die CPU-Temperatur
+- auf der Seite **Programme**: Wiederherstellungspunkt erstellen, Programme für alle Benutzer deinstallieren, Registry-Reste außerhalb deines Benutzerbereichs löschen, Dienste/Aufgaben/Autostart-Einträge für alle Benutzer ändern
 
 ## So benutzt du die App
 
@@ -25,7 +26,8 @@ Die App startet **ohne Adminrechte**. Nur zwei Dinge fragen gezielt per UAC nach
 | **Scan** | Ordner auswählen, Ausschlüsse festlegen, Kategorien an- oder abschalten, „Scan starten“. Der Scan löscht nichts. |
 | **Ergebnisse** | Liste nach Kategorie gruppiert, Vorschau rechts (Video, Bild, Text, PDF). Häkchen setzen → „In den Papierkorb“. |
 | **Desktop aufräumen** | Ordnet App-Symbole nach Kategorien in Gruppen an und packt lose Dateien in passende Ordner. Mit Vorher/Nachher-Vorschau, Verlauf und „Rückgängig machen“. |
-| **Protokoll** | Jede Löschung und jede Desktop-Aufräumaktion mit Datum, Pfad und Größe, als CSV exportierbar. Darunter steht das Fehlerprotokoll. |
+| **Programme** | Programme, Store-Apps und Spiele deinstallieren und danach Reste suchen. Tabs: Deinstallieren, Erzwungene Deinstallation, Installationen überwachen, Autostart. |
+| **Protokoll** | Jede Löschung, jede Deinstallation und jede Desktop-Aufräumaktion mit Datum, Pfad und Größe, als CSV exportierbar. Darunter steht das Fehlerprotokoll. |
 | **Einstellungen** | Zeiträume, Kategorien, Mindestgröße, Ausschluss- und Ausnahmeliste, Dark/Light Mode. |
 
 ### Typischer Ablauf
@@ -75,6 +77,33 @@ Gut zu wissen:
 - Windows speichert die Positionen selbst. Ändert sich die Bildschirmauflösung, kann Windows Symbole verschieben. Dafür gibt es den Verlauf mit „Rückgängig“.
 - In den **Einstellungen → Desktop aufräumen** verwaltest du Kategorien (hinzufügen, umbenennen, löschen, Reihenfolge), die Regeln „Programm → Kategorie“ und „Dateityp → Ordner“ sowie die „Nie anfassen“-Liste.
 
+### Programme
+**Tab „Deinstallieren“**: Die Liste zeigt
+- klassische Programme aus den drei Uninstall-Bereichen der Registry (Systemkomponenten und Updates nur mit dem Häkchen „Systemkomponenten & Updates anzeigen“),
+- Store-Apps und vorinstallierte Windows-Apps (von Windows gesperrte Apps haben ein 🔒 und sind nicht auswählbar),
+- Spiele aus Steam, Epic, GOG, EA, Ubisoft und Battle.net. **Spiele werden immer über ihren Launcher deinstalliert**, nie daran vorbei. Danach klickst du „Fertig“. Bei Steam und Epic merkt die App selbst, wenn der Spielordner weg ist.
+
+Die Spalten lassen sich sortieren. Oben gibt es Suche, Typ- und Kategorie-Filter und „Nach Kategorie gruppieren“. Die **Kategorie** ist dieselbe wie beim Desktop-Aufräumen: Änderst du sie hier, gilt das auch dort. Rechtsklick: Deinstallieren, Installationsordner öffnen, Registry-Eintrag anzeigen, im Internet suchen, verwaisten Eintrag entfernen. ⚠ = verwaister Eintrag (Deinstaller fehlt), ⏺ = Installation aufgezeichnet.
+
+**Ablauf einer Deinstallation** (auch für mehrere Programme auf einmal: dann ein Wiederherstellungspunkt, eine Warteschlange und eine gemeinsame Restesuche):
+1. 🛡 **Wiederherstellungspunkt** (abschaltbar in den Einstellungen). Ist der Computerschutz aus, fragt die App, ob sie ihn einschalten soll. Windows erlaubt normalerweise **nur einen Punkt pro 24 Stunden**. Dann sagt die App das klar, und du entscheidest, ob es ohne neuen Punkt weitergeht.
+2. Der **eigene Deinstaller** des Programms startet (bei MSI `msiexec /x {Produktcode}`, Store-Apps über Windows). Die App wartet, bis er **und alle von ihm gestarteten Prozesse** fertig sind.
+3. **Suchmodus** wählen: **Sicher** (nur eindeutig Zugehöriges), **Moderat** (Standard; zusätzlich AppData, ProgramData, Startmenü, Hersteller-Ordner, Dienste, Aufgaben, Firewall) oder **Erweitert** (ganze Registry; mehr Funde, aber auch mehr Fehlalarme).
+4. Das Ergebnis erscheint als zwei Bäume: **Registry-Einträge & Systemobjekte** und **Dateien & Ordner**. **Standardmäßig ist NICHTS ausgewählt.** Fett = sicher, grau = unsicher (mit Grund). „Alle sicheren Funde auswählen“ hakt nur die sicheren an.
+5. „Ausgewählte entfernen“ → Zusammenfassung → bestätigen. **Dateien kommen in den Papierkorb.** Registry-Einträge werden vorher als `.reg`-Datei gesichert (Doppelklick darauf stellt sie wieder her). Alles steht im Protokoll.
+
+**Schutzregeln der Restesuche.** Nie vorgeschlagen werden:
+- gemeinsam genutzte Ordner und Schlüssel: Common Files, Microsoft, Windows, .NET, Visual-C++-Laufzeiten, Treiber
+- Hersteller-Ordner, die noch ein anderes installiertes Programm nutzt, und Ordner, deren Name zu einem anderen installierten Programm passt
+- `C:\Windows`, `System32`, `HKLM\SYSTEM` (Ausnahme: ein Dienst, dessen Programmdatei nicht mehr existiert)
+- alles auf deiner eigenen Schutzliste (Einstellungen → Programme)
+
+**Tab „Erzwungene Deinstallation“**: für kaputte oder schon gelöschte Programme. Namen eintippen, Ordner oder .exe wählen. Ist noch ein Deinstaller da, bietet die App ihn zuerst an. Danach sucht sie **in jedem Fall** nach Resten.
+
+**Tab „Installationen überwachen“**: „Installation aufzeichnen …“ → Setup-Datei wählen. Die App merkt sich Dateien und Registry vorher und nachher und speichert die Unterschiede. So ein Programm lässt sich später anhand der Aufzeichnung restlos entfernen. Aufzeichnungen lassen sich umbenennen und löschen. Ehrlich gesagt: Die **Hintergrund-Überwachung** (Häkchen) erkennt nur, *dass* ein neues Programm aufgetaucht ist. Was das Setup angelegt hat, kann sie im Nachhinein nur **schätzen** (neue Ordner und Schlüssel rund um den Installationszeitpunkt). Solche Einträge sind als „geschätzt“ markiert.
+
+**Tab „Autostart“**: funktioniert wie im Task-Manager. Ein- und Ausschalten ändert nur den Schalter von Windows (`StartupApproved`). **Nichts wird gelöscht**, alles ist umkehrbar. Gezeigt werden Registry (Run/RunOnce), Autostart-Ordner, Store-Apps, geplante Aufgaben bei Anmeldung/Start und unter „Fortgeschritten“ auch Dienste. Die Spalten „Signiert“ und „Datei da“ helfen beim Einschätzen. Einträge, deren Datei fehlt, lassen sich nach Bestätigung entfernen. Windows- und Sicherheitseinträge sind gesperrt (🔒).
+
 ### „Zuletzt geöffnet“: wie zuverlässig ist das?
 Windows aktualisiert das Datum „Letzter Zugriff“ nicht immer. Die App liest die Einstellung `NtfsDisableLastAccessUpdate` aus der Registry und zeigt sie auf der Scan-Seite an. Die Ausgabe von `fsutil behavior query disablelastaccess` steht dort ebenfalls, falls Windows sie ohne Adminrechte liefert. Ist die Aktualisierung aus, nutzt die App das **Änderungsdatum**. In der Spalte **Grundlage** steht bei jeder Datei, welches Datum verwendet wurde.
 
@@ -112,6 +141,8 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 - `letztes-ergebnis.json`: letzte Ergebnisliste (wird beim Start automatisch geladen)
 - `Ergebnisse\`: deine mit „Speichern unter …“ gesicherten Ergebnislisten
 - `Desktop-Verlauf\`: gespeicherte Zustände vor jeder Desktop-Aufräumaktion (Grundlage für „Rückgängig“)
+- `Registry-Sicherungen\`: `.reg`-Sicherung jedes gelöschten Registry-Rests (Doppelklick stellt ihn wieder her)
+- `Aufzeichnungen\`: Installationsaufzeichnungen (Ordner in den Einstellungen änderbar)
 
 ---
 
@@ -125,7 +156,7 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 ```bash
 cd "Games/In Arbeit/PCAufraeumer"
 dotnet build
-dotnet test                       # 50 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
+dotnet test                       # 62 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
 dotnet run --project src/PCAufraeumer
 ```
 
@@ -157,15 +188,26 @@ PCAufraeumer/
 │  ├─ Services/      ScanService (Scan + Duplikate), ProtectionService (Schutzregeln),
 │  │                 CleanupService (Papierkorb + Admin-Helfer), TempService, LastAccessService,
 │  │                 SystemInfoService, DriverService (WMI/WU/NVIDIA), ThumbnailService, Storage …
+│  │                 Programme: ProgramInventory (Registry/Appx/Launcher), UninstallRunner, LeftoverScanner,
+│  │                 LeftoverDeleter, InstallRecorder, AutostartService, AdminHelper (UAC-Aufgaben)
 │  ├─ ViewModels/    eine pro Seite + MainViewModel (Navigation)
 │  ├─ Views/         XAML-Seiten, PreviewPanel (Video/Bild/Text/PDF), ConfirmDialog, Vollbild
 │  ├─ Themes/        Colors.Dark/Light.xaml, Styles.xaml
 │  └─ Interop/       Windows-API (SHFileOperation, Shell-Thumbnails, Known Folders)
-└─ tests/PCAufraeumer.Tests/   xUnit-Tests (Scan-Regeln, Schutz, Duplikate, Papierkorb, Temp, CSV, Treiber)
+└─ tests/PCAufraeumer.Tests/   xUnit-Tests (Scan-Regeln, Schutz, Duplikate, Papierkorb, Temp, CSV, Treiber, Desktop, Programme)
 ```
 
 ### Admin-Helfer
 Für Admin-Bereiche startet die App sich selbst mit `--admin-clean <job> <ergebnis>` per UAC. Der Helfer bekommt **nur IDs** aus der fest eingebauten Temp-Liste (keine beliebigen Pfade) und schreibt das Protokoll zurück.
+
+Die Seite **Programme** nutzt einen zweiten, allgemeineren Helfer: `--admin-job <job.json> <ergebnis.json>`. Er führt nur fest eingebaute Aufgabenarten aus: Wiederherstellungspunkt, Computerschutz einschalten, Registry-Schlüssel/-Wert löschen (mit `.reg`-Sicherung), Papierkorb, Dienst/Aufgabe/Firewall-Regel löschen, Aufgabe ein/aus, StartupApproved setzen. Vor jedem Registry-Löschen prüft der Helfer die Schutzregeln selbst noch einmal (z. B. nichts unter `HKLM\SYSTEM` außer einem einzelnen Dienst, nichts unter `Software\Microsoft` außer einzelnen Uninstall-/App-Paths-Schlüsseln und Run-Werten).
+
+### Programme: Technik
+- **Store-Apps** werden per PowerShell (`Get-AppxPackage`, `Remove-AppxPackage`) gelesen und entfernt. Grund: Das Windows-SDK-Zielframework (`net8.0-windows10.0.19041.0`) verträgt sich in diesem Projekt nicht mit WebView2 und LibVLCSharp. Anzeigenamen kommen aus dem AppxManifest (`SHLoadIndirectString`).
+- **Wiederherstellungspunkt:** WMI `root\default:SystemRestore.CreateRestorePoint`. Ob wirklich ein Punkt entstanden ist, prüft die App durch Zählen vorher/nachher, denn wegen der 24-Stunden-Sperre meldet Windows sonst trotzdem Erfolg.
+- **Autostart ein/aus:** `...\Explorer\StartupApproved\Run|Run32|StartupFolder` (12 Byte, erstes Byte 02 = an, 03 = aus), Store-Apps über ihren `State`-Wert.
+- **Signatur:** `WinVerifyTrust` (Authenticode).
+- **Tests** laufen mit den harmlosen Testprogrammen „PCA-Testprogramm“ und „PCA-Nachbarprogramm“. Sie werden nur im Benutzerbereich (HKCU + AppData) installiert und danach komplett entfernt.
 
 ### Test-Datenordner
 Mit der Umgebungsvariable `PCA_DATADIR` nutzt die App einen anderen Datenordner, damit deine echten Einstellungen beim Testen unberührt bleiben.

@@ -131,6 +131,51 @@
                 </StackPanel>
             </Grid>
 
+            <!-- ───── Programme ───── -->
+            <TextBlock Text="Programme" Style="{StaticResource H1}" FontSize="20" Margin="0,10,0,4"/>
+            <TextBlock Style="{StaticResource Muted}" Margin="0,0,14,12" Text="Deinstallieren, Restesuche und Installationsaufzeichnungen."/>
+            <Grid DataContext="{Binding Programs}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Deinstallieren" Style="{StaticResource H2}"/>
+                        <CheckBox IsChecked="{Binding CreateRestorePoint}" Margin="0,2">
+                            <TextBlock TextWrapping="Wrap" Text="🛡 Vor jeder Deinstallation einen Wiederherstellungspunkt erstellen (empfohlen)"/>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding ShowSystemComponents}" Content="Systemkomponenten und Updates in der Liste anzeigen" Margin="0,6"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock Text="Standard-Suchmodus für Reste:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox ItemsSource="{Binding Modes}" SelectedItem="{Binding DefaultMode}" Width="140"/>
+                        </StackPanel>
+                        <TextBlock Text="Ordner für Installationsaufzeichnungen" Style="{StaticResource Label}" Margin="0,14,0,2"/>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Command="{Binding PickRecordingsFolderCommand}" Margin="8,0,0,0"><TextBlock Text="Ändern …"/></Button>
+                            <TextBlock Text="{Binding RecordingsFolder}" Style="{StaticResource Muted}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                        </DockPanel>
+                        <Button Command="{Binding OpenBackupsCommand}" HorizontalAlignment="Left" Margin="0,12,0,0">
+                            <TextBlock Text="Registry-Sicherungen öffnen (.reg zum Wiederherstellen)"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Eigene Schutzliste für die Restesuche" Style="{StaticResource H2}"/>
+                        <TextBlock Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,6"
+                                   Text="Ordner und Registry-Pfade (z. B. HKEY_CURRENT_USER\Software\MeineFirma), die nie als Rest vorgeschlagen werden – zusätzlich zu den fest eingebauten Schutzregeln."/>
+                        <ListBox ItemsSource="{Binding ProtectedPaths}" SelectedItem="{Binding SelectedProtectedPath}" Height="120"/>
+                        <DockPanel Margin="0,8,0,0" LastChildFill="True">
+                            <Button DockPanel.Dock="Right" Command="{Binding RemoveProtectedCommand}" Margin="0"><TextBlock Text="Entfernen"/></Button>
+                            <Button DockPanel.Dock="Right" Command="{Binding AddProtectedFolderCommand}"><TextBlock Text="Ordner …"/></Button>
+                            <Button DockPanel.Dock="Right" Command="{Binding AddProtectedTextCommand}"><TextBlock Text="Hinzufügen"/></Button>
+                            <TextBox Text="{Binding NewProtectedPath, UpdateSourceTrigger=PropertyChanged}" MinWidth="120" Margin="0,0,8,0"/>
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
             <!-- ───── Desktop aufräumen ───── -->
             <TextBlock Text="Desktop aufräumen" Style="{StaticResource H1}" FontSize="20" Margin="0,10,0,4"/>
             <TextBlock Style="{StaticResource Muted}" Margin="0,0,14,12"
