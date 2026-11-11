@@ -141,6 +141,24 @@ public sealed class SizeBarConverter : IValueConverter
     public object ConvertBack(object value, Type t, object p, CultureInfo c) => throw new NotSupportedException();
 }
 
+/// <summary>Gruppen-Elemente (FileCandidate) → Gesamtgröße als Text, z. B. „4,3 GB“.</summary>
+public sealed class GroupSizeConverter : IValueConverter
+{
+    public object Convert(object? value, Type t, object p, CultureInfo c) =>
+        value is System.Collections.IEnumerable items
+            ? Format.Bytes(items.OfType<PCAufraeumer.Models.FileCandidate>().Where(f => !f.IsDeleted).Sum(f => f.Size))
+            : "";
+    public object ConvertBack(object value, Type t, object p, CultureInfo c) => throw new NotSupportedException();
+}
+
+/// <summary>Zahl &gt; 0 → sichtbar.</summary>
+public sealed class PositiveToVisibility : IValueConverter
+{
+    public object Convert(object? value, Type t, object p, CultureInfo c) =>
+        value is int i && i > 0 ? Visibility.Visible : Visibility.Collapsed;
+    public object ConvertBack(object value, Type t, object p, CultureInfo c) => throw new NotSupportedException();
+}
+
 /// <summary>Anteil (0–1) → Breite in Pixeln (Parameter = volle Breite). Für Anteil-Balken.</summary>
 public sealed class ShareWidthConverter : IValueConverter
 {

@@ -45,6 +45,10 @@ Die App startet **ohne Adminrechte**. Nur diese Dinge fragen gezielt per UAC nac
 - **Doppelte Dateien**: Die App filtert zuerst nach Größe, prüft dann Anfang und Ende der Datei und bestätigt am Ende per Inhalts-Hash (xxHash128). Pro Gruppe schlägt sie eine Kopie zum **Behalten** vor (grünes „BLEIBT“). Sie bevorzugt dabei Kopien, die nicht in Downloads/Temp liegen und kein „Kopie“ oder „(1)“ im Namen haben, sonst die älteste. Mit „Diese Kopie behalten“ änderst du den Vorschlag. Mindestens eine Kopie bleibt **immer** erhalten.
 - **Temp-/Cache-Dateien**: `%TEMP%`, `C:\Windows\Temp`, Chrome-, Edge- und Firefox-Cache, Miniaturansichten, Windows-Update-Reste. Sie werden als eigener Bereich angezeigt, unabhängig von der Ordnerauswahl. Diese Dateien werden **direkt** gelöscht (kein Papierkorb), aber erst nach einer eigenen Bestätigung mit Pflicht-Häkchen. Browser-Caches lassen sich nur bei geschlossenem Browser leeren.
 - **Alte Downloads/Installer**: `.exe`, `.msi`, `.zip`, `.rar`, `.7z`, `.iso` usw. im Downloads-Ordner, die älter sind als der eingestellte Zeitraum (Standard: 6 Monate).
+- **Spielaufnahmen**: **alle** Clips von NVIDIA (ShadowPlay/NVIDIA App), Xbox Game Bar, AMD ReLive, OBS, Medal und SteelSeries Moments, **ohne Altersgrenze**, nach Spiel gruppiert (größtes Spiel zuerst, darin die neuesten oben). Die Ordner findet die App selbst (Registry, Programm-Einstellungen, Standardorte); eigene Ordner kommen über „Ordner hinzufügen …“ dazu. Das Spiel kommt aus dem Unterordner (NVIDIA, AMD, Medal) oder aus dem Dateinamen („Fortnite 2026-01-04 17-32-11.mp4“).
+  - **Schutz:** Clips in einem Unterordner **„Behalten“** (z. B. `Videos\NVIDIA\Apex Legends\Behalten\`) werden nie angezeigt. „In ‚Behalten‘ verschieben“ (in der Vorschau, oder unten für alle ausgewählten Clips) legt diesen Ordner an und verschiebt die Clips dorthin, ohne etwas zu überschreiben.
+  - Clips erscheinen nur hier, nicht zusätzlich als „alte Videos“ oder Duplikate. Gerade laufende Aufnahmen (gesperrt) werden übersprungen.
+  - **Steam** speichert Clips intern als viele Bruchstücke statt als Videodatei. Steam-Ordner werden deshalb nur angezeigt, wenn darin echte Videodateien liegen (z. B. Exporte). Interne Steam-Clips verwaltest du in Steam selbst.
 
 ### Desktop aufräumen
 1. Seite **Desktop aufräumen** öffnen. Die App liest deinen Desktop (auch einen per OneDrive umgeleiteten) und den öffentlichen Desktop. Dabei wird **nichts verändert**.
@@ -178,7 +182,7 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 ```bash
 cd "Games/In Arbeit/PCAufraeumer"
 dotnet build
-dotnet test                       # 76 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
+dotnet test                       # 85 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
 dotnet run --project src/PCAufraeumer
 ```
 
@@ -215,7 +219,8 @@ PCAufraeumer/
 │  │                 SystemInfoService, DriverService (WMI/WU/NVIDIA), ThumbnailService, Storage …
 │  │                 Programme: ProgramInventory (Registry/Appx/Launcher), UninstallRunner, LeftoverScanner,
 │  │                 LeftoverDeleter, InstallRecorder, AutostartService, AdminHelper (UAC-Aufgaben)
-│  │                 DiskMapService + TreemapLayout (Speicher), WingetService (Updates), DownloadsPlanner
+│  │                 DiskMapService + TreemapLayout (Speicher), WingetService (Updates), DownloadsPlanner,
+│  │                 RecordingSources (Aufnahme-Ordner + Spielname)
 │  ├─ ViewModels/    eine pro Seite + MainViewModel (Navigation)
 │  ├─ Views/         XAML-Seiten, PreviewPanel (Video/Bild/Text/PDF), ConfirmDialog, Vollbild
 │  ├─ Themes/        Colors.Dark/Light.xaml, Styles.xaml

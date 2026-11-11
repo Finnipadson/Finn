@@ -9,6 +9,8 @@
     <conv:UpperConverter x:Key="Upper"/>
     <conv:SizeBarConverter x:Key="SizeBar"/>
     <conv:ShareWidthConverter x:Key="ShareWidth"/>
+    <conv:GroupSizeConverter x:Key="GroupSize"/>
+    <conv:PositiveToVisibility x:Key="PositiveToVis"/>
 
     <Style x:Key="Mono" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource MonoFont}"/>

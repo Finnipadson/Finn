@@ -54,7 +54,7 @@ public sealed partial class ScanViewModel : ObservableObject
     {
         if (IsScanning) return;
         var s = _settings.Current;
-        bool fileCats = s.CategoryVideos || s.CategoryDuplicates || s.CategoryDownloads;
+        bool fileCats = s.CategoryVideos || s.CategoryDuplicates || s.CategoryDownloads || s.CategoryRecordings;
         if (!fileCats && !s.CategoryTemp)
         {
             Phase = "Bitte mindestens eine Kategorie einschalten.";
@@ -62,7 +62,7 @@ public sealed partial class ScanViewModel : ObservableObject
         }
         if (s.CategoryVideos || s.CategoryDuplicates)
         {
-            if (!s.ScanFolders.Any(Directory.Exists) && !s.CategoryDownloads && !s.CategoryTemp)
+            if (!s.ScanFolders.Any(Directory.Exists) && !s.CategoryDownloads && !s.CategoryTemp && !s.CategoryRecordings)
             {
                 Phase = "Bitte zuerst mindestens einen Ordner zum Durchsuchen hinzufügen.";
                 return;

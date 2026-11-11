@@ -84,6 +84,7 @@ public partial class PreviewPanel : UserControl
         ReasonText.Text = c.Reason + $"  (Grundlage: {c.BasisLabel})";
         PathText.Text = c.FullPath;
         BtnKeepCopy.Visibility = c.Category == FindingCategory.Duplicates && !c.IsKeep && !c.IsDeleted ? Visibility.Visible : Visibility.Collapsed;
+        BtnKeepFolder.Visibility = c.IsRecording && !c.IsDeleted ? Visibility.Visible : Visibility.Collapsed;
         BtnNever.IsEnabled = !c.IsDeleted;
         BtnOpen.IsEnabled = !c.IsDeleted;
 
@@ -440,6 +441,15 @@ public partial class PreviewPanel : UserControl
         StopVideo();
         RestoreAccessTime();
         Vm?.NeverSuggestCommand.Execute(c);
+    }
+
+    private void KeepFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var c = Item;
+        if (c == null) return;
+        StopVideo();          // VLC gibt die Datei frei
+        RestoreAccessTime();
+        Vm?.MoveOneToKeepCommand.Execute(c);
     }
 
     private void ExcludeFolder_Click(object sender, RoutedEventArgs e)

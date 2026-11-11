@@ -34,6 +34,7 @@ public sealed partial class ResultsViewModel : ObservableObject
         new CategoryFilter("Alte Videos/Clips", FindingCategory.Videos),
         new CategoryFilter("Doppelte Dateien", FindingCategory.Duplicates),
         new CategoryFilter("Alte Downloads/Installer", FindingCategory.Downloads),
+        new CategoryFilter("Spielaufnahmen", FindingCategory.Recordings),
     };
 
     [ObservableProperty] private string _searchText = "";
@@ -77,7 +78,8 @@ public sealed partial class ResultsViewModel : ObservableObject
         View.GroupDescriptions.Add(new PropertyGroupDescription(nameof(FileCandidate.GroupLabel)));
         View.SortDescriptions.Add(new SortDescription(nameof(FileCandidate.Category), ListSortDirection.Ascending));
         View.SortDescriptions.Add(new SortDescription(nameof(FileCandidate.GroupId), ListSortDirection.Ascending));
-        View.SortDescriptions.Add(new SortDescription(nameof(FileCandidate.Size), ListSortDirection.Descending));
+        // Aufnahmen: neueste zuerst; alle anderen: größte zuerst (siehe FileCandidate.SortValue)
+        View.SortDescriptions.Add(new SortDescription(nameof(FileCandidate.SortValue), ListSortDirection.Descending));
         View.Filter = Filter;
     }
 
@@ -219,6 +221,41 @@ public sealed partial class ResultsViewModel : ObservableObject
         TempSummary = temps.Count == 0 ? "" : $"{temps.Count} Temp-/Cache-Bereich(e) ausgewählt ({Format.Bytes(temps.Sum(t => t.Size))})";
         DeleteSelectedCommand.NotifyCanExecuteChanged();
         CleanTempCommand.NotifyCanExecuteChanged();
+        SelectedRecordingCount = files.Count(f => f.IsRecording);
+        MoveSelectedToKeepCommand.NotifyCanExecuteChanged();
+    }
+
+    [ObservableProperty] private int _selectedRecordingCount;
+
+    private bool CanMoveSelectedToKeep() => !IsWorking && SelectedRecordingCount > 0;
+
+    /// <summary>Ausgewählte Spielaufnahmen in den Ordner „Behalten“ verschieben.</summary>
+    [RelayCommand(CanExecute = nameof(CanMoveSelectedToKeep))]
+    private void MoveSelectedToKeep() =>
+        MoveToKeep(Items.Where(i => i.IsRecording && i.IsSelected && !i.IsDeleted).ToList());
+
+    /// <summary>Eine Spielaufnahme (aus der Vorschau) in den Ordner „Behalten“ verschieben.</summary>
+    [RelayCommand]
+    private void MoveOneToKeep(FileCandidate? c)
+    {
+        if (c is { IsRecording: true, IsDeleted: false }) MoveToKeep(new List<FileCandidate> { c });
+    }
+
+    private void MoveToKeep(List<FileCandidate> clips)
+    {
+        if (clips.Count == 0) return;
+        var (moved, problems) = _cleanup.MoveToKeepFolder(clips);
+        foreach (var c in moved)
+        {
+            c.PropertyChanged -= ItemChanged;
+            Items.Remove(c);
+        }
+        View.Refresh(); // Gruppengrößen neu berechnen
+        WorkStatus = $"{moved.Count} Aufnahme(n) in „{RecordingSources.KeepFolderName}“ verschoben – sie werden nie mehr vorgeschlagen." +
+                     (problems.Count > 0 ? " Nicht verschoben: " + string.Join("; ", problems.Take(3)) : "");
+        UpdateSummary();
+        AutoSave();
+        _logChanged();
     }
 
     /// <summary>„Alle in dieser Gruppe auswählen“ – behaltene Kopien bleiben immer abgewählt.</summary>

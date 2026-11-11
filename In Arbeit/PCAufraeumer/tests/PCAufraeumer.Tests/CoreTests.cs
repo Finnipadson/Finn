@@ -147,7 +147,8 @@ public class ScanTests : IDisposable
             DownloadAgeDays = 182,
         };
         var prot = new ProtectionService(() => settings.ExcludedFolders);
-        var scan = new ScanService(prot, la) { DownloadsFolder = Path.Combine(_t.Root, "Downloads") };
+        // Nie die echten Aufnahme-Ordner des PCs einlesen
+        var scan = new ScanService(prot, la) { DownloadsFolder = Path.Combine(_t.Root, "Downloads"), RecordingFolders = _ => new() };
         return (scan, settings);
     }
 

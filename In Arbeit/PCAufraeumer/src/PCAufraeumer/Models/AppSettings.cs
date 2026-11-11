@@ -16,6 +16,11 @@ public sealed class AppSettings
     public bool CategoryDuplicates { get; set; } = true;
     public bool CategoryTemp { get; set; } = true;
     public bool CategoryDownloads { get; set; } = true;
+    /// <summary>Spielaufnahmen: alle Clips der Aufnahme-Programme, nach Spiel gruppiert (ohne Altersgrenze).</summary>
+    public bool CategoryRecordings { get; set; } = true;
+
+    /// <summary>Zusätzliche, selbst gewählte Aufnahme-Ordner.</summary>
+    public List<string> RecordingFolders { get; set; } = new();
 
     /// <summary>Videos gelten als „alt“, wenn sie so viele Tage nicht geöffnet wurden. Standard 1 Jahr.</summary>
     public int VideoAgeDays { get; set; } = 365;

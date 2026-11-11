@@ -9,6 +9,8 @@ public enum FindingCategory
     Videos,
     Duplicates,
     Downloads,
+    /// <summary>Spielaufnahmen (NVIDIA, Xbox, Steam, AMD, OBS, Medal, SteelSeries) – nach Spiel gruppiert.</summary>
+    Recordings,
 }
 
 public enum DateBasis
@@ -40,6 +42,10 @@ public sealed partial class FileCandidate : ObservableObject
     public int GroupId { get; set; }
     public string Hash { get; set; } = "";
 
+    /// <summary>Nur Spielaufnahmen: Spiel und Aufnahme-Programm.</summary>
+    public string Game { get; set; } = "";
+    public string Source { get; set; } = "";
+
     /// <summary>Freigabe zum Löschen. Standard: NICHT ausgewählt.</summary>
     [ObservableProperty] private bool _isSelected;
 
@@ -58,6 +64,7 @@ public sealed partial class FileCandidate : ObservableObject
         FindingCategory.Videos => "Alte Videos/Clips",
         FindingCategory.Duplicates => "Doppelte Dateien",
         FindingCategory.Downloads => "Alte Downloads/Installer",
+        FindingCategory.Recordings => "Spielaufnahmen",
         _ => "",
     };
 
@@ -69,9 +76,17 @@ public sealed partial class FileCandidate : ObservableObject
         _ => "",
     };
 
-    [JsonIgnore] public string GroupLabel => Category == FindingCategory.Duplicates
-        ? $"{CategoryLabel} · Gruppe {GroupId}"
-        : CategoryLabel;
+    [JsonIgnore] public string GroupLabel => Category switch
+    {
+        FindingCategory.Duplicates => $"{CategoryLabel} · Gruppe {GroupId}",
+        FindingCategory.Recordings => $"{CategoryLabel} · {Game}",
+        _ => CategoryLabel,
+    };
+
+    /// <summary>Sortierung innerhalb einer Gruppe: Aufnahmen neueste zuerst, sonst größte zuerst.</summary>
+    [JsonIgnore] public long SortValue => Category == FindingCategory.Recordings ? LastWrite.Ticks : Size;
+
+    [JsonIgnore] public bool IsRecording => Category == FindingCategory.Recordings;
 
     [JsonIgnore] public bool CanSelect => !IsKeep && !IsDeleted;
 

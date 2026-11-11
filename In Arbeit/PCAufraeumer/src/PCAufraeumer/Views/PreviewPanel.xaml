@@ -43,6 +43,13 @@
                                 <TextBlock Text="Diese Kopie behalten" FontSize="12"/>
                             </StackPanel>
                         </Button>
+                        <Button x:Name="BtnKeepFolder" Click="KeepFolder_Click" Margin="0,0,6,6" Padding="10,5" Visibility="Collapsed"
+                                ToolTip="Clip in den Unterordner „Behalten“ verschieben – dort wird er nie mehr vorgeschlagen">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE735;" Style="{StaticResource Icon}" FontSize="12" Margin="0,0,6,0"/>
+                                <TextBlock Text="In „Behalten“ verschieben" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
                         <Button x:Name="BtnNever" Click="Never_Click" Margin="0,0,6,6" Padding="10,5"
                                 ToolTip="Datei kommt auf die Ausnahmeliste (in den Einstellungen bearbeitbar)">
                             <StackPanel Orientation="Horizontal">

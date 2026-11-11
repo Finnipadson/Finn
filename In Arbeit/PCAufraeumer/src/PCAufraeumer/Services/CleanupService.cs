@@ -41,6 +41,48 @@ public sealed class CleanupService
         return problems;
     }
 
+    /// <summary>
+    /// Spielaufnahmen in den Unterordner „Behalten“ ihres Ordners verschieben (dort werden sie nie mehr vorgeschlagen).
+    /// Nichts wird überschrieben. Gibt die verschobenen Funde und Probleme zurück.
+    /// </summary>
+    public (List<FileCandidate> moved, List<string> problems) MoveToKeepFolder(IEnumerable<FileCandidate> clips)
+    {
+        var moved = new List<FileCandidate>();
+        var problems = new List<string>();
+        var log = new List<DeleteLogEntry>();
+        var reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var c in clips)
+        {
+            var e = new DeleteLogEntry
+            {
+                Timestamp = DateTime.Now, Path = c.FullPath, Size = c.Size,
+                Method = "Aufnahme: nach „Behalten“ verschoben", Category = c.CategoryLabel,
+            };
+            try
+            {
+                if (c.Category != FindingCategory.Recordings) throw new InvalidOperationException("Nur für Spielaufnahmen.");
+                if (!File.Exists(c.FullPath)) throw new IOException("Datei existiert nicht mehr.");
+                if (ProtectionService.IsLocked(c.FullPath)) throw new IOException("Datei ist geöffnet/gesperrt.");
+                var dir = Path.Combine(Path.GetDirectoryName(c.FullPath)!, RecordingSources.KeepFolderName);
+                Directory.CreateDirectory(dir);
+                var dest = DesktopPlanner.UniquePath(dir, Path.GetFileName(c.FullPath), reserved);
+                File.Move(c.FullPath, dest, overwrite: false);
+                e.Success = true;
+                e.Error = $"→ {dest}";
+                moved.Add(c);
+            }
+            catch (Exception ex)
+            {
+                e.Success = false;
+                e.Error = ex.Message;
+                problems.Add($"{c.Name}: {ex.Message}");
+            }
+            log.Add(e);
+        }
+        _log.Append(log);
+        return (moved, problems);
+    }
+
     /// <summary>Verschiebt Dateien einzeln in den Papierkorb und protokolliert jede Aktion.</summary>
     public Task<List<DeleteLogEntry>> RecycleAsync(IReadOnlyList<FileCandidate> files, IReadOnlyCollection<FileCandidate> all,
         IProgress<(int done, int total, string path)> progress, CancellationToken ct)

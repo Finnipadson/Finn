@@ -32,12 +32,17 @@ public sealed partial class SettingsViewModel : ObservableObject
     public ObservableCollection<string> ScanFolders { get; } = new();
     public ObservableCollection<string> ExcludedFolders { get; } = new();
     public ObservableCollection<string> ExceptionFiles { get; } = new();
+    /// <summary>Selbst hinzugefügte Aufnahme-Ordner.</summary>
+    public ObservableCollection<string> RecordingFolders { get; } = new();
+    /// <summary>Alle gefundenen Aufnahme-Ordner (automatisch erkannt + eigene) – Anzeige auf der Scan-Seite.</summary>
+    public ObservableCollection<RecordingFolder> DetectedRecordingFolders { get; } = new();
     public IReadOnlyList<string> ProtectedRoots { get; }
 
     [ObservableProperty] private bool _categoryVideos;
     [ObservableProperty] private bool _categoryDuplicates;
     [ObservableProperty] private bool _categoryTemp;
     [ObservableProperty] private bool _categoryDownloads;
+    [ObservableProperty] private bool _categoryRecordings;
     [ObservableProperty] private PeriodOption? _videoPeriod;
     [ObservableProperty] private int _videoCustomDays;
     [ObservableProperty] private PeriodOption? _downloadPeriod;
@@ -81,6 +86,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         Replace(ScanFolders, s.ScanFolders);
         Replace(ExcludedFolders, s.ExcludedFolders);
         Replace(ExceptionFiles, s.ExceptionFiles);
+        Replace(RecordingFolders, s.RecordingFolders);
+        CategoryRecordings = s.CategoryRecordings;
         CategoryVideos = s.CategoryVideos;
         CategoryDuplicates = s.CategoryDuplicates;
         CategoryTemp = s.CategoryTemp;
@@ -94,6 +101,34 @@ public sealed partial class SettingsViewModel : ObservableObject
         DarkMode = s.DarkMode;
         NvidiaOnlineCheck = s.NvidiaOnlineCheck;
         _loading = false;
+        RefreshRecordingFolders();
+    }
+
+    /// <summary>Aufnahme-Ordner neu ermitteln (NVIDIA, Xbox, Steam, AMD, OBS, Medal, SteelSeries + eigene).</summary>
+    public void RefreshRecordingFolders()
+    {
+        DetectedRecordingFolders.Clear();
+        try { foreach (var f in RecordingSources.Detect(RecordingFolders)) DetectedRecordingFolders.Add(f); }
+        catch (Exception ex) { ErrorLog.Write("Aufnahme-Ordner konnten nicht ermittelt werden.", ex); }
+        OnPropertyChanged(nameof(RecordingFoldersText));
+    }
+
+    public string RecordingFoldersText => DetectedRecordingFolders.Count == 0
+        ? "Keine Aufnahme-Ordner gefunden."
+        : $"{DetectedRecordingFolders.Count} Aufnahme-Ordner gefunden:";
+
+    [RelayCommand]
+    private void AddRecordingFolder()
+    {
+        var f = PickFolder("Ordner mit Spielaufnahmen wählen");
+        if (f != null && !RecordingFolders.Contains(f, StringComparer.OrdinalIgnoreCase)) { RecordingFolders.Add(f); Persist(); RefreshRecordingFolders(); }
+    }
+
+    [RelayCommand]
+    private void RemoveRecordingFolder(string? f)
+    {
+        if (f != null && RecordingFolders.Remove(RecordingFolders.FirstOrDefault(x => string.Equals(x, f, StringComparison.OrdinalIgnoreCase)) ?? ""))
+        { Persist(); RefreshRecordingFolders(); }
     }
 
     private static void Replace(ObservableCollection<string> target, IEnumerable<string> src)
@@ -119,6 +154,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         s.CategoryDuplicates = CategoryDuplicates;
         s.CategoryTemp = CategoryTemp;
         s.CategoryDownloads = CategoryDownloads;
+        s.CategoryRecordings = CategoryRecordings;
+        s.RecordingFolders = RecordingFolders.ToList();
         s.VideoAgeDays = VideoPeriod is { Days: > 0 } vp ? vp.Days : Math.Clamp(VideoCustomDays, 1, 36500);
         s.DownloadAgeDays = DownloadPeriod is { Days: > 0 } dp ? dp.Days : Math.Clamp(DownloadCustomDays, 1, 36500);
         s.MinSizeMB = Math.Max(0, MinSizeMB);

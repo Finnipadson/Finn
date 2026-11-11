@@ -54,6 +54,12 @@ public sealed class ScanService
     /// <summary>Zum Testen überschreibbar.</summary>
     public string DownloadsFolder { get; set; } = KnownFolders.Downloads;
 
+    /// <summary>Aufnahme-Ordner ermitteln (zum Testen überschreibbar).</summary>
+    public Func<AppSettings, List<RecordingFolder>> RecordingFolders { get; set; } = s => RecordingSources.Detect(s.RecordingFolders);
+
+    /// <summary>Steam-Spielnamen (appid → Name), zum Testen überschreibbar.</summary>
+    public Func<Dictionary<string, string>> SteamAppNames { get; set; } = RecordingSources.SteamAppNames;
+
     private readonly record struct Root(string Path, bool DownloadsOnly);
 
     private sealed record DupFile(FileInfo Info);
@@ -84,6 +90,10 @@ public sealed class ScanService
                 FilesSeen = stats.FilesSeen, Found = result.Candidates.Count,
             });
         }
+
+        // Aufnahme-Ordner: ihre Videos erscheinen nur unter „Spielaufnahmen“ (nicht doppelt als alte Videos/Duplikate).
+        var recFolders = s.CategoryRecordings ? RecordingFolders(s) : new List<RecordingFolder>();
+        bool InRecordings(string path) => recFolders.Any(r => ProtectionService.IsUnder(path, r.Path));
 
         try
         {
@@ -123,6 +133,7 @@ public sealed class ScanService
                     }
 
                     if (root.DownloadsOnly) continue;
+                    if (recFolders.Count > 0 && VideoExtensions.Contains(ext) && InRecordings(fi.FullName)) continue;
 
                     if (s.CategoryVideos && VideoExtensions.Contains(ext))
                     {
@@ -145,6 +156,9 @@ public sealed class ScanService
                     }
                 }
             }
+
+            if (recFolders.Count > 0)
+                FindRecordings(recFolders, exceptions, result, ct, p => Report("Spielaufnahmen werden gesucht", p));
 
             if (s.CategoryDuplicates)
                 FindDuplicates(bySize, result, progress, ct);
@@ -278,6 +292,53 @@ public sealed class ScanService
         if (ext is ".exe" or ".msi" or ".msix" or ".appx") return "Installer";
         if (DownloadExtensions.Contains(ext)) return "Archiv/Abbild";
         return ext.Length > 1 ? ext.TrimStart('.').ToUpperInvariant() + "-Datei" : "Datei";
+    }
+
+    // ───────────────────────── Spielaufnahmen ─────────────────────────
+
+    /// <summary>
+    /// Alle Clips der Aufnahme-Ordner, ohne Altersgrenze. Clips in „Behalten“-Ordnern werden ausgelassen.
+    /// Gruppen-Nummer = Rang des Spiels nach Gesamtgröße (größtes Spiel zuerst).
+    /// </summary>
+    private void FindRecordings(List<RecordingFolder> folders, HashSet<string> exceptions, ScanResult result,
+        CancellationToken ct, Action<string> report)
+    {
+        var stats = result.Stats;
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var found = new List<FileCandidate>();
+        Dictionary<string, string>? steamNames = null;
+        // Genauester Ordner zuerst (z. B. Videos\NVIDIA vor einem OBS-Ordner „Videos“)
+        foreach (var f in folders.OrderByDescending(f => f.Path.Length))
+        {
+            ct.ThrowIfCancellationRequested();
+            foreach (var fi in Walk(f.Path, stats, ct, report))
+            {
+                if (!VideoExtensions.Contains(fi.Extension) || !RecordingSources.Belongs(f, fi.FullName)) continue;
+                if (!seen.Add(fi.FullName)) continue;
+                if (RecordingSources.IsInKeepFolder(f.Path, fi.FullName)) { stats.SkippedExceptions++; continue; }
+                if (exceptions.Contains(fi.FullName)) { stats.SkippedExceptions++; continue; }
+                FileAttributes a;
+                try { a = fi.Attributes; } catch { stats.Errors++; continue; }
+                if (ProtectionService.IsSystemFile(a)) { stats.SkippedSystem++; continue; }
+                if (ProtectionService.IsCloudOnly(a)) { stats.SkippedCloudOnly++; continue; }
+                if (f.Source == "Steam") steamNames ??= SteamAppNames();
+                var c = Make(fi, FindingCategory.Recordings);
+                c.Game = RecordingSources.GameFor(f, fi.FullName, steamNames == null ? null : id => steamNames.GetValueOrDefault(id));
+                c.Source = f.Source;
+                c.Basis = DateBasis.LastWrite;
+                c.Reason = (f.IsCustom ? "Aufnahme aus eigenem Ordner" : $"{f.Source}-Aufnahme") + $" vom {fi.LastWriteTime:dd.MM.yyyy HH:mm}";
+                int before = result.Candidates.Count;
+                AddChecked(c, result); // gerade laufende Aufnahmen (gesperrt) werden übersprungen
+                if (result.Candidates.Count > before) found.Add(c);
+            }
+        }
+        int rank = 1;
+        foreach (var g in found.GroupBy(c => c.Game, StringComparer.OrdinalIgnoreCase).OrderByDescending(g => g.Sum(c => c.Size)))
+        {
+            var name = g.First().Game; // gleiche Schreibweise für die ganze Gruppe
+            foreach (var c in g) { c.GroupId = rank; c.Game = name; }
+            rank++;
+        }
     }
 
     // ───────────────────────── Duplikate ─────────────────────────

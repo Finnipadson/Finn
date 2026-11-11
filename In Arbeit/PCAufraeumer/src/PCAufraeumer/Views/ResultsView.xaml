@@ -37,7 +37,7 @@
         <!-- Filterleiste -->
         <WrapPanel Grid.Row="1" Margin="0,0,0,10">
             <Grid Width="300" Margin="0,0,10,6">
-                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}" Padding="30,6,8,6"/>
+                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}" Padding="30,0,8,0"/>
                 <TextBlock Text="&#xE721;" Style="{StaticResource Icon}" FontSize="13" Margin="10,0,0,0" HorizontalAlignment="Left"
                            Foreground="{DynamicResource TextMuted}" IsHitTestVisible="False"/>
             </Grid>
@@ -87,7 +87,7 @@
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" MinWidth="260">
                                                             <Run Text="{Binding Name, Mode=OneWay}"/>
-                                                            <Run Text="{Binding ItemCount, Mode=OneWay, StringFormat='({0} Dateien)'}" Foreground="{DynamicResource TextMuted}" FontWeight="Normal"/>
+                                                            <Run Text="{Binding ItemCount, Mode=OneWay, StringFormat='({0} Dateien'}" Foreground="{DynamicResource TextMuted}" FontWeight="Normal"/><Run Text="{Binding Items, Mode=OneWay, Converter={StaticResource GroupSize}, StringFormat=' · {0})'}" Foreground="{DynamicResource TextMuted}" FontWeight="Normal"/>
                                                         </TextBlock>
                                                         <Button Padding="10,3" Margin="12,0,0,0" FontSize="12"
                                                                 Command="{Binding DataContext.ToggleGroupCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -238,6 +238,16 @@
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Command="{Binding SelectNoneCommand}">
                         <TextBlock Text="Auswahl aufheben"/>
+                    </Button>
+                    <Button Command="{Binding MoveSelectedToKeepCommand}"
+                            Visibility="{Binding SelectedRecordingCount, Converter={StaticResource PositiveToVis}}"
+                            ToolTip="Ausgewählte Spielaufnahmen in den Unterordner „Behalten“ verschieben – dort werden sie nie mehr vorgeschlagen">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE735;" Style="{StaticResource Icon}" FontSize="13" Margin="0,0,8,0"/>
+                            <TextBlock>
+                                <Run Text="In „Behalten“ verschieben"/><Run Text="{Binding SelectedRecordingCount, Mode=OneWay, StringFormat=' ({0})'}"/>
+                            </TextBlock>
+                        </StackPanel>
                     </Button>
                     <Button Command="{Binding CleanTempCommand}" Style="{StaticResource DangerButton}">
                         <StackPanel Orientation="Horizontal">
