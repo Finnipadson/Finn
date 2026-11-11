@@ -161,14 +161,17 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="110"/>
+                                <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="120" ElementStyle="{StaticResource Mono}"/>
                                 <DataGridTextColumn Header="Hersteller" Binding="{Binding Publisher}" Width="160"/>
-                                <DataGridTextColumn Header="Installiert" Binding="{Binding InstallDateText}" SortMemberPath="InstallDate" Width="90"/>
-                                <DataGridTemplateColumn Header="Größe" Width="85" SortMemberPath="Size">
+                                <DataGridTextColumn Header="Installiert" Binding="{Binding InstallDateText}" SortMemberPath="InstallDate" Width="100" ElementStyle="{StaticResource Mono}"/>
+                                <DataGridTemplateColumn Header="Größe" Width="95" SortMemberPath="Size">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Size, Converter={StaticResource Bytes}}" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                       ToolTip="Größe laut Programmeintrag bzw. berechnete Ordnergröße"/>
+                                            <StackPanel VerticalAlignment="Center" ToolTip="Größe laut Programmeintrag bzw. berechnete Ordnergröße. Der Balken zeigt die Größe im Vergleich (1 MB … 100 GB).">
+                                                <TextBlock Text="{Binding Size, Converter={StaticResource Bytes}}" Style="{StaticResource Mono}" HorizontalAlignment="Right"/>
+                                                <Border Height="3" CornerRadius="1.5" Background="{DynamicResource Accent}" Opacity="0.55" HorizontalAlignment="Right"
+                                                        Margin="0,3,0,0" Width="{Binding Size, Converter={StaticResource SizeBar}}"/>
+                                            </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>

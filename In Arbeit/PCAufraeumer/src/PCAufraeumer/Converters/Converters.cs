@@ -114,3 +114,29 @@ public sealed class TypeGlyph : IValueConverter
     };
     public object ConvertBack(object value, Type t, object p, CultureInfo c) => throw new NotSupportedException();
 }
+
+/// <summary>Spaltenköpfe im Graphit-Design: Großbuchstaben.</summary>
+public sealed class UpperConverter : IValueConverter
+{
+    public object Convert(object? value, Type t, object p, CultureInfo c) =>
+        value is string s ? s.ToUpper(CultureInfo.GetCultureInfo("de-DE")) : value ?? "";
+    public object ConvertBack(object value, Type t, object p, CultureInfo c) => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Größe → Breite eines kleinen Balkens (logarithmisch: 1 MB ≈ 0 px, 100 GB ≈ Max px).
+/// So sieht man auf einen Blick, welche Programme viel Platz belegen.
+/// </summary>
+public sealed class SizeBarConverter : IValueConverter
+{
+    public double Max { get; set; } = 75;
+    public object Convert(object? value, Type t, object p, CultureInfo c)
+    {
+        double bytes = value switch { long l => l, int i => i, double d => d, _ => 0 };
+        if (bytes < 1024 * 1024) return 0.0;
+        double w = Math.Log10(bytes / (1024.0 * 1024)) / 5.0 * Max; // 10^5 MB ≈ 100 GB
+        w = Math.Clamp(w, 0, Max);
+        return w < 3 ? 0.0 : w;
+    }
+    public object ConvertBack(object value, Type t, object p, CultureInfo c) => throw new NotSupportedException();
+}

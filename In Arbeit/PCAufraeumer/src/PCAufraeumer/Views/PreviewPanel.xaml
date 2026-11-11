@@ -73,8 +73,8 @@
                                     HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" Padding="0" Margin="0">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border Background="#CC1F6FE5" CornerRadius="32">
-                                            <TextBlock Text="&#xE768;" Style="{StaticResource Icon}" FontSize="26" Foreground="White"
+                                        <Border Background="#E6E0A43A" CornerRadius="32">
+                                            <TextBlock Text="&#xE768;" Style="{StaticResource Icon}" FontSize="26" Foreground="#1A1814"
                                                        HorizontalAlignment="Center" Margin="4,0,0,0"/>
                                         </Border>
                                     </ControlTemplate>

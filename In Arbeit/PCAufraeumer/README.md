@@ -166,6 +166,9 @@ dotnet publish src/PCAufraeumer -c Release -r win-x64 --self-contained true -o p
 ```
 Ergebnis: `publish/PCAufraeumer/PCAufraeumer.exe` (ca. 260 MB inkl. .NET und VLC, läuft ohne Installation).
 
+### Design „Graphit“
+Warmes Grau mit einem einzigen Akzent in Bernstein, als dunkle und helle Variante (umschalten unten in der Seitenleiste). Die Seitenleiste ist eine schmale Symbolleiste, der volle Seitenname steht im Tooltip. Überschriften nutzen **Bahnschrift**, Zahlen in Tabellen **Cascadia Mono**. Beide Schriften sind bei Windows 10/11 schon dabei, die App bringt also keine eigenen Schriften mit. Farben: `Themes/Colors.Dark.xaml` und `Colors.Light.xaml`, Steuerelemente: `Themes/Styles.xaml`. Die Entwürfe der anderen fünf Varianten liegen in `Design-Vorschlaege/`.
+
 ### Technik & Begründung
 **WPF statt WinUI 3**: Der Videoplayer LibVLCSharp (spielt auch .mkv & Co.) läuft unter WPF stabil. Die .exe startet ohne MSIX-Paket und Zertifikat. Virtualisierte Listen sind in WPF bewährt.
 

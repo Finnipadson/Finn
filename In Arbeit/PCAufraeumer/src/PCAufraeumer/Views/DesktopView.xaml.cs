@@ -201,8 +201,8 @@ internal static class DesktopRenderer
             var b = new Border
             {
                 Width = m.Width, Height = m.Height, CornerRadius = new CornerRadius(18),
-                Background = new LinearGradientBrush(Color.FromRgb(0x1C, 0x2B, 0x45), Color.FromRgb(0x10, 0x16, 0x24), 90),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(0x5A, 0x6A, 0x85)), BorderThickness = new Thickness(6),
+                Background = new LinearGradientBrush(Color.FromRgb(0x2A, 0x28, 0x25), Color.FromRgb(0x14, 0x13, 0x12), 90),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(0x4A, 0x46, 0x40)), BorderThickness = new Thickness(6),
             };
             Canvas.SetLeft(b, m.Left - minX);
             Canvas.SetTop(b, m.Top - minY);
@@ -222,7 +222,7 @@ internal static class DesktopRenderer
 
         foreach (var g in groups ?? Array.Empty<PreviewGroup>())
         {
-            var accent = g.IsCategory ? Color.FromArgb(0x30, 0x4C, 0x9A, 0xFF) : Color.FromArgb(0x30, 0xF2, 0xC1, 0x4E);
+            var accent = g.IsCategory ? Color.FromArgb(0x30, 0xE0, 0xA4, 0x3A) : Color.FromArgb(0x30, 0x86, 0xB8, 0x6F);
             var r = new Border
             {
                 Width = g.Width - 6, Height = g.Height, CornerRadius = new CornerRadius(12),
@@ -242,7 +242,7 @@ internal static class DesktopRenderer
                 ToolTip = g.Name,
                 Child = new TextBlock
                 {
-                    Text = g.Name, FontSize = 22, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White,
+                    Text = g.Name, FontSize = 22, FontWeight = FontWeights.SemiBold, Foreground = new SolidColorBrush(Color.FromRgb(0x1A, 0x18, 0x14)),
                     TextTrimming = TextTrimming.CharacterEllipsis,
                 },
             };

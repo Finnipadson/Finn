@@ -48,6 +48,14 @@ public static class ThemeManager
             if (hwnd == IntPtr.Zero) return;
             int dark = IsDark ? 1 : 0;
             DwmSetWindowAttribute(hwnd, 20, ref dark, sizeof(int));
+            // Windows 11: Titelleiste in der Fensterfarbe (Graphit), damit sie nahtlos übergeht
+            if (Application.Current?.TryFindResource("WindowBgColor") is System.Windows.Media.Color c)
+            {
+                int colorRef = c.R | (c.G << 8) | (c.B << 16);
+                DwmSetWindowAttribute(hwnd, 35, ref colorRef, sizeof(int));
+                int text = IsDark ? 0x00DEE5E9 : 0x001D2123; // COLORREF (BGR)
+                DwmSetWindowAttribute(hwnd, 36, ref text, sizeof(int));
+            }
         }
         catch { /* ältere Windows-Version */ }
     }

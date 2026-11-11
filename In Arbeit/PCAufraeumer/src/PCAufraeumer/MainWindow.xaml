@@ -21,57 +21,48 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="232"/>
+            <ColumnDefinition Width="80"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Seitenleiste -->
+        <!-- Seitenleiste: schmale Symbolleiste (Design „Graphit“), voller Name als Tooltip -->
         <Border Background="{DynamicResource SidebarBg}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,1,0">
             <DockPanel LastChildFill="False">
-                <StackPanel DockPanel.Dock="Top" Margin="18,22,18,22" Orientation="Horizontal">
-                    <Border Width="34" Height="34" CornerRadius="9" Background="{DynamicResource Accent}">
-                        <TextBlock Text="&#xEA99;" Style="{StaticResource Icon}" FontSize="18" HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource AccentText}"/>
-                    </Border>
-                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="PC Aufräumer" FontWeight="SemiBold" FontSize="15"/>
-                        <TextBlock Text="&amp; Systemübersicht" Style="{StaticResource Muted}" FontSize="11"/>
-                    </StackPanel>
-                </StackPanel>
+                <Border DockPanel.Dock="Top" Width="38" Height="38" CornerRadius="9" Margin="0,12,0,18" HorizontalAlignment="Center"
+                        BorderBrush="{DynamicResource Accent}" BorderThickness="1.5" ToolTip="PC Aufräumer &amp; Systemübersicht">
+                    <TextBlock Text="&#xEA99;" Style="{StaticResource Icon}" FontSize="18" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource Accent}"/>
+                </Border>
 
                 <StackPanel DockPanel.Dock="Top">
-                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE80F;" Content="Übersicht" GroupName="nav"
+                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE80F;" Content="Übersicht" GroupName="nav" ToolTip="Systemübersicht"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=dashboard, Mode=TwoWay}"/>
-                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE90F;" Content="Treiber" GroupName="nav"
+                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE90F;" Content="Treiber" GroupName="nav" ToolTip="Treiber"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=drivers, Mode=TwoWay}"/>
-                    <TextBlock Text="AUFRÄUMEN" Style="{StaticResource Label}" Margin="22,18,0,4" FontSize="11"/>
-                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE721;" Content="Scan" GroupName="nav"
+                    <Border Width="30" Height="1" Background="{DynamicResource Border}" Margin="0,8"/>
+                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE721;" Content="Scan" GroupName="nav" ToolTip="Scan"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=scan, Mode=TwoWay}"/>
-                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE8FD;" Content="Ergebnisse" GroupName="nav"
+                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE8FD;" Content="Ergebnisse" GroupName="nav" ToolTip="Ergebnisse"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=results, Mode=TwoWay}"/>
-                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE7F4;" Content="Desktop aufräumen" GroupName="nav"
+                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE7F4;" Content="Desktop" GroupName="nav" ToolTip="Desktop aufräumen"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=desktop, Mode=TwoWay}"/>
-                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE71D;" Content="Programme" GroupName="nav"
+                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE71D;" Content="Programme" GroupName="nav" ToolTip="Programme"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=programs, Mode=TwoWay}"/>
-                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE81C;" Content="Protokoll" GroupName="nav"
+                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE81C;" Content="Protokoll" GroupName="nav" ToolTip="Protokoll"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=log, Mode=TwoWay}"/>
-                    <TextBlock Text="APP" Style="{StaticResource Label}" Margin="22,18,0,4" FontSize="11"/>
-                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE713;" Content="Einstellungen" GroupName="nav"
+                    <Border Width="30" Height="1" Background="{DynamicResource Border}" Margin="0,8"/>
+                    <RadioButton Style="{StaticResource NavButton}" Tag="&#xE713;" Content="Optionen" GroupName="nav" ToolTip="Einstellungen"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=settings, Mode=TwoWay}"/>
                 </StackPanel>
 
-                <StackPanel DockPanel.Dock="Bottom" Margin="16,0,16,18">
-                    <Button Style="{StaticResource GhostButton}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Command="{Binding ToggleThemeCommand}" Margin="0,0,0,8" ToolTip="Hell/Dunkel umschalten">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE793;" Style="{StaticResource Icon}" Margin="0,0,12,0"/>
-                            <TextBlock Text="Hell / Dunkel umschalten"/>
-                        </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,14" HorizontalAlignment="Center">
+                    <Button Style="{StaticResource RailButton}" Command="{Binding ToggleThemeCommand}" ToolTip="Hell / Dunkel umschalten">
+                        <TextBlock Text="&#xE793;" Style="{StaticResource Icon}"/>
                     </Button>
-                    <StackPanel Orientation="Horizontal" Margin="8,0,0,0">
-                        <TextBlock Text="&#xEA18;" Style="{StaticResource Icon}" FontSize="13" Foreground="{DynamicResource TextMuted}" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding AdminText}" Style="{StaticResource Muted}" FontSize="11"/>
-                    </StackPanel>
+                    <Border Width="40" Height="32" Background="Transparent" ToolTip="{Binding AdminText}">
+                        <TextBlock Text="&#xEA18;" Style="{StaticResource Icon}" FontSize="14" Foreground="{DynamicResource TextMuted}"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
                 </StackPanel>
             </DockPanel>
         </Border>
