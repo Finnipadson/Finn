@@ -21,6 +21,7 @@ public sealed partial class MainViewModel : ObservableObject
     public LogViewModel Log { get; }
     public SettingsViewModel Settings { get; }
     public DesktopViewModel Desktop { get; }
+    public ProgramsPageViewModel Programs { get; }
 
     [ObservableProperty] private object? _currentPage;
     [ObservableProperty] private string _currentKey = "dashboard";
@@ -41,6 +42,7 @@ public sealed partial class MainViewModel : ObservableObject
         Dashboard = new DashboardViewModel();
         Drivers = new DriversViewModel(SettingsService);
         Desktop = new DesktopViewModel(SettingsService, new DesktopApplier(DeleteLog), () => Log.Reload());
+        Programs = new ProgramsPageViewModel(SettingsService, DeleteLog, () => Log.Reload());
         CurrentPage = Dashboard;
     }
 
@@ -69,8 +71,10 @@ public sealed partial class MainViewModel : ObservableObject
             "log" => Log,
             "settings" => Settings,
             "desktop" => Desktop,
+            "programs" => Programs,
             _ => Dashboard,
         };
+        if (key == "programs") _ = Programs.EnsureLoadedAsync();
         if (key == "dashboard") Dashboard.Resume(); else Dashboard.Pause();
         if (key == "drivers") _ = Drivers.EnsureLoadedAsync();
         if (key == "log") Log.Reload();

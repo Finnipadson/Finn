@@ -1,0 +1,490 @@
+<UserControl x:Class="PCAufraeumer.Views.ProgramsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:m="clr-namespace:PCAufraeumer.Models">
+    <UserControl.Resources>
+        <Style x:Key="LeftoverTree" TargetType="TreeView">
+            <Setter Property="Background" Value="{DynamicResource CardBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Border}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="TreeViewItem">
+                        <Setter Property="IsExpanded" Value="True"/>
+                        <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <HierarchicalDataTemplate DataType="{x:Type m:LeftoverNode}" ItemsSource="{Binding Children}">
+                        <ContentControl Content="{Binding}">
+                            <ContentControl.Style>
+                                <Style TargetType="ContentControl">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Margin="0,2" ToolTip="{Binding Item.Reason}">
+                                                    <CheckBox IsChecked="{Binding Item.IsChecked}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                    <TextBlock x:Name="t" Text="{Binding Title}" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Item.ConfidenceLabel, StringFormat='  ({0})'}" Foreground="{DynamicResource TextMuted}" FontSize="11" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Item.Size, Converter={StaticResource Bytes}, StringFormat='  {0}'}" Foreground="{DynamicResource TextMuted}" FontSize="11" VerticalAlignment="Center"
+                                                               Visibility="{Binding Item.IsFileSystem, Converter={StaticResource BoolToVis}}"/>
+                                                    <TextBlock Text="{Binding Item.Status, StringFormat='  → {0}'}" Foreground="{DynamicResource Warn}" FontSize="11" VerticalAlignment="Center"
+                                                               Visibility="{Binding Item.Status, Converter={StaticResource NullToVis}}"/>
+                                                </StackPanel>
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding Item.Confidence}" Value="Sicher">
+                                                        <Setter TargetName="t" Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Item.Confidence}" Value="Unsicher">
+                                                        <Setter TargetName="t" Property="Foreground" Value="{DynamicResource TextMuted}"/>
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsGroup}" Value="True">
+                                            <Setter Property="ContentTemplate">
+                                                <Setter.Value>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" Margin="0,4"/>
+                                                    </DataTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ContentControl.Style>
+                        </ContentControl>
+                    </HierarchicalDataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <DockPanel Margin="24,20,24,16">
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                <TextBlock Text="Programme" Style="{StaticResource H1}"/>
+                <TextBlock Style="{StaticResource Muted}" FontSize="12"
+                           Text="Programme, Apps und Spiele deinstallieren und Reste restlos entfernen. 🛡 = braucht Adminrechte (Windows fragt nach)."/>
+            </StackPanel>
+
+            <TabControl SelectedIndex="{Binding TabIndex}">
+                <!-- ═══════════ Tab 1: Deinstallieren ═══════════ -->
+                <TabItem Header="Deinstallieren">
+                    <DockPanel DataContext="{Binding List}">
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                            <Grid Width="260" Margin="0,0,10,6">
+                                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=200}" Padding="30,0,8,0"/>
+                                <TextBlock Text="&#xE721;" Style="{StaticResource Icon}" FontSize="13" Margin="10,0,0,0" HorizontalAlignment="Left"
+                                           Foreground="{DynamicResource TextMuted}" IsHitTestVisible="False"/>
+                            </Grid>
+                            <ComboBox ItemsSource="{Binding TypeFilters}" SelectedItem="{Binding TypeFilter}" Width="140" Margin="0,0,10,6" VerticalContentAlignment="Center"/>
+                            <ComboBox ItemsSource="{Binding CategoryFilters}" SelectedItem="{Binding CategoryFilter}" Width="180" Margin="0,0,14,6" VerticalContentAlignment="Center"/>
+                            <CheckBox Content="Nach Kategorie gruppieren" IsChecked="{Binding GroupByCategory}" Margin="0,0,14,6"/>
+                            <CheckBox Content="Systemkomponenten &amp; Updates anzeigen" IsChecked="{Binding ShowHidden}" Margin="0,0,14,6"/>
+                            <Button Command="{Binding ReloadCommand}" Margin="0,0,0,6" Padding="10,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE72C;" Style="{StaticResource Icon}" FontSize="12" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Aktualisieren"/>
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+
+                        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,10,0,0" Padding="14,10">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button Command="{Binding SelectNoneCommand}"><TextBlock Text="Auswahl aufheben"/></Button>
+                                    <Button Command="{Binding UninstallSelectedCommand}" CommandParameter="{Binding Selected}">
+                                        <TextBlock Text="🛡 Markiertes deinstallieren"/>
+                                    </Button>
+                                    <Button Command="{Binding UninstallCheckedCommand}" Style="{StaticResource PrimaryButton}" Margin="0" Padding="16,8">
+                                        <TextBlock>
+                                            <Run Text="🛡 Ausgewählte deinstallieren"/><Run Text="{Binding CheckedCount, Mode=OneWay, StringFormat=' ({0})'}"/>
+                                        </TextBlock>
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ProgressBar IsIndeterminate="True" Width="80" Height="4" Margin="0,0,10,0"
+                                                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <DataGrid x:Name="ProgramGrid" ItemsSource="{Binding View}" SelectedItem="{Binding Selected}" IsReadOnly="True" RowHeight="34"
+                                  LoadingRow="ProgramGrid_LoadingRow">
+                            <DataGrid.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource GroupBg}" Padding="10,5">
+                                                <TextBlock FontWeight="SemiBold">
+                                                    <Run Text="{Binding Name, Mode=OneWay}"/>
+                                                    <Run Text="{Binding ItemCount, Mode=OneWay, StringFormat='({0})'}" Foreground="{DynamicResource TextMuted}" FontWeight="Normal"/>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </DataGrid.GroupStyle>
+                            <DataGrid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="🛡 Deinstallieren" Command="{Binding UninstallSelectedCommand}"/>
+                                    <MenuItem Header="Installationsordner öffnen" Command="{Binding OpenFolderCommand}"/>
+                                    <MenuItem Header="🛡 Registry-Eintrag anzeigen" Command="{Binding ShowRegistryCommand}"/>
+                                    <MenuItem Header="Im Internet suchen" Command="{Binding SearchWebCommand}"/>
+                                    <Separator/>
+                                    <MenuItem Header="Verwaisten Eintrag aus Liste entfernen" Command="{Binding RemoveOrphanCommand}"/>
+                                </ContextMenu>
+                            </DataGrid.ContextMenu>
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="" Width="34" SortMemberPath="IsChecked">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"
+                                                      IsEnabled="{Binding IsLocked, Converter={StaticResource Not}}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Name" Width="280" SortMemberPath="Name">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="{Binding Icon}" Width="22" Height="22" Margin="0,0,8,0"/>
+                                                <TextBlock Text="{Binding StatusIcons}" VerticalAlignment="Center" ToolTip="🔒 von Windows gesperrt · ⏺ Installation aufgezeichnet · ⚠ verwaister Eintrag"/>
+                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="110"/>
+                                <DataGridTextColumn Header="Hersteller" Binding="{Binding Publisher}" Width="160"/>
+                                <DataGridTextColumn Header="Installiert" Binding="{Binding InstallDateText}" SortMemberPath="InstallDate" Width="90"/>
+                                <DataGridTemplateColumn Header="Größe" Width="85" SortMemberPath="Size">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Size, Converter={StaticResource Bytes}}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                       ToolTip="Größe laut Programmeintrag bzw. berechnete Ordnergröße"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Typ" Binding="{Binding TypeLabel}" SortMemberPath="TypeLabel" Width="120"/>
+                                <DataGridTemplateColumn Header="Kategorie" Width="170" SortMemberPath="Category">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding DataContext.Categories, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                      SelectedItem="{Binding Category, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"
+                                                      ToolTip="Gilt auch fürs Desktop-Aufräumen"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Installationsort" Width="*" MinWidth="200" SortMemberPath="InstallLocation">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding InstallLocation}" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding InstallLocation}" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+
+                <!-- ═══════════ Tab 2: Erzwungene Deinstallation ═══════════ -->
+                <TabItem Header="Erzwungene Deinstallation">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" DataContext="{Binding Forced}">
+                        <StackPanel MaxWidth="900" HorizontalAlignment="Left">
+                            <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,12" TextWrapping="Wrap"
+                                       Text="Für kaputte Programme, die sich nicht normal deinstallieren lassen, oder für Reste von Programmen, die schon gelöscht wurden. Vorher wird ein Wiederherstellungspunkt erstellt (🛡)."/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="1. Programm angeben" Style="{StaticResource H2}"/>
+                                    <TextBlock Text="Programmname" Style="{StaticResource Label}"/>
+                                    <TextBox Text="{Binding Query, UpdateSourceTrigger=PropertyChanged, Delay=200}" Width="420" HorizontalAlignment="Left"/>
+                                    <ListBox ItemsSource="{Binding Matches}" SelectedItem="{Binding SelectedMatch}" MaxHeight="160" Margin="0,6,0,0" Width="420" HorizontalAlignment="Left"
+                                             DisplayMemberPath="Name"/>
+                                    <TextBlock Text="… oder Ordner bzw. Programmdatei" Style="{StaticResource Label}" Margin="0,12,0,4"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Command="{Binding PickFolderCommand}"><TextBlock Text="Ordner wählen …"/></Button>
+                                        <Button Command="{Binding PickExeCommand}"><TextBlock Text=".exe wählen …"/></Button>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Folder, StringFormat='Ordner: {0}'}" Style="{StaticResource Muted}" Margin="0,8,0,0"
+                                               Visibility="{Binding Folder, Converter={StaticResource NullToVis}}"/>
+                                    <TextBlock Text="{Binding ExeFile, StringFormat='Programmdatei: {0}'}" Style="{StaticResource Muted}"
+                                               Visibility="{Binding ExeFile, Converter={StaticResource NullToVis}}"/>
+                                    <TextBlock Text="{Binding Info}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Card}">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Command="{Binding StartCommand}" Style="{StaticResource PrimaryButton}" Margin="0" Padding="18,9">
+                                        <TextBlock Text="🛡 Weiter: Deinstaller / Restesuche"/>
+                                    </Button>
+                                    <TextBlock Text="2. Danach wählst du den Suchmodus (Sicher, Moderat, Erweitert) und entscheidest selbst, was entfernt wird."
+                                               TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ═══════════ Tab 3: Installationen überwachen ═══════════ -->
+                <TabItem Header="Installationen überwachen">
+                    <DockPanel DataContext="{Binding Recorder}">
+                        <Border DockPanel.Dock="Top" Style="{StaticResource Card}">
+                            <StackPanel>
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Command="{Binding SetupDoneCommand}" Visibility="{Binding WaitingForSetup, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Fertig – Setup ist durch"/>
+                                        </Button>
+                                        <Button Command="{Binding CancelRecordingCommand}" Visibility="{Binding IsRecording, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Abbrechen"/>
+                                        </Button>
+                                        <Button Command="{Binding RecordCommand}" Style="{StaticResource PrimaryButton}" Margin="0" Padding="18,9"
+                                                IsEnabled="{Binding IsRecording, Converter={StaticResource Not}}">
+                                            <TextBlock Text="⏺ Installation aufzeichnen …"/>
+                                        </Button>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Installation aufzeichnen" Style="{StaticResource H2}"/>
+                                        <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,16,0"
+                                                   Text="Wähle eine Setup-Datei (.exe oder .msi). Die App merkt sich vorher und nachher, was sich geändert hat – so lässt sich das Programm später garantiert restlos entfernen."/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0" Visibility="{Binding Status, Converter={StaticResource NullToVis}}">
+                                    <ProgressBar IsIndeterminate="True" Width="80" Height="4" Margin="0,0,10,0" Visibility="{Binding IsRecording, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="{Binding Status}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border DockPanel.Dock="Top" Style="{StaticResource Card}">
+                            <StackPanel>
+                                <CheckBox IsChecked="{Binding WatchNewInstalls}" FontWeight="SemiBold"
+                                          Content="Im Hintergrund auf neue Installationen achten und nachfragen, ob sie zugeordnet werden sollen"/>
+                                <TextBlock Text="{Binding WatchHonesty}" Style="{StaticResource Muted}" FontSize="12" Margin="24,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding RenameText, UpdateSourceTrigger=PropertyChanged}" Width="280" Margin="0,0,8,0"/>
+                                <Button Command="{Binding RenameCommand}"><TextBlock Text="Umbenennen"/></Button>
+                                <Button Command="{Binding ShowCommand}"><TextBlock Text="Ansehen"/></Button>
+                                <Button Command="{Binding DeleteCommand}"><TextBlock Text="Aufzeichnung löschen"/></Button>
+                            </StackPanel>
+                        </DockPanel>
+                        <DataGrid ItemsSource="{Binding Recordings}" SelectedItem="{Binding Selected}" IsReadOnly="True" RowHeight="30">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Programm" Binding="{Binding Name}" Width="260"/>
+                                <DataGridTextColumn Header="Datum" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
+                                <DataGridTextColumn Header="Ordner neu" Binding="{Binding NewDirectories.Count}" Width="90"/>
+                                <DataGridTextColumn Header="Dateien neu" Binding="{Binding NewFiles.Count}" Width="90"/>
+                                <DataGridTextColumn Header="Registry neu" Binding="{Binding NewKeys.Count}" Width="100"/>
+                                <DataGridTextColumn Header="Art" Binding="{Binding Kind}" Width="120"/>
+                                <DataGridTextColumn Header="Setup" Binding="{Binding SetupFile}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+
+                <!-- ═══════════ Tab 4: Autostart ═══════════ -->
+                <TabItem Header="Autostart">
+                    <DockPanel DataContext="{Binding Autostart}">
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                            <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" MaxWidth="700" Margin="0,0,16,6" VerticalAlignment="Center"
+                                       Text="Ein- und Ausschalten wie im Task-Manager: Nichts wird gelöscht, alles ist jederzeit umkehrbar. 🔒 = Windows-eigen oder sicherheitsrelevant."/>
+                            <CheckBox Content="Windows-eigene Aufgaben anzeigen" IsChecked="{Binding ShowWindows}" Margin="0,0,14,6"/>
+                            <CheckBox Content="Dienste anzeigen (Fortgeschritten, 🛡)" IsChecked="{Binding ShowAdvanced}" Margin="0,0,14,6"/>
+                            <Button Command="{Binding ReloadCommand}" Margin="0,0,0,6" Padding="10,4"><TextBlock Text="Aktualisieren"/></Button>
+                        </WrapPanel>
+                        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,10,0,0" Padding="14,10">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button Command="{Binding OpenLocationCommand}"><TextBlock Text="Im Explorer zeigen"/></Button>
+                                    <Button Command="{Binding RemoveOrphanCommand}"><TextBlock Text="Verwaisten Eintrag entfernen"/></Button>
+                                    <Button Command="{Binding ToggleCommand}" Style="{StaticResource PrimaryButton}" Margin="0"><TextBlock Text="Aktivieren / Deaktivieren"/></Button>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <ProgressBar IsIndeterminate="True" Width="80" Height="4" Margin="0,0,10,0" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                        <DataGrid ItemsSource="{Binding View}" SelectedItem="{Binding Selected}" IsReadOnly="True" RowHeight="32">
+                            <DataGrid.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource GroupBg}" Padding="10,5">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </DataGrid.GroupStyle>
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Status" Width="110" SortMemberPath="Enabled">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse x:Name="dot" Width="10" Height="10" Fill="{DynamicResource Good}" Margin="0,0,8,0"/>
+                                                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center"/>
+                                                <TextBlock Text=" 🔒" VerticalAlignment="Center" ToolTip="{Binding LockReason}"
+                                                           Visibility="{Binding IsLocked, Converter={StaticResource BoolToVis}}"/>
+                                            </StackPanel>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding Enabled}" Value="False">
+                                                    <Setter TargetName="dot" Property="Fill" Value="{DynamicResource Neutral}"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Name" Width="240" SortMemberPath="Name">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="{Binding Icon}" Width="20" Height="20" Margin="0,0,8,0"/>
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Hersteller" Binding="{Binding Publisher}" Width="160"/>
+                                <DataGridTextColumn Header="Signiert" Binding="{Binding SignedText}" Width="70"/>
+                                <DataGridTemplateColumn Header="Datei da" Width="70" SortMemberPath="FileExists">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock x:Name="t" Text="{Binding ExistsText}" VerticalAlignment="Center"/>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding FileExists}" Value="False">
+                                                    <Setter TargetName="t" Property="Foreground" Value="{DynamicResource Danger}"/>
+                                                    <Setter TargetName="t" Property="FontWeight" Value="Bold"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Befehl / Pfad" Width="*" MinWidth="240" SortMemberPath="Command">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Command}" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding Command}" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+            </TabControl>
+        </DockPanel>
+
+        <!-- ═══════════ Assistent: Deinstallieren + Restesuche ═══════════ -->
+        <Grid DataContext="{Binding Uninstall}" Visibility="{Binding IsOpen, Converter={StaticResource BoolToVis}}" Background="#B0000000">
+            <Border Background="{DynamicResource WindowBg}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="12"
+                    Margin="40,30" Padding="22">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Right" Command="{Binding CloseCommand}" Margin="0"><TextBlock Text="Schließen"/></Button>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Title}" Style="{StaticResource H1}" FontSize="22"/>
+                            <TextBlock Text="{Binding RestoreInfo}" Style="{StaticResource Muted}" Visibility="{Binding RestoreInfo, Converter={StaticResource NullToVis}}"/>
+                        </StackPanel>
+                    </DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10" Visibility="{Binding Status, Converter={StaticResource NullToVis}}">
+                        <ProgressBar IsIndeterminate="True" Width="90" Height="4" Margin="0,0,10,0" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="{Binding Status}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Warteschlange -->
+                    <ItemsControl x:Name="QueueList" DockPanel.Dock="Top" ItemsSource="{Binding Queue}" Margin="0,0,0,10">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Visibility="{Binding WaitsForUser, Converter={StaticResource BoolToVis}}">
+                                            <Button Command="{Binding DataContext.QueueItemSkipCommand, ElementName=QueueList}" CommandParameter="{Binding}"><TextBlock Text="Überspringen"/></Button>
+                                            <Button Command="{Binding DataContext.QueueItemDoneCommand, ElementName=QueueList}" CommandParameter="{Binding}" Style="{StaticResource PrimaryButton}" Margin="0"><TextBlock Text="Fertig"/></Button>
+                                        </StackPanel>
+                                        <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="40" Height="4" Margin="0,0,10,0"
+                                                     Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"/>
+                                        <StackPanel>
+                                            <TextBlock FontWeight="SemiBold"><Run Text="{Binding Name, Mode=OneWay}"/><Run Text="  –  "/><Run Text="{Binding State, Mode=OneWay}"/></TextBlock>
+                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource Muted}" FontSize="12"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Moduswahl -->
+                    <StackPanel x:Name="ModePanel" DockPanel.Dock="Top" Visibility="Collapsed" Margin="0,4,0,0">
+                        <UniformGrid Columns="3">
+                            <Button Command="{Binding ChooseModeCommand}" CommandParameter="Sicher" Margin="0,0,10,0" Padding="14" HorizontalContentAlignment="Stretch">
+                                <StackPanel>
+                                    <TextBlock Text="Sicher" FontWeight="Bold" FontSize="15"/>
+                                    <TextBlock TextWrapping="Wrap" Style="{StaticResource Muted}" Text="Nur eindeutig zugehörige Reste: Installationsordner, Einträge mit genau passendem Namen/Pfad."/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding ChooseModeCommand}" CommandParameter="Moderat" Margin="0,0,10,0" Padding="14" BorderBrush="{DynamicResource Accent}" BorderThickness="2" HorizontalContentAlignment="Stretch">
+                                <StackPanel>
+                                    <TextBlock Text="Moderat (empfohlen)" FontWeight="Bold" FontSize="15"/>
+                                    <TextBlock TextWrapping="Wrap" Style="{StaticResource Muted}" Text="Zusätzlich AppData, ProgramData, Startmenü, Hersteller-Ordner, Registry unter Hersteller/Programm, Dienste, Aufgaben, Firewall."/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding ChooseModeCommand}" CommandParameter="Erweitert" Margin="0" Padding="14" HorizontalContentAlignment="Stretch">
+                                <StackPanel>
+                                    <TextBlock Text="Erweitert" FontWeight="Bold" FontSize="15"/>
+                                    <TextBlock TextWrapping="Wrap" Style="{StaticResource Muted}" Text="Gründliche Suche in der gesamten Registry und weiteren Orten. Mehr Funde – aber auch mehr Fehlalarme."/>
+                                </StackPanel>
+                            </Button>
+                        </UniformGrid>
+                        <Button Command="{Binding ChooseModeCommand}" CommandParameter="Keine" HorizontalAlignment="Left" Margin="0,10,0,0" Style="{StaticResource GhostButton}">
+                            <TextBlock Text="Ohne Restesuche beenden"/>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Ergebnis -->
+                    <DockPanel x:Name="ResultPanel" Visibility="Collapsed">
+                        <DockPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Command="{Binding OpenBackupFolderCommand}"><TextBlock Text="Registry-Sicherungen"/></Button>
+                                <Button Command="{Binding SelectNoneCommand}"><TextBlock Text="Auswahl aufheben"/></Button>
+                                <Button Command="{Binding SelectAllSafeCommand}"><TextBlock Text="Alle sicheren Funde auswählen"/></Button>
+                                <Button Command="{Binding DeleteSelectedCommand}" Style="{StaticResource DangerButton}" Margin="0" Padding="16,8"><TextBlock Text="🛡 Ausgewählte entfernen …"/></Button>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding SelectionSummary}" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding ResultInfo}" Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="Registry-Einträge &amp; Systemobjekte" Style="{StaticResource H2}"/>
+                                <TreeView ItemsSource="{Binding RegistryTree}" Style="{StaticResource LeftoverTree}"/>
+                            </DockPanel>
+                            <DockPanel Grid.Column="2">
+                                <TextBlock DockPanel.Dock="Top" Text="Dateien &amp; Ordner" Style="{StaticResource H2}"/>
+                                <TreeView ItemsSource="{Binding FileTree}" Style="{StaticResource LeftoverTree}"/>
+                            </DockPanel>
+                        </Grid>
+                    </DockPanel>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+
+
+</UserControl>

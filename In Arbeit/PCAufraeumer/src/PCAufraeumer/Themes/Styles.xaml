@@ -298,6 +298,50 @@
         </Style.Triggers>
     </Style>
 
+    <!-- ───── Tabs ───── -->
+    <Style TargetType="TabControl">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabControl">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Margin="0,0,0,12">
+                            <TabPanel IsItemsHost="True"/>
+                        </Border>
+                        <ContentPresenter ContentSource="SelectedContent"/>
+                    </DockPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="TabItem">
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabItem">
+                    <Grid Margin="0,0,22,0">
+                        <ContentPresenter ContentSource="Header" Margin="2,8,2,10"/>
+                        <Border x:Name="line" Height="3" VerticalAlignment="Bottom" CornerRadius="2" Background="{DynamicResource Accent}" Visibility="Hidden"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="line" Property="Visibility" Value="Visible"/>
+                            <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ───── ScrollBar (schmal, passt zu Dark/Light) ───── -->
     <Style x:Key="ScrollThumb" TargetType="Thumb">
         <Setter Property="Template">

@@ -67,10 +67,29 @@ public sealed class DesktopSettings
     public List<string> NeverTouch { get; set; } = new();
     /// <summary>Gemerkte Zuordnungen aus der Vorschau: Dateiname des Symbols → Kategorie.</summary>
     public Dictionary<string, string> IconOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>Gemerkte Zuordnungen aus der Programmliste: Ziel-.exe (klein geschrieben) bzw. „name:Programmname“ → Kategorie.
+    /// Gilt auch fürs Desktop-Aufräumen (Verknüpfung mit gleichem Ziel oder Namen).</summary>
+    public Dictionary<string, string> TargetOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>Symbole auf Nebenmonitoren ebenfalls auf den Hauptmonitor holen.</summary>
     public bool AllOnPrimary { get; set; }
     /// <summary>Leere Spalten zwischen den Kategorie-Gruppen.</summary>
     public int GapColumns { get; set; } = 1;
+    /// <summary>Stand der mitgelieferten Regeln. Neue Standardregeln werden bei älteren Dateien ergänzt (eigene bleiben).</summary>
+    public int RulesVersion { get; set; }
+    public const int CurrentRulesVersion = 2;
+
+    /// <summary>Fehlende neue Standardregeln vor den allgemeinen Web-Link-Regeln einfügen.</summary>
+    public void MigrateRules()
+    {
+        if (RulesVersion >= CurrentRulesVersion) return;
+        foreach (var d in DefaultAppRules())
+        {
+            if (AppRules.Any(r => string.Equals(r.Pattern, d.Pattern, StringComparison.OrdinalIgnoreCase))) continue;
+            int web = AppRules.FindIndex(r => r.Pattern.StartsWith("http", StringComparison.OrdinalIgnoreCase));
+            if (web >= 0) AppRules.Insert(web, d); else AppRules.Add(d);
+        }
+        RulesVersion = CurrentRulesVersion;
+    }
     /// <summary>Zuletzt gewählter Anordnungs-Vorschlag.</summary>
     public DesktopLayout Layout { get; set; } = DesktopLayout.Spalten;
 
@@ -106,6 +125,15 @@ public sealed class DesktopSettings
             "Corsair", "iCUE", "Afterburner", "HWiNFO", "CPU-Z", "GPU-Z", "Everything", "PC Aufräumer", "PCAufraeumer",
             "AnyDesk", "TeamViewer", "KeePass", "Bitwarden", "1Password", "Rufus", "CrystalDisk", "Revo Uninstaller",
             "DriverHub", "ASUS", "Armoury", "3uTools", "Sideloadly", "VirtualBox", "VMware", "OpenRGB", "Malwarebytes");
+        // Ab Regel-Version 2 (Programmliste): Launcher, Windows-Apps, Treiber und Laufzeitumgebungen
+        Add("Spiele", "Valve Corporation", "\\Steam\\", "Electronic Arts", "EA app", "Epic Online Services", "Rockstar Games SDK");
+        Add("Kreativ & Bearbeitung", "Microsoft.Paint", "\\Paint\\");
+        Add("Medien", "ZuneMusic", "ZuneVideo", "Windows.Photos");
+        Add("Büro & Dokumente", "MicrosoftOfficeHub", "Microsoft 365", "WindowsNotepad");
+        Add("Entwicklung", "JDK", "Java", "Node.js", "SDK", "GitHub CLI", "FFmpeg");
+        Add("System & Tools", "WindowsCalculator", "ScreenSketch", "WindowsStore", "ImmersiveControlPanel", "PowerAutomate",
+            "Visual C++", "Redistributable", "Desktop Runtime", ".NET", "Realtek", "Chipset", "Driver", "Treiber", "OneDrive",
+            "GameInput", "Compatibility", "Mozilla Maintenance", "Apple Mobile Device", "Bonjour");
         Add("Browser & Internet", "chrome.exe", "firefox.exe", "msedge.exe", "msedge_proxy.exe", "opera.exe", "brave.exe",
             "vivaldi.exe", "librewolf", "\\Tor Browser\\", "arc.exe", "qbittorrent", "filezilla", "http://", "https://");
         return r;

@@ -99,6 +99,9 @@ public sealed class DesktopCategorizer
         var ov = _s.IconOverrides.FirstOrDefault(kv => string.Equals(kv.Key, item.FileName, StringComparison.OrdinalIgnoreCase));
         if (ov.Key != null) return Valid(ov.Value);
 
+        // In der Programmliste gesetzte Kategorie (gleiche .exe oder gleicher Name) gilt auch hier.
+        if (TargetOverride(info.Target, item.DisplayName) is { } tov) return Valid(tov);
+
         var hay = string.Join(" | ", item.DisplayName, item.FileName, info.Target, info.Arguments, info.Description, info.Company, info.Product);
         foreach (var r in _s.AppRules)
         {
@@ -107,6 +110,45 @@ public sealed class DesktopCategorizer
                 return Valid(r.Category);
         }
         return FallbackCategory;
+    }
+
+    public static string ExeKey(string exe) => exe.Trim().Trim('"').ToLowerInvariant();
+    public static string NameKey(string name) => "name:" + name.Trim().ToLowerInvariant();
+
+    private string? TargetOverride(string target, string name)
+    {
+        var d = _s.TargetOverrides;
+        if (!string.IsNullOrWhiteSpace(target) &&
+            d.FirstOrDefault(kv => string.Equals(kv.Key, ExeKey(target), StringComparison.OrdinalIgnoreCase)) is { Key: not null } a) return a.Value;
+        if (!string.IsNullOrWhiteSpace(name) &&
+            d.FirstOrDefault(kv => string.Equals(kv.Key, NameKey(name), StringComparison.OrdinalIgnoreCase)) is { Key: not null } b) return b.Value;
+        return null;
+    }
+
+    /// <summary>Kategorie für einen Eintrag der Programmliste (gleiche Regeln wie beim Desktop).</summary>
+    public string CategorizeProgram(InstalledProgram p)
+    {
+        var cats = _s.Categories;
+        string Valid(string c) => cats.Contains(c, StringComparer.OrdinalIgnoreCase)
+            ? cats.First(x => string.Equals(x, c, StringComparison.OrdinalIgnoreCase)) : FallbackCategory;
+        if (TargetOverride(p.MainExe, p.Name) is { } ov) return Valid(ov);
+        if (p.Kind == ProgramKind.Spiel && cats.Contains("Spiele", StringComparer.OrdinalIgnoreCase)) return Valid("Spiele");
+        var hay = string.Join(" | ", p.Name, p.Publisher, p.MainExe, p.InstallLocation, p.LauncherUri, p.PackageFamilyName);
+        foreach (var r in _s.AppRules)
+        {
+            if (string.IsNullOrWhiteSpace(r.Pattern)) continue;
+            // Allgemeine Web-Links sagen bei Programmen nichts aus.
+            if (r.Pattern.StartsWith("http", StringComparison.OrdinalIgnoreCase)) continue;
+            if (hay.Contains(r.Pattern, StringComparison.OrdinalIgnoreCase)) return Valid(r.Category);
+        }
+        return FallbackCategory;
+    }
+
+    /// <summary>Kategorie eines Programms merken – gilt dann auch fürs Desktop-Aufräumen.</summary>
+    public void RememberProgramCategory(InstalledProgram p, string category)
+    {
+        if (!string.IsNullOrWhiteSpace(p.MainExe)) _s.TargetOverrides[ExeKey(p.MainExe)] = category;
+        _s.TargetOverrides[NameKey(p.Name)] = category;
     }
 
     public string FallbackCategory =>

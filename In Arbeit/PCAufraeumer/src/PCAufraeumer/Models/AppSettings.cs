@@ -36,4 +36,23 @@ public sealed class AppSettings
 
     /// <summary>„Desktop aufräumen“. Fehlt in alten Einstellungsdateien → Standardwerte.</summary>
     public DesktopSettings Desktop { get; set; } = new();
+
+    /// <summary>„Programme“. Fehlt in alten Einstellungsdateien → Standardwerte.</summary>
+    public ProgramSettings Programs { get; set; } = new();
+}
+
+public enum LeftoverMode { Sicher, Moderat, Erweitert }
+
+public sealed class ProgramSettings
+{
+    public LeftoverMode DefaultMode { get; set; } = LeftoverMode.Moderat;
+    public bool ShowSystemComponents { get; set; }
+    public bool CreateRestorePoint { get; set; } = true;
+    /// <summary>Ordner und Registry-Pfade, die nie als Rest vorgeschlagen werden.</summary>
+    public List<string> ProtectedPaths { get; set; } = new();
+    /// <summary>Ordner für Installationsaufzeichnungen (leer = %APPDATA%\PCAufraeumer\Aufzeichnungen).</summary>
+    public string RecordingsFolder { get; set; } = "";
+    public bool WatchNewInstalls { get; set; }
+    /// <summary>Programmliste nach Kategorie gruppieren.</summary>
+    public bool GroupByCategory { get; set; }
 }

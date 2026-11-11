@@ -84,6 +84,9 @@ public sealed class SettingsService
         Current.DownloadAgeDays = Math.Clamp(Current.DownloadAgeDays, 1, 36500);
         Current.MinSizeMB = Math.Max(0, Current.MinSizeMB);
         Current.DuplicateMinKB = Math.Max(1, Current.DuplicateMinKB);
+        Current.Desktop ??= new DesktopSettings();
+        Current.Programs ??= new ProgramSettings();
+        Current.Desktop.MigrateRules();
     }
 
     public void Save()

@@ -42,12 +42,16 @@ public sealed partial class LogViewModel : ObservableObject
         Errors.Clear();
         foreach (var e in ErrorLog.ReadRecent()) Errors.Add(e);
         // Löschungen und Desktop-Aktionen getrennt zählen
-        var deletes = Entries.Where(e => !e.Method.StartsWith("Desktop", StringComparison.Ordinal)).ToList();
+        bool IsDelete(DeleteLogEntry e) => e.Method == "Papierkorb" || e.Method.StartsWith("Direkt", StringComparison.Ordinal) ||
+                                           e.Method.StartsWith("Rest entfernt", StringComparison.Ordinal);
+        var deletes = Entries.Where(IsDelete).ToList();
         var ok = deletes.Where(e => e.Success).ToList();
-        int desktop = Entries.Count - deletes.Count;
+        int desktop = Entries.Count(e => e.Method.StartsWith("Desktop", StringComparison.Ordinal));
+        int programs = Entries.Count(e => e.Method.StartsWith("Programme", StringComparison.Ordinal) || e.Method.StartsWith("Autostart", StringComparison.Ordinal));
         Summary = $"{ok.Count:N0} erfolgreiche Löschungen, zusammen {Format.Bytes(ok.Sum(e => e.Size))} · " +
                   $"{deletes.Count - ok.Count:N0} nicht durchgeführt" +
-                  (desktop > 0 ? $" · {desktop:N0} Desktop-Aufräumaktionen" : "");
+                  (desktop > 0 ? $" · {desktop:N0} Desktop-Aufräumaktionen" : "") +
+                  (programs > 0 ? $" · {programs:N0} Programm-/Autostart-Aktionen" : "");
     }
 
     [RelayCommand]

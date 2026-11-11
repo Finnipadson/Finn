@@ -15,6 +15,13 @@ public partial class App : Application
             Shutdown(code);
             return;
         }
+        // Allgemeiner Admin-Helfer (Programme deinstallieren, Registry, Autostart …) – nur fest erlaubte Aktionen.
+        if (e.Args.Length == 3 && e.Args[0] == "--admin-job")
+        {
+            int code = AdminHelper.RunJobFile(e.Args[1], e.Args[2]);
+            Shutdown(code);
+            return;
+        }
 
         DispatcherUnhandledException += OnUiException;
         AppDomain.CurrentDomain.UnhandledException += (_, ev) =>
