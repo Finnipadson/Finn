@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Design-Vorschläge</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1400px;height:880px;overflow:hidden}
+.app{width:1400px;height:880px;display:flex;flex-direction:column;overflow:hidden}
+.titlebar{height:32px;display:flex;align-items:center;padding-left:12px;font-size:12px;flex:none}
+.titlebar .wc{margin-left:auto;display:flex;height:100%}
+.titlebar .wc span{width:46px;display:flex;align-items:center;justify-content:center}
+.body{flex:1;display:flex;min-height:0}
+.side{flex:none;display:flex;flex-direction:column}
+.nav a{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;white-space:nowrap}
+.nav svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.side .grp{text-transform:uppercase}
+.side .bottom{margin-top:auto}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.tabs{display:flex;flex:none}
+.tabs span{white-space:nowrap}
+.filters{display:flex;align-items:center;gap:10px;flex:none}
+.search{display:flex;align-items:center;gap:8px}
+.search svg,.btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.sel{display:flex;align-items:center;justify-content:space-between}
+.sel:after{content:"";width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);opacity:.6;margin-left:12px}
+.chk{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.cb{width:16px;height:16px;flex:none;display:inline-flex;align-items:center;justify-content:center}
+.cb.on:after{content:"";width:4px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-1px) rotate(45deg)}
+.tablewrap{flex:1;min-height:0;overflow:hidden}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+td.num,th.num{text-align:right}
+.ico{display:inline-flex;align-items:center;justify-content:center;flex:none;font-weight:700;color:#fff}
+.namecell{display:flex;align-items:center;gap:10px;overflow:hidden}
+.namecell b{overflow:hidden;text-overflow:ellipsis;font-weight:inherit}
+.foot{display:flex;align-items:center;gap:10px;flex:none}
+.foot .info{margin-right:auto}
+.btn{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.shield{width:13px;height:13px}
+.bar{display:block;height:4px;margin-top:4px}
+
+/* ═══════════ 1 PROFESSIONELL (Windows 11 / Fluent) ═══════════ */
+.v1{font-family:"Segoe UI Variable Text","Segoe UI",sans-serif;font-size:14px;color:#1b1b1b;background:#eef0f3}
+.v1 .titlebar{color:#1b1b1b;background:transparent}
+.v1 .side{width:232px;padding:6px 8px 10px}
+.v1 .brand{display:flex;gap:10px;align-items:center;padding:6px 10px 18px;font-weight:600}
+.v1 .brand i{width:26px;height:26px;border-radius:6px;background:#005fb8;display:block}
+.v1 .brand small{display:block;font-weight:400;font-size:11px;color:#616161}
+.v1 .nav a{height:36px;padding:0 12px;border-radius:5px;margin-bottom:2px;position:relative}
+.v1 .nav a.act{background:#e3e6ea}
+.v1 .nav a.act:before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:2px;background:#005fb8}
+.v1 .grp{font-size:11px;color:#616161;padding:14px 12px 6px;letter-spacing:.02em;text-transform:none;font-weight:600}
+.v1 .bottom{font-size:12px;color:#616161;padding:8px 12px}
+.v1 .main{background:#f9f9fa;border-top-left-radius:8px;border:1px solid #e1e3e6;border-right:0;border-bottom:0;padding:22px 28px 18px}
+.v1 h1{font-family:"Segoe UI Variable Display","Segoe UI";font-size:28px;font-weight:600}
+.v1 .head p{color:#616161;font-size:13px;margin:4px 0 14px}
+.v1 .tabs{gap:26px;border-bottom:1px solid #e1e3e6;margin-bottom:14px}
+.v1 .tabs span{padding:8px 0 10px;color:#616161;position:relative}
+.v1 .tabs span.act{color:#1b1b1b;font-weight:600}
+.v1 .tabs span.act:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;border-radius:2px;background:#005fb8}
+.v1 .filters{margin-bottom:12px}
+.v1 .search,.v1 .sel{height:32px;padding:0 10px;background:#fff;border:1px solid #d9dce0;border-bottom-color:#8a8a8a;border-radius:4px;font-size:13px;color:#616161}
+.v1 .search{width:280px}.v1 .sel{width:160px;color:#1b1b1b}
+.v1 .cb{border:1px solid #8a8a8a;border-radius:3px;background:#fff}
+.v1 .cb.on{background:#005fb8;border-color:#005fb8;color:#fff}
+.v1 .chk{font-size:13px;margin-left:6px}
+.v1 .btn{height:32px;padding:0 14px;border:1px solid #d9dce0;border-radius:4px;background:#fff;font-size:13px}
+.v1 .btn.pri{background:#005fb8;border-color:#005fb8;color:#fff}
+.v1 .filters .btn{margin-left:auto}
+.v1 .tablewrap{background:#fff;border:1px solid #e1e3e6;border-radius:8px}
+.v1 th{font-weight:600;font-size:12px;color:#616161;height:38px;padding:0 12px;border-bottom:1px solid #e1e3e6}
+.v1 td{height:40px;padding:0 12px;border-bottom:1px solid #f0f1f3;font-size:13px}
+.v1 tr.selrow td{background:#eef4fb}
+.v1 .ico{width:22px;height:22px;border-radius:5px;font-size:11px}
+.v1 td.cat{color:#1b1b1b}
+.v1 td.cat:after{content:"";display:inline-block;width:6px;height:6px;border-right:1.5px solid #8a8a8a;border-bottom:1.5px solid #8a8a8a;transform:rotate(45deg);margin:0 0 3px 9px}
+.v1 .muted{color:#616161}
+.v1 .foot{padding-top:14px}
+.v1 .foot .info{font-size:12px;color:#616161}
+
+/* ═══════════ 2 CLEAN / MINIMAL ═══════════ */
+.v2{font-family:"Segoe UI Variable Text","Segoe UI",sans-serif;font-size:14px;color:#141414;background:#fff}
+.v2 .titlebar{color:#999}
+.v2 .side{width:210px;padding:16px 0 18px 28px}
+.v2 .brand{font-family:"Segoe UI Variable Display";font-size:15px;font-weight:600;padding-bottom:34px;letter-spacing:-.01em}
+.v2 .brand small{display:block;font-weight:400;color:#a0a0a0;font-size:12px}
+.v2 .brand i{display:none}
+.v2 .nav svg{display:none}
+.v2 .nav a{height:32px;color:#8a8a8a;font-size:14px}
+.v2 .nav a.act{color:#141414;font-weight:600}
+.v2 .nav a{position:relative}.v2 .nav a.act:before{content:"";position:absolute;left:-28px;top:15px;width:16px;height:2px;background:#141414}
+.v2 .grp{font-size:11px;color:#c0c0c0;padding:22px 0 8px;letter-spacing:.08em}
+.v2 .bottom{font-size:12px;color:#a0a0a0}
+.v2 .main{padding:36px 48px 26px 40px;border-left:1px solid #f0f0f0}
+.v2 h1{font-family:"Segoe UI Variable Display";font-size:40px;font-weight:600;letter-spacing:-.02em}
+.v2 .head p{color:#9a9a9a;margin:6px 0 26px;font-size:14px}
+.v2 .tabs{gap:30px;margin-bottom:24px}
+.v2 .tabs span{color:#a0a0a0;font-size:14px}
+.v2 .tabs span.act{color:#141414;font-weight:600}
+.v2 .filters{margin-bottom:10px;gap:22px}
+.v2 .search{width:260px;border-bottom:1px solid #141414;height:32px;color:#a0a0a0}
+.v2 .sel{height:32px;color:#141414;font-size:13px}
+.v2 .chk{font-size:13px;color:#555}
+.v2 .cb{border:1.5px solid #c8c8c8;border-radius:2px}
+.v2 .cb.on{border-color:#141414;background:#141414;color:#fff}
+.v2 .btn{height:36px;padding:0 16px;font-size:13px;border:1px solid #e2e2e2;border-radius:18px}
+.v2 .filters .btn{margin-left:auto;border:0;padding:0;color:#555}
+.v2 .btn.pri{background:#141414;color:#fff;border-color:#141414}
+.v2 th{font-size:12px;font-weight:500;color:#a0a0a0;height:40px;padding:0 10px;border-bottom:1px solid #141414}
+.v2 td{height:44px;padding:0 10px;border-bottom:1px solid #f1f1f1;font-size:14px}
+.v2 tr.selrow td{background:#fafafa}
+.v2 .ico{width:8px;height:8px;border-radius:50%;font-size:0}
+.v2 .muted{color:#9a9a9a}
+.v2 .foot{padding-top:18px}
+.v2 .foot .info{font-size:13px;color:#9a9a9a}
+
+/* ═══════════ 3 WERKZEUG (klassisch, kompakt) ═══════════ */
+.v3{font-family:"Segoe UI",sans-serif;font-size:12px;color:#000;background:#f0f0f0}
+.v3 .titlebar{background:#fff;color:#000;border-bottom:1px solid #dadada}
+.v3 .menubar{height:24px;display:flex;align-items:center;gap:2px;padding:0 4px;background:#fff;border-bottom:1px solid #dadada;flex:none}
+.v3 .menubar span{padding:2px 8px}
+.v3 .toolbar{display:flex;gap:2px;padding:4px 6px;background:#f7f7f7;border-bottom:1px solid #d0d0d0;flex:none}
+.v3 .tb{width:84px;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid transparent;border-radius:2px;text-align:center;line-height:1.1;font-size:11px}
+.v3 .tb.act{background:#dceeff;border-color:#9ccbf5}
+.v3 .tb svg{width:24px;height:24px;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.v3 .tbsep{width:1px;background:#d0d0d0;margin:6px 6px}
+.v3 .side{width:200px;background:#fff;border-right:1px solid #d0d0d0;padding:6px 0}
+.v3 .brand{display:none}
+.v3 .nav a{height:22px;padding:0 10px 0 22px;gap:7px}
+.v3 .nav svg{width:14px;height:14px;stroke:#2c6db5}
+.v3 .nav a.act{background:#cce8ff;outline:1px solid #99d1ff;outline-offset:-1px}
+.v3 .grp{font-weight:600;padding:8px 10px 3px;text-transform:none;color:#000;display:flex;gap:4px}
+.v3 .grp:before{content:"▾";color:#666}
+.v3 .bottom{display:none}
+.v3 .main{padding:0;background:#fff}
+.v3 .head,.v3 .tabs{display:none}
+.v3 .filters{padding:5px 6px;gap:6px;border-bottom:1px solid #d0d0d0;background:#fafafa}
+.v3 .search{width:230px;height:22px;border:1px solid #a0a0a0;background:#fff;padding:0 4px;color:#777}
+.v3 .sel{height:22px;width:130px;border:1px solid #a0a0a0;background:#fff;padding:0 4px;font-size:12px}
+.v3 .lbl{color:#444}
+.v3 .cb{width:13px;height:13px;border:1px solid #333;background:#fff}
+.v3 .cb.on:after{width:3px;height:7px;border-width:0 1.5px 1.5px 0}
+.v3 .btn{height:22px;padding:0 10px;border:1px solid #adadad;background:#e1e1e1;font-size:12px}
+.v3 .filters .btn{margin-left:auto}
+.v3 th{font-weight:400;height:22px;padding:0 6px;background:#fff;border-right:1px solid #e5e5e5;border-bottom:1px solid #d5d5d5;color:#222}
+.v3 th.sorted{background:#f3f9ff}
+.v3 th.sorted:after{content:"▲";font-size:7px;color:#888;margin-left:6px;vertical-align:2px}
+.v3 td{height:21px;padding:0 6px;border-right:1px solid #f2f2f2}
+.v3 tr:nth-child(even) td{background:#fafafa}
+.v3 tr.selrow td{background:#cce8ff}
+.v3 .ico{width:16px;height:16px;font-size:9px;border-radius:2px}
+.v3 .namecell{gap:6px}
+.v3 .muted{color:#555}
+.v3 .foot{padding:5px 6px;border-top:1px solid #d0d0d0;background:#f7f7f7}
+.v3 .foot .info{color:#333}
+.v3 .btn.pri{border-color:#0078d4;background:#e5f1fb;outline:1px solid #0078d4;outline-offset:-2px}
+.v3 .statusbar{height:22px;display:flex;align-items:center;background:#f0f0f0;border-top:1px solid #d0d0d0;flex:none}
+.v3 .statusbar span{padding:0 10px;border-right:1px solid #d0d0d0}
+
+/* ═══════════ 4 GRAPHIT (dunkel, Bernstein) ═══════════ */
+.v4{font-family:"Segoe UI Variable Text","Segoe UI",sans-serif;font-size:13px;color:#e7e3dc;background:#161514}
+.v4 .titlebar{color:#8b867d}
+.v4 .side{width:72px;align-items:center;padding:4px 0 14px;border-right:1px solid #262422}
+.v4 .brand{width:36px;height:36px;border:1.5px solid #e0a43a;border-radius:8px;margin:6px 0 22px;display:flex;align-items:center;justify-content:center;color:#e0a43a;font-family:Bahnschrift;font-weight:600;font-size:15px}
+.v4 .brand small,.v4 .grp{display:none}
+.v4 .nav{display:flex;flex-direction:column;align-items:center;gap:2px}
+.v4 .nav a{width:56px;height:50px;flex-direction:column;justify-content:center;gap:4px;font-size:10px;color:#8b867d;border-radius:8px}
+.v4 .nav a span{display:block;max-width:54px;overflow:hidden;text-overflow:ellipsis}
+.v4 .nav svg{width:18px;height:18px}
+.v4 .nav a.act{color:#e0a43a;background:#24221f}
+.v4 .nav .sep{width:28px;height:1px;background:#2c2a27;margin:6px 0}
+.v4 .bottom{font-size:16px;color:#6b665e}
+.v4 .main{padding:22px 30px 18px}
+.v4 h1{font-family:Bahnschrift;font-weight:600;font-size:26px;letter-spacing:.01em;display:flex;align-items:baseline;gap:14px}
+.v4 h1 em{font-style:normal;font-family:"Cascadia Mono";font-size:12px;font-weight:400;color:#8b867d}
+.v4 .head p{color:#8b867d;margin:4px 0 16px}
+.v4 .tabs{gap:4px;margin-bottom:14px;background:#1e1d1b;padding:3px;border-radius:7px;align-self:flex-start;border:1px solid #2a2825}
+.v4 .tabs span{padding:6px 14px;border-radius:5px;color:#8b867d}
+.v4 .tabs span.act{background:#2e2b27;color:#f3efe8}
+.v4 .filters{margin-bottom:12px}
+.v4 .search,.v4 .sel{height:32px;padding:0 10px;background:#1e1d1b;border:1px solid #2f2c29;border-radius:6px;color:#8b867d}
+.v4 .search{width:270px}.v4 .sel{width:150px;color:#e7e3dc}
+.v4 .chk{color:#b9b4ab}
+.v4 .cb{border:1.5px solid #5a554e;border-radius:4px}
+.v4 .cb.on{background:#e0a43a;border-color:#e0a43a;color:#161514}
+.v4 .btn{height:32px;padding:0 14px;border:1px solid #34312d;border-radius:6px;background:#211f1d}
+.v4 .filters .btn{margin-left:auto}
+.v4 .btn.pri{background:#e0a43a;color:#1a1814;border-color:#e0a43a;font-weight:600}
+.v4 .tablewrap{border:1px solid #2a2825;border-radius:8px;background:#1b1a18}
+.v4 th{font-size:11px;font-weight:600;color:#8b867d;letter-spacing:.06em;text-transform:uppercase;height:36px;padding:0 12px;border-bottom:1px solid #2a2825}
+.v4 td{height:38px;padding:0 12px;border-bottom:1px solid #22201e}
+.v4 tr.selrow td{background:#26231f}
+.v4 tr.selrow td:first-child{box-shadow:inset 3px 0 #e0a43a}
+.v4 .ico{width:22px;height:22px;border-radius:6px;font-size:10px}
+.v4 td.num,.v4 td.date,.v4 td.ver{font-family:"Cascadia Mono";font-size:12px}
+.v4 .bar{background:#e0a43a;opacity:.8;border-radius:2px;margin:3px 0 -7px auto;height:3px}
+.v4 .ico{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.v4 .muted{color:#8b867d}
+.v4 .foot{padding-top:14px}
+.v4 .foot .info{color:#8b867d;font-family:"Cascadia Mono";font-size:12px}
+
+/* ═══════════ 5 PAPIER (Bericht, Serifen) ═══════════ */
+.v5{font-family:"Segoe UI",sans-serif;font-size:13px;color:#2b2925;background:#f4efe6}
+.v5 .titlebar{color:#7d766a}
+.v5 .side{width:220px;padding:14px 0 18px 30px}
+.v5 .brand{font-family:"Sitka Heading",Georgia,serif;font-size:21px;line-height:1.1;padding-bottom:30px}
+.v5 .brand small{display:block;font-family:"Sitka Text",Georgia,serif;font-style:italic;font-size:13px;color:#7d766a;margin-top:2px}
+.v5 .brand i{display:none}
+.v5 .nav svg{display:none}
+.v5 .nav a{height:30px;font-family:"Sitka Text",Georgia,serif;font-size:15px;color:#5c564c}
+.v5 .nav a .n{font-family:"Segoe UI";font-size:10px;color:#a69e8f;width:18px}
+.v5 .nav a.act{color:#1f4d40;font-style:italic}
+.v5 .nav a.act .n{color:#1f4d40}
+.v5 .grp{font-size:10px;letter-spacing:.14em;color:#a69e8f;padding:20px 0 6px}
+.v5 .bottom{font-family:"Sitka Text",serif;font-style:italic;color:#7d766a}
+.v5 .main{margin:6px 22px 18px 0;padding:30px 40px 20px;background:#fbf8f2;border:1px solid #e2dacb;box-shadow:0 1px 0 #e2dacb}
+.v5 h1{font-family:"Sitka Display",Georgia,serif;font-size:38px;font-weight:600;letter-spacing:-.01em}
+.v5 .head p{font-family:"Sitka Text",Georgia,serif;font-style:italic;color:#7d766a;font-size:15px;margin:2px 0 20px;padding-bottom:16px;border-bottom:2px solid #2b2925}
+.v5 .tabs{gap:28px;margin-bottom:18px}
+.v5 .tabs span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8d8576}
+.v5 .tabs span.act{color:#1f4d40;font-weight:600;border-bottom:1.5px solid #1f4d40;padding-bottom:3px}
+.v5 .filters{margin-bottom:10px;gap:16px}
+.v5 .search{width:250px;height:30px;border:1px solid #cfc6b5;background:#fff;padding:0 10px;color:#9a917f;font-family:"Sitka Text",serif;font-style:italic}
+.v5 .sel{height:30px;width:150px;border:1px solid #cfc6b5;background:#fff;padding:0 10px}
+.v5 .cb{border:1px solid #6e675b;background:#fff}
+.v5 .cb.on{color:#1f4d40}
+.v5 .btn{height:32px;padding:0 16px;border:1px solid #2b2925;background:transparent;font-size:12px;letter-spacing:.04em}
+.v5 .filters .btn{margin-left:auto;border-color:#cfc6b5}
+.v5 .btn.pri{background:#1f4d40;border-color:#1f4d40;color:#fbf8f2}
+.v5 th{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:#7d766a;height:32px;padding:0 10px;border-bottom:1px solid #2b2925}
+.v5 td{height:38px;padding:0 10px;border-bottom:1px dotted #cfc6b5}
+.v5 td.name b{font-family:"Sitka Text",Georgia,serif;font-size:15px;line-height:1;padding-top:4px}
+.v5 td.cat{padding-top:3px}
+.v5 tr.selrow td{background:#efe8da}
+.v5 .ico{display:none}
+.v5 td.num{font-family:Georgia,serif;font-variant-numeric:tabular-nums}
+.v5 td.cat{font-family:"Sitka Text",serif;font-style:italic;color:#1f4d40}
+.v5 .muted{color:#7d766a}
+.v5 .foot{padding-top:16px}
+.v5 .foot .info{font-family:"Sitka Text",serif;font-style:italic;color:#7d766a;font-size:14px}
+
+/* ═══════════ 6 FREUNDLICH (Farbe, Kategorien) ═══════════ */
+.v6{font-family:"Segoe UI Variable Text","Segoe UI",sans-serif;font-size:14px;color:#1f2a30;background:#f5f6f4}
+.v6 .titlebar{background:#0f3d47;color:#a9c7cc}
+.v6 .side{width:220px;background:#0f3d47;color:#cfe2e4;padding:4px 12px 16px}
+.v6 .brand{display:flex;gap:10px;align-items:center;padding:8px 8px 22px;font-weight:600;color:#fff}
+.v6 .brand i{width:30px;height:30px;border-radius:9px;background:#f2b84b;display:block}
+.v6 .brand small{display:block;font-weight:400;font-size:11px;color:#8fb3b8}
+.v6 .nav a{height:38px;padding:0 12px;border-radius:9px;margin-bottom:2px}
+.v6 .nav a.act{background:#fff;color:#0f3d47;font-weight:600}
+.v6 .grp{font-size:11px;color:#6f9aa0;padding:14px 12px 6px;letter-spacing:.06em}
+.v6 .bottom{font-size:12px;color:#8fb3b8;padding:0 12px}
+.v6 .main{padding:24px 30px 18px}
+.v6 h1{font-family:"Segoe UI Variable Display";font-size:30px;font-weight:700}
+.v6 .head p{color:#5f6d73;margin:2px 0 16px}
+.v6 .tabs{gap:8px;margin-bottom:14px}
+.v6 .tabs span{padding:7px 14px;border-radius:20px;color:#3e4b51;background:#e8ebe7}
+.v6 .tabs span.act{background:#127a73;color:#fff;font-weight:600}
+.v6 .filters{margin-bottom:12px}
+.v6 .search,.v6 .sel{height:36px;padding:0 12px;background:#fff;border:1px solid #dde1dc;border-radius:10px;color:#7a868b}
+.v6 .search{width:270px}.v6 .sel{width:160px;color:#1f2a30}
+.v6 .cb{border:2px solid #b9c2bd;border-radius:5px;width:18px;height:18px;background:#fff}
+.v6 .cb.on{background:#127a73;border-color:#127a73;color:#fff}
+.v6 .btn{height:38px;padding:0 16px;border-radius:10px;background:#fff;border:1px solid #dde1dc;font-weight:600;font-size:13px}
+.v6 .filters .btn{margin-left:auto}
+.v6 .btn.pri{background:#127a73;border-color:#127a73;color:#fff}
+.v6 .tablewrap{background:#fff;border-radius:14px;border:1px solid #e3e6e1}
+.v6 th{font-size:12px;font-weight:600;color:#7a868b;height:40px;padding:0 12px;border-bottom:1px solid #eceee9}
+.v6 td{height:42px;padding:0 12px;border-bottom:1px solid #f2f3f0}
+.v6 tr.selrow td{background:#eef7f5}
+.v6 .ico{width:26px;height:26px;border-radius:8px;font-size:11px}
+.v6 .chip{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.v6 .typ{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;border:1px solid #dde1dc;color:#5f6d73}
+.v6 .muted{color:#6b777c}
+.v6 .foot{padding-top:14px}
+.v6 .foot .info{color:#5f6d73;font-size:13px}
+</style>
+</head>
+<body>
+<script>
+const v = +(new URLSearchParams(location.search).get('v') || 1);
+document.body.className = 'v' + v;
+
+const I = {
+  home:'<path d="M3 8.5 10 3l7 5.5V17H3z"/><path d="M8 17v-5h4v5"/>',
+  wrench:'<path d="M12.5 3.5a3.5 3.5 0 0 0-3.3 4.6L3.5 13.8l2.7 2.7 5.7-5.7a3.5 3.5 0 0 0 4.6-3.3l-2 2-2-.5-.5-2z"/>',
+  search:'<circle cx="8.5" cy="8.5" r="5"/><path d="m12.5 12.5 4 4"/>',
+  list:'<path d="M7 5h10M7 10h10M7 15h10M3 5h1M3 10h1M3 15h1"/>',
+  monitor:'<rect x="2.5" y="3.5" width="15" height="10" rx="1"/><path d="M7 17h6M10 13.5V17"/>',
+  apps:'<rect x="3" y="3" width="5.5" height="5.5" rx="1"/><rect x="11.5" y="3" width="5.5" height="5.5" rx="1"/><rect x="3" y="11.5" width="5.5" height="5.5" rx="1"/><path d="M14.25 11.5v5.5M11.5 14.25H17"/>',
+  history:'<path d="M3.5 10a6.5 6.5 0 1 0 2-4.7"/><path d="M3 3v3.5h3.5M10 6.5V10l2.5 1.5"/>',
+  gear:'<circle cx="10" cy="10" r="2.5"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4"/>',
+  refresh:'<path d="M16 10a6 6 0 1 1-1.8-4.3"/><path d="M16 3.5v3.5h-3.5"/>',
+};
+const svg = (k, extra='') => `<svg viewBox="0 0 20 20" ${extra}>${I[k]}</svg>`;
+const shield = `<svg class="shield" viewBox="0 0 20 20" style="fill:none;stroke:currentColor;stroke-width:1.7"><path d="M10 2.5 4 5v4.5c0 3.8 2.6 6.6 6 8 3.4-1.4 6-4.2 6-8V5z"/></svg>`;
+
+const P = [
+  ['3uTools','9.09.009','Shenzhen Aidapu Network','22.09.2026',null,'Programm','System & Tools','#2f6fd6'],
+  ['Aimlabs','–','Statespace','03.12.2025',20.8,'Spiel (Steam)','Spiele','#1aa596',1],
+  ['AlphaTerminal','1.0.0.2','alphaterminal-proxy','11.06.2026',0.00003,'Store-App','System & Tools','#5b6470'],
+  ['AMD Chipset Software','8.03.25.247','Advanced Micro Devices','05.06.2026',0.0164,'Programm','System & Tools','#1d1d1d'],
+  ['AMD Software','2026.04.15','Advanced Micro Devices','07.09.2026',0.0889,'Programm','System & Tools','#c8281e'],
+  ['Apex Legends','–','Respawn','06.06.2026',67.7,'Spiel (Steam)','Spiele','#d4362c'],
+  ['Apple Mobile Device Support','20.0.0.35','Apple Inc.','26.09.2026',0.0936,'Programm','System & Tools','#6a7a8c'],
+  ['ASUS DriverHub','1.0.7.1','ASUSTeK Computer Inc.','05.06.2026',null,'Programm','System & Tools','#2468b0'],
+  ['Bloons TD 6','–','Ninja Kiwi','03.12.2025',2.7,'Spiel (Steam)','Spiele','#e0892b',1,1],
+  ['Call of Duty','–','Treyarch','29.07.2026',80.7,'Spiel (Steam)','Spiele','#2b2b2b'],
+  ['Claude','5.1231.0.0','Anthropic','10.11.2026',0.728,'Store-App','Sonstiges','#c96442'],
+  ['Cursor (User)','3.7.36','Anysphere','14.06.2026',1.0,'Programm','Entwicklung','#3a3a3a'],
+  ['Discord','1.0.9267','Discord Inc.','03.11.2026',0.117,'Programm','Kommunikation','#5865c2'],
+  ['DTS Audio Processing','1.11.3.0','–','09.10.2026',0.0086,'Store-App','Sonstiges','#e2671f'],
+  ['EA app','13.743.1.6250','Electronic Arts','14.07.2026',0.765,'Programm','Spiele','#e2403a'],
+  ['Firefox','133.0','Mozilla','02.11.2026',0.262,'Programm','Browser & Internet','#e8711c'],
+];
+const size = g => g == null ? '–' : g >= 1 ? g.toFixed(1).replace('.', ',') + ' GB' : g >= 0.001 ? Math.round(g * 1000 * 10) / 10 + ' MB' : (g * 1e6).toFixed(1).replace('.', ',') + ' KB';
+const fmt = s => s.replace(/(\d+)\.(\d) MB/, '$1,$2 MB');
+const chipColor = {
+  'Spiele':['#fde3dc','#9c3b25'], 'System & Tools':['#e1e9f4','#2c4f7c'], 'Sonstiges':['#ecebe6','#5b5a52'],
+  'Entwicklung':['#e4f0e1','#356030'], 'Kommunikation':['#fbefd5','#86601a'], 'Browser & Internet':['#dff1ef','#1d625b'],
+};
+const mono = n => n.replace(/[^A-Za-z0-9]/g,'').slice(0, v === 3 ? 1 : 2).replace(/^(.)(.?)$/, (m,a,b)=> a.toUpperCase() + (b||'').toLowerCase());
+
+const navItems = [
+  ['Übersicht','home'],['Treiber','wrench'],'Aufräumen',['Scan','search'],['Ergebnisse','list'],
+  ['Desktop aufräumen','monitor'],['Programme','apps',1],['Protokoll','history'],'App',['Einstellungen','gear'],
+];
+let navNo = 0;
+const nav = navItems.map(n => {
+  if (typeof n === 'string') return v === 4 ? '<div class="sep"></div>' : `<div class="grp">${n}</div>`;
+  navNo++;
+  const label = v === 4 ? n[0].replace('Desktop aufräumen','Desktop').replace('Einstellungen','Optionen').replace('Ergebnisse','Funde') : n[0];
+  return `<a class="${n[2] ? 'act' : ''}">${v === 5 ? `<span class="n">${String(navNo).padStart(2,'0')}</span>` : ''}${svg(n[1])}<span>${label}</span></a>`;
+}).join('');
+
+const brand = v === 4 ? '<div class="brand">PA</div>'
+  : v === 5 ? '<div class="brand">PC Aufräumer<small>&amp; Systemübersicht</small></div>'
+  : '<div class="brand"><i></i><div>PC Aufräumer<small>&amp; Systemübersicht</small></div></div>';
+const bottom = v === 4 ? `<div class="bottom" title="Ohne Adminrechte">${shield}</div>`
+  : v === 5 ? '<div class="bottom">läuft ohne Adminrechte</div>'
+  : `<div class="bottom"><span style="display:flex;gap:8px;align-items:center">${shield} Läuft ohne Adminrechte</span></div>`;
+
+const tabs = ['Deinstallieren','Erzwungene Deinstallation','Installationen überwachen','Autostart']
+  .map((t,i) => `<span class="${i ? '' : 'act'}">${t}</span>`).join('');
+
+const maxG = 80.7;
+const rows = P.map(p => {
+  const [name, ver, pub, date, g, typ, cat, col, checked, sel] = p;
+  const typCell = v === 6 ? `<span class="typ">${typ}</span>` : typ;
+  const cc = chipColor[cat];
+  const catCell = v === 6 ? `<span class="chip" style="background:${cc[0]};color:${cc[1]}">${cat}</span>` : cat;
+  const sizeCell = v === 4 && g && g / maxG * 70 >= 4 ? `${fmt(size(g))}<span class="bar" style="width:${Math.max(2, g / maxG * 70)}px"></span>` : fmt(size(g));
+  return `<tr class="${sel ? 'selrow' : ''}">
+    <td><span class="cb ${checked ? 'on' : ''}"></span></td>
+    <td class="name"><div class="namecell"><span class="ico" style="background:${col}">${mono(name)}</span><b>${name}</b></div></td>
+    <td class="ver ${ver === '–' ? 'muted' : ''}">${ver}</td>
+    <td class="muted">${pub}</td>
+    <td class="date">${date}</td>
+    <td class="num">${sizeCell}</td>
+    <td>${typCell}</td>
+    <td class="cat">${catCell}</td>
+  </tr>`;
+}).join('');
+
+const W = {
+  1:[44,250,120,200,110,95,120,160], 2:[40,250,120,190,110,95,120,150], 3:[26,230,105,190,82,75,95,120],
+  4:[44,240,120,190,110,110,120,150], 5:[38,250,110,190,110,90,115,150], 6:[44,250,115,180,110,95,130,170],
+}[v];
+const heads = ['', 'Name','Version','Hersteller','Installiert','Größe','Typ','Kategorie'];
+const thead = heads.map((h,i) => `<th style="width:${W[i]}px" class="${i === 5 ? 'num' : ''} ${v === 3 && i === 1 ? 'sorted' : ''}">${h}</th>`).join('');
+
+const filters = `<div class="filters">
+  ${v === 3 ? '<span class="lbl">Suchen:</span>' : ''}
+  <div class="search">${v === 3 ? '' : svg('search')}<span>${v === 5 ? 'Programm suchen …' : 'Suchen …'}</span></div>
+  ${v === 3 ? '<span class="lbl">Typ:</span>' : ''}<div class="sel">Alle Typen</div>
+  ${v === 3 ? '<span class="lbl">Kategorie:</span>' : ''}<div class="sel">Alle Kategorien</div>
+  <label class="chk"><span class="cb"></span>Nach Kategorie gruppieren</label>
+  <label class="chk"><span class="cb"></span>Systemkomponenten zeigen</label>
+  <span class="btn">${svg('refresh')}Aktualisieren</span>
+</div>`;
+
+const info = v === 4 ? '108 einträge · 145 ausgeblendet · Σ 1,0 TB · 2 markiert = 23,5 GB'
+  : v === 5 ? '108 Programme, zusammen 1,0 TB — 2 markiert (23,5 GB)'
+  : v === 1 || v === 3 ? '108 Einträge angezeigt · 145 Systemkomponenten/Updates ausgeblendet · zusammen 1,0 TB'
+  : '108 Einträge · 145 ausgeblendet · zusammen 1,0 TB';
+const foot = `<div class="foot"><span class="info">${info}</span>
+  <span class="btn">Auswahl aufheben</span>
+  <span class="btn">${shield}Markiertes deinstallieren</span>
+  <span class="btn pri">${shield}Ausgewählte deinstallieren (2)</span></div>`;
+
+const tbIcon = (k, c) => `<svg viewBox="0 0 20 20" style="stroke:${c}">${I[k]}</svg>`;
+const toolbar = v !== 3 ? '' : `<div class="menubar"><span>Datei</span><span>Ansicht</span><span>Extras</span><span>Hilfe</span></div>
+<div class="toolbar">
+  <div class="tb act">${tbIcon('apps','#2c6db5')}Deinstallieren</div>
+  <div class="tb">${tbIcon('wrench','#b5462c')}Erzwungen</div>
+  <div class="tb">${tbIcon('history','#3c8c3c')}Installation<br>aufzeichnen</div>
+  <div class="tb">${tbIcon('refresh','#9b6a12')}Autostart</div>
+  <div class="tbsep"></div>
+  <div class="tb">${tbIcon('search','#555')}Reste<br>suchen</div>
+  <div class="tb">${tbIcon('list','#555')}Protokoll</div>
+</div>`;
+const statusbar = v !== 3 ? '' : `<div class="statusbar"><span>108 Programme</span><span>145 ausgeblendet</span><span>Gesamt: 1,0 TB</span><span>2 markiert (23,5 GB)</span><span style="border:0;margin-left:auto">Ohne Adminrechte</span></div>`;
+
+const title = v === 4 ? '<span>PC Aufräumer</span>' : '<span>PC Aufräumer &amp; Systemübersicht</span>';
+const head = `<header class="head"><h1>Programme${v === 4 ? '<em>253 installiert</em>' : ''}</h1><p>${
+  v === 5 ? 'Programme, Apps und Spiele deinstallieren – und was sie zurücklassen.' : 'Programme, Apps und Spiele deinstallieren und Reste restlos entfernen.'}</p></header>`;
+
+document.body.innerHTML = `<div class="app">
+  <div class="titlebar">${title}<div class="wc"><span>─</span><span>☐</span><span>✕</span></div></div>
+  ${toolbar}
+  <div class="body">
+    <aside class="side">${brand}<nav class="nav">${nav}</nav>${bottom}</aside>
+    <main class="main">${head}<nav class="tabs">${tabs}</nav>${filters}
+      <div class="tablewrap"><table><thead><tr>${thead}</tr></thead><tbody>${rows}</tbody></table></div>
+      ${foot}
+    </main>
+  </div>
+  ${statusbar}
+</div>`;
+</script>
+</body>
+</html>
