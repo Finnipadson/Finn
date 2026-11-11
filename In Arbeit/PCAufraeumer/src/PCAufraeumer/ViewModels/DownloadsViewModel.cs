@@ -18,6 +18,7 @@ public sealed partial class DownloadsViewModel : ObservableObject
 {
     private readonly SettingsService _settings;
     private readonly DesktopApplier _applier;
+    private readonly CleanupService _cleanup;
     private readonly Action _logChanged;
     private readonly DispatcherTimer _replanTimer = new() { Interval = TimeSpan.FromMilliseconds(150) };
     private DownloadsPlanner? _planner;
@@ -45,11 +46,14 @@ public sealed partial class DownloadsViewModel : ObservableObject
     [ObservableProperty] private string _summary = "";
     [ObservableProperty] private string _infoText = "";
     [ObservableProperty] private bool _hasPlan;
+    [ObservableProperty] private int _duplicateCount;
+    [ObservableProperty] private string _duplicateText = "";
 
-    public DownloadsViewModel(SettingsService settings, DesktopApplier applier, Action logChanged)
+    public DownloadsViewModel(SettingsService settings, DesktopApplier applier, CleanupService cleanup, Action logChanged)
     {
         _settings = settings;
         _applier = applier;
+        _cleanup = cleanup;
         _logChanged = logChanged;
         _replanTimer.Tick += (_, _) => { _replanTimer.Stop(); Replan(); };
     }
@@ -70,6 +74,7 @@ public sealed partial class DownloadsViewModel : ObservableObject
     partial void OnIsBusyChanged(bool value)
     {
         ApplyCommand.NotifyCanExecuteChanged();
+        RecycleDuplicatesCommand.NotifyCanExecuteChanged();
         AnalyzeCommand.NotifyCanExecuteChanged();
     }
 
@@ -103,7 +108,9 @@ public sealed partial class DownloadsViewModel : ObservableObject
             {
                 var files = planner.ReadFiles();
                 foreach (var f in files) f.Icon = ShellIcons.Get(f.Path, 32);
-                return planner.BuildChanges(files, minAge, DateTime.Now);
+                var list = planner.BuildChanges(files, minAge, DateTime.Now);
+                DownloadsPlanner.MarkDuplicates(list);
+                return list;
             });
             foreach (var c in Changes) c.PropertyChanged -= ChangeChanged;
             Changes.Clear();
@@ -111,6 +118,10 @@ public sealed partial class DownloadsViewModel : ObservableObject
             int folders = planner.ExistingFolderNames().Count;
             InfoText = (IsTestMode ? "TESTMODUS – " : "") +
                        $"{Folder}  ·  {changes.Count} lose Dateien ({Format.Bytes(changes.Sum(c => c.Item.Size))}), {folders} Unterordner";
+            var dups = changes.Where(c => c.IsDuplicate).ToList();
+            DuplicateCount = dups.Count;
+            DuplicateText = dups.Count == 0 ? "" : $"Doppelte in den Papierkorb ({dups.Count} · {Format.Bytes(dups.Sum(c => c.Item.Size))})";
+            RecycleDuplicatesCommand.NotifyCanExecuteChanged();
             Replan();
             Status = changes.Count == 0 ? "Der Downloads-Ordner ist schon aufgeräumt – keine losen Dateien." : "Vorschau bereit – noch wurde nichts verändert.";
         }
@@ -211,6 +222,59 @@ public sealed partial class DownloadsViewModel : ObservableObject
             IsBusy = false;
             LoadHistory();
         }
+        var keep = Status;
+        await AnalyzeAsync();
+        Status = keep;
+    }
+
+    private bool CanRecycleDuplicates() => !IsBusy && DuplicateCount > 0;
+
+    /// <summary>Doppelte (gleicher Inhalt) in den Papierkorb – von jeder Gruppe bleibt die markierte Originaldatei.</summary>
+    [RelayCommand(CanExecute = nameof(CanRecycleDuplicates))]
+    private async Task RecycleDuplicatesAsync()
+    {
+        var groups = Changes.Where(c => c.DuplicateGroup > 0).GroupBy(c => c.DuplicateGroup).ToList();
+        var all = new List<FileCandidate>();
+        var delete = new List<FileCandidate>();
+        foreach (var g in groups)
+            foreach (var c in g)
+            {
+                var fc = new FileCandidate
+                {
+                    FullPath = c.Item.Path, Name = c.Item.FileName, Directory = Folder, Size = c.Item.Size,
+                    Category = FindingCategory.Duplicates, GroupId = g.Key, Extension = Path.GetExtension(c.Item.FileName),
+                    Reason = c.IsDuplicate ? $"Duplikat von {c.DuplicateKeepPath}" : "Wird behalten",
+                };
+                fc.IsKeep = !c.IsDuplicate;
+                all.Add(fc);
+                if (c.IsDuplicate) delete.Add(fc);
+            }
+        if (delete.Count == 0) return;
+        var lines = Changes.Where(c => c.IsDuplicate).Select(c => $"{c.Item.FileName}  (gleich wie „{c.DuplicateOf}“, bleibt)").ToList();
+        var ok = ConfirmDialog.Show(Application.Current.MainWindow, $"{delete.Count} doppelte Datei(en) in den Papierkorb?",
+            $"Frei werden {Format.Bytes(delete.Sum(d => d.Size))}.",
+            "Die Dateien haben genau den gleichen Inhalt wie eine andere Datei im Downloads-Ordner (per Hash geprüft). " +
+            "Die jeweils andere Datei bleibt erhalten. Alles kommt in den Papierkorb und lässt sich von dort wiederherstellen.",
+            lines, "In den Papierkorb", requireCheckbox: null);
+        if (!ok) return;
+
+        IsBusy = true;
+        try
+        {
+            var progress = new Progress<(int done, int total, string path)>(p => Status = $"Papierkorb {p.done}/{p.total}: {Path.GetFileName(p.path)}");
+            var log = await _cleanup.RecycleAsync(delete, all, progress, CancellationToken.None);
+            int okCount = log.Count(e => e.Success);
+            var failed = log.Where(e => !e.Success).ToList();
+            Status = $"{okCount} doppelte Datei(en) im Papierkorb ({Format.Bytes(log.Where(e => e.Success).Sum(e => e.Size))} frei)." +
+                     (failed.Count > 0 ? " Nicht gelöscht: " + string.Join("; ", failed.Take(3).Select(f => $"{Path.GetFileName(f.Path)} – {f.Error}")) : "");
+            _logChanged();
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Doppelte Downloads konnten nicht gelöscht werden.", ex);
+            Status = "Fehler: " + ex.Message;
+        }
+        finally { IsBusy = false; }
         var keep = Status;
         await AnalyzeAsync();
         Status = keep;

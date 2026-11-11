@@ -4,6 +4,7 @@ using PCAufraeumer.Services;
 namespace PCAufraeumer.Tests;
 
 /// <summary>Spielaufnahmen im Scan – nur mit Dummy-Clips im Testordner, nie mit den echten Aufnahmen.</summary>
+[Collection("seq")]
 public class RecordingTests : IDisposable
 {
     private readonly TestFolder _t = new();

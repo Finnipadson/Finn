@@ -6,6 +6,7 @@ using PCAufraeumer.Services;
 namespace PCAufraeumer.Tests;
 
 /// <summary>Speicherplatz-Karte, Programm-Updates (winget-Ausgabe) und Downloads aufräumen – nur im Testordner.</summary>
+[Collection("seq")]
 public class StorageUpdatesDownloadsTests : IDisposable
 {
     private readonly TestFolder _t = new();
@@ -236,5 +237,98 @@ public class StorageUpdatesDownloadsTests : IDisposable
         Assert.Equal("Desktop", s.Area);
         Assert.Contains("Symbolpositionen", s.Summary);
         Assert.Empty(DesktopHistory.Load(DesktopHistory.DownloadsArea));
+    }
+}
+
+/// <summary>Downloads: Regel „Code“ und doppelte Dateien – nur im Testordner.</summary>
+[Collection("seq")]
+public class DownloadsDuplicateTests : IDisposable
+{
+    private readonly TestFolder _t = new();
+    public void Dispose() => _t.Dispose();
+
+    [Fact]
+    public void Code_rule_sorts_scripts_and_is_added_to_old_settings_once()
+    {
+        var fresh = new DesktopSettings();
+        var cat = new DesktopCategorizer(fresh);
+        Assert.Equal("Code", cat.RuleForFile("bot_server.py").Folder);
+        Assert.Equal("Code", cat.RuleForFile("index.html").Folder);
+        Assert.Equal("Dokumente", cat.RuleForFile("notizen.txt").Folder);
+        Assert.Equal("Sonstiges", cat.RuleForFile("daten.xyz").Folder);
+
+        // Alte Einstellungsdatei ohne „Code“ → wird vor „Sonstiges“ eingefügt, eigene Regeln bleiben
+        var old = new DesktopSettings();
+        old.FolderRules.RemoveAll(r => r.Folder == "Code");
+        old.FolderRules.Insert(0, new FolderRule("Meine Skripte", ".ps1"));
+        old.MigrateFolderRules();
+        old.MigrateFolderRules();
+        Assert.Single(old.FolderRules, r => r.Folder == "Code");
+        Assert.Equal("Sonstiges", old.FolderRules[^1].Folder);
+        Assert.Equal("Code", old.FolderRules[^2].Folder);
+        Assert.Equal("Meine Skripte", new DesktopCategorizer(old).RuleForFile("x.ps1").Folder); // eigene Regel gewinnt
+        Assert.Equal(DesktopSettings.CurrentFolderRulesVersion, old.FolderRulesVersion);
+
+        // Wer „Code“ schon selbst hat, bekommt keine zweite Regel
+        var own = new DesktopSettings();
+        own.FolderRules.RemoveAll(r => r.Folder == "Code");
+        own.FolderRules.Insert(0, new FolderRule("code", ".py"));
+        own.MigrateFolderRules();
+        Assert.Single(own.FolderRules, r => r.Folder.Equals("code", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task Duplicates_are_marked_original_kept_and_only_copies_recycled()
+    {
+        var dl = Path.Combine(_t.Root, "Downloads");
+        var old = DateTime.Now.AddDays(-5);
+        var zip = TestFolder.Bytes(5000, 1);
+        var pptx = TestFolder.Bytes(7000, 2);
+        _t.File("Downloads/alle_sounds_pack_1.21.10.zip", zip, old);
+        _t.File("Downloads/alle_sounds_pack_1.21.10_1.zip", zip, DateTime.Now.AddDays(-9)); // älter, aber Kopie-Name
+        _t.File("Downloads/BigTech_WithImages.pptx", pptx, old);
+        _t.File("Downloads/BigTech_WithImages (1).pptx", pptx, old);
+        _t.File("Downloads/BigTech - Kopie.pptx", pptx, old);
+        _t.File("Downloads/gleich_gross_anders.zip", TestFolder.Bytes(5000, 9), old);   // gleiche Größe, anderer Inhalt
+        _t.File("Downloads/laeuft.zip.crdownload", zip, old);                           // laufender Download
+
+        var planner = new DownloadsPlanner(new DesktopSettings(), dl);
+        var changes = planner.BuildChanges(planner.ReadFiles(), 1, DateTime.Now);
+        int marked = DownloadsPlanner.MarkDuplicates(changes);
+        DesktopChange C(string n) => changes.Single(c => c.Item.FileName == n);
+
+        Assert.Equal(3, marked);
+        Assert.False(C("alle_sounds_pack_1.21.10.zip").IsDuplicate);
+        Assert.Equal("alle_sounds_pack_1.21.10.zip", C("alle_sounds_pack_1.21.10_1.zip").DuplicateOf);
+        Assert.False(C("BigTech_WithImages.pptx").IsDuplicate);
+        Assert.True(C("BigTech_WithImages (1).pptx").IsDuplicate);
+        Assert.True(C("BigTech - Kopie.pptx").IsDuplicate);
+        Assert.False(C("gleich_gross_anders.zip").IsDuplicate);
+        Assert.False(C("laeuft.zip.crdownload").IsDuplicate);
+        Assert.Contains("gleicher Inhalt", C("BigTech - Kopie.pptx").DuplicateText);
+
+        // In den Papierkorb: nur die Kopien, die Originale bleiben (Sicherung über Duplikat-Gruppen)
+        var all = new List<FileCandidate>();
+        var delete = new List<FileCandidate>();
+        foreach (var c in changes.Where(c => c.DuplicateGroup > 0))
+        {
+            var fc = new FileCandidate { FullPath = c.Item.Path, Name = c.Item.FileName, Size = c.Item.Size, Category = FindingCategory.Duplicates, GroupId = c.DuplicateGroup };
+            fc.IsKeep = !c.IsDuplicate;
+            all.Add(fc);
+            if (c.IsDuplicate) delete.Add(fc);
+        }
+        var cleanup = new CleanupService(new ProtectionService(() => new List<string>()), new DeleteLogService());
+        var log = await cleanup.RecycleAsync(delete, all, new Progress<(int, int, string)>(), CancellationToken.None);
+        Assert.All(log, e => Assert.True(e.Success, e.Error));
+        Assert.True(File.Exists(Path.Combine(dl, "alle_sounds_pack_1.21.10.zip")));
+        Assert.True(File.Exists(Path.Combine(dl, "BigTech_WithImages.pptx")));
+        Assert.False(File.Exists(Path.Combine(dl, "alle_sounds_pack_1.21.10_1.zip")));
+        Assert.False(File.Exists(Path.Combine(dl, "BigTech_WithImages (1).pptx")));
+        Assert.False(File.Exists(Path.Combine(dl, "BigTech - Kopie.pptx")));
+
+        // Ohne überlebende Kopie verweigert der Papierkorb-Dienst das Löschen
+        var lone = new FileCandidate { FullPath = Path.Combine(dl, "BigTech_WithImages.pptx"), Size = 7000, Category = FindingCategory.Duplicates, GroupId = 99 };
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            cleanup.RecycleAsync(new[] { lone }, new[] { lone }, new Progress<(int, int, string)>(), CancellationToken.None));
     }
 }

@@ -95,6 +95,67 @@ public sealed class DownloadsPlanner
         return changes;
     }
 
+    /// <summary>
+    /// Doppelte Dateien unter den losen Dateien finden (gleiche Größe → gleicher Inhalts-Hash).
+    /// Pro Gruppe bleibt die Datei ohne „_1“/„(1)“/„Kopie“ im Namen, sonst die älteste; die anderen werden markiert.
+    /// Laufende Downloads, gesperrte und „Nur online“-Dateien werden nicht gelesen.
+    /// </summary>
+    public static int MarkDuplicates(IReadOnlyList<DesktopChange> changes, CancellationToken ct = default)
+    {
+        foreach (var c in changes) { c.DuplicateOf = ""; c.DuplicateKeepPath = ""; c.DuplicateGroup = 0; }
+        var usable = changes.Where(c => c.Item.Size > 0 && !c.Item.Locked && c.CanEnable &&
+                                        !PartialExtensions.Contains(Path.GetExtension(c.Item.FileName)) && !IsCloudOnly(c.Item.Path)).ToList();
+        int group = 0, marked = 0;
+        foreach (var bySize in usable.GroupBy(c => c.Item.Size).Where(g => g.Count() > 1))
+        {
+            var byHash = new Dictionary<UInt128, List<DesktopChange>>();
+            foreach (var c in bySize)
+            {
+                ct.ThrowIfCancellationRequested();
+                try
+                {
+                    var h = ProtectionService.PreserveAccessTime(c.Item.Path, () => ScanService.Hash(c.Item.Path, partial: false, ct));
+                    if (!byHash.TryGetValue(h, out var l)) byHash[h] = l = new List<DesktopChange>();
+                    l.Add(c);
+                }
+                catch (OperationCanceledException) { throw; }
+                catch (Exception ex) { ErrorLog.Write($"Downloads: Datei nicht lesbar (Duplikatprüfung): {c.Item.Path}", ex); }
+            }
+            foreach (var members in byHash.Values.Where(l => l.Count > 1))
+            {
+                group++;
+                var keep = members.OrderBy(m => CopyPenalty(m.Item.FileName))
+                    .ThenBy(m => m.Item.Modified ?? DateTime.MaxValue)
+                    .ThenBy(m => m.Item.FileName.Length).First();
+                foreach (var m in members)
+                {
+                    m.DuplicateGroup = group;
+                    if (ReferenceEquals(m, keep)) continue;
+                    m.DuplicateOf = keep.Item.FileName;
+                    m.DuplicateKeepPath = keep.Item.Path;
+                    marked++;
+                }
+            }
+        }
+        return marked;
+    }
+
+    private static bool IsCloudOnly(string path)
+    {
+        try { return ProtectionService.IsCloudOnly(File.GetAttributes(path)); } catch { return true; }
+    }
+
+    /// <summary>Namen, die nach Kopie aussehen: „Datei (1).zip“, „Datei_1.zip“, „Datei - Kopie.zip“, „Copy of …“.</summary>
+    internal static int CopyPenalty(string fileName)
+    {
+        var n = Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant();
+        int p = 0;
+        if (System.Text.RegularExpressions.Regex.IsMatch(n, @"\(\d+\)$")) p += 3;
+        if (System.Text.RegularExpressions.Regex.IsMatch(n, @"[_ ]\d$")) p += 2;
+        if (n.Contains(" - kopie") || n.Contains(" - copy") || n.StartsWith("kopie von") || n.StartsWith("copy of")) p += 4;
+        return p;
+    }
+
     /// <summary>Zielordner und endgültige Dateinamen berechnen (nichts wird überschrieben).</summary>
     public DesktopPlan Plan(IEnumerable<DesktopChange> changes)
     {

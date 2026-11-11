@@ -51,6 +51,14 @@
                     <TextBlock Text="Geplante Änderungen" Style="{StaticResource H2}" Margin="0,0,16,0" VerticalAlignment="Center"/>
                     <Button Command="{Binding SelectAllCommand}" Padding="8,3" FontSize="12"><TextBlock Text="Alle an"/></Button>
                     <Button Command="{Binding SelectNoneCommand}" Padding="8,3" FontSize="12"><TextBlock Text="Alle aus"/></Button>
+                    <Button Command="{Binding RecycleDuplicatesCommand}" Padding="8,3" FontSize="12" Margin="8,0,0,0"
+                            Visibility="{Binding DuplicateCount, Converter={StaticResource PositiveToVis}}"
+                            ToolTip="Dateien mit genau gleichem Inhalt – die jeweils andere Datei bleibt erhalten">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE74D;" Style="{StaticResource Icon}" FontSize="12" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding DuplicateText}"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
                 <DataGrid ItemsSource="{Binding Changes}" IsReadOnly="True" RowHeight="36">
                     <DataGrid.Columns>
@@ -91,6 +99,8 @@
                                         <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Description}"/>
                                         <TextBlock Text="{Binding Note}" Foreground="{DynamicResource Warn}" FontSize="11" TextTrimming="CharacterEllipsis"
                                                    Visibility="{Binding Note, Converter={StaticResource NullToVis}}" ToolTip="{Binding Note}"/>
+                                        <TextBlock Text="{Binding DuplicateText}" Foreground="{DynamicResource Accent}" FontSize="11" TextTrimming="CharacterEllipsis"
+                                                   Visibility="{Binding IsDuplicate, Converter={StaticResource BoolToVis}}" ToolTip="{Binding DuplicateKeepPath}"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

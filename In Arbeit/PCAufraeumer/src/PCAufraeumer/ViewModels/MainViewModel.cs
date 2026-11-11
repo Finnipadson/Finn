@@ -46,7 +46,7 @@ public sealed partial class MainViewModel : ObservableObject
         Desktop = new DesktopViewModel(SettingsService, new DesktopApplier(DeleteLog), () => Log.Reload());
         Programs = new ProgramsPageViewModel(SettingsService, DeleteLog, () => Log.Reload());
         Storage = new StorageViewModel();
-        Downloads = new DownloadsViewModel(SettingsService, new DesktopApplier(DeleteLog), () => Log.Reload());
+        Downloads = new DownloadsViewModel(SettingsService, new DesktopApplier(DeleteLog), Cleanup, () => Log.Reload());
         CurrentPage = Dashboard;
     }
 

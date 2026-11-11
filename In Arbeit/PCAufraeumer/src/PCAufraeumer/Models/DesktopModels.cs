@@ -167,8 +167,30 @@ public sealed class DesktopSettings
         new("Dokumente", ".pdf .doc .docx .odt .rtf .txt .md .xls .xlsx .ods .csv .ppt .pptx .odp", "", "Documents;Docs;Unterlagen"),
         new("Archive", ".zip .rar .7z .tar .gz .bz2 .xz", "", "Archiv;Zips"),
         new("Installer", ".exe .msi .msix .msixbundle .appx .iso .img", "", "Setups;Setup;Programme"),
+        CodeRule(),
         new("Sonstiges", "", "", "Andere;Misc"),
     };
+
+    /// <summary>Quelltexte und Skripte (ab Ordnerregel-Version 1).</summary>
+    public static FolderRule CodeRule() => new("Code",
+        ".py .pyw .ipynb .js .mjs .cjs .ts .tsx .jsx .html .htm .css .scss .json .xml .yml .yaml .toml .java .kt .cs .cpp .c .h .hpp " +
+        ".go .rs .rb .php .lua .sql .sh .bat .cmd .ps1 .vbs .r .swift .dart .gd", "", "Programmieren;Skripte;Scripts;Source;Quellcode");
+
+    /// <summary>Stand der mitgelieferten Ordnerregeln. Neue Standardregeln werden ergänzt, eigene bleiben.</summary>
+    public int FolderRulesVersion { get; set; }
+    public const int CurrentFolderRulesVersion = 1;
+
+    /// <summary>Regel „Code“ vor der Auffangregel („Sonstiges“) einfügen, falls es sie noch nicht gibt.</summary>
+    public void MigrateFolderRules()
+    {
+        if (FolderRulesVersion >= CurrentFolderRulesVersion) return;
+        if (!FolderRules.Any(r => string.Equals(r.Folder, "Code", StringComparison.OrdinalIgnoreCase)))
+        {
+            int catchAll = FolderRules.FindIndex(r => !r.ExtensionList().Any());
+            if (catchAll >= 0) FolderRules.Insert(catchAll, CodeRule()); else FolderRules.Add(CodeRule());
+        }
+        FolderRulesVersion = CurrentFolderRulesVersion;
+    }
 }
 
 /// <summary>Ein Element auf dem Desktop (aktueller Zustand).</summary>
@@ -210,6 +232,13 @@ public sealed partial class DesktopChange : ObservableObject
     // Vom Planer gesetzt
     public string FinalPath { get; set; } = "";
     public bool TargetIsNewFolder { get; set; }
+
+    /// <summary>Nur Downloads: gleicher Inhalt wie diese Datei (die behalten wird). Leer = kein Duplikat.</summary>
+    public string DuplicateOf { get; set; } = "";
+    public string DuplicateKeepPath { get; set; } = "";
+    public int DuplicateGroup { get; set; }
+    public bool IsDuplicate => DuplicateOf.Length > 0;
+    public string DuplicateText => IsDuplicate ? $"Doppelt – gleicher Inhalt wie „{DuplicateOf}“" : "";
 
     public string KindLabel => Kind == DesktopChangeKind.MoveFile ? "Datei" : Item.Kind == DesktopItemKind.Folder ? "Ordner" : "Symbol";
     public bool IsFile => Kind == DesktopChangeKind.MoveFile;

@@ -128,6 +128,8 @@ Lose Dateien direkt im Downloads-Ordner kommen in Unterordner (Bilder, Dokumente
 - **Bleiben liegen:** laufende/unfertige Downloads (`.crdownload`, `.part` …), versteckte und Systemdateien (`desktop.ini`), geöffnete Dateien und – je nach Auswahl „Was verschieben“ – Dateien von heute bzw. der letzten 7/30 Tage (einzeln einschaltbar).
 - Unterordner und ihr Inhalt werden nicht angefasst. Es wird nichts überschrieben: Ist ein Name im Zielordner schon vergeben, heißt die Datei „Name (2)“.
 - „Übernehmen“ → Bestätigung → verschieben. Im **Verlauf** rechts macht „Rückgängig“ alles wieder rückgängig (neu angelegte, leere Ordner werden entfernt). Der Verlauf ist getrennt vom Desktop-Verlauf.
+- **Was es bringt:** Ordnung – es wird dabei kein Speicherplatz frei. Platz bringt der Knopf **„Doppelte in den Papierkorb“**: Dateien mit genau gleichem Inhalt (per Hash geprüft) werden in der Liste markiert („Doppelt – gleicher Inhalt wie …“). Behalten wird die Datei ohne „_1“, „(1)“ oder „Kopie“ im Namen, sonst die älteste; nur die Kopien kommen nach Bestätigung in den Papierkorb.
+- Skripte und Quelltexte (`.py`, `.js`, `.html`, `.json` …) kommen in den Ordner **„Code“**. Die Regel wird bei bestehenden Einstellungen einmalig vor „Sonstiges“ ergänzt (eigene Regeln bleiben) und gilt auch für „Desktop aufräumen“.
 
 ### „Zuletzt geöffnet“: wie zuverlässig ist das?
 Windows aktualisiert das Datum „Letzter Zugriff“ nicht immer. Die App liest die Einstellung `NtfsDisableLastAccessUpdate` aus der Registry und zeigt sie auf der Scan-Seite an. Die Ausgabe von `fsutil behavior query disablelastaccess` steht dort ebenfalls, falls Windows sie ohne Adminrechte liefert. Ist die Aktualisierung aus, nutzt die App das **Änderungsdatum**. In der Spalte **Grundlage** steht bei jeder Datei, welches Datum verwendet wurde.
@@ -182,7 +184,7 @@ Sie vergleicht die Game-Ready-Version (WHQL, DCH) mit der installierten Version,
 ```bash
 cd "Games/In Arbeit/PCAufraeumer"
 dotnet build
-dotnet test                       # 85 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
+dotnet test                       # 87 Tests – arbeiten nur in %USERPROFILE%\PCAufraeumer-Testordner
 dotnet run --project src/PCAufraeumer
 ```
 

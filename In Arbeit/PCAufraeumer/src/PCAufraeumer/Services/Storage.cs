@@ -87,6 +87,8 @@ public sealed class SettingsService
         Current.Desktop ??= new DesktopSettings();
         Current.Programs ??= new ProgramSettings();
         Current.Desktop.MigrateRules();
+        Current.Desktop.MigrateFolderRules();
+        Current.Downloads ??= new DownloadsSettings();
     }
 
     public void Save()
