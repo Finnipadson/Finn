@@ -1,0 +1,15 @@
+{
+  "showUnsupportedFiles": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "Notizen",
+  "attachmentFolderPath": "Notizen/Anhänge",
+  "alwaysUpdateLinks": true,
+  "useMarkdownLinks": false,
+  "userIgnoreFilters": [
+    "PCAufraeumer/publish/",
+    "PCAufraeumer/src/PCAufraeumer/bin/",
+    "PCAufraeumer/src/PCAufraeumer/obj/",
+    "PCAufraeumer/tests/PCAufraeumer.Tests/bin/",
+    "PCAufraeumer/tests/PCAufraeumer.Tests/obj/"
+  ]
+}
