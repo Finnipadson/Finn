@@ -19,6 +19,8 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 	- Vorbild-Stil: TikTok @dannie_bei „AI Levels“ (Hochformat, flache 2D-Vektorgrafik, Küchen-Metapher mit Köchen als KI-Modelle, Preisschilder/Bestellzettel, Wort-für-Wort-Untertitel, Sprecher). Machbar mit Remotion + SVG-Figuren; dazu braucht es Sprecherstimme (eigene oder KI-Stimme), Untertitel per Whisper (lokal, kostenlos) und Musik
 	- Erster Test (12.11.2026): `remotion/src/Erklaervideo Test` → „Bug-Küche EP 01“, 16 s, 1080×1920, mit Stimme. Video: `remotion/out/Erklaervideo Test.mp4`
 	- Stimme: kostenlos per `edge-tts` (Microsoft-Neural-Stimme de-DE-ConradNeural), Skript `voice.py` im Video-Ordner erzeugt `voice.mp3` + `words.json` (Zeitstempel je Wort). Untertitel und alle Animationen richten sich automatisch nach den Wörtern → Text ändern, `voice.py` neu ausführen, neu rendern
+	- Zweites Video (12.11.2026): `remotion/src/Satz des Pythagoras` → Mathe-Erklärvideo, 48 s, mit Stimme. Dreieck zeichnet sich, Quadrate wachsen auf den Seiten, Beispiel 3-4-5 mit Kästchen-Raster, Formel + Rechenschritte synchron zur Stimme. Video: `remotion/out/Satz des Pythagoras.mp4`
+	- `voice.py` ordnet Wörter jetzt zeichengenau zu (die Stimme fasst z. B. „3 mal 3“ zu einem Block zusammen)
 	- Noch offen: Musik, schönere Figuren
 
 ## Sonstiges
