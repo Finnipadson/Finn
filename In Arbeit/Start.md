@@ -14,6 +14,7 @@ Zentrale Übersicht über alle Projekte.
 | [[Nachtschicht]] | 3D-Grusel-Shooter (Three.js) | Phase 1+2 fertig, Phase 3 offen |
 | [[Stapelfieber]] | Online-Kartenspiel (Artifact) | spielbar |
 | [[PC Aufräumer]] | Windows-App (C# WPF) | in Arbeit |
+| [[Highlight Cutter]] | PC-App: Highlights aus NVIDIA-Aufnahmen schneiden | Idee |
 
 Ältere/kleinere Projekte: [[Weitere Projekte]]
 
