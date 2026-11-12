@@ -9,23 +9,22 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 
 ## Tools & Apps
 
-- [ ] **Text → animiertes Video** (12.11.2026): detaillierte Beschreibung eingeben, daraus entsteht automatisch ein animiertes Video
-	- Weg: Claude schreibt aus der Beschreibung Remotion-Code (React), Remotion rendert ein MP4. Remotion ist schon eingerichtet (`Desktop\Claude\remotion`)
-	- Gut machbar: Motion Graphics, Erklärvideos, animierte Texte/Formen/Icons/Diagramme, Intros, Social-Media-Clips
-	- Nicht machbar ohne KI-Video-Dienst (kostet extra): realistische Szenen, Zeichentrick-Figuren, Film-Look
-	- Variante A (mit Pro-Abo): als Workflow/Skill in Claude Code, kein Extra-Geld
-	- Variante B (eigene App): braucht API-Schlüssel mit Abrechnung, zahlt pro Nutzung
-	- Offen: Sprecherstimme, Musik, Bilder einbinden?
-	- Vorbild-Stil: TikTok @dannie_bei „AI Levels“ (Hochformat, flache 2D-Vektorgrafik, Küchen-Metapher mit Köchen als KI-Modelle, Preisschilder/Bestellzettel, Wort-für-Wort-Untertitel, Sprecher). Machbar mit Remotion + SVG-Figuren; dazu braucht es Sprecherstimme (eigene oder KI-Stimme), Untertitel per Whisper (lokal, kostenlos) und Musik
-	- Erster Test (12.11.2026): `remotion/src/Erklaervideo Test` → „Bug-Küche EP 01“, 16 s, 1080×1920, mit Stimme. Video: `remotion/out/Erklaervideo Test.mp4`
-	- Stimme: kostenlos per `edge-tts` (Microsoft-Neural-Stimme de-DE-ConradNeural), Skript `voice.py` im Video-Ordner erzeugt `voice.mp3` + `words.json` (Zeitstempel je Wort). Untertitel und alle Animationen richten sich automatisch nach den Wörtern → Text ändern, `voice.py` neu ausführen, neu rendern
-	- Zweites Video (12.11.2026): `remotion/src/Satz des Pythagoras` → Mathe-Erklärvideo, 48 s, mit Stimme. Dreieck zeichnet sich, Quadrate wachsen auf den Seiten, Beispiel 3-4-5 mit Kästchen-Raster, Formel + Rechenschritte synchron zur Stimme. Video: `remotion/out/Satz des Pythagoras.mp4`
-	- `voice.py` ordnet Wörter jetzt zeichengenau zu (die Stimme fasst z. B. „3 mal 3“ zu einem Block zusammen)
-	- ✅ Ansatz getestet und für gut befunden (12.11.2026): Stil und Qualität vom Pythagoras-Video passen
-	- **App-Idee daraus:** Thema/Beschreibung eingeben → App schreibt den Sprechertext, erzeugt Stimme + Animation und rendert das MP4 automatisch. Mögliche Funktionen: Vorlagen (Mathe/Schule, Tech-Erklärung, Produkt-Intro), Stimme wählen, Format wählen (Hochformat/Quer), Vorschau vor dem Rendern
-	- Bauweg: erst als Skill/Workflow in Claude Code (läuft mit Pro-Abo), später ggf. eigene App mit API-Schlüssel
-	- **Gewählt für die PC-App: Weg 1** – eigene Windows-App (Eingabefeld, Stimme wählen, Vorschau, Rendern), die im Hintergrund Claude Code aufruft (`claude -p "…"`) und so über das Pro-Abo läuft. Stimme (edge-tts) und Rendern (Remotion) sind kostenlos. Gilt nur für die eigene Nutzung; zum Weitergeben/Verkaufen bräuchte es einen API-Schlüssel (Weg 2, Kosten pro Video)
-	- Noch offen: Musik, schönere Figuren
+- [ ] **Text → animiertes Video** (12.11.2026) ✅ Ansatz getestet, Qualität passt
+	- Idee: Thema/Beschreibung eingeben → fertiges animiertes Erklärvideo (MP4)
+	- **So funktioniert's**
+		- Claude schreibt Sprechertext + Remotion-Code (React), Remotion rendert das MP4 (`Desktop\Claude\remotion`)
+		- Stimme kostenlos per `edge-tts` (de-DE-ConradNeural). `voice.py` im Video-Ordner erzeugt `voice.mp3` + `words.json` (Zeitstempel je Wort); Untertitel und Animationen richten sich danach → Text ändern, `voice.py` neu ausführen, neu rendern
+		- Gut machbar: Motion Graphics, Erklärvideos, animierte Texte/Formen/Diagramme, Intros, Social-Media-Clips
+		- Nicht machbar ohne KI-Video-Dienst (z. B. Runway, kostet extra): realistische Szenen, Zeichentrick-Figuren, Film-Look
+		- Vorbild-Stil: TikTok @dannie_bei „AI Levels“ (Hochformat, flache Vektorgrafik, Wort-für-Wort-Untertitel, Sprecher)
+	- **Tests**
+		- `remotion/src/Erklaervideo Test` → „Bug-Küche EP 01“, 16 s → `remotion/out/Erklaervideo Test.mp4`
+		- `remotion/src/Satz des Pythagoras` → Mathe-Erklärvideo, 48 s → `remotion/out/Satz des Pythagoras.mp4`
+	- **App (Weg 1)**
+		- Eigene Windows-App: Eingabefeld, Vorlagen (Mathe/Schule, Tech, Produkt-Intro), Stimme + Format (Hoch/Quer) wählen, Vorschau, Rendern
+		- Ruft im Hintergrund Claude Code auf (`claude -p "…"`) → läuft über das Pro-Abo, Stimme + Rendern kostenlos
+		- Nur für eigene Nutzung; zum Weitergeben/Verkaufen bräuchte es einen API-Schlüssel (Kosten pro Video)
+	- **Noch offen:** Musik, schönere Figuren
 
 ## Sonstiges
 
