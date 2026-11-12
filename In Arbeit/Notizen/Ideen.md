@@ -17,7 +17,9 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 	- Variante B (eigene App): braucht API-Schlüssel mit Abrechnung, zahlt pro Nutzung
 	- Offen: Sprecherstimme, Musik, Bilder einbinden?
 	- Vorbild-Stil: TikTok @dannie_bei „AI Levels“ (Hochformat, flache 2D-Vektorgrafik, Küchen-Metapher mit Köchen als KI-Modelle, Preisschilder/Bestellzettel, Wort-für-Wort-Untertitel, Sprecher). Machbar mit Remotion + SVG-Figuren; dazu braucht es Sprecherstimme (eigene oder KI-Stimme), Untertitel per Whisper (lokal, kostenlos) und Musik
-	- Erster Test (12.11.2026): `remotion/src/Erklaervideo Test` → „Bug-Küche EP 01“, 15 s, 1080×1920, ohne Ton. Video: `remotion/out/Erklaervideo Test.mp4`
+	- Erster Test (12.11.2026): `remotion/src/Erklaervideo Test` → „Bug-Küche EP 01“, 16 s, 1080×1920, mit Stimme. Video: `remotion/out/Erklaervideo Test.mp4`
+	- Stimme: kostenlos per `edge-tts` (Microsoft-Neural-Stimme de-DE-ConradNeural), Skript `voice.py` im Video-Ordner erzeugt `voice.mp3` + `words.json` (Zeitstempel je Wort). Untertitel und alle Animationen richten sich automatisch nach den Wörtern → Text ändern, `voice.py` neu ausführen, neu rendern
+	- Noch offen: Musik, schönere Figuren
 
 ## Sonstiges
 
