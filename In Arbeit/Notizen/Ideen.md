@@ -24,6 +24,7 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 	- ✅ Ansatz getestet und für gut befunden (12.11.2026): Stil und Qualität vom Pythagoras-Video passen
 	- **App-Idee daraus:** Thema/Beschreibung eingeben → App schreibt den Sprechertext, erzeugt Stimme + Animation und rendert das MP4 automatisch. Mögliche Funktionen: Vorlagen (Mathe/Schule, Tech-Erklärung, Produkt-Intro), Stimme wählen, Format wählen (Hochformat/Quer), Vorschau vor dem Rendern
 	- Bauweg: erst als Skill/Workflow in Claude Code (läuft mit Pro-Abo), später ggf. eigene App mit API-Schlüssel
+	- **Gewählt für die PC-App: Weg 1** – eigene Windows-App (Eingabefeld, Stimme wählen, Vorschau, Rendern), die im Hintergrund Claude Code aufruft (`claude -p "…"`) und so über das Pro-Abo läuft. Stimme (edge-tts) und Rendern (Remotion) sind kostenlos. Gilt nur für die eigene Nutzung; zum Weitergeben/Verkaufen bräuchte es einen API-Schlüssel (Weg 2, Kosten pro Video)
 	- Noch offen: Musik, schönere Figuren
 
 ## Sonstiges
