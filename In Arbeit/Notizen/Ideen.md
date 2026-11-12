@@ -13,7 +13,9 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 	- Idee: Thema/Beschreibung eingeben → fertiges animiertes Erklärvideo (MP4)
 	- **So funktioniert's**
 		- Claude schreibt Sprechertext + Remotion-Code (React), Remotion rendert das MP4 (`Desktop\Claude\remotion`)
-		- Stimme kostenlos per `edge-tts` (de-DE-ConradNeural). `voice.py` im Video-Ordner erzeugt `voice.mp3` + `words.json` (Zeitstempel je Wort); Untertitel und Animationen richten sich danach → Text ändern, `voice.py` neu ausführen, neu rendern
+		- Stimme kostenlos per `edge-tts`. `voice.py` im Video-Ordner erzeugt `voice.mp3` + `words.json` (Zeitstempel je Wort); Untertitel und Animationen richten sich danach → Text ändern, `voice.py` neu ausführen, neu rendern
+		- **Menschlicher klingen (Favorit: Version C, 12.11.2026)**: gesprächiger Text (kurze Sätze, direkte Ansprache, „Okay, pass auf.“), Satz für Satz vertont mit unterschiedlich langen Pausen, Tempo pro Satz, Wärme-EQ + leichter Raumklang + Kompression, leiser Musik-Teppich ca. 15 dB unter der Stimme. Hörproben: `remotion/out/Stimmproben/Vorher-Nachher`
+		- Beste Stimme bisher: Ava Multilingual (`en-US-AvaMultilingualNeural`), klingt am wenigsten nach KI
 		- Gut machbar: Motion Graphics, Erklärvideos, animierte Texte/Formen/Diagramme, Intros, Social-Media-Clips
 		- Nicht machbar ohne KI-Video-Dienst (z. B. Runway, kostet extra): realistische Szenen, Zeichentrick-Figuren, Film-Look
 		- Vorbild-Stil: TikTok @dannie_bei „AI Levels“ (Hochformat, flache Vektorgrafik, Wort-für-Wort-Untertitel, Sprecher)
@@ -21,7 +23,8 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 		- `remotion/src/Erklaervideo Test` → „Bug-Küche EP 01“, 16 s → `remotion/out/Erklaervideo Test.mp4`
 		- `remotion/src/Satz des Pythagoras` → Mathe-Erklärvideo, 48 s → `remotion/out/Satz des Pythagoras.mp4`
 	- **App (Weg 1)**
-		- Eigene Windows-App: Eingabefeld, Vorlagen (Mathe/Schule, Tech, Produkt-Intro), Stimme + Format (Hoch/Quer) wählen, Vorschau, Rendern
+		- Eigene Windows-App: Eingabefeld, Vorlagen (Mathe/Schule, Tech, Produkt-Intro), Format (Hoch/Quer) wählen, Vorschau, Rendern
+		- **Sprecher-Auswahl**: Liste der Stimmen (z. B. Ava, Seraphina, Florian, Conrad …) mit Probehören-Knopf, Standard = Ava; dazu Schalter „Musik an/aus“ und evtl. Tempo-Regler
 		- Ruft im Hintergrund Claude Code auf (`claude -p "…"`) → läuft über das Pro-Abo, Stimme + Rendern kostenlos
 		- Nur für eigene Nutzung; zum Weitergeben/Verkaufen bräuchte es einen API-Schlüssel (Kosten pro Video)
 	- **Noch offen:** Musik, schönere Figuren
