@@ -13,7 +13,13 @@ Denkspiel: Sudoku, Kopfrechnen, Schachrätsel und Form-Puzzle zufällig gemischt
 
 ## Offene Punkte
 
--
+- [ ] **Neuer Rätseltyp: Farben sortieren (Röhren/Gläser)**, Idee vom 12.11.2026
+	- Mehrere Röhren mit gemischten Farbschichten, dazu 1–2 leere Röhren
+	- Antippen = oberste Schicht nehmen, zweites Antippen = drauflegen. Geht nur auf die gleiche Farbe oder in eine leere Röhre, solange Platz ist
+	- Ziel: jede Röhre enthält nur noch eine Farbe
+	- Schwierigkeit über Anzahl Farben/Röhren und Füllhöhe; Level-Generator muss garantiert lösbare Rätsel erzeugen (z. B. vom gelösten Zustand rückwärts mischen)
+	- Passt in die gemischten Welten, ins Daily und ins Training wie die anderen Rätseltypen
+	- Ideen: Rückgängig-Knopf, Zugzähler mit Sternen, Boss-Variante mit verdeckten Schichten
 
 ## Notizen
 
