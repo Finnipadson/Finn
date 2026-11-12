@@ -25,6 +25,11 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 	- **App (Weg 1)**
 		- Eigene Windows-App: Eingabefeld, Vorlagen (Mathe/Schule, Tech, Produkt-Intro), Format (Hoch/Quer) wählen, Vorschau, Rendern
 		- **Sprecher-Auswahl**: Liste der Stimmen (z. B. Ava, Seraphina, Florian, Conrad …) mit Probehören-Knopf, Standard = Ava; dazu Schalter „Musik an/aus“ und evtl. Tempo-Regler
+		- **Szenen-Bibliothek**: wiederverwendbare Bausteine (Titel-Intro, Formel-Aufbau, Diagramm, Vergleich A vs. B, Schritt-für-Schritt-Liste, Zeitstrahl …), Claude setzt sie zusammen statt alles neu zu schreiben → einheitlicher und schneller
+		- **Design-Themen**: z. B. „Tafel“, „Dunkel-Neon“, „Papier & Bleistift“, „Küche“, ein Klick wechselt Farben, Schriften, Hintergrund
+		- **Drehbuch-Schritt**: vor dem Rendern Sprechertext + Szenenliste anzeigen, Sätze ändern, Szenen löschen, erst dann bauen
+		- **Szenen einzeln neu machen**: z. B. „Szene 3 langsamer“, nur diese Szene wird neu erzeugt
+		- **Cover-Bild**: automatisches Vorschaubild (Thumbnail) aus dem Video
 		- Ruft im Hintergrund Claude Code auf (`claude -p "…"`) → läuft über das Pro-Abo, Stimme + Rendern kostenlos
 		- Nur für eigene Nutzung; zum Weitergeben/Verkaufen bräuchte es einen API-Schlüssel (Kosten pro Video)
 	- **Noch offen:** Musik, schönere Figuren
