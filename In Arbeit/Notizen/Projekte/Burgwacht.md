@@ -18,3 +18,6 @@ Turmverteidigung im Pixel-Stil, Modus von [[Kopfsache]]. 8 Karten mit Kampagnenk
 ## Notizen
 
 -
+
+
+

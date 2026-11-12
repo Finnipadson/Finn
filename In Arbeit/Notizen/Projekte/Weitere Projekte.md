@@ -10,7 +10,6 @@ Projekte außerhalb von `In Arbeit` (Links öffnen den Ordner bzw. die Datei dir
 ## Tools
 
 - **AdBlocker**: Firefox-Erweiterung (YouTube). [Ordner](file:///C:/Users/finns/OneDrive/Desktop/Claude/Games/AdBlocker)
-- **fanance**: Aktien-Dashboard (Kurse, News, Bot, Portfolio). [fanance.html](file:///C:/Users/finns/OneDrive/Desktop/Claude/Games/Aktien/fanance.html)
 - **SongFinder**: Python-App. [Ordner](file:///C:/Users/finns/OneDrive/Desktop/Claude/Games/SongFinder)
 - **RecastAI**: Face-/Character-Swap-Videopipeline. [Ordner](file:///C:/Users/finns/OneDrive/Desktop/Claude/RecastAI)
 - **Remotion**: Videos per Code. [Ordner](file:///C:/Users/finns/OneDrive/Desktop/Claude/remotion)
