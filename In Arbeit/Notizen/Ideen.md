@@ -21,6 +21,9 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 	- Stimme: kostenlos per `edge-tts` (Microsoft-Neural-Stimme de-DE-ConradNeural), Skript `voice.py` im Video-Ordner erzeugt `voice.mp3` + `words.json` (Zeitstempel je Wort). Untertitel und alle Animationen richten sich automatisch nach den Wörtern → Text ändern, `voice.py` neu ausführen, neu rendern
 	- Zweites Video (12.11.2026): `remotion/src/Satz des Pythagoras` → Mathe-Erklärvideo, 48 s, mit Stimme. Dreieck zeichnet sich, Quadrate wachsen auf den Seiten, Beispiel 3-4-5 mit Kästchen-Raster, Formel + Rechenschritte synchron zur Stimme. Video: `remotion/out/Satz des Pythagoras.mp4`
 	- `voice.py` ordnet Wörter jetzt zeichengenau zu (die Stimme fasst z. B. „3 mal 3“ zu einem Block zusammen)
+	- ✅ Ansatz getestet und für gut befunden (12.11.2026): Stil und Qualität vom Pythagoras-Video passen
+	- **App-Idee daraus:** Thema/Beschreibung eingeben → App schreibt den Sprechertext, erzeugt Stimme + Animation und rendert das MP4 automatisch. Mögliche Funktionen: Vorlagen (Mathe/Schule, Tech-Erklärung, Produkt-Intro), Stimme wählen, Format wählen (Hochformat/Quer), Vorschau vor dem Rendern
+	- Bauweg: erst als Skill/Workflow in Claude Code (läuft mit Pro-Abo), später ggf. eigene App mit API-Schlüssel
 	- Noch offen: Musik, schönere Figuren
 
 ## Sonstiges
