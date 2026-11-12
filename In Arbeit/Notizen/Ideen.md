@@ -16,6 +16,7 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 	- Variante A (mit Pro-Abo): als Workflow/Skill in Claude Code, kein Extra-Geld
 	- Variante B (eigene App): braucht API-Schlüssel mit Abrechnung, zahlt pro Nutzung
 	- Offen: Sprecherstimme, Musik, Bilder einbinden?
+	- Vorbild-Stil: TikTok @dannie_bei „AI Levels“ (Hochformat, flache 2D-Vektorgrafik, Küchen-Metapher mit Köchen als KI-Modelle, Preisschilder/Bestellzettel, Wort-für-Wort-Untertitel, Sprecher). Machbar mit Remotion + SVG-Figuren; dazu braucht es Sprecherstimme (eigene oder KI-Stimme), Untertitel per Whisper (lokal, kostenlos) und Musik
 
 ## Sonstiges
 
