@@ -11,7 +11,6 @@ Projekte außerhalb von `In Arbeit` (Links öffnen den Ordner bzw. die Datei dir
 
 - **AdBlocker**: Firefox-Erweiterung (YouTube). [Ordner](file:///C:/Users/finns/OneDrive/Desktop/Claude/Games/AdBlocker)
 - **SongFinder**: Python-App. [Ordner](file:///C:/Users/finns/OneDrive/Desktop/Claude/Games/SongFinder)
-- **RecastAI**: Face-/Character-Swap-Videopipeline. [Ordner](file:///C:/Users/finns/OneDrive/Desktop/Claude/RecastAI)
 - **Remotion**: Videos per Code. [Ordner](file:///C:/Users/finns/OneDrive/Desktop/Claude/remotion)
 
 ## Websites (`Games/website`)
