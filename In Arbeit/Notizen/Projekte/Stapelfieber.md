@@ -4,8 +4,6 @@ status: spielbar
 technik: HTML/JS als claude.ai-Artifact (db, user, room)
 ---
 
-# Stapelfieber
-
 Online-Kartenspiel mit Ablege-Mechanik 1–12, 2–6 Spieler am Handy.
 
 - Spiel: [[stapelfieber.html]]

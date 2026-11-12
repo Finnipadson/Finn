@@ -5,8 +5,6 @@ technik:
 erstellt: {{date}}
 ---
 
-# {{title}}
-
 Kurzbeschreibung in 1–2 Sätzen.
 
 - Datei/Ordner:

@@ -1,11 +1,11 @@
-# Ideen
+Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das noch kein eigenes Projekt hat. Im Zweifel einfach hier rein.
 
-Ideen-Inbox: erst mal alles rein, später sortieren. Ausgearbeitete Ideen bekommen eine eigene Projektnotiz (Vorlage *Projekt*).
+> **Idee zu einem bestehenden Projekt?** → in dessen Projektnotiz unter „Offene Punkte“, z. B. [[Burgwacht]] oder [[Nachtschicht]].
+> **Wird eine Idee hier ernst?** → eigene Projektnotiz mit der Vorlage *Projekt* in `Notizen/Projekte` anlegen und hier abhaken.
 
 ## Spiele
 
-- [ ] Nachtschicht Phase 3: Feinschliff → [[nachtschicht-plan]]
-- [ ] Burgwacht: weitere Kartenideen (Brücke einreißen, Nebel, Fluss mit Fähre, Burg in der Mitte mit 4 Startpunkten) → [[burgwacht-plan]]
+-
 
 ## Tools & Apps
 

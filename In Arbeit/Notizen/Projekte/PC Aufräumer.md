@@ -4,8 +4,6 @@ status: in Arbeit
 technik: C# .NET 8 WPF
 ---
 
-# PC Aufräumer
-
 Windows-App „PC Aufräumer & Systemübersicht“: Dateiscan mit Vorschau + Papierkorb-Löschen, Dashboard, Treiberprüfung, Desktop aufräumen, Programme (Deinstallieren, Restesuche, Autostart, winget-Updates), Speicher-Karte (Treemap), Downloads sortieren.
 
 - Build/Start/Publish: [[PCAufraeumer/README|README]]

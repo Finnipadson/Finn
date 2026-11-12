@@ -5,8 +5,6 @@ technik: Three.js r128 (cdnjs), nur PC
 speicher: localStorage nachtschicht_v1
 ---
 
-# Nachtschicht
-
 3D-Grusel-Shooter: 6 Level, 4 Waffen, Endgegner. Braucht Internet (Three.js vom CDN).
 
 - Spiel: [[nachtschicht.html]]

@@ -1,5 +1,3 @@
-# Gelernte Fehler
-
 Fallen, die schon mal Zeit gekostet haben. Kurzfassung, die ausführliche Version liegt in Claudes Memory-Ordner.
 
 ## Browser-Spiele (HTML/CSS/JS)

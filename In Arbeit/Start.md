@@ -1,6 +1,9 @@
-# Start
+Zentrale Übersicht über alle Projekte.
 
-Zentrale Übersicht über alle Projekte. Neue Ideen landen zuerst in [[Ideen]], gelerntes Wissen in `Notizen/Wissen`.
+**Wohin mit Ideen?**
+- Neues Projekt oder unsicher → [[Ideen]]
+- Idee zu einem bestehenden Projekt → dessen Projektnotiz (Link in der Tabelle unten), Abschnitt „Offene Punkte“
+- Die Ordner `Burgwacht`, `Kopfsache` usw. enthalten nur Code und Baupläne, dort keine Notizen anlegen
 
 ## Aktive Projekte
 

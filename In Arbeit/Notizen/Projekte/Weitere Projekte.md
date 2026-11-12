@@ -1,5 +1,3 @@
-# Weitere Projekte
-
 Projekte außerhalb von `In Arbeit` (Links öffnen den Ordner bzw. die Datei direkt).
 
 ## Spiele-Klassiker (`Games/Games`)
