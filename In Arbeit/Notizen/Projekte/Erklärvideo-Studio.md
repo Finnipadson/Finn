@@ -1,6 +1,6 @@
 ---
 typ: app
-status: in Arbeit (Phase 4 fertig)
+status: fertig (Phase 5 abgeschlossen)
 technik: Windows-App + Claude Code (Pro-Abo) + Remotion + edge-tts + FFmpeg
 erstellt: 2026-11-13
 ---
@@ -41,13 +41,14 @@ Windows-App, die aus einer kurzen Beschreibung automatisch ein fertiges animiert
 - [x] Technik der Oberfläche: **lokale Web-App im eigenen Fenster** (React + Remotion-Player für Live-Vorschau), bestätigt 13.11.2026
 - [x] Bauplan mit Phasen schreiben
 - [ ] Szenen-Bibliothek aus den Testvideos herauslösen (wiederverwendbare Bausteine)
-- [ ] Echte lizenzfreie Musik statt synthetischer Akkorde
 - [x] Testvideo-Code auf GitHub sichern (in `referenz/`)
 - [x] Phase 1: Drehbuch → Video (7 Bausteine, `tools/ton.py`, `npm run render`, 2 Beispiele)
 - [x] Phase 2: Claude schreibt das Drehbuch (`claude -p`, 3 Vorlagen, automatische Korrektur, Thema-Eingabe in der App)
 - [x] Phase 3: Oberfläche (Drehbuch-Editor mit Live-Vorschau, Sprecher mit Probehören, Einstellungen, Stimme erzeugen in der App)
 - [x] Phase 4: Rendern in der App (Fortschritt + Abbrechen, MP4 + Cover, „Szene neu machen“ mit Claude, Grafikkarte → ~1 Min. pro Video)
-- [ ] Phase 5: Feinschliff (Design-Themen, weitere Bausteine, echte Musik, Fehlerbehandlung, Desktop-Verknüpfung)
+- [x] Phase 5: Feinschliff (4 Design-Themen, Bausteine Zeitstrahl + Fenster, 3 Musik-Stimmungen + eigene Musik, verständliche Fehler, Desktop-Verknüpfung mit Icon)
+- [ ] Optional: Figur mit Lippen-Sync (Koch)
+- [ ] Lizenzfreie Musikdateien besorgen und in `Erklaervideo-Studio/musik/<stimmung>/` legen
 
 ## Notizen
 

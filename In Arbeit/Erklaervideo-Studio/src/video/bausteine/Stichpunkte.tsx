@@ -3,7 +3,8 @@ import { AbsoluteFill } from "remotion";
 import type { SzStichpunkte } from "../../drehbuch/typen";
 import { Icon, Karte, Kopf, Pop, T, useSzene } from "../kit";
 
-const FARBEN = [T.blau, T.teal, T.lila, T.akzent, T.gelb];
+// Funktion statt Konstante: T hängt vom Design-Thema ab
+const farben = () => [T.blau, T.teal, T.lila, T.akzent, T.gelb];
 
 export const Stichpunkte: React.FC<{ sz: SzStichpunkte }> = ({ sz }) => {
   const { hoch, bei } = useSzene();
@@ -16,7 +17,7 @@ export const Stichpunkte: React.FC<{ sz: SzStichpunkte }> = ({ sz }) => {
         gap: hoch ? 34 : 40, padding: hoch ? "0 60px 330px" : "0 60px 150px", width: "100%", justifyContent: "center",
       }}>
         {sz.punkte.map((p, i) => {
-          const col = FARBEN[i % FARBEN.length];
+          const col = farben()[i % 5];
           return (
             <Pop key={i} at={bei(p.bei, 20 + i * 14)} style={{ flex: hoch ? undefined : `0 1 ${Math.min(440, 1700 / n)}px` }}>
               <Karte glow={col} style={hoch

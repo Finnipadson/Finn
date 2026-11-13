@@ -8,7 +8,7 @@ export const Titel: React.FC<{ sz: SzTitel }> = ({ sz }) => {
   const groesse = Math.min(hoch ? 150 : 170, (hoch ? 1900 : 2600) / Math.max(6, sz.titel.length));
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", padding: 60 }}>
-      <div style={{ textAlign: "center", fontFamily: T.sans }}>
+      <div style={{ textAlign: "center", fontFamily: T.titel }}>
         {sz.kicker && <div style={{ fontFamily: T.mono, fontSize: hoch ? 32 : 28, letterSpacing: 8, color: T.dim, opacity: sp(f - 2), marginBottom: 16 }}>{sz.kicker.toUpperCase()}</div>}
         <div style={{ fontWeight: 900, fontSize: groesse, lineHeight: 1.05, color: T.text, letterSpacing: -2 }}>
           {sz.titel.split(" ").map((wort, wi, arr) => (

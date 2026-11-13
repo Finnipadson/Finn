@@ -3,6 +3,8 @@
    Schreibweise: "Katheten" (erstes Vorkommen in der Szene) oder "Quadrat#2" (zweites Vorkommen). */
 
 export type Format = "hoch" | "quer";
+export type Stimmung = "ruhig" | "froh" | "spannend";
+export const STIMMUNGEN: Record<Stimmung, string> = { ruhig: "Ruhig", froh: "Fröhlich", spannend: "Spannend" };
 export type Farbe = "a" | "b" | "c" | "akzent" | "text" | "gruen" | "rot" | "blau" | "lila";
 
 export type Bei = { bei?: string };
@@ -39,18 +41,29 @@ export type SzGeometrie = Basis & {
   beschriftung?: { a?: string; b?: string; c?: string };
   dreieck?: Bei; katheten?: Bei; hypotenuse?: Bei; quadrate?: Bei; raster?: Bei; werte?: Bei;
 };
+export type SzZeitstrahl = Basis & {
+  typ: "zeitstrahl";
+  ereignisse: ({ zeit: string; text: string; icon?: string } & Bei)[];  // 2–6, z. B. zeit "1991"
+};
+export type SzFenster = Basis & {
+  typ: "fenster";
+  art: "terminal" | "chat";
+  titel?: string;                                                     // Text in der Titelleiste
+  zeilen: ({ text: string; rolle: "ich" | "antwort" } & Bei)[];       // 1–6; "ich" wird getippt
+};
 export type SzAbschluss = Basis & { typ: "abschluss"; text: string; unter?: string } & Bei;
 
-export type Szene = SzTitel | SzStichpunkte | SzVergleich | SzAblauf | SzFormel | SzGeometrie | SzAbschluss;
-export const SZENEN_TYPEN = ["titel", "stichpunkte", "vergleich", "ablauf", "formel", "geometrie", "abschluss"] as const;
+export type Szene = SzTitel | SzStichpunkte | SzVergleich | SzAblauf | SzFormel | SzGeometrie | SzZeitstrahl | SzFenster | SzAbschluss;
+export const SZENEN_TYPEN = ["titel", "stichpunkte", "vergleich", "ablauf", "formel", "geometrie", "zeitstrahl", "fenster", "abschluss"] as const;
 
 export type Drehbuch = {
   titel: string;
   format: Format;
-  thema?: "dunkel";
+  thema?: "dunkel" | "tafel" | "papier" | "kueche";  // Design-Thema (Standard: dunkel)
   stimme?: string;
   tempo?: number;
   musik?: boolean;
+  stimmung?: Stimmung;   // Musik-Stimmung (Standard: ruhig)
   szenen: Szene[];
 };
 

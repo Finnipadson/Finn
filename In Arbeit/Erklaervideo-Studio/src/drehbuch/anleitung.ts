@@ -10,7 +10,7 @@ export const VORLAGEN: Record<string, { name: string; hinweis: string }> = {
   },
   tech: {
     name: "Tech-Erklärung",
-    hinweis: "Erkläre ein Technik-Thema für interessierte Laien. Starte mit dem Problem, zeige den Unterschied zum Bekannten (Baustein „vergleich“), erkläre den Ablauf in Schritten (Baustein „ablauf“), nenne die wichtigsten Punkte (Baustein „stichpunkte“) und schließe mit einer klaren Kernaussage.",
+    hinweis: "Erkläre ein Technik-Thema für interessierte Laien. Starte mit dem Problem, zeige den Unterschied zum Bekannten (Baustein „vergleich“), erkläre den Ablauf in Schritten (Baustein „ablauf“), nenne die wichtigsten Punkte (Baustein „stichpunkte“) und schließe mit einer klaren Kernaussage. Bei Software, Apps oder KI zeigt der Baustein „fenster“ (Chat oder Terminal), wie es aussieht; bei Entwicklungen über die Zeit passt „zeitstrahl“.",
   },
   produkt: {
     name: "Produkt-Intro",
@@ -26,6 +26,8 @@ Szenen-Bausteine („typ“) und ihre Felder. Alle Szenen haben „sprecher“ (
 - "ablauf": "schritte": 2–6 Einträge mit "text" (1–2 Wörter), "icon", "bei"; "form": "kreis" (Schleife) oder "kette" (nacheinander); optional "fehler" {"text","bei"} und "erfolg" {"text","bei"} für „klappt erst nicht, dann doch“.
 - "formel": "teile": Formel in Stücken mit "text" (Symbole erlaubt, z. B. "a²", "+", "=") , "farbe", "bei"; optional "schritte": Rechenschritte mit "text" und "bei"; optional "merke": {"bei"} rahmt die Formel ein.
 - "geometrie": NUR für rechtwinklige Dreiecke. "a", "b" (Zahlen, Katheten), optional "beschriftung" {"a","b","c"}; Momente als Objekte mit "bei": "dreieck", "katheten", "hypotenuse", "quadrate", "raster", "werte".
+- "zeitstrahl": "ereignisse": 2–6 Einträge mit "zeit" (z. B. "1991", "Früher", "Schritt 1"; max. 12 Zeichen), "text" (max. 4 Wörter), "icon" (optional), "bei". Für Geschichte, Entwicklungen, Reihenfolgen über die Zeit.
+- "fenster": "art": "terminal" (Befehle eintippen, Ausgaben erscheinen) oder "chat" (Sprechblasen), "titel" (Titelleiste, optional), "zeilen": 1–6 Einträge mit "text" (max. 60 Zeichen), "rolle": "ich" (Eingabe/eigene Nachricht, wird getippt) oder "antwort" (Ausgabe/Antwort), "bei". Für Software, Apps, KI, Programmieren.
 - "abschluss": "text" (Merksatz oder Kernaussage, max. 6 Wörter), "unter" (optional), "bei". Immer die letzte Szene.
 Icons: chat, datei, stift, terminal, haken, kreuz, idee, buch, karte, lupe, wegweiser, schild, stern, person, blitz, herz, zahnrad, uhr, rakete, ziel.
 Farben (für "farbe"): a (cyan), b (gelb), c (rot), akzent, text, gruen, rot, blau, lila.`;

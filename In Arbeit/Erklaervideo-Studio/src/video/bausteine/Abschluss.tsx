@@ -13,7 +13,7 @@ export const Abschluss: React.FC<{ sz: SzAbschluss }> = ({ sz }) => {
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", paddingBottom: hoch ? 260 : 100 }}>
         <div style={{ textAlign: "center", opacity: p, transform: `scale(${0.85 + 0.15 * p})` }}>
           <div style={{
-            fontFamily: T.sans, fontWeight: 900, fontSize: hoch ? 110 : 120, color: T.text, lineHeight: 1.1,
+            fontFamily: T.titel, fontWeight: 900, fontSize: hoch ? 110 : 120, color: T.text, lineHeight: 1.1,
             padding: "24px 60px", borderRadius: 34, border: `6px solid ${T.gruen}`, boxShadow: `0 0 60px ${T.gruen}55`,
             maxWidth: hoch ? 980 : 1600,
           }}>{sz.text}</div>

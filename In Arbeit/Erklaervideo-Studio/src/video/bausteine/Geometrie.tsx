@@ -73,7 +73,7 @@ export const Geometrie: React.FC<{ sz: SzGeometrie }> = ({ sz }) => {
           <Raster n={c} size={c * U} col={T.c} />
         </g>
         {/* Dreieck */}
-        <path d={`M ${Ox} ${Oy} L ${Bx} ${By} L ${Ax} ${Ay} Z`} fill="#fff" fillOpacity={0.05 * draw} stroke={T.text} strokeWidth={6}
+        <path d={`M ${Ox} ${Oy} L ${Bx} ${By} L ${Ax} ${Ay} Z`} fill={T.flaeche} fillOpacity={0.05 * draw} stroke={T.text} strokeWidth={6}
           strokeLinejoin="round" strokeDasharray={total} strokeDashoffset={total * (1 - draw)} />
         <line x1={Ox} y1={Oy} x2={Ax} y2={Ay} stroke={T.a} strokeWidth={6 + 6 * legs} strokeLinecap="round" opacity={legs} />
         <line x1={Ox} y1={Oy} x2={Bx} y2={By} stroke={T.b} strokeWidth={6 + 6 * legs} strokeLinecap="round" opacity={legs} />

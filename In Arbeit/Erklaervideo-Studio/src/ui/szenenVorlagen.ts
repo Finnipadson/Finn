@@ -4,7 +4,7 @@ import type { Szene } from "../drehbuch/typen";
 
 export const TYP_NAMEN: Record<Szene["typ"], string> = {
   titel: "Titel", stichpunkte: "Stichpunkte", vergleich: "Vergleich", ablauf: "Ablauf",
-  formel: "Formel", geometrie: "Geometrie", abschluss: "Abschluss",
+  formel: "Formel", geometrie: "Geometrie", zeitstrahl: "Zeitstrahl", fenster: "Fenster (Terminal/Chat)", abschluss: "Abschluss",
 };
 
 export const neueSzene = (typ: Szene["typ"]): Szene => {
@@ -39,6 +39,18 @@ export const neueSzene = (typ: Szene["typ"]): Szene => {
       return {
         typ, a: 3, b: 4, dreieck: { bei: "Dreieck" }, quadrate: { bei: "Quadrate" },
         sprecher: [{ satz: "Ein rechtwinkliges Dreieck mit Quadraten.", pause: 0.4 }],
+      };
+    case "zeitstrahl":
+      return {
+        typ, ueberschrift: "Wie es dazu kam",
+        ereignisse: [{ zeit: "Früher", text: "alles per Hand", bei: "Früher" }, { zeit: "Heute", text: "automatisch", bei: "Heute" }],
+        sprecher: [{ satz: "Früher war alles Handarbeit.", pause: 0.3 }, { satz: "Heute geht das automatisch.", pause: 0.4 }],
+      };
+    case "fenster":
+      return {
+        typ, art: "chat", titel: "Chat",
+        zeilen: [{ text: "Wie spät ist es?", rolle: "ich", bei: "fragst" }, { text: "Gleich drei Uhr.", rolle: "antwort", bei: "Antwort" }],
+        sprecher: [{ satz: "Du fragst etwas.", pause: 0.3 }, { satz: "Und sofort kommt die Antwort.", pause: 0.4 }],
       };
     case "abschluss":
       return { typ, text: "Das Wichtigste", unter: "Merke", bei: "Merke", sprecher: [{ satz: "Merke dir das.", pause: 0.3 }] };

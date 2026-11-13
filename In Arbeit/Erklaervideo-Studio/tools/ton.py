@@ -84,7 +84,8 @@ async def sprechen(text: str, stimme: str, tempo: str, mp3: Path) -> list[dict]:
         except Exception as e:  # Netzwerkfehler o. ä.
             letzter = e
         await asyncio.sleep(1.5 * (versuch + 1))
-    sys.exit(f"Sprachausgabe für {text!r} fehlgeschlagen (Internet?): {letzter}")
+    # Marke „FEHLER-INTERNET“ → der Server zeigt eine verständliche Meldung
+    sys.exit(f"FEHLER-INTERNET: Keine Stimme für {text!r} erhalten ({type(letzter).__name__}: {letzter})")
 
 
 def alle_bei(obj, schluessel=""):
@@ -112,6 +113,42 @@ def finde(woerter: list[dict], bei: str):
             if treffer == n:
                 return w["start"]
     return None
+
+
+# Synthetische Musik je Stimmung: 4 Akkorde (je 4 Töne in Hz), weich überblendet, Zykluslänge in Sekunden
+STIMMUNGEN = {
+    "ruhig": {   # C – Am – F – G, langsam
+        "akkorde": [(130.81, 164.81, 196.00, 261.63), (110.00, 130.81, 164.81, 220.00), (87.31, 130.81, 174.61, 220.00), (98.00, 146.83, 196.00, 246.94)],
+        "zyklus": 16, "puls": "(0.85+0.15*sin(2*PI*t/2))", "extra": "0",
+        "filter": "lowpass=f=1200,aecho=0.8:0.7:120|240:0.35|0.25",
+    },
+    "froh": {    # C – G – Am – F, hüpfend im Achtel-Takt (120 bpm)
+        "akkorde": [(261.63, 329.63, 392.00, 523.25), (196.00, 246.94, 293.66, 392.00), (220.00, 261.63, 329.63, 440.00), (174.61, 220.00, 261.63, 349.23)],
+        "zyklus": 8, "puls": "(0.45+0.55*exp(-mod(t,0.25)*9))", "extra": "0",
+        "filter": "lowpass=f=2600,aecho=0.8:0.6:90:0.25",
+    },
+    "spannend": {  # Am – F – Dm – E, dunkel, mit pochendem Bass
+        "akkorde": [(110.00, 130.81, 164.81, 220.00), (87.31, 110.00, 130.81, 174.61), (73.42, 146.83, 174.61, 220.00), (82.41, 123.47, 164.81, 207.65)],
+        "zyklus": 16, "puls": "(0.8+0.2*sin(2*PI*t/4))", "extra": "0.9*sin(2*PI*55*t)*exp(-mod(t,0.5)*8)",
+        "filter": "lowpass=f=1400,aecho=0.8:0.75:160|320:0.4|0.3",
+    },
+}
+
+
+def musik_ausdruck(stimmung: str) -> str:
+    st = STIMMUNGEN[stimmung]
+    L = st["zyklus"]
+    m = f"mod(t,{L})"
+    breite = L / 4 * 0.65
+    teile = []
+    for i, ak in enumerate(st["akkorde"]):
+        mitte = L / 8 + i * L / 4
+        gew = f"max(0,1-abs({m}-{mitte})/{breite})"
+        if i == 0:  # Übergang vom letzten zurück zum ersten Akkord
+            gew += f"+max(0,1-abs({m}-{L + mitte})/{breite})"
+        ton = "+".join(f"{0.5 if n == 3 else 1}*sin(2*PI*{f}*t)" for n, f in enumerate(ak))
+        teile.append(f"({gew})*({ton})")
+    return f"0.07*(({'+'.join(teile)})*{st['puls']}+{st['extra']})"
 
 
 async def main() -> None:
@@ -212,21 +249,23 @@ async def main() -> None:
             gesehen.add((art, round(zeit, 2)))
             treffer.append((art, zeit, 0.5 if art == "plopp" else 0.45))
 
-    # 3) Musik-Teppich (C – Am – F – G, weich überblendet), unter der Stimme automatisch leiser
-    akk = {
-        "a": "sin(2*PI*130.81*t)+sin(2*PI*164.81*t)+sin(2*PI*196.00*t)+0.5*sin(2*PI*261.63*t)",
-        "b": "sin(2*PI*110.00*t)+sin(2*PI*130.81*t)+sin(2*PI*164.81*t)+0.5*sin(2*PI*220.00*t)",
-        "c": "sin(2*PI*87.31*t)+sin(2*PI*130.81*t)+sin(2*PI*174.61*t)+0.5*sin(2*PI*220.00*t)",
-        "d": "sin(2*PI*98.00*t)+sin(2*PI*146.83*t)+sin(2*PI*196.00*t)+0.5*sin(2*PI*246.94*t)",
-    }
-    m = "mod(t,16)"
-    gew = {"a": f"max(0,1-abs({m}-2)/2.6)+max(0,1-abs({m}-18)/2.6)", "b": f"max(0,1-abs({m}-6)/2.6)",
-           "c": f"max(0,1-abs({m}-10)/2.6)", "d": f"max(0,1-abs({m}-14)/2.6)"}
-    ausdruck = "0.07*(" + "+".join(f"({gew[x]})*({akk[x]})" for x in "abcd") + ")*(0.85+0.15*sin(2*PI*t/2))"
+    # 3) Musik: eigene Datei aus musik/<stimmung>/ – sonst synthetischer Teppich in der Stimmung.
+    #    Lautstärke wird immer auf denselben Wert gebracht (-30 LUFS) und unter der Stimme automatisch leiser.
     musik = arbeit / "musik.wav"
+    stimmung = db.get("stimmung", "ruhig") if db.get("stimmung") in STIMMUNGEN else "ruhig"
+    fades = f"afade=t=in:d=1.5,afade=t=out:st={max(0, dauer - 2.5)}:d=2.5"
+    laut = "loudnorm=I=-30:TP=-6:LRA=11"
     if db.get("musik", True):
-        ff("-f", "lavfi", "-i", f"aevalsrc='{ausdruck}':s={SR}:d={dauer}",
-           "-af", f"lowpass=f=1200,aecho=0.8:0.7:120|240:0.35|0.25,afade=t=in:d=1.5,afade=t=out:st={max(0, dauer - 2)}:d=2", str(musik))
+        eigene = sorted(p for p in (ROOT / "musik" / stimmung).glob("*") if p.suffix.lower() in (".mp3", ".wav", ".ogg", ".m4a", ".flac"))             if (ROOT / "musik" / stimmung).is_dir() else []
+        if eigene:
+            # Feste Auswahl je Video (gleiches Video → gleiche Musik), Datei wird bei Bedarf wiederholt
+            datei = eigene[sum(map(ord, db.get("titel", ""))) % len(eigene)]
+            print(f"Musik: {datei.name} (eigene Datei, Stimmung {stimmung})")
+            ff("-stream_loop", "-1", "-i", str(datei), "-t", f"{dauer:.3f}", "-af", f"{laut},{fades}", "-ac", "1", "-ar", str(SR), str(musik))
+        else:
+            print(f"Musik: synthetisch, Stimmung {stimmung}")
+            ff("-f", "lavfi", "-i", f"aevalsrc='{musik_ausdruck(stimmung)}':s={SR}:d={dauer}",
+               "-af", f"{STIMMUNGEN[stimmung]['filter']},{laut},{fades}", "-ar", str(SR), str(musik))
     else:
         stille(dauer, musik)
 
@@ -239,7 +278,7 @@ async def main() -> None:
         marken.append(f"[g{i}]")
     graph = ";".join([
         "[0:a]asplit=2[v][vk]",
-        "[1:a]volume=1.3[mu]",
+        "[1:a]volume=1.0[mu]",
         "[mu][vk]sidechaincompress=threshold=0.03:ratio=5:attack=25:release=350[duck]",
         *ketten,
         f"[v][duck]{''.join(marken)}amix=inputs={2 + len(marken)}:duration=first:normalize=0,"
@@ -256,4 +295,15 @@ async def main() -> None:
     print(f"Fertig: {len(woerter)} Wörter, {dauer:.1f} s → {ziel.relative_to(ROOT)}, {tpfad.name}")
 
 
-asyncio.run(main())
+def musikprobe(stimmung: str, ziel: str) -> None:
+    """Hörprobe einer Stimmung (12 s, synthetisch bzw. eigene Datei): python tools/ton.py --musikprobe froh ziel.mp3"""
+    eigene = sorted(p for p in (ROOT / "musik" / stimmung).glob("*") if p.suffix.lower() in (".mp3", ".wav", ".ogg", ".m4a", ".flac"))         if (ROOT / "musik" / stimmung).is_dir() else []
+    quelle = ["-i", str(eigene[0])] if eigene else ["-f", "lavfi", "-i", f"aevalsrc='{musik_ausdruck(stimmung)}':s={SR}:d=12"]
+    filt = "" if eigene else STIMMUNGEN[stimmung]["filter"] + ","
+    ff(*quelle, "-t", "12", "-af", f"{filt}loudnorm=I=-20:TP=-3:LRA=11,afade=t=in:d=0.5,afade=t=out:st=10.5:d=1.5", "-ar", str(SR), ziel)
+
+
+if len(sys.argv) >= 4 and sys.argv[1] == "--musikprobe":
+    musikprobe(sys.argv[2] if sys.argv[2] in STIMMUNGEN else "ruhig", sys.argv[3])
+else:
+    asyncio.run(main())

@@ -230,3 +230,11 @@ textarea.json { width: 100%; min-height: 60vh; font-family: "Cascadia Code", Con
 .ergebnis .cover img { width: 100%; border-radius: 10px; border: 1px solid var(--line); display: block; margin-bottom: 8px; }
 .ergebnis .cover a, .ergebnis .cover button { display: block; width: 100%; text-align: center; margin-bottom: 8px; text-decoration: none; }
 @media (max-width: 900px) { .ergebnis { grid-template-columns: 1fr; } }
+
+/* Design-Themen */
+.themen { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.thema-karte { border: 1.5px solid var(--line); border-radius: 12px; padding: 10px; cursor: pointer; }
+.thema-karte:hover { border-color: var(--dim); }
+.thema-karte.an { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(255, 122, 89, 0.18); }
+.thema-karte .muster { height: 64px; border-radius: 8px; display: flex; gap: 8px; align-items: flex-end; padding: 10px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,.08); }
+.thema-karte .muster span { width: 22px; height: 22px; border-radius: 50%; }

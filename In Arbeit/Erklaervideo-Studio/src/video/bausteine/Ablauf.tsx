@@ -58,13 +58,13 @@ export const Ablauf: React.FC<{ sz: SzAblauf }> = ({ sz }) => {
       <svg width={W} height={H} style={{ position: "absolute", left: 0, top: 0 }}>
         {kreis ? (
           <>
-            <circle cx={cx} cy={cy} r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={16} />
+            <circle cx={cx} cy={cy} r={R} fill="none" stroke={T.spur} strokeWidth={16} />
             <circle cx={cx} cy={cy} r={R} fill="none" stroke={farbeAktiv} strokeWidth={16} strokeLinecap="round"
               strokeDasharray={kreisU} strokeDashoffset={kreisU * (1 - Math.min(1, ringAnteil))} transform={`rotate(-90 ${cx} ${cy})`} />
           </>
         ) : (
           <>
-            <path d={kette} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={14} strokeLinecap="round" />
+            <path d={kette} fill="none" stroke={T.spur} strokeWidth={14} strokeLinecap="round" />
             <path d={kette} fill="none" stroke={farbeAktiv} strokeWidth={14} strokeLinecap="round"
               strokeDasharray={ketteLaenge} strokeDashoffset={ketteLaenge * (1 - Math.min(1, pos / (n - 1 || 1)))} />
           </>
@@ -72,7 +72,7 @@ export const Ablauf: React.FC<{ sz: SzAblauf }> = ({ sz }) => {
         {f >= zeiten[0] && (
           <g>
             <circle cx={dot.x} cy={dot.y} r={30} fill={farbeAktiv} opacity={0.25} />
-            <circle cx={dot.x} cy={dot.y} r={14} fill="#fff" />
+            <circle cx={dot.x} cy={dot.y} r={14} fill={T.punkt} />
           </g>
         )}
       </svg>
@@ -80,7 +80,7 @@ export const Ablauf: React.FC<{ sz: SzAblauf }> = ({ sz }) => {
         const t = zeiten[i];
         const p = sp(f - t + 8);
         const letzte = i === n - 1;
-        const col = letzte && kaputt ? T.rot : letzte && gut ? T.gruen : f >= t ? T.akzent : "#3a4060";
+        const col = letzte && kaputt ? T.rot : letzte && gut ? T.gruen : f >= t ? T.akzent : T.aus;
         const icon = letzte && kaputt ? "kreuz" : s.icon;
         const seitlich = !kreis && hoch;
         return (
@@ -93,7 +93,7 @@ export const Ablauf: React.FC<{ sz: SzAblauf }> = ({ sz }) => {
               width: 140, height: 140, borderRadius: 70, background: T.panel2, border: `5px solid ${col}`, flexShrink: 0,
               display: "flex", alignItems: "center", justifyContent: "center", boxShadow: f >= t ? `0 0 40px ${col}66` : "none",
             }}>
-              <Icon name={icon} size={64} color={col === "#3a4060" ? T.dim : col} width={2.2} />
+              <Icon name={icon} size={64} color={col === T.aus ? T.dim : col} width={2.2} />
             </div>
             <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: hoch ? 42 : 32, color: T.text, textAlign: seitlich ? "left" : "center" }}>{s.text}</div>
           </div>

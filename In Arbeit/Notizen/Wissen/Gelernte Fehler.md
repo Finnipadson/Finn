@@ -37,4 +37,5 @@ Fallen, die schon mal Zeit gekostet haben. Kurzfassung, die ausführliche Versio
 - Rendern mit Weichzeichnern (CSS `blur`, SVG `feGaussianBlur`) ohne Grafikkarte extrem langsam → `--gl=angle` bzw. `chromiumOptions: { gl: "angle" }` (8× schneller).
 - `renderStill`/`renderMedia`: Props kommen aus `composition.props`, nicht aus `inputProps` → abweichende Props dort setzen.
 - Nie zwei Renders gleichzeitig starten → „Page crashed“.
+- Design-Themen über ein veränderliches Token-Objekt: keine Modul-Konstanten mit Theme-Farben bilden (frieren das Standard-Thema ein) → Funktion.
 - `lerp`/`interpolate` mit `Infinity` → Fehler „inputRange must contain only finite numbers“; Zeitpunkte vorher absichern.

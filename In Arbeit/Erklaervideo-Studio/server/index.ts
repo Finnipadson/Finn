@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { ClaudeFehler, schreibeDrehbuch, ueberarbeiteSzene } from "./claude";
 import { aktualisiere, coverDatei, freierName, lade, liste, PROJEKTE, ROOT, speichere, videoDatei } from "./projekte";
 import { Abgebrochen, starteRender } from "./render";
+import { verstaendlich } from "./fehler";
 import { VORLAGEN } from "../src/drehbuch/anleitung";
 import { pruefeDrehbuch } from "../src/drehbuch/pruefen";
 import { STIMMEN, type Drehbuch } from "../src/drehbuch/typen";
@@ -30,11 +31,13 @@ const run = (command: string, timeoutMs = 15000) =>
   });
 
 app.get("/api/health", async (_req, res) => {
-  const [claude, auth, py, ff] = await Promise.all([
+  const [claude, auth, py, ff, netz] = await Promise.all([
     run("claude --version"),
     run("claude auth status"),
     run(`python -c "import edge_tts, sys; print('Python', sys.version.split()[0], '+ edge-tts', edge_tts.__version__)"`),
     run("ffmpeg -version"),
+    // Erreichbarkeit des Sprachdienstes, den edge-tts nutzt
+    fetch("https://speech.platform.bing.com", { method: "HEAD", signal: AbortSignal.timeout(5000) }).then(() => true, () => false),
   ]);
   let angemeldet = false, abo = "";
   try { const s = JSON.parse(auth.all); angemeldet = !!s.loggedIn; abo = s.subscriptionType ?? ""; } catch { /* ältere Version */ }
@@ -43,6 +46,7 @@ app.get("/api/health", async (_req, res) => {
     { name: "Claude Code", ok: claude.ok, detail: claude.ok ? claude.out : "nicht gefunden", hint: "Claude Code installieren." },
     { name: "Claude-Anmeldung", ok: angemeldet, detail: angemeldet ? `angemeldet${abo ? ` (${abo})` : ""}` : "nicht angemeldet", hint: "Im Terminal `claude auth login` ausführen." },
     { name: "Stimme (Python + edge-tts)", ok: py.ok, detail: py.ok ? py.out : "nicht gefunden", hint: "`python -m pip install edge-tts`" },
+    { name: "Internet (für die Stimme)", ok: netz, detail: netz ? "Sprachdienst erreichbar" : "keine Verbindung", hint: "Die Stimme wird online erzeugt – bitte Internetverbindung prüfen." },
     { name: "FFmpeg", ok: ff.ok, detail: ff.ok ? ff.out.replace(/ Copyright.*/, "") : "nicht gefunden", hint: "`winget install Gyan.FFmpeg`" },
   ];
   res.json({ ok: checks.every((c) => c.ok), checks });
@@ -150,10 +154,10 @@ app.post("/api/projekte/:name/ton", (req, res) => {
     }
   });
   proc.stderr.on("data", (d: Buffer) => (fehlerText += d.toString("utf8")));
-  proc.on("error", (e) => Object.assign(a, { fertig: true, status: "Fehler", fehler: [`Python nicht gefunden: ${e.message}`] }));
+  proc.on("error", (e) => Object.assign(a, { fertig: true, status: "Fehler", fehler: [`Python wurde nicht gefunden (${e.message}). Python installieren und die App neu starten.`] }));
   proc.on("close", (code) => {
     if (code === 0) Object.assign(a, { fertig: true, fortschritt: 1, status: "Stimme fertig.", projekt: p.name });
-    else Object.assign(a, { fertig: true, status: "Fehler", fehler: [fehlerText.trim().split(/\r?\n/).slice(-3).join(" ") || `ton.py endete mit Code ${code}`] });
+    else Object.assign(a, { fertig: true, status: "Fehler", fehler: [fehlerText.trim() ? verstaendlich(fehlerText) : `ton.py endete mit Code ${code}`] });
   });
   res.json({ id });
 });
@@ -197,7 +201,7 @@ app.post("/api/projekte/:name/rendern", (req, res) => {
     .then((e) => Object.assign(a, { fertig: true, fortschritt: 1, status: `Fertig in ${Math.round(e.dauerMs / 1000)} s.`, ergebnis: e }))
     .catch((e) => e instanceof Abgebrochen
       ? Object.assign(a, { fertig: true, abgebrochen: true, status: "Abgebrochen – das vorherige Video (falls vorhanden) ist unverändert." })
-      : Object.assign(a, { fertig: true, status: "Fehler beim Rendern", fehler: [e instanceof Error ? e.message.split(/\r?\n/).slice(0, 3).join(" ") : String(e)] }))
+      : Object.assign(a, { fertig: true, status: "Fehler beim Rendern", fehler: [verstaendlich(e instanceof Error ? `${e.message}\n${e.stack ?? ""}`.slice(0, 4000) : String(e))] }))
     .finally(() => { renderLaeuft = null; abbrecher.delete(id); a.abbrechbar = false; });
   res.json({ id });
 });
@@ -221,6 +225,36 @@ app.post("/api/projekte/:name/zeigen", (req, res) => {
   res.json({ ok: true });
 });
 
+/* ── Musik: eigene Dateien je Stimmung zählen + Hörprobe ── */
+const MUSIK_ENDUNGEN = [".mp3", ".wav", ".ogg", ".m4a", ".flac"];
+app.get("/api/musik", (_req, res) => {
+  const ordner = path.join(ROOT, "musik");
+  const zaehle = (st: string) => {
+    const d = path.join(ordner, st);
+    return fs.existsSync(d) ? fs.readdirSync(d).filter((f) => MUSIK_ENDUNGEN.includes(path.extname(f).toLowerCase())).length : 0;
+  };
+  res.json({ ordner, eigene: { ruhig: zaehle("ruhig"), froh: zaehle("froh"), spannend: zaehle("spannend") } });
+});
+app.get("/api/musikprobe", async (req, res) => {
+  const st = ["ruhig", "froh", "spannend"].includes(String(req.query.stimmung)) ? String(req.query.stimmung) : "ruhig";
+  const ordner = path.join(ROOT, "public", "ton", "_proben");
+  fs.mkdirSync(ordner, { recursive: true });
+  // Eigene Dateien können sich ändern → Probe nicht dauerhaft zwischenspeichern, sondern nach Inhalt benennen
+  const d = path.join(ROOT, "musik", st);
+  const eigene = fs.existsSync(d) ? fs.readdirSync(d).filter((f) => MUSIK_ENDUNGEN.includes(path.extname(f).toLowerCase())).sort() : [];
+  const datei = `musik-${st}-${eigene.length ? Buffer.from(eigene[0]).toString("hex").slice(0, 16) : "synth"}.mp3`;
+  const ziel = path.join(ordner, datei);
+  if (!fs.existsSync(ziel)) {
+    const ok = await new Promise<boolean>((resolve) => {
+      const p = spawn("python", ["tools/ton.py", "--musikprobe", st, ziel], { cwd: ROOT, windowsHide: true });
+      p.on("error", () => resolve(false));
+      p.on("close", (code) => resolve(code === 0 && fs.existsSync(ziel)));
+    });
+    if (!ok) return res.status(502).json({ fehler: "Musik-Probe konnte nicht erzeugt werden (FFmpeg?)." });
+  }
+  res.json({ url: `/ton/_proben/${datei}` });
+});
+
 /* ── Hörprobe einer Stimme (wird zwischengespeichert) ── */
 app.get("/api/stimmprobe", async (req, res) => {
   const key = String(req.query.stimme ?? "ava");
@@ -241,6 +275,14 @@ app.get("/api/stimmprobe", async (req, res) => {
   }
   res.json({ url: `/ton/_proben/${datei}` });
 });
+
+// Unerwartete Fehler: verständlich antworten statt abzustürzen
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err);
+  res.status(500).json({ fehler: verstaendlich(err instanceof Error ? err.message : String(err)) });
+});
+process.on("unhandledRejection", (e) => console.error("Unbehandelter Fehler:", e));
+process.on("uncaughtException", (e) => console.error("Unerwarteter Fehler:", e));
 
 fs.mkdirSync(PROJEKTE, { recursive: true });
 app.listen(PORT, () => {

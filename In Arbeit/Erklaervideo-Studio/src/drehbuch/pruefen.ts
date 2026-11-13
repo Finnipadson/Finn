@@ -40,6 +40,8 @@ export const pruefeDrehbuch = (d: unknown): string[] => {
   const db = d as Partial<Drehbuch>;
   if (!db.titel) f.push("Es fehlt der Titel („titel“).");
   if (db.format !== "hoch" && db.format !== "quer") f.push("„format“ muss \"hoch\" oder \"quer\" sein.");
+  if (db.thema && !["dunkel", "tafel", "papier", "kueche"].includes(db.thema)) f.push(`Unbekanntes Design-Thema „${db.thema}“ (möglich: dunkel, tafel, papier, kueche).`);
+  if (db.stimmung && !["ruhig", "froh", "spannend"].includes(db.stimmung)) f.push(`Unbekannte Musik-Stimmung „${db.stimmung}“ (möglich: ruhig, froh, spannend).`);
   if (db.stimme && !STIMMEN[db.stimme]) f.push(`Unbekannte Stimme „${db.stimme}“ (möglich: ${Object.keys(STIMMEN).join(", ")}).`);
   if (!Array.isArray(db.szenen) || db.szenen.length === 0) return [...f, "Es gibt keine Szenen („szenen“)."];
 
@@ -61,6 +63,11 @@ export const pruefeDrehbuch = (d: unknown): string[] => {
       case "ablauf": need(Array.isArray(sz.schritte) && sz.schritte.length >= 2 && sz.schritte.length <= 6, "„schritte“ braucht 2–6 Einträge."); break;
       case "formel": need(Array.isArray(sz.teile) && sz.teile.length >= 1, "„teile“ braucht mindestens einen Eintrag."); break;
       case "geometrie": need(sz.a > 0 && sz.b > 0, "„a“ und „b“ müssen positive Zahlen sein."); break;
+      case "zeitstrahl": need(Array.isArray(sz.ereignisse) && sz.ereignisse.length >= 2 && sz.ereignisse.length <= 6 && sz.ereignisse.every((e) => e?.zeit && e?.text), "„ereignisse“ braucht 2–6 Einträge mit „zeit“ und „text“."); break;
+      case "fenster":
+        need(sz.art === "terminal" || sz.art === "chat", "„art“ muss \"terminal\" oder \"chat\" sein.");
+        need(Array.isArray(sz.zeilen) && sz.zeilen.length >= 1 && sz.zeilen.length <= 6 && sz.zeilen.every((z) => z?.text && (z.rolle === "ich" || z.rolle === "antwort")), "„zeilen“ braucht 1–6 Einträge mit „text“ und „rolle“ (\"ich\" oder \"antwort\").");
+        break;
       case "abschluss": need(sz.text, "Es fehlt „text“."); break;
     }
     const w = tokens(sz as Szene);
@@ -74,7 +81,7 @@ export const pruefeDrehbuch = (d: unknown): string[] => {
 /** Alles, was den Ton beeinflusst. Ändert sich das, muss die Stimme neu erzeugt werden. */
 export const tonSchluessel = (d: Drehbuch) =>
   JSON.stringify({
-    stimme: d.stimme ?? "ava", tempo: d.tempo ?? 0, musik: d.musik ?? true,
+    stimme: d.stimme ?? "ava", tempo: d.tempo ?? 0, musik: d.musik ?? true, stimmung: d.stimmung ?? "ruhig",
     szenen: d.szenen.map((s) => ({ sprecher: s.sprecher, bei: alleBei(s).map((b) => b.wert) })),
   });
 

@@ -1,0 +1,17 @@
+Eigene Hintergrundmusik für das Erklärvideo-Studio
+==================================================
+
+Lege lizenzfreie Musikdateien (mp3, wav, ogg, m4a, flac) in den passenden Ordner:
+
+  musik/ruhig/      ruhig, entspannt (Standard)
+  musik/froh/       fröhlich, locker
+  musik/spannend/   spannend, dramatisch
+
+Die App nimmt automatisch eine Datei aus dem Ordner der gewählten Stimmung
+(Einstellungen → Musik), wiederholt sie bei Bedarf, gleicht die Lautstärke an
+und macht sie leiser, sobald gesprochen wird. Ist ein Ordner leer, wird die
+eingebaute (synthetische) Musik genutzt.
+
+Gute Quellen für lizenzfreie Musik: YouTube Audio-Mediathek, Pixabay Music.
+Lizenz der jeweiligen Datei beachten (z. B. Namensnennung).
+Die Musikdateien selbst werden nicht mit ins Git-Repo übernommen.

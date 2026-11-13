@@ -10,7 +10,7 @@ const Spalte: React.FC<{ s: Seite; gut: boolean; start: number }> = ({ s, gut, s
   const glow = gut ? sp(f - at - 10) : 0;
   return (
     <Pop at={at} style={{ flex: 1 }}>
-      <Karte glow={gut ? T.gruen : undefined} style={{ padding: hoch ? "40px 44px" : "40px 44px", height: "100%", opacity: gut ? 1 : 0.85, boxShadow: gut ? `0 30px 60px rgba(0,0,0,.45), 0 0 ${60 * glow}px ${T.gruen}40` : undefined }}>
+      <Karte glow={gut ? T.gruen : undefined} style={{ padding: hoch ? "40px 44px" : "40px 44px", height: "100%", opacity: gut ? 1 : 0.85, boxShadow: gut ? `0 30px 60px ${T.schatten}, 0 0 ${60 * glow}px ${T.gruen}40` : undefined }}>
         <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 26 }}>
           <div style={{ width: 70, height: 70, borderRadius: 35, background: `${col}22`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Icon name={s.icon ?? (gut ? "haken" : "kreuz")} size={40} color={col} />

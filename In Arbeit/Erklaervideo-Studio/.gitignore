@@ -6,3 +6,6 @@ projekte/
 public/ton/
 **/_work/
 *.log
+
+# Eigene Musikdateien (nur die Anleitung ins Repo)
+musik/*/*

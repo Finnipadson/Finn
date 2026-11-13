@@ -154,6 +154,35 @@ const SzenenFormular: React.FC<{ sz: Szene; setze: (s: Szene) => void }> = ({ sz
         </>
       )}
 
+      {sz.typ === "zeitstrahl" && (
+        <Liste titel="Ereignisse" eintraege={sz.ereignisse} setze={(e) => set("ereignisse", e)} min={2} max={6} neu={() => ({ zeit: "2025", text: "Neues Ereignis" })}
+          render={(e, se) => (
+            <div className="felder">
+              <Feld label="Zeitpunkt"><Text wert={e.zeit} setze={(v) => se({ ...e, zeit: v })} max={14} /></Feld>
+              <Feld label="Text"><Text wert={e.text} setze={(v) => se({ ...e, text: v })} max={30} /></Feld>
+              <Feld label="Icon"><Auswahl wert={e.icon} setze={(v) => se({ ...e, icon: v || undefined })} optionen={ICONS} leer="(keins)" /></Feld>
+              <Feld label="bei"><Bei wert={e.bei} setze={(v) => se({ ...e, bei: v })} woerter={w} /></Feld>
+            </div>
+          )} />
+      )}
+
+      {sz.typ === "fenster" && (
+        <>
+          <div className="felder">
+            <Feld label="Art"><Auswahl wert={sz.art} setze={(v) => set("art", v)} optionen={[["chat", "Chat (Sprechblasen)"], ["terminal", "Terminal (Befehle)"]]} /></Feld>
+            <Feld label="Titelleiste"><Text wert={sz.titel} setze={(v) => set("titel", v || undefined)} max={30} /></Feld>
+          </div>
+          <Liste titel="Zeilen" eintraege={sz.zeilen} setze={(z) => set("zeilen", z)} min={1} max={6} neu={() => ({ text: "Neue Zeile", rolle: "antwort" as const })}
+            render={(z, sz2) => (
+              <div className="felder">
+                <Feld label="Text" breit><Text wert={z.text} setze={(v) => sz2({ ...z, text: v })} max={80} /></Feld>
+                <Feld label="Wer"><Auswahl wert={z.rolle} setze={(v) => sz2({ ...z, rolle: v as "ich" | "antwort" })} optionen={[["ich", "ich (wird getippt)"], ["antwort", "Antwort / Ausgabe"]]} /></Feld>
+                <Feld label="bei"><Bei wert={z.bei} setze={(v) => sz2({ ...z, bei: v })} woerter={w} /></Feld>
+              </div>
+            )} />
+        </>
+      )}
+
       <SprecherEditor saetze={sz.sprecher} setze={(s) => set("sprecher", s)} />
     </div>
   );

@@ -1,6 +1,6 @@
 # Erklärvideo-Studio – Bauplan
 
-Stand: 13.11.2026 · Status: **Phase 4 fertig**, als Nächstes Phase 5 · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
+Stand: 13.11.2026 · Status: **Phase 5 fertig** – alle Phasen abgeschlossen (offen: optionale Figur) · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
 
 **Ziel:** Thema eingeben → Drehbuch prüfen → Vorschau → fertiges animiertes Erklärvideo (MP4) mit Stimme, Untertiteln, Geräuschen und Musik. Nur für die eigene Nutzung, KI läuft über Claude Code (Pro-Abo).
 
@@ -106,12 +106,14 @@ Jeder Baustein funktioniert in **Hoch- und Querformat** und in jedem **Design-Th
 - **Ergebnis:** `server/render.ts` rendert direkt im Server (`@remotion/bundler` + `@remotion/renderer`): Fortschritt mit Bildzähler und Restzeit, **Abbrechen** (Temp-Datei, altes Video bleibt), danach **Cover-Bild** (Ende der Titel-Szene, ohne Untertitel). Video + Cover liegen in `projekte/<name>/<name>.mp4` bzw. `<name>-cover.png`. Seite **Rendern**: Infos (Format, Länge, Sprecher), „Video rendern“/„Ohne Stimme rendern“, Video-Player mit Ergebnis, Download MP4/Cover, „Im Ordner zeigen“, Hinweis „Video ist älter als das Drehbuch“; Render läuft beim Wechsel der Schritte weiter (Prozent in der Navigation), immer nur einer gleichzeitig. **„Szene neu machen“** im Editor: Wunsch eintippen (oder Vorschlag-Chip) → Claude überarbeitet nur diese Szene (ganzes Drehbuch als Kontext, Prüfung + bis zu 2 Korrekturrunden) → Szene wird ersetzt, „↶ Rückgängig“. Speichern/Öffnen gab es schon seit Phase 3. **Test:** Akku-Video in der App gerendert (48 s Video in 51 s), Abbrechen geprüft, Szene 2 „kürzer und lockerer“ in 45 s neu gemacht + rückgängig.
 - **Gelernt:** Remotion rendert CSS-/SVG-Weichzeichner ohne Grafikkarte extrem langsam → `chromiumOptions: { gl: "angle" }` (8× schneller: 442 s → 51 s; Rückfall auf normal, falls es scheitert). `renderStill`/`renderMedia` nehmen die Props aus `composition.props`, nicht aus `inputProps` → abweichende Props (Cover) dort setzen. Zwei Renders gleichzeitig → „Page crashed“; ein Fehlversuch beim Status-Abruf darf die Abfrage nicht beenden (PC ist beim Rendern ausgelastet).
 
-### Phase 5 – Feinschliff
+### Phase 5 – Feinschliff ✅ (14.11.2026)
 - 4 Design-Themen ausgearbeitet, weitere Bausteine (`geometrie`, `fenster`, `bilder`, `zeitstrahl`)
 - Echte lizenzfreie Musik (Ordner mit Stimmungen), Lautstärke automatisch
 - Fehlerbehandlung (kein Internet für edge-tts, Claude nicht angemeldet, Render-Fehler)
 - Desktop-Verknüpfung mit Icon
 - Optional: `figur`-Baustein (Koch mit Lippen-Sync)
+- **Ergebnis:** **4 Design-Themen** (`thema`: dunkel, tafel mit Holzrahmen + Kreideschrift „Segoe Print“, papier mit Karopapier, kueche mit Holzbrettern + warmem Licht) – Farben/Schriften als Tokens in `kit.tsx` (`setzeThema()` vor dem Zeichnen), Auswahl als Karten in den Einstellungen, wirkt ohne neue Stimme; Mathe-Drehbücher bekommen automatisch „Tafel“. **2 neue Bausteine:** `zeitstrahl` und `fenster` (Terminal/Chat mit Tippen und „•••“) inkl. Prüfung, Editor-Formular, Startwerten und Anleitung für Claude (jetzt 9 Bausteine). **Musik:** 3 Stimmungen (ruhig/froh/spannend, synthetisch) + eigene Dateien aus `musik/<stimmung>/` (wiederholt, Lautstärke per `loudnorm` auf −30 LUFS, Ducking wie bisher), Hörprobe in der App. **Fehlerbehandlung:** `server/fehler.ts` übersetzt Fehler (kein Internet, edge-tts/FFmpeg fehlt, Render-Browser abgestürzt, Platte voll, Datei gesperrt), System-Check prüft Internet, Server stürzt bei unerwarteten Fehlern nicht mehr ab. **Desktop-Verknüpfung** mit eigenem Icon (`tools/icon.py`, `verknuepfung.ps1`), Favicon im App-Fenster, `start.bat` erkennt ein laufendes Studio. Die Figur (Lippen-Sync) ist bewusst weggelassen – optional für später.
+- **Gelernt:** Modul-Konstanten mit Theme-Farben (`const FARBEN = [T.blau …]`) frieren das Standard-Thema ein → als Funktion schreiben. Backslashes in Python-Heredocs über die Shell werden verfälscht → Regex-Code mit dem Edit/Write-Werkzeug schreiben.
 
 ---
 

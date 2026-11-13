@@ -12,6 +12,10 @@ if not exist node_modules (
   )
 )
 
+rem Laeuft das Studio schon? Dann nur ein weiteres App-Fenster oeffnen.
+powershell -NoProfile -Command "try { Invoke-WebRequest -UseBasicParsing http://localhost:5173 -TimeoutSec 1 | Out-Null; exit 0 } catch { exit 1 }" >nul 2>&1
+if not errorlevel 1 goto fenster
+
 rem Server + Oberflaeche in eigenem, minimiertem Fenster starten
 start "Erklaervideo-Studio (Server)" /min cmd /c "npm run dev"
 
@@ -30,6 +34,7 @@ if errorlevel 1 (
   goto wait
 )
 
+:fenster
 set EDGE=%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe
 if not exist "%EDGE%" set EDGE=%ProgramFiles%\Microsoft\Edge\Application\msedge.exe
 if exist "%EDGE%" (

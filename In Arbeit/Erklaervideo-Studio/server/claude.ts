@@ -72,7 +72,8 @@ export const schreibeDrehbuch = async (a: DrehbuchAuftrag, status: (s: string) =
     let fehler: string[];
     if (json && typeof json === "object") {
       // Vorgaben aus der App haben Vorrang
-      Object.assign(json, { format: a.format, stimme });
+      // Design passend zur Vorlage (später in den Einstellungen änderbar)
+      Object.assign(json, { format: a.format, stimme, thema: a.vorlage === "mathe" ? "tafel" : "dunkel" });
       fehler = pruefeDrehbuch(json);
     } else {
       fehler = ["Das JSON ist nicht gültig (Syntaxfehler)."];

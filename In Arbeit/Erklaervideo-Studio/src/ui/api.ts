@@ -48,6 +48,8 @@ export const api = {
     fetch(`/api/projekte/${name}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ drehbuch }) }).then((r) => json<{ tonVeraltet: boolean }>(r)),
   tonErzeugen: (name: string) => fetch(`/api/projekte/${name}/ton`, { method: "POST" }).then((r) => json<{ id: string }>(r)),
   stimmprobe: (stimme: string, tempo: number) => fetch(`/api/stimmprobe?stimme=${stimme}&tempo=${tempo}`).then((r) => json<{ url: string }>(r)),
+  musik: () => fetch("/api/musik").then((r) => json<{ ordner: string; eigene: Record<string, number> }>(r)),
+  musikprobe: (stimmung: string) => fetch(`/api/musikprobe?stimmung=${stimmung}`).then((r) => json<{ url: string }>(r)),
   auftrag: (id: string) => fetch(`/api/auftrag/${id}`).then((r) => json<Auftrag>(r)),
   abbrechen: (id: string) => fetch(`/api/auftrag/${id}/abbrechen`, { method: "POST" }).then((r) => json<{ ok: boolean }>(r)),
   szeneNeu: (drehbuch: Drehbuch, index: number, wunsch: string) =>

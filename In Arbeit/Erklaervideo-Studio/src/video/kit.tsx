@@ -4,14 +4,63 @@ import type { Farbe } from "../drehbuch/typen";
 
 /* Gemeinsame Bausteine für alle Szenen: Farben, Icons, Animations-Helfer, Szenen-Kontext. */
 
-export const T = {
+/* ── Design-Themen ──
+   T ist das aktuelle Thema. Erklaervideo ruft vor dem Zeichnen setzeThema() auf; alle Bausteine lesen T beim Rendern. */
+const BASIS = {
   bg: "#0d1020", panel: "#161a2e", panel2: "#1d2238", line: "rgba(255,255,255,0.12)",
   text: "#eef0f7", dim: "#9aa1b9", akzent: "#ff7a59", teal: "#3dd6c4", lila: "#8b7bff",
   gelb: "#ffd34d", gruen: "#3ddc97", rot: "#ff5d6c", blau: "#5aa9ff",
   a: "#4fd1ff", b: "#f2c94c", c: "#ff6b5b",
   sans: "'Segoe UI', Arial, sans-serif",
+  titel: "'Segoe UI', Arial, sans-serif",   // Schrift für große Überschriften
   mono: "'Cascadia Code', Consolas, 'Courier New', monospace",
+  spur: "rgba(255,255,255,0.08)",  // Linien/Bahnen im Hintergrund von Grafiken
+  aus: "#3a4060",                  // noch nicht aktive Station
+  punkt: "#ffffff",                // laufender Punkt
+  flaeche: "#ffffff",              // leichte Füllung von Flächen
+  schatten: "rgba(0,0,0,.45)",
+  vignette: "rgba(0,0,0,.55)",
+  glanz: "#171c38",                // heller Fleck in der Bildmitte
+  untertitel: "rgba(0,0,0,0.38)",  // Hintergrund der noch nicht aktiven Untertitel-Wörter
 };
+export type ThemaId = "dunkel" | "tafel" | "papier" | "kueche";
+export const THEMEN: Record<ThemaId, { name: string; info: string; werte: Partial<typeof BASIS> }> = {
+  dunkel: { name: "Dunkel-Neon", info: "dunkel, leuchtende Farben", werte: {} },
+  tafel: {
+    name: "Tafel", info: "grüne Schultafel, Kreide", werte: {
+      bg: "#1c3328", panel: "#21392d", panel2: "#284434", line: "rgba(255,255,240,0.22)",
+      text: "#f5f2e6", dim: "#b8c6b3", akzent: "#ffb066", teal: "#8fe3d3", lila: "#c7b8ff",
+      gelb: "#ffe680", gruen: "#a6ec9b", rot: "#ff9b8f", blau: "#9ccfff",
+      a: "#8fd8ff", b: "#ffe680", c: "#ff9b8f",
+      titel: "'Segoe Print', 'Segoe UI', Arial, sans-serif",
+      spur: "rgba(255,255,240,0.12)", aus: "#3d5a49", punkt: "#fffdf0", flaeche: "#fffdf0",
+      schatten: "rgba(0,0,0,.35)", vignette: "rgba(0,0,0,.45)", glanz: "#2a4a3a",
+    },
+  },
+  papier: {
+    name: "Papier", info: "hell, wie ein Notizblock", werte: {
+      bg: "#f3eee3", panel: "#fffdf8", panel2: "#fffaf0", line: "rgba(60,40,20,0.16)",
+      text: "#29241f", dim: "#7b7064", akzent: "#e0553a", teal: "#139e8c", lila: "#6a58d6",
+      gelb: "#ffd34d", gruen: "#2b9a5c", rot: "#d63f35", blau: "#2c6fd6",
+      a: "#1b8cc8", b: "#c98a00", c: "#d63f35",
+      spur: "rgba(60,40,20,0.10)", aus: "#d6cdbd", punkt: "#29241f", flaeche: "#29241f",
+      schatten: "rgba(80,55,25,.16)", vignette: "rgba(120,90,50,.16)", glanz: "#fffaf0", untertitel: "rgba(41,36,31,0.78)",
+    },
+  },
+  kueche: {
+    name: "Küche", info: "warmes Holz, Orange", werte: {
+      bg: "#24160f", panel: "#332116", panel2: "#3d2819", line: "rgba(255,220,180,0.16)",
+      text: "#fff3e3", dim: "#d2b596", akzent: "#ff9a3c", teal: "#7fd6c4", lila: "#c9a2ff",
+      gelb: "#ffd166", gruen: "#9bd77f", rot: "#ff6f59", blau: "#7fb8ff",
+      a: "#7fd6c4", b: "#ffd166", c: "#ff6f59",
+      spur: "rgba(255,220,180,0.10)", aus: "#5a3d29", glanz: "#3a2416",
+    },
+  },
+};
+export const T = { ...BASIS };
+export const themaVon = (id?: string): ThemaId => (id && id in THEMEN ? (id as ThemaId) : "dunkel");
+export const setzeThema = (id?: string) => { Object.assign(T, BASIS, THEMEN[themaVon(id)].werte); };
+
 export const farbe = (f?: Farbe) => ({
   a: T.a, b: T.b, c: T.c, akzent: T.akzent, text: T.text, gruen: T.gruen, rot: T.rot, blau: T.blau, lila: T.lila,
 }[f ?? "text"]);
@@ -88,7 +137,7 @@ export const Kopf: React.FC<{ kicker?: string; titel?: string }> = ({ kicker, ti
   return (
     <div style={{ textAlign: "center", opacity: p, transform: `translateY(${(1 - p) * -20}px)`, padding: "0 60px" }}>
       {kicker && <div style={{ fontFamily: T.mono, fontSize: hoch ? 30 : 22, letterSpacing: 6, color: T.akzent }}>{kicker.toUpperCase()}</div>}
-      {titel && <div style={{ fontFamily: T.sans, fontWeight: 800, fontSize: hoch ? 76 : 58, lineHeight: 1.1, color: T.text, marginTop: 8 }}>{titel}</div>}
+      {titel && <div style={{ fontFamily: T.titel, fontWeight: 800, fontSize: hoch ? 76 : 58, lineHeight: 1.1, color: T.text, marginTop: 8 }}>{titel}</div>}
     </div>
   );
 };
@@ -98,6 +147,6 @@ export const Karte: React.FC<{ children: React.ReactNode; glow?: string; style?:
   <div style={{
     borderRadius: 28, background: `linear-gradient(160deg, ${T.panel2}, ${T.panel})`,
     border: `1.5px solid ${glow ? `${glow}aa` : T.line}`,
-    boxShadow: `0 30px 60px rgba(0,0,0,.45)${glow ? `, 0 0 50px ${glow}2a` : ""}`, ...style,
+    boxShadow: `0 30px 60px ${T.schatten}${glow ? `, 0 0 50px ${glow}2a` : ""}`, ...style,
   }}>{children}</div>
 );
