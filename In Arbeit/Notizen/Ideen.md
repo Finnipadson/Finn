@@ -23,6 +23,7 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 		- `remotion/src/Erklaervideo Test` → „Bug-Küche EP 01“, 16 s → `remotion/out/Erklaervideo Test.mp4`
 		- `remotion/src/Satz des Pythagoras` → Mathe-Erklärvideo, 48 s → `remotion/out/Satz des Pythagoras.mp4`
 		- `remotion/src/Koch Szene HD` → Qualitäts-Test (13.11.2026), 18,6 s, 60 fps → `remotion/out/Koch Szene HD.mp4`
+		- `remotion/src/Claude Code Erklaerung` → Erklärvideo für Papa (13.11.2026), Querformat 1920×1080, 97 s, 60 fps, 7 Szenen (Was ist es, Chat vs. Claude Code, Arbeitsschleife, Kontrolle, eigene Projekte mit echten Screenshots, was man selbst können muss, Ausblick Ideenliste) → `remotion/out/Claude Code Erklaerung.mp4`
 	- **Qualitäts-Stufe (aus Koch Szene HD)**
 		- Figur: Licht/Schatten-Verläufe statt flacher Farben, Augen mit Glanzpunkt und Blickrichtung, Blinzeln, Mund synchron zur Stimme (Lautstärke pro Bild), Arme mit Gelenken (inverse Kinematik), Mütze schwingt nach, Atmen
 		- Szene: Küche mit Tiefenschärfe (unscharfer Hintergrund), Lampe mit Lichtkegel, Gasflammen, Dampf, Funken, Schattenwurf
