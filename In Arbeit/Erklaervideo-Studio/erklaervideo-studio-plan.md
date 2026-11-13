@@ -10,7 +10,7 @@ Stand: 13.11.2026 · Status: Planung · Projektnotiz: `Notizen/Projekte/Erklärv
 
 | Thema | Entscheidung | Warum |
 |---|---|---|
-| Oberfläche | **Lokale Web-App** (React), geöffnet in eigenem Fenster (`msedge --app=…`), Start per Verknüpfung | Die Videos sind schon React (Remotion). So gibt es eine **Live-Vorschau ohne Rendern** (`@remotion/player`) und alles bleibt eine Sprache. WPF müsste die Vorschau erst rendern. |
+| Oberfläche ✅ | **Lokale Web-App** (React), geöffnet in eigenem Fenster (`msedge --app=…`), Start per Verknüpfung | Die Videos sind schon React (Remotion). So gibt es eine **Live-Vorschau ohne Rendern** (`@remotion/player`) und alles bleibt eine Sprache. WPF müsste die Vorschau erst rendern. |
 | Server | Node.js (Express) im selben Projekt | ruft `claude -p`, die Ton-Pipeline und `@remotion/renderer` auf |
 | KI | `claude -p` (Claude Code, Pro-Abo) | kein API-Schlüssel nötig; nur eigene Nutzung |
 | Video | Remotion 4 (wie bisher), 60 fps, CRF 16 | bewährt aus den 4 Testvideos |
@@ -117,6 +117,6 @@ Jeder Baustein funktioniert in **Hoch- und Querformat** und in jedem **Design-Th
 
 ## Offene Fragen
 
-- [ ] Oberfläche als lokale Web-App im eigenen Fenster – passt das, oder lieber klassische WPF-App?
+- [x] Oberfläche als lokale Web-App im eigenen Fenster – **bestätigt am 13.11.2026** (statt WPF)
 - [ ] Welche Vorlage zuerst richtig gut machen? (Vorschlag: Mathe/Schule)
 - [ ] Soll die Koch-Figur (aufwendig) früh rein oder erst in Phase 5?

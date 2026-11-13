@@ -36,7 +36,7 @@ Windows-App, die aus einer kurzen Beschreibung automatisch ein fertiges animiert
 
 ## Offene Punkte
 
-- [ ] Technik der Oberfläche bestätigen (Vorschlag im Bauplan: lokale Web-App im eigenen Fenster statt WPF wie [[PC Aufräumer]])
+- [x] Technik der Oberfläche: **lokale Web-App im eigenen Fenster** (React + Remotion-Player für Live-Vorschau), bestätigt 13.11.2026
 - [x] Bauplan mit Phasen schreiben
 - [ ] Szenen-Bibliothek aus den Testvideos herauslösen (wiederverwendbare Bausteine)
 - [ ] Echte lizenzfreie Musik statt synthetischer Akkorde
