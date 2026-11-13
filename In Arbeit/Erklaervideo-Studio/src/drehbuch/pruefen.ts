@@ -51,6 +51,7 @@ export const pruefeDrehbuch = (d: unknown): string[] => {
     sz.sprecher.forEach((s, j) => {
       if (!s?.satz?.trim()) f.push(`${wo}: Satz ${j + 1} ist leer.`);
       else if (s.satz.split(/\s+/).some((t) => t && !norm(t))) f.push(`${wo}: Satz ${j + 1} enthält ein „Wort“ ohne Buchstaben (z. B. einzelner Gedankenstrich) – bitte entfernen.`);
+      else if (/[²³√=+×÷%<>{}[\]|^~*/\\#]/.test(s.satz)) f.push(`${wo}: Satz ${j + 1} („${s.satz}“) enthält Symbole – im Sprechertext nur Wörter und Ziffern (z. B. „a Quadrat“ statt „a²“).`);
     });
     const need = (ok: unknown, was: string) => { if (!ok) f.push(`${wo} (${sz.typ}): ${was}`); };
     switch (sz.typ) {

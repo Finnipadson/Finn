@@ -119,7 +119,8 @@ async def main() -> None:
         sys.exit("Bitte ein Drehbuch angeben, z. B.: npm run ton -- beispiele/pythagoras.json")
     pfad = Path(sys.argv[1]).resolve()
     db = json.loads(pfad.read_text(encoding="utf-8"))
-    name = pfad.stem
+    # projekte/<name>/drehbuch.json → Name des Ordners; beispiele/<name>.json → Dateiname
+    name = pfad.parent.name if pfad.stem == "drehbuch" else pfad.stem
     stimme = STIMMEN.get(db.get("stimme", "ava"), STIMMEN["ava"])
     grundtempo = float(db.get("tempo", 0))
     arbeit = ROOT / "public" / "ton" / "_work" / name
@@ -247,7 +248,7 @@ async def main() -> None:
     ff(*eingaben, "-filter_complex_script", str(gdatei), "-ar", str(SR), str(ziel))
 
     timing = {"fps": FPS, "dauer": dauer, "woerter": woerter, "szenen": szenen}
-    tpfad = pfad.with_name(f"{name}.timing.json")
+    tpfad = pfad.with_name(f"{pfad.stem}.timing.json")
     tpfad.write_text(json.dumps(timing, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"Fertig: {len(woerter)} Wörter, {dauer:.1f} s → {ziel.relative_to(ROOT)}, {tpfad.name}")
 

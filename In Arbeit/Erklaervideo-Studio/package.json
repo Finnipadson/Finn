@@ -10,6 +10,7 @@
     "web": "vite",
     "typecheck": "tsc --noEmit",
     "pruefen": "tsx tools/pruefen.ts",
+    "drehbuch": "tsx tools/drehbuch.ts",
     "ton": "python tools/ton.py",
     "render": "tsx tools/render.ts",
     "studio": "remotion studio src/video/index.ts"

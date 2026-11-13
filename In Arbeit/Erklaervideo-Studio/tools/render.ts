@@ -14,14 +14,16 @@ if (!datei) {
   console.error("Bitte ein Drehbuch angeben, z. B.: npm run render -- beispiele/pythagoras.json");
   process.exit(2);
 }
-const name = path.basename(datei, ".json");
+// projekte/<name>/drehbuch.json → Name des Ordners; beispiele/<name>.json → Dateiname
+const stamm = path.basename(datei, ".json");
+const name = stamm === "drehbuch" ? path.basename(path.dirname(path.resolve(datei))) : stamm;
 const drehbuch = JSON.parse(fs.readFileSync(datei, "utf8"));
 const fehler = pruefeDrehbuch(drehbuch);
 if (fehler.length) {
   console.error(`✗ Drehbuch fehlerhaft:\n${fehler.map((f) => `   - ${f}`).join("\n")}`);
   process.exit(1);
 }
-const timingDatei = path.join(path.dirname(datei), `${name}.timing.json`);
+const timingDatei = path.join(path.dirname(datei), `${stamm}.timing.json`);
 const tonDatei = path.join("public", "ton", `${name}.wav`);
 let timing = null, audio = null;
 if (!ohneTon) {
