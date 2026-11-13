@@ -6,6 +6,7 @@ import { ThemaAnsicht } from "./ui/ThemaAnsicht";
 import { Editor } from "./ui/Editor";
 import { Einstellungen } from "./ui/Einstellungen";
 import { VorschauPlayer } from "./ui/VorschauPlayer";
+import { Rendern } from "./ui/Rendern";
 
 // Beispiel-Drehbücher + (falls erzeugt) ihre Zeitlisten aus dem Ordner beispiele/
 const dateien = import.meta.glob("../beispiele/*.json", { eager: true, import: "default" }) as Record<string, unknown>;
@@ -13,16 +14,16 @@ const BEISPIELE_ROH: Eintrag[] = Object.entries(dateien)
   .filter(([p]) => !p.endsWith(".timing.json"))
   .map(([p, d]) => {
     const name = p.split("/").pop()!.replace(/\.json$/, "");
-    return { id: `b:${name}`, name, quelle: "beispiel", drehbuch: d as Drehbuch, timing: (dateien[`../beispiele/${name}.timing.json`] as Timing | undefined) ?? null, ton: null };
+    return { id: `b:${name}`, name, quelle: "beispiel", drehbuch: d as Drehbuch, timing: (dateien[`../beispiele/${name}.timing.json`] as Timing | undefined) ?? null, ton: null, video: null };
   });
 
 type Ansicht = "thema" | "drehbuch" | "einstellungen" | "vorschau" | "rendern";
-const SCHRITTE: { id: Ansicht; label: string; brauchtProjekt: boolean; phase?: number }[] = [
+const SCHRITTE: { id: Ansicht; label: string; brauchtProjekt: boolean }[] = [
   { id: "thema", label: "Thema", brauchtProjekt: false },
   { id: "drehbuch", label: "Drehbuch", brauchtProjekt: true },
   { id: "einstellungen", label: "Einstellungen", brauchtProjekt: true },
   { id: "vorschau", label: "Vorschau", brauchtProjekt: true },
-  { id: "rendern", label: "Rendern", brauchtProjekt: true, phase: 4 },
+  { id: "rendern", label: "Rendern", brauchtProjekt: true },
 ];
 
 export const App: React.FC = () => {
@@ -36,6 +37,7 @@ export const App: React.FC = () => {
   const [speichertGerade, setSpeichertGerade] = useState(false);
   const [meldung, setMeldung] = useState("");
   const [tonAuftrag, setTonAuftrag] = useState<Auftrag | null>(null);
+  const [renderAuftrag, setRenderAuftrag] = useState<(Auftrag & { id?: string }) | null>(null);
 
   const pruefeHealth = useCallback(() => {
     setHealth(null);
@@ -76,6 +78,7 @@ export const App: React.FC = () => {
     setEntwurf(klon(e.drehbuch));
     setMeldung("");
     setTonAuftrag(null);
+    setRenderAuftrag((r) => (r && !r.fertig ? r : null)); // ein laufender Render läuft weiter
     setAnsicht(zu);
   };
 
@@ -121,6 +124,22 @@ export const App: React.FC = () => {
   };
 
   const tonLaeuft = !!tonAuftrag && !tonAuftrag.fertig;
+  const renderLaeuft = !!renderAuftrag && !renderAuftrag.fertig;
+
+  const rendern = async (ohneTon: boolean) => {
+    if (fehler.length || renderLaeuft) return;
+    const name = geaendert || eintrag?.quelle === "beispiel" ? await speichern() : eintrag?.name;
+    if (!name) return;
+    setRenderAuftrag({ status: "Startet …", fertig: false, fortschritt: 0, projekt: name });
+    try {
+      const { id } = await api.rendern(name, ohneTon);
+      setRenderAuftrag((a) => ({ ...a!, id }));
+      await warteAuf(id, (a) => setRenderAuftrag({ ...a, id }));
+      await ladeProjekte();
+    } catch (e) {
+      setRenderAuftrag({ status: "Fehler", fertig: true, fehler: [(e as Error).message], projekt: name });
+    }
+  };
 
   return (
     <div className="app">
@@ -147,7 +166,7 @@ export const App: React.FC = () => {
               title={gesperrt ? "Erst ein Drehbuch schreiben oder öffnen" : ""} onClick={() => setAnsicht(s.id)}>
               <span className="num">{i + 1}</span>
               <span>{s.label}</span>
-              {s.phase && <span className="soon">Phase {s.phase}</span>}
+              {s.id === "rendern" && renderLaeuft && <span className="soon">{Math.round((renderAuftrag?.fortschritt ?? 0) * 100)} %</span>}
             </button>
           );
         })}
@@ -201,13 +220,12 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {ansicht === "rendern" && entwurf && (
-          <section className="card rendern">
-            <div className="card-head"><h2>Rendern</h2><span className="badge">kommt in Phase 4</span></div>
-            <p className="muted">Bis dahin im Terminal (im Ordner des Studios):</p>
-            <pre>{`npm run render -- ${eintrag?.quelle === "beispiel" ? `beispiele/${eintrag.name}.json` : `projekte/${eintrag?.name}/drehbuch.json`}`}</pre>
-            <p className="muted">Vorher Stimme erzeugen (Schritt „Vorschau“) und speichern. Das Video landet in <code>out/</code>.</p>
-          </section>
+        {ansicht === "rendern" && entwurf && eintrag && (
+          <Rendern eintrag={eintrag} drehbuch={entwurf} timing={timing} geaendert={geaendert} fehler={fehler.length} tonPasst={tonPasst}
+            auftrag={renderAuftrag && (renderAuftrag.projekt === eintrag.name || !renderAuftrag.projekt) ? renderAuftrag : null}
+            andererLaeuft={renderLaeuft && renderAuftrag?.projekt !== eintrag.name ? renderAuftrag?.projekt ?? "" : null}
+            starte={rendern} abbrechen={() => renderAuftrag?.id && api.abbrechen(renderAuftrag.id).catch(() => {})}
+            zurVorschau={() => setAnsicht("vorschau")} />
         )}
       </main>
     </div>

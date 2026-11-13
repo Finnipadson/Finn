@@ -17,6 +17,7 @@ export type ErklaervideoProps = {
   drehbuch: Drehbuch;
   timing: Timing | null;
   audio: string | null; // Pfad im public-Ordner, z. B. "ton/pythagoras.wav"
+  cover?: boolean;      // Cover-Bild: ohne Untertitel
 };
 
 const Baustein: React.FC<{ sz: Szene }> = ({ sz }) => {
@@ -90,7 +91,7 @@ const Untertitel: React.FC<{ f: number; timing: Timing; hoch: boolean }> = ({ f,
   );
 };
 
-export const Erklaervideo: React.FC<ErklaervideoProps> = ({ drehbuch, timing, audio }) => {
+export const Erklaervideo: React.FC<ErklaervideoProps> = ({ drehbuch, timing, audio, cover }) => {
   const f = useCurrentFrame();
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const tm = timing ?? schaetzeTiming(drehbuch);
@@ -131,10 +132,11 @@ export const Erklaervideo: React.FC<ErklaervideoProps> = ({ drehbuch, timing, au
           );
         })}
         <AbsoluteFill style={{ background: `radial-gradient(${W * 0.75}px ${H * 0.85}px at 50% 45%, transparent 60%, rgba(0,0,0,.55) 100%)` }} />
-        <Untertitel f={f} timing={tm} hoch={hoch} />
+        {!cover && <Untertitel f={f} timing={tm} hoch={hoch} />}
       </AbsoluteFill>
     </AbsoluteFill>
   );
 };
 
 export const dauerInBildern = (d: Drehbuch, t: Timing | null) => Math.ceil((t ?? schaetzeTiming(d)).dauer * 60);
+

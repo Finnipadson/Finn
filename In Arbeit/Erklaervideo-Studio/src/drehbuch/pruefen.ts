@@ -120,3 +120,11 @@ export const schaetzeTiming = (d: Drehbuch, fps = 60): Timing => {
   szenen.forEach((s, k) => { s.ende = k + 1 < szenen.length ? szenen[k + 1].start : t + 1.2; });
   return { fps, dauer: t + 1.2, geschaetzt: true, woerter, szenen };
 };
+
+/** Gutes Bild für das Cover: kurz vor Ende der Titel-Szene (alles eingeblendet, noch kein Übergang). */
+export const coverBild = (d: Drehbuch, t: Timing | null) => {
+  const tm = t ?? schaetzeTiming(d);
+  const s0 = tm.szenen[0];
+  if (!s0) return 0;
+  return Math.max(0, Math.round((s0.ende - 0.35) * tm.fps));
+};

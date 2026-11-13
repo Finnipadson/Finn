@@ -6,6 +6,7 @@ import { ICON_NAMEN } from "../video/kit";
 import { Auswahl, Bei, Feld, Liste, Text, Zahl } from "./Felder";
 import { neueSzene, TYP_NAMEN } from "./szenenVorlagen";
 import { VorschauPlayer } from "./VorschauPlayer";
+import { SzeneNeu } from "./SzeneNeu";
 
 /* Drehbuch-Editor: Szenenliste | Formular der Szene | Live-Vorschau. */
 
@@ -165,6 +166,10 @@ export const Editor: React.FC<{ drehbuch: Drehbuch; setze: (d: Drehbuch) => void
   const [jsonText, setJsonText] = useState("");
   const [jsonFehler, setJsonFehler] = useState("");
   const player = useRef<PlayerRef>(null);
+  // Neuester Stand – „Szene neu machen“ antwortet erst nach einer Weile, Änderungen in der Zwischenzeit sollen bleiben
+  const aktuell = useRef(drehbuch);
+  aktuell.current = drehbuch;
+  const ersetzeSzene = (i: number, s: Szene) => { const d = aktuell.current; setze({ ...d, szenen: d.szenen.map((x, j) => (j === i ? s : x)) }); };
   const k = Math.min(aktiv, drehbuch.szenen.length - 1);
   const fehler = useMemo(() => pruefeDrehbuch(drehbuch), [drehbuch]);
   const fehlerVon = (i: number) => fehler.filter((f) => f.startsWith(`Szene ${i + 1}:`) || f.startsWith(`Szene ${i + 1} (`));
@@ -228,6 +233,7 @@ export const Editor: React.FC<{ drehbuch: Drehbuch; setze: (d: Drehbuch) => void
         ) : drehbuch.szenen[k] && (
           <>
             <div className="card-head"><h2>Szene {k + 1}: {TYP_NAMEN[drehbuch.szenen[k].typ]}</h2></div>
+            <SzeneNeu key={k} drehbuch={drehbuch} index={k} ersetze={ersetzeSzene} />
             {[...allgemein, ...fehlerVon(k)].length > 0 && (
               <div className="err"><ul>{[...allgemein, ...fehlerVon(k)].map((f) => <li key={f}>{f.replace(/^Szene \d+( \([^)]*\))?: /, "")}</li>)}</ul></div>
             )}

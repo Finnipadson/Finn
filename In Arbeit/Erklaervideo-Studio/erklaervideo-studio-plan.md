@@ -1,6 +1,6 @@
 # Erklärvideo-Studio – Bauplan
 
-Stand: 13.11.2026 · Status: **Phase 3 fertig**, als Nächstes Phase 4 · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
+Stand: 13.11.2026 · Status: **Phase 4 fertig**, als Nächstes Phase 5 · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
 
 **Ziel:** Thema eingeben → Drehbuch prüfen → Vorschau → fertiges animiertes Erklärvideo (MP4) mit Stimme, Untertiteln, Geräuschen und Musik. Nur für die eigene Nutzung, KI läuft über Claude Code (Pro-Abo).
 
@@ -97,12 +97,14 @@ Jeder Baustein funktioniert in **Hoch- und Querformat** und in jedem **Design-Th
 - **Getestet (im Browser):** Akku öffnen → Satz ändern → Speichern → „Stimme veraltet“ → Stimme erzeugen → „mit Stimme“; Beispiel bearbeiten → „Als Kopie speichern“; Hörprobe Seraphina (erstes Mal ca. 11 s, danach sofort).
 - **Gelernt:** Python puffert die Ausgabe bei Umleitung → `python -u`, sonst kommt kein Fortschritt an. Geänderte Tondatei braucht Cache-Schutz in der URL (`?v=<Änderungszeit>`); `staticFile()` dafür umgehen.
 
-### Phase 4 – Rendern & Nacharbeiten
+### Phase 4 – Rendern & Nacharbeiten ✅ (13.11.2026)
 - Rendern mit Fortschrittsbalken (`@remotion/renderer`), Abbrechen möglich
 - Export: MP4 + Cover-Bild (Thumbnail aus einer gewählten Szene)
 - „Szene neu machen“: Freitext-Wunsch („Szene 3 langsamer“) → Claude ändert nur diese Szene
 - Projekt speichern/öffnen (Drehbuch + Ton + Einstellungen in einem Ordner)
 - **Fertig, wenn:** ein Video komplett in der App entsteht und gespeichert wird
+- **Ergebnis:** `server/render.ts` rendert direkt im Server (`@remotion/bundler` + `@remotion/renderer`): Fortschritt mit Bildzähler und Restzeit, **Abbrechen** (Temp-Datei, altes Video bleibt), danach **Cover-Bild** (Ende der Titel-Szene, ohne Untertitel). Video + Cover liegen in `projekte/<name>/<name>.mp4` bzw. `<name>-cover.png`. Seite **Rendern**: Infos (Format, Länge, Sprecher), „Video rendern“/„Ohne Stimme rendern“, Video-Player mit Ergebnis, Download MP4/Cover, „Im Ordner zeigen“, Hinweis „Video ist älter als das Drehbuch“; Render läuft beim Wechsel der Schritte weiter (Prozent in der Navigation), immer nur einer gleichzeitig. **„Szene neu machen“** im Editor: Wunsch eintippen (oder Vorschlag-Chip) → Claude überarbeitet nur diese Szene (ganzes Drehbuch als Kontext, Prüfung + bis zu 2 Korrekturrunden) → Szene wird ersetzt, „↶ Rückgängig“. Speichern/Öffnen gab es schon seit Phase 3. **Test:** Akku-Video in der App gerendert (48 s Video in 51 s), Abbrechen geprüft, Szene 2 „kürzer und lockerer“ in 45 s neu gemacht + rückgängig.
+- **Gelernt:** Remotion rendert CSS-/SVG-Weichzeichner ohne Grafikkarte extrem langsam → `chromiumOptions: { gl: "angle" }` (8× schneller: 442 s → 51 s; Rückfall auf normal, falls es scheitert). `renderStill`/`renderMedia` nehmen die Props aus `composition.props`, nicht aus `inputProps` → abweichende Props (Cover) dort setzen. Zwei Renders gleichzeitig → „Page crashed“; ein Fehlversuch beim Status-Abruf darf die Abfrage nicht beenden (PC ist beim Rendern ausgelastet).
 
 ### Phase 5 – Feinschliff
 - 4 Design-Themen ausgearbeitet, weitere Bausteine (`geometrie`, `fenster`, `bilder`, `zeitstrahl`)

@@ -1,8 +1,8 @@
 import { spawn } from "node:child_process";
 import os from "node:os";
-import { baueAnleitung, baueKorrektur } from "../src/drehbuch/anleitung";
+import { baueAnleitung, baueKorrektur, baueSzenenAnleitung, baueSzenenKorrektur } from "../src/drehbuch/anleitung";
 import { pruefeDrehbuch } from "../src/drehbuch/pruefen";
-import { STIMMEN, type Drehbuch, type Format } from "../src/drehbuch/typen";
+import { STIMMEN, type Drehbuch, type Format, type Szene } from "../src/drehbuch/typen";
 
 /* Lässt Claude Code (über das eigene Abo, `claude -p`) ein Drehbuch schreiben,
    prüft es und lässt Fehler automatisch korrigieren (max. 2 Korrektur-Runden). */
@@ -81,5 +81,23 @@ export const schreibeDrehbuch = async (a: DrehbuchAuftrag, status: (s: string) =
     if (versuch > 2) return { drehbuch: null, fehler, versuche: versuch, dauerMs: Date.now() - t0 };
     status(`${fehler.length} Problem(e) gefunden – Claude korrigiert (Runde ${versuch}) …`);
     antwort = await frageClaude(baueKorrektur(json ? JSON.stringify(json, null, 1) : roh, fehler));
+  }
+};
+
+/** „Szene neu machen“: Claude überarbeitet nur eine Szene nach einem Freitext-Wunsch. */
+export const ueberarbeiteSzene = async (d: Drehbuch, index: number, wunsch: string, status: (s: string) => void = () => {}) => {
+  const t0 = Date.now();
+  status(`Claude überarbeitet Szene ${index + 1} …`);
+  let antwort = await frageClaude(baueSzenenAnleitung(d, index, wunsch));
+  for (let versuch = 1; ; versuch++) {
+    const { json, roh } = holeJson(antwort);
+    // Nur diese eine Szene prüfen (Meldungen sollen „Szene 1“ heißen → umbenennen auf die echte Nummer)
+    const fehler = json && typeof json === "object"
+      ? pruefeDrehbuch({ ...d, szenen: [json] }).map((f) => f.replace(/^Szene 1\b/, `Szene ${index + 1}`))
+      : ["Das JSON ist nicht gültig (Syntaxfehler)."];
+    if (fehler.length === 0) return { szene: json as Szene, fehler: [], versuche: versuch, dauerMs: Date.now() - t0 };
+    if (versuch > 2) return { szene: null, fehler, versuche: versuch, dauerMs: Date.now() - t0 };
+    status(`${fehler.length} Problem(e) – Claude korrigiert (Runde ${versuch}) …`);
+    antwort = await frageClaude(baueSzenenKorrektur(json ? JSON.stringify(json, null, 1) : roh, fehler));
   }
 };

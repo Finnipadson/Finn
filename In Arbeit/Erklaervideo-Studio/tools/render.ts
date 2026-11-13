@@ -41,7 +41,7 @@ const ziel = path.join("out", `${name}.mp4`);
 console.log(`Rendere ${datei} → ${ziel} …`);
 const p = spawn(
   "npx",
-  ["remotion", "render", "src/video/index.ts", "Erklaervideo", ziel, `--props=${propsDatei}`, "--crf=16", "--audio-bitrate=256k"],
+  ["remotion", "render", "src/video/index.ts", "Erklaervideo", ziel, `--props=${propsDatei}`, "--crf=16", "--audio-bitrate=256k", "--gl=angle"],
   { stdio: "inherit", shell: process.platform === "win32" },
 );
 p.on("exit", (code) => {

@@ -3,14 +3,15 @@ import fs from "node:fs";
 import path from "node:path";
 import { exec, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { ClaudeFehler, schreibeDrehbuch } from "./claude";
-import { aktualisiere, freierName, lade, liste, PROJEKTE, ROOT, speichere } from "./projekte";
+import { ClaudeFehler, schreibeDrehbuch, ueberarbeiteSzene } from "./claude";
+import { aktualisiere, coverDatei, freierName, lade, liste, PROJEKTE, ROOT, speichere, videoDatei } from "./projekte";
+import { Abgebrochen, starteRender } from "./render";
 import { VORLAGEN } from "../src/drehbuch/anleitung";
 import { pruefeDrehbuch } from "../src/drehbuch/pruefen";
 import { STIMMEN, type Drehbuch } from "../src/drehbuch/typen";
 
-// Lokaler Server für das Erklärvideo-Studio: System-Check, Drehbuch von Claude, Projekte, Stimme.
-// Später: Rendern aus der App (Phase 4).
+// Lokaler Server für das Erklärvideo-Studio: System-Check, Drehbuch von Claude, Projekte, Stimme,
+// „Szene neu machen“, Rendern (MP4 + Cover).
 
 const PORT = 4710;
 const app = express();
@@ -52,7 +53,13 @@ app.get("/api/vorlagen", (_req, res) => {
 });
 
 /* ── Aufträge (dauern länger) → Status-Abfrage über /api/auftrag/:id ── */
-type Auftrag = { status: string; fertig: boolean; fehler?: string[]; fehlerArt?: string; projekt?: string; fortschritt?: number };
+type Auftrag = {
+  status: string; fertig: boolean; fehler?: string[]; fehlerArt?: string; projekt?: string; fortschritt?: number;
+  szene?: unknown;                 // „Szene neu machen“: die neue Szene
+  abbrechbar?: boolean; abgebrochen?: boolean;
+  ergebnis?: { dauerMs: number; bytes: number; sekunden: number };
+};
+const abbrecher = new Map<string, () => void>();
 const auftraege = new Map<string, Auftrag>();
 const neuerAuftrag = () => {
   const id = randomUUID();
@@ -64,6 +71,12 @@ app.get("/api/auftrag/:id", (req, res) => {
   const a = auftraege.get(req.params.id);
   if (!a) return res.status(404).json({ fehler: "Auftrag unbekannt" });
   res.json(a);
+});
+app.post("/api/auftrag/:id/abbrechen", (req, res) => {
+  const stop = abbrecher.get(req.params.id);
+  if (!stop) return res.status(404).json({ fehler: "Dieser Auftrag kann nicht (mehr) abgebrochen werden." });
+  stop();
+  res.json({ ok: true });
 });
 
 /* Drehbuch von Claude schreiben lassen (30–180 s) */
@@ -143,6 +156,69 @@ app.post("/api/projekte/:name/ton", (req, res) => {
     else Object.assign(a, { fertig: true, status: "Fehler", fehler: [fehlerText.trim().split(/\r?\n/).slice(-3).join(" ") || `ton.py endete mit Code ${code}`] });
   });
   res.json({ id });
+});
+
+/* ── „Szene neu machen“: Claude überarbeitet eine Szene nach Wunsch (Ergebnis ersetzt sie erst in der App) ── */
+app.post("/api/szene", (req, res) => {
+  const { drehbuch, index, wunsch } = req.body ?? {};
+  const d = drehbuch as Drehbuch | undefined;
+  if (!d || !Array.isArray(d.szenen)) return res.status(400).json({ fehler: "Kein Drehbuch übergeben." });
+  if (!Number.isInteger(index) || index < 0 || index >= d.szenen.length) return res.status(400).json({ fehler: "Ungültige Szene." });
+  if (typeof wunsch !== "string" || wunsch.trim().length < 3) return res.status(400).json({ fehler: "Bitte beschreiben, was anders werden soll." });
+  const { id, a } = neuerAuftrag();
+  ueberarbeiteSzene(d, index, wunsch.trim().slice(0, 600), (s) => (a.status = s))
+    .then((r) => {
+      if (!r.szene) Object.assign(a, { fertig: true, status: `Keine gültige Szene nach ${r.versuche} Versuchen.`, fehler: r.fehler });
+      else Object.assign(a, { fertig: true, status: `Fertig in ${(r.dauerMs / 1000).toFixed(0)} s.`, szene: r.szene });
+    })
+    .catch((e) => Object.assign(a, { fertig: true, status: "Fehler", fehler: [e instanceof Error ? e.message : String(e)], fehlerArt: e instanceof ClaudeFehler ? e.art : "unbekannt" }));
+  res.json({ id });
+});
+
+/* ── Rendern: MP4 + Cover in projekte/<name>/ (immer nur ein Render gleichzeitig) ── */
+let renderLaeuft: string | null = null;
+app.post("/api/projekte/:name/rendern", (req, res) => {
+  const p = lade(req.params.name);
+  if (!p) return res.status(404).json({ fehler: "Projekt nicht gefunden" });
+  if (renderLaeuft) return res.status(409).json({ fehler: "Es wird gerade schon ein Video gerendert." });
+  const fehler = pruefeDrehbuch(p.drehbuch);
+  if (fehler.length) return res.status(400).json({ fehler: `Das Drehbuch hat noch ${fehler.length} Fehler – bitte erst beheben.` });
+  const ohneTon = req.body?.ohneTon === true;
+  if (!ohneTon && (!p.ton || !p.timing)) return res.status(400).json({ fehler: "Es gibt noch keine Stimme – bitte erst „Stimme erzeugen“ (Schritt Vorschau)." });
+  const { id, a } = neuerAuftrag();
+  renderLaeuft = p.name;
+  Object.assign(a, { abbrechbar: true, fortschritt: 0, projekt: p.name });
+  const r = starteRender(
+    { drehbuch: p.drehbuch, timing: ohneTon ? null : p.timing, audio: ohneTon ? null : `ton/${p.name}.wav`, video: videoDatei(p.name), cover: coverDatei(p.name) },
+    (status, fortschritt) => { a.status = status; a.fortschritt = fortschritt; },
+  );
+  abbrecher.set(id, r.abbrechen);
+  r.fertig
+    .then((e) => Object.assign(a, { fertig: true, fortschritt: 1, status: `Fertig in ${Math.round(e.dauerMs / 1000)} s.`, ergebnis: e }))
+    .catch((e) => e instanceof Abgebrochen
+      ? Object.assign(a, { fertig: true, abgebrochen: true, status: "Abgebrochen – das vorherige Video (falls vorhanden) ist unverändert." })
+      : Object.assign(a, { fertig: true, status: "Fehler beim Rendern", fehler: [e instanceof Error ? e.message.split(/\r?\n/).slice(0, 3).join(" ") : String(e)] }))
+    .finally(() => { renderLaeuft = null; abbrecher.delete(id); a.abbrechbar = false; });
+  res.json({ id });
+});
+
+/* Fertiges Video / Cover ausliefern (für Vorschau und Download) */
+app.get("/api/projekte/:name/datei/:art", (req, res) => {
+  const p = lade(req.params.name);
+  const datei = !p ? null : req.params.art === "video" ? videoDatei(p.name) : req.params.art === "cover" ? coverDatei(p.name) : null;
+  if (!datei || !fs.existsSync(datei)) return res.status(404).json({ fehler: "Datei nicht gefunden" });
+  if (req.query.download !== undefined) return res.download(datei);
+  res.sendFile(datei);
+});
+
+/* Projektordner im Explorer zeigen (Video markiert) */
+app.post("/api/projekte/:name/zeigen", (req, res) => {
+  const p = lade(req.params.name);
+  if (!p) return res.status(404).json({ fehler: "Projekt nicht gefunden" });
+  const v = videoDatei(p.name);
+  const args = fs.existsSync(v) ? `/select,"${v}"` : `"${path.dirname(v)}"`;
+  spawn("explorer.exe", [args], { windowsVerbatimArguments: true, detached: true, stdio: "ignore" }).unref();
+  res.json({ ok: true });
 });
 
 /* ── Hörprobe einer Stimme (wird zwischengespeichert) ── */

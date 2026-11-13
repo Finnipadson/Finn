@@ -204,3 +204,29 @@ textarea.json { width: 100%; min-height: 60vh; font-family: "Cascadia Code", Con
   .szenen-liste, .editor-vorschau { position: static; }
   .meldung { display: none; }
 }
+
+/* Szene neu machen */
+.szene-neu { border: 1px dashed var(--line); border-radius: 12px; padding: 8px 10px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; }
+.szene-neu.offen { border-style: solid; background: rgba(255, 255, 255, 0.025); }
+.szene-neu-kopf { display: flex; gap: 8px; align-items: center; }
+.ghost.klein { padding: 5px 10px; }
+.szene-neu textarea { width: 100%; resize: vertical; }
+.szene-neu .status { margin: 0; }
+.wrap-chips { flex-wrap: wrap; gap: 8px; }
+.wrap-chips .primary { margin-left: auto; }
+.chip { border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); color: var(--dim); border-radius: 20px; padding: 4px 10px; font-size: 12px; }
+.chip:hover:not(:disabled) { color: var(--text); border-color: var(--dim); }
+
+/* Rendern */
+.rendern { max-width: 1100px; }
+.render-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.render-info > div { background: rgba(255, 255, 255, 0.04); border-radius: 10px; padding: 10px 12px; }
+.render-info b { display: block; font-size: 16px; margin-top: 2px; }
+.render-info span { font-size: 12px; color: var(--dim); }
+.hinweis { background: rgba(255, 196, 61, 0.1); color: #ffd98a; padding: 10px 12px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.render-knoepfe { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.ergebnis { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 16px; align-items: start; margin-top: 6px; }
+.ergebnis video { width: 100%; max-height: 62vh; background: #000; border-radius: 12px; }
+.ergebnis .cover img { width: 100%; border-radius: 10px; border: 1px solid var(--line); display: block; margin-bottom: 8px; }
+.ergebnis .cover a, .ergebnis .cover button { display: block; width: 100%; text-align: center; margin-bottom: 8px; text-decoration: none; }
+@media (max-width: 900px) { .ergebnis { grid-template-columns: 1fr; } }

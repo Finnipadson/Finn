@@ -2,15 +2,16 @@
 
 Lokale Web-App: Thema eingeben → Drehbuch prüfen → Vorschau → animiertes Erklärvideo (MP4) mit Stimme, Untertiteln, Geräuschen und Musik.
 
-**Stand:** Phase 3 – komplette Oberfläche: Thema → Drehbuch bearbeiten → Einstellungen → Vorschau mit Stimme. Nur das Rendern läuft noch über das Terminal (Phase 4). Bauplan: [`erklaervideo-studio-plan.md`](erklaervideo-studio-plan.md)
+**Stand:** Phase 4 – alles in der App: Thema → Drehbuch bearbeiten (auch „Szene neu machen“ mit Claude) → Einstellungen → Vorschau mit Stimme → Rendern (MP4 + Cover). Bauplan: [`erklaervideo-studio-plan.md`](erklaervideo-studio-plan.md)
 
 ## So benutzt du die App
 
 1. **Thema** – Thema eingeben, Vorlage/Format/Länge wählen, „Drehbuch schreiben“. Oder ein vorhandenes Drehbuch bzw. Beispiel öffnen.
 2. **Drehbuch** – links die Szenen (umsortieren ↑↓, löschen ✕, neue Szene einfügen), in der Mitte das Formular der Szene (Texte, Icons, Farben, Sprechertext mit Pause/Tempo, „bei“ als Auswahl aus den gesprochenen Wörtern), rechts die Live-Vorschau (Klick auf eine Szene springt dorthin). Fehler werden sofort angezeigt. Für Profis: „JSON bearbeiten“.
+   **✨ Szene neu machen:** Wunsch eintippen („kürzer und lockerer“, „als Vergleich“) → Claude überarbeitet nur diese Szene (30–60 s). Mit „↶ Rückgängig“ zurück.
 3. **Einstellungen** – Titel, Format, Sprecher mit **▶ Probe**, Grundtempo, Musik an/aus.
 4. **Vorschau** – „Stimme erzeugen“ (speichert vorher automatisch, zeigt Fortschritt), danach Vorschau mit echter Stimme, Geräuschen und Musik.
-5. **Rendern** – kommt in Phase 4; bis dahin zeigt die Seite den passenden Terminal-Befehl.
+5. **Rendern** – „Video rendern“ (speichert vorher automatisch) mit Fortschritt, Restzeit und **Abbrechen**. Danach: Video ansehen, **MP4** und **Cover-Bild** herunterladen, „Im Ordner zeigen“. Dateien: `projekte/<name>/<name>.mp4` und `<name>-cover.png`. Rendern nutzt die Grafikkarte (ca. 1 Minute für 50 s Video) und läuft weiter, wenn du andere Schritte öffnest.
 
 Oben rechts: **Speichern** (gelber Punkt = ungespeicherte Änderungen). Ein bearbeitetes **Beispiel** wird beim Speichern automatisch als eigenes Projekt kopiert. Ändert sich Sprechertext, „bei“, Stimme, Tempo oder Musik, verwirft der Server die alte Stimme – die Vorschau zeigt dann „Stimme veraltet“.
 
@@ -37,7 +38,7 @@ Claude Code läuft dabei im Hintergrund (`claude -p`, ohne Werkzeuge, über das 
 
 **Fehler „nicht angemeldet / Token abgelaufen“:** im Terminal `claude auth login` ausführen. (Achtung: `claude auth status` kann „angemeldet“ melden, obwohl der Token abgelaufen ist.)
 
-## Vom Drehbuch zum Video (Kommandozeile, bis Phase 4 in der App)
+## Vom Drehbuch zum Video (Kommandozeile, Alternative zur App)
 
 ```bash
 npm run pruefen -- beispiele/pythagoras.json   # Drehbuch prüfen (verständliche Fehlermeldungen)
@@ -102,17 +103,18 @@ Die App zeigt das alles im **System-Check** an.
 src/drehbuch/          Typen, Prüfung, geschätztes Timing, Anleitung + Vorlagen für Claude
 server/claude.ts       Claude-Aufruf (claude -p), JSON herauslösen, prüfen, Korrektur-Runden
 server/projekte.ts     Projekte speichern/laden (projekte/<name>/), alte Stimme bei Text-Änderung verwerfen
-src/ui/                Oberfläche: ThemaAnsicht, Editor (+ Felder), Einstellungen, VorschauPlayer, api.ts
+server/render.ts       Rendern im Server (@remotion/renderer, Grafikkarte), Abbrechen, Cover-Bild
+src/ui/                Oberfläche: ThemaAnsicht, Editor (+ Felder, SzeneNeu), Einstellungen, VorschauPlayer, Rendern, api.ts
 src/video/             Remotion: Erklaervideo.tsx (spielt jedes Drehbuch), kit.tsx (Farben, Icons, Helfer)
 src/video/bausteine/   die 7 Szenen-Bausteine
 tools/                 drehbuch.ts, pruefen.ts, ton.py (Ton-Pipeline), probe.py (Hörprobe), render.ts
 beispiele/             Beispiel-Drehbücher (+ erzeugte .timing.json)
-server/index.ts        Lokaler Server (Express): System-Check; später Claude, Stimme, Rendern
+server/index.ts        Lokaler Server (Express): System-Check, Claude, Projekte, Stimme, Szene neu machen, Rendern
 referenz/              Die 4 Testvideos (Code + Ton-Skripte) als Vorlage
 ```
 
 ## Hinweise
 
 - Nur für die eigene Nutzung: Die KI läuft über das eigene Claude-Code-Abo (`claude -p`), nicht über einen API-Schlüssel.
-- `projekte/`, `public/ton/` (Ton-Dateien) und `out/` (Videos) sind per `.gitignore` vom Repo ausgeschlossen – alles neu erzeugbar.
+- `projekte/` (inkl. fertiger Videos), `public/ton/` (Ton-Dateien) und `out/` (Videos aus der Kommandozeile) sind per `.gitignore` vom Repo ausgeschlossen – alles neu erzeugbar.
 - edge-tts braucht Internet; bei Aussetzern wird automatisch bis zu 4× wiederholt.

@@ -71,3 +71,37 @@ Tipp: Jedes „bei“ muss exakt ein Wort aus dem Sprechertext derselben Szene s
 
 Drehbuch:
 ${vorher}`;
+
+/** Nur EINE Szene überarbeiten („Szene neu machen“): Claude bekommt das ganze Drehbuch als Kontext. */
+export const baueSzenenAnleitung = (d: { titel: string; format: Format; szenen: unknown[] }, index: number, wunsch: string) =>
+  `Du überarbeitest EINE Szene in einem Drehbuch für ein kurzes animiertes Erklärvideo (Motion Graphics, deutsche Sprecherstimme).
+Ein Programm macht aus dem Drehbuch automatisch das Video. Deshalb muss das JSON exakt dem Format entsprechen.
+${BAUSTEINE}
+
+Regeln:
+1. Antworte NUR mit dem JSON-Objekt der EINEN neuen Szene (mit "typ", "sprecher" usw.). Kein Markdown, keine Erklärung, nicht das ganze Drehbuch.
+2. Setze den Wunsch um. Alles, was der Wunsch nicht betrifft, bleibt möglichst wie bisher. Den Baustein-Typ nur wechseln, wenn der Wunsch es verlangt.
+3. Die Szene muss zu den Szenen davor und danach passen (Übergänge, keine Wiederholungen).
+4. Sprechertext: kurze Sätze (höchstens 12 Wörter), Ansprache mit „du“, NUR Wörter und normale Ziffern, keine Symbole („a Quadrat“ statt „a²“, „Prozent“ statt „%“), keine Abkürzungen mit Punkt, keine einzelnen Gedankenstriche, keine Emojis. Jeder Satz: {"satz", "pause" (0.2–0.7), optional "tempo"}.
+5. „bei“ = genau EIN Wort aus dem Sprechertext DIESER Szene, ohne Satzzeichen; bei Wiederholung "Wort#2". Jedes Element sollte ein „bei“ haben.
+6. Fachlich korrekt, nichts erfinden (keine Preise, Plattformen, Zahlen, die nicht im Drehbuch stehen).
+
+Ganzes Drehbuch (Format: ${d.format === "hoch" ? "Hochformat" : "Querformat"}):
+${JSON.stringify(d)}
+
+Zu überarbeiten: Szene ${index + 1} von ${d.szenen.length}:
+${JSON.stringify(d.szenen[index], null, 1)}
+
+Wunsch: ${wunsch}
+
+Gib jetzt nur das JSON-Objekt der neuen Szene ${index + 1} zurück.`;
+
+export const baueSzenenKorrektur = (vorher: string, fehler: string[]) =>
+  `Diese Szene hat Fehler, die das Programm nicht verarbeiten kann:
+${fehler.map((f) => `- ${f}`).join("\n")}
+
+Korrigiere genau diese Fehler und gib die vollständige, korrigierte Szene zurück. Nur das JSON-Objekt der Szene, nichts sonst.
+Tipp: Jedes „bei“ muss exakt ein Wort aus dem Sprechertext dieser Szene sein; im Sprechertext keine Symbole.
+
+Szene:
+${vorher}`;

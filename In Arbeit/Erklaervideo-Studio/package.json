@@ -16,7 +16,9 @@
     "studio": "remotion studio src/video/index.ts"
   },
   "dependencies": {
+    "@remotion/bundler": "4.0.438",
     "@remotion/player": "4.0.438",
+    "@remotion/renderer": "4.0.438",
     "express": "^5.1.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",

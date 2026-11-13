@@ -24,8 +24,11 @@ export const freierName = (basis: string) => {
 
 export type Meta = { name: string; thema: string; vorlage: string; erstellt: string; versuche: number; dauerMs: number; geaendert?: string };
 
-const sicher = (name: string) => path.basename(name).replace(/[^a-z0-9-]/gi, "");
-const dir = (name: string) => path.join(PROJEKTE, sicher(name));
+export const sicher = (name: string) => path.basename(name).replace(/[^a-z0-9-]/gi, "");
+export const dir = (name: string) => path.join(PROJEKTE, sicher(name));
+/** Fertiges Video + Cover liegen im Projektordner und heißen wie das Projekt. */
+export const videoDatei = (name: string) => path.join(dir(name), `${sicher(name)}.mp4`);
+export const coverDatei = (name: string) => path.join(dir(name), `${sicher(name)}-cover.png`);
 
 export const speichere = (name: string, drehbuch: Drehbuch, meta: Meta) => {
   const d = dir(name);
@@ -63,6 +66,15 @@ export const lade = (name: string) => {
   const drehbuch = lies("drehbuch.json") as Drehbuch | null;
   if (!drehbuch) return null;
   const ton = tonDatei(sicher(name));
+  const v = videoDatei(name);
+  const video = fs.existsSync(v)
+    ? (() => {
+        const st = fs.statSync(v);
+        // Video ist veraltet, wenn das Drehbuch danach noch geändert wurde
+        const geaendert = fs.statSync(path.join(d, "drehbuch.json")).mtimeMs;
+        return { bytes: st.size, zeit: Math.round(st.mtimeMs), veraltet: geaendert > st.mtimeMs, cover: fs.existsSync(coverDatei(name)) };
+      })()
+    : null;
   return {
     name: sicher(name),
     drehbuch,
@@ -70,5 +82,6 @@ export const lade = (name: string) => {
     timing: lies("drehbuch.timing.json"),
     ton: fs.existsSync(ton),
     tonVersion: fs.existsSync(ton) ? Math.round(fs.statSync(ton).mtimeMs) : 0,
+    video,
   };
 };
