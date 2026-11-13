@@ -9,7 +9,7 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 
 ## Tools & Apps
 
-- [ ] **Text → animiertes Video** (12.11.2026) ✅ Ansatz getestet, Qualität passt
+- [x] **Text → animiertes Video** (12.11.2026) ✅ Ansatz getestet, Qualität passt → jetzt eigenes Projekt: [[Erklärvideo-Studio]]
 	- Idee: Thema/Beschreibung eingeben → fertiges animiertes Erklärvideo (MP4)
 	- **So funktioniert's**
 		- Claude schreibt Sprechertext + Remotion-Code (React), Remotion rendert das MP4 (`Desktop\Claude\remotion`)
