@@ -115,6 +115,9 @@ def finde(woerter: list[dict], bei: str):
 
 
 async def main() -> None:
+    # Windows-Konsolen sind oft nicht UTF-8 → Umlaute/Pfeile in Meldungen nicht abstürzen lassen
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     if len(sys.argv) < 2:
         sys.exit("Bitte ein Drehbuch angeben, z. B.: npm run ton -- beispiele/pythagoras.json")
     pfad = Path(sys.argv[1]).resolve()

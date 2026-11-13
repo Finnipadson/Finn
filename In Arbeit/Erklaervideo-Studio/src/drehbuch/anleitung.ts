@@ -14,7 +14,7 @@ export const VORLAGEN: Record<string, { name: string; hinweis: string }> = {
   },
   produkt: {
     name: "Produkt-Intro",
-    hinweis: "Stelle ein Produkt, eine App oder ein Projekt vor: Problem → Lösung → drei Vorteile (Baustein „stichpunkte“) → wie es funktioniert (Baustein „ablauf“, Form „kette“) → Abschluss mit Aufforderung. Begeisternd, aber ehrlich, keine Superlative ohne Grund.",
+    hinweis: "Stelle ein Produkt, eine App oder ein Projekt vor: Problem → Lösung → drei Vorteile (Baustein „stichpunkte“) → wie es funktioniert (Baustein „ablauf“, Form „kette“) → Abschluss mit Aufforderung. Begeisternd, aber ehrlich, keine Superlative ohne Grund. Nur Eigenschaften nennen, die im Thema stehen.",
   },
 };
 
@@ -42,7 +42,8 @@ Regeln:
    - Kommazahlen als Wort („zwei Komma fünf“) oder vermeiden.
 5. „bei“ koppelt ein Bild-Element an ein gesprochenes Wort DERSELBEN Szene: genau EIN Wort, so geschrieben wie im Satz, ohne Satzzeichen. Kommt das Wort mehrmals vor: "Wort#2" für das zweite Vorkommen. Wähle das Wort, bei dem das Element inhaltlich drankommt. Jedes Element einer Szene sollte ein „bei“ haben.
 6. Bildschirmtexte sind kurz und knackig (siehe Bausteine), der Sprechertext erklärt die Details.
-7. Fachlich korrekt. Keine erfundenen Zahlen oder Fakten.`;
+7. Fachlich korrekt. Keine erfundenen Zahlen oder Fakten.
+8. Bei Produkten, Apps, Spielen oder Projekten: Behaupte NUR, was im Thema steht. Erfinde keine Plattform („App“, „im Store“), keinen Preis („kostenlos“), keine Verfügbarkeit, Nutzerzahlen oder Bewertungen. Fehlt etwas, lass es weg oder formuliere neutral („Probier es aus“).`;
 
 export const baueAnleitung = (opts: { thema: string; vorlage: string; format: Format; stimme: string; sekunden: number }) => {
   const v = VORLAGEN[opts.vorlage] ?? VORLAGEN.tech;

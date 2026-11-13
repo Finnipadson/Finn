@@ -2,7 +2,7 @@
 
 Lokale Web-App: Thema eingeben → Drehbuch prüfen → Vorschau → animiertes Erklärvideo (MP4) mit Stimme, Untertiteln, Geräuschen und Musik.
 
-**Stand:** Phase 1 (Drehbuch → Video) – ein Drehbuch (JSON) wird ohne KI zu einem fertigen Video. Bauplan: [`erklaervideo-studio-plan.md`](erklaervideo-studio-plan.md)
+**Stand:** Phase 2 – Claude schreibt aus einem Thema das Drehbuch, daraus wird das fertige Video. Bauplan: [`erklaervideo-studio-plan.md`](erklaervideo-studio-plan.md)
 
 ## Starten
 
@@ -13,13 +13,28 @@ Doppelklick auf **`start.bat`**
 
 Beenden: das Fenster „Erklaervideo-Studio (Server)“ schließen.
 
-## Vom Drehbuch zum Video (Phase 1, Kommandozeile)
+## Vom Thema zum Drehbuch (Phase 2)
+
+In der App: **Thema** eingeben, Vorlage (Mathe/Schule, Tech-Erklärung, Produkt-Intro), Format und Länge wählen → „Drehbuch schreiben“ (dauert 1–3 Minuten). Das Ergebnis landet in `projekte/<name>/drehbuch.json` und erscheint in der Vorschau unter „Meine Drehbücher“.
+
+Oder im Terminal:
+
+```bash
+npm run drehbuch -- "Wie funktioniert ein Akku?" --vorlage tech --format quer --sekunden 45 --name akku
+```
+
+Claude Code läuft dabei im Hintergrund (`claude -p`, ohne Werkzeuge, über das eigene Abo). Jedes Drehbuch wird geprüft; bei Fehlern korrigiert Claude automatisch (max. 2 Runden). Die Anleitung für Claude steht in `src/drehbuch/anleitung.ts`.
+
+**Fehler „nicht angemeldet / Token abgelaufen“:** im Terminal `claude auth login` ausführen. (Achtung: `claude auth status` kann „angemeldet“ melden, obwohl der Token abgelaufen ist.)
+
+## Vom Drehbuch zum Video (Kommandozeile, bis Phase 4 in der App)
 
 ```bash
 npm run pruefen -- beispiele/pythagoras.json   # Drehbuch prüfen (verständliche Fehlermeldungen)
 npm run ton -- beispiele/pythagoras.json       # Stimme + Geräusche + Musik + Zeitliste erzeugen
 npm run render -- beispiele/pythagoras.json    # MP4 nach out/pythagoras.mp4 (60 fps)
 npm run render -- beispiele/x.json --ohne-ton  # ohne Stimme, Zeiten geschätzt
+npm run ton -- projekte/akku/drehbuch.json     # funktioniert genauso für eigene Projekte
 ```
 
 In der App zeigt **Vorschau** jedes Beispiel aus `beispiele/` sofort – mit echter Stimme, sobald `npm run ton` gelaufen ist, sonst mit geschätzten Zeiten.
@@ -74,10 +89,12 @@ Die App zeigt das alles im **System-Check** an.
 ## Aufbau
 
 ```
-src/drehbuch/          Typen, Prüfung, geschätztes Timing
+src/drehbuch/          Typen, Prüfung, geschätztes Timing, Anleitung + Vorlagen für Claude
+server/claude.ts       Claude-Aufruf (claude -p), JSON herauslösen, prüfen, Korrektur-Runden
+server/projekte.ts     Projekte speichern/laden (projekte/<name>/)
 src/video/             Remotion: Erklaervideo.tsx (spielt jedes Drehbuch), kit.tsx (Farben, Icons, Helfer)
 src/video/bausteine/   die 7 Szenen-Bausteine
-tools/                 pruefen.ts, ton.py (Ton-Pipeline), render.ts
+tools/                 drehbuch.ts, pruefen.ts, ton.py (Ton-Pipeline), render.ts
 beispiele/             Beispiel-Drehbücher (+ erzeugte .timing.json)
 server/index.ts        Lokaler Server (Express): System-Check; später Claude, Stimme, Rendern
 referenz/              Die 4 Testvideos (Code + Ton-Skripte) als Vorlage

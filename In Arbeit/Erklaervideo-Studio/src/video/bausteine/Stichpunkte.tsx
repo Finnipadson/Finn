@@ -12,8 +12,8 @@ export const Stichpunkte: React.FC<{ sz: SzStichpunkte }> = ({ sz }) => {
     <AbsoluteFill style={{ paddingTop: hoch ? 170 : 70, alignItems: "center" }}>
       <Kopf kicker={sz.kicker} titel={sz.ueberschrift} />
       <div style={{
-        marginTop: hoch ? 80 : 70, display: "flex", flexDirection: hoch ? "column" : "row",
-        gap: hoch ? 34 : 40, padding: "0 60px", width: "100%", justifyContent: "center",
+        flex: 1, display: "flex", flexDirection: hoch ? "column" : "row", alignItems: hoch ? "stretch" : "center",
+        gap: hoch ? 34 : 40, padding: hoch ? "0 60px 330px" : "0 60px 150px", width: "100%", justifyContent: "center",
       }}>
         {sz.punkte.map((p, i) => {
           const col = FARBEN[i % FARBEN.length];

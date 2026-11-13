@@ -37,13 +37,15 @@ export const Vergleich: React.FC<{ sz: SzVergleich }> = ({ sz }) => {
   return (
     <AbsoluteFill style={{ paddingTop: hoch ? 170 : 70, alignItems: "center" }}>
       <Kopf kicker={sz.kicker} titel={sz.ueberschrift} />
+      <div style={{ flex: 1, display: "flex", alignItems: "center", paddingBottom: hoch ? 300 : 140 }}>
       <div style={{
-        marginTop: hoch ? 70 : 60, display: "flex", flexDirection: hoch ? "column" : "row", gap: hoch ? 40 : 50,
+        display: "flex", flexDirection: hoch ? "column" : "row", gap: hoch ? 40 : 50,
         width: hoch ? 940 : 1640, height: hoch ? 1150 : 500,
       }}>
         <Spalte s={sz.links} gut={false} start={20} />
         <div style={{ alignSelf: "center", fontFamily: T.mono, fontSize: 34, color: T.dim, flexShrink: 0 }}>vs.</div>
         <Spalte s={sz.rechts} gut start={60} />
+      </div>
       </div>
     </AbsoluteFill>
   );

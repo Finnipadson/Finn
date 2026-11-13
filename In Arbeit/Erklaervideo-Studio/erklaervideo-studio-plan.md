@@ -1,6 +1,6 @@
 # Erklärvideo-Studio – Bauplan
 
-Stand: 13.11.2026 · Status: **Phase 1 fertig**, als Nächstes Phase 2 · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
+Stand: 13.11.2026 · Status: **Phase 2 fertig**, als Nächstes Phase 3 · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
 
 **Ziel:** Thema eingeben → Drehbuch prüfen → Vorschau → fertiges animiertes Erklärvideo (MP4) mit Stimme, Untertiteln, Geräuschen und Musik. Nur für die eigene Nutzung, KI läuft über Claude Code (Pro-Abo).
 
@@ -79,11 +79,13 @@ Jeder Baustein funktioniert in **Hoch- und Querformat** und in jedem **Design-Th
 - **Ergebnis:** Typen + Prüfung (`src/drehbuch/`, `npm run pruefen`), **7 Bausteine** (zusätzlich `geometrie` – für Pythagoras nötig, aus Phase 5 vorgezogen), Ton-Pipeline `tools/ton.py` (Stimme satzweise, Geräusche je `bei`, Musik mit Ducking, `<name>.timing.json`), generische Komposition `Erklaervideo` (Hoch/Quer per `calculateMetadata`, Szenenwechsel mit Blur, Wort-Untertitel), `npm run render`. Statt „Marken“ gibt es **`bei`**: ein Element erscheint beim gesprochenen Wort. Ohne Ton: geschätzte Zeiten für die Sofort-Vorschau. Zwei Beispiele: `beispiele/pythagoras.json` (hoch, 51 s) und `beispiele/claude-code-kurz.json` (quer, 41 s). App-Vorschau zeigt beide.
 - **Gelernt:** optionale Zeitpunkte sind „Infinity“ → Animations-Helfer (`lerp`, `sp`) müssen das abfangen; `interpolate` braucht streng steigende Zeiten.
 
-### Phase 2 – Claude schreibt das Drehbuch
+### Phase 2 – Claude schreibt das Drehbuch ✅ (13.11.2026)
 - Server ruft `claude -p` mit Anleitung + Schema + Beispiel-Drehbüchern auf, Ergebnis wird geprüft, bei Fehlern automatisch nachgebessert (max. 2 Versuche)
 - Vorlagen als Anleitungs-Bausteine: Mathe/Schule, Tech-Erklärung, Produkt-Intro
 - Sprechertext im „menschlichen“ Stil (kurze Sätze, direkte Ansprache, Pausen)
 - **Fertig, wenn:** 3 verschiedene Themen ohne Handarbeit ein gültiges Drehbuch ergeben
+- **Ergebnis:** `server/claude.ts` (`claude -p --output-format json --tools "" --no-session-persistence`, cwd = Temp-Ordner, Prompt über stdin; Fehlerarten Anmeldung/nicht gefunden/Zeit/Antwort), Anleitung + 3 Vorlagen in `src/drehbuch/anleitung.ts`, Projekte in `projekte/<name>/`, CLI `npm run drehbuch`, Server-Aufträge (`POST /api/drehbuch` + Status-Abfrage), Thema-Eingabe in der App. Prüfung lehnt jetzt Symbole im Sprechertext ab. **Test:** Prozentrechnung (Mathe, hoch), Akku (Tech, quer), Kopfsache-Intro (Produkt, hoch) – alle 3 auf Anhieb gültig (je 1 Versuch, 2–3 Min. bei parallelem Lauf); Akku als Video gerendert.
+- **Gelernt:** Claude erfand beim Produkt-Intro Fakten („App“, „kostenlos“) → Regel 8 „nur behaupten, was im Thema steht“, danach sauber. `claude auth status` meldet „angemeldet“, obwohl der Token abgelaufen sein kann → echter Fehler kommt erst beim Aufruf, die App zeigt dann „`claude auth login` ausführen“.
 
 ### Phase 3 – Oberfläche
 - Start-Seite: Thema-Feld, Vorlage, Format, Design-Thema
