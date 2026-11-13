@@ -2,7 +2,17 @@
 
 Lokale Web-App: Thema eingeben → Drehbuch prüfen → Vorschau → animiertes Erklärvideo (MP4) mit Stimme, Untertiteln, Geräuschen und Musik.
 
-**Stand:** Phase 2 – Claude schreibt aus einem Thema das Drehbuch, daraus wird das fertige Video. Bauplan: [`erklaervideo-studio-plan.md`](erklaervideo-studio-plan.md)
+**Stand:** Phase 3 – komplette Oberfläche: Thema → Drehbuch bearbeiten → Einstellungen → Vorschau mit Stimme. Nur das Rendern läuft noch über das Terminal (Phase 4). Bauplan: [`erklaervideo-studio-plan.md`](erklaervideo-studio-plan.md)
+
+## So benutzt du die App
+
+1. **Thema** – Thema eingeben, Vorlage/Format/Länge wählen, „Drehbuch schreiben“. Oder ein vorhandenes Drehbuch bzw. Beispiel öffnen.
+2. **Drehbuch** – links die Szenen (umsortieren ↑↓, löschen ✕, neue Szene einfügen), in der Mitte das Formular der Szene (Texte, Icons, Farben, Sprechertext mit Pause/Tempo, „bei“ als Auswahl aus den gesprochenen Wörtern), rechts die Live-Vorschau (Klick auf eine Szene springt dorthin). Fehler werden sofort angezeigt. Für Profis: „JSON bearbeiten“.
+3. **Einstellungen** – Titel, Format, Sprecher mit **▶ Probe**, Grundtempo, Musik an/aus.
+4. **Vorschau** – „Stimme erzeugen“ (speichert vorher automatisch, zeigt Fortschritt), danach Vorschau mit echter Stimme, Geräuschen und Musik.
+5. **Rendern** – kommt in Phase 4; bis dahin zeigt die Seite den passenden Terminal-Befehl.
+
+Oben rechts: **Speichern** (gelber Punkt = ungespeicherte Änderungen). Ein bearbeitetes **Beispiel** wird beim Speichern automatisch als eigenes Projekt kopiert. Ändert sich Sprechertext, „bei“, Stimme, Tempo oder Musik, verwirft der Server die alte Stimme – die Vorschau zeigt dann „Stimme veraltet“.
 
 ## Starten
 
@@ -91,10 +101,11 @@ Die App zeigt das alles im **System-Check** an.
 ```
 src/drehbuch/          Typen, Prüfung, geschätztes Timing, Anleitung + Vorlagen für Claude
 server/claude.ts       Claude-Aufruf (claude -p), JSON herauslösen, prüfen, Korrektur-Runden
-server/projekte.ts     Projekte speichern/laden (projekte/<name>/)
+server/projekte.ts     Projekte speichern/laden (projekte/<name>/), alte Stimme bei Text-Änderung verwerfen
+src/ui/                Oberfläche: ThemaAnsicht, Editor (+ Felder), Einstellungen, VorschauPlayer, api.ts
 src/video/             Remotion: Erklaervideo.tsx (spielt jedes Drehbuch), kit.tsx (Farben, Icons, Helfer)
 src/video/bausteine/   die 7 Szenen-Bausteine
-tools/                 drehbuch.ts, pruefen.ts, ton.py (Ton-Pipeline), render.ts
+tools/                 drehbuch.ts, pruefen.ts, ton.py (Ton-Pipeline), probe.py (Hörprobe), render.ts
 beispiele/             Beispiel-Drehbücher (+ erzeugte .timing.json)
 server/index.ts        Lokaler Server (Express): System-Check; später Claude, Stimme, Rendern
 referenz/              Die 4 Testvideos (Code + Ton-Skripte) als Vorlage

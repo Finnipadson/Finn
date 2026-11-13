@@ -1,6 +1,6 @@
 # Erklärvideo-Studio – Bauplan
 
-Stand: 13.11.2026 · Status: **Phase 2 fertig**, als Nächstes Phase 3 · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
+Stand: 13.11.2026 · Status: **Phase 3 fertig**, als Nächstes Phase 4 · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
 
 **Ziel:** Thema eingeben → Drehbuch prüfen → Vorschau → fertiges animiertes Erklärvideo (MP4) mit Stimme, Untertiteln, Geräuschen und Musik. Nur für die eigene Nutzung, KI läuft über Claude Code (Pro-Abo).
 
@@ -87,12 +87,15 @@ Jeder Baustein funktioniert in **Hoch- und Querformat** und in jedem **Design-Th
 - **Ergebnis:** `server/claude.ts` (`claude -p --output-format json --tools "" --no-session-persistence`, cwd = Temp-Ordner, Prompt über stdin; Fehlerarten Anmeldung/nicht gefunden/Zeit/Antwort), Anleitung + 3 Vorlagen in `src/drehbuch/anleitung.ts`, Projekte in `projekte/<name>/`, CLI `npm run drehbuch`, Server-Aufträge (`POST /api/drehbuch` + Status-Abfrage), Thema-Eingabe in der App. Prüfung lehnt jetzt Symbole im Sprechertext ab. **Test:** Prozentrechnung (Mathe, hoch), Akku (Tech, quer), Kopfsache-Intro (Produkt, hoch) – alle 3 auf Anhieb gültig (je 1 Versuch, 2–3 Min. bei parallelem Lauf); Akku als Video gerendert.
 - **Gelernt:** Claude erfand beim Produkt-Intro Fakten („App“, „kostenlos“) → Regel 8 „nur behaupten, was im Thema steht“, danach sauber. `claude auth status` meldet „angemeldet“, obwohl der Token abgelaufen sein kann → echter Fehler kommt erst beim Aufruf, die App zeigt dann „`claude auth login` ausführen“.
 
-### Phase 3 – Oberfläche
+### Phase 3 – Oberfläche ✅ (13.11.2026)
 - Start-Seite: Thema-Feld, Vorlage, Format, Design-Thema
 - Drehbuch-Editor: Szenenliste (umsortieren, löschen), Sprechertext bearbeiten
 - **Live-Vorschau** mit `@remotion/player` (ohne Stimme sofort, mit Stimme nach Ton-Erzeugung)
 - Sprecher-Auswahl mit Probehören (Ava, Seraphina, Florian, Conrad …), Musik an/aus, Tempo
 - **Fertig, wenn:** der komplette Ablauf Thema → Drehbuch → Vorschau in der App klickbar ist
+- **Ergebnis:** klickbare Schritt-Navigation (gesperrt ohne Projekt); Start mit Thema-Eingabe, Projekt- und Beispiel-Karten, System-Check; **Editor** mit Szenenliste (↑↓✕, neue Szene je Baustein-Typ mit Startwerten), Formular für alle 7 Bausteine, Sprechertext (Pause/Tempo je Satz), „bei“ als Dropdown der gesprochenen Wörter (mit #2), Live-Prüfung, Live-Vorschau mit Sprung zur Szene, JSON-Modus; **Einstellungen** (Titel, Format, 5 Sprecher mit Hörprobe, Tempo-Regler, Musik); **Vorschau** mit „Stimme erzeugen“ (Fortschritt pro Satz) und Status „mit Stimme / Stimme veraltet“; Speichern (Beispiel → automatische Kopie), Warnung bei ungespeicherten Änderungen. Server: `PUT/POST /api/projekte`, `POST /api/projekte/:name/ton`, `GET /api/stimmprobe` (Proben zwischengespeichert). Design-Thema-Auswahl → Phase 5 (es gibt bisher nur ein Thema).
+- **Getestet (im Browser):** Akku öffnen → Satz ändern → Speichern → „Stimme veraltet“ → Stimme erzeugen → „mit Stimme“; Beispiel bearbeiten → „Als Kopie speichern“; Hörprobe Seraphina (erstes Mal ca. 11 s, danach sofort).
+- **Gelernt:** Python puffert die Ausgabe bei Umleitung → `python -u`, sonst kommt kein Fortschritt an. Geänderte Tondatei braucht Cache-Schutz in der URL (`?v=<Änderungszeit>`); `staticFile()` dafür umgehen.
 
 ### Phase 4 – Rendern & Nacharbeiten
 - Rendern mit Fortschrittsbalken (`@remotion/renderer`), Abbrechen möglich

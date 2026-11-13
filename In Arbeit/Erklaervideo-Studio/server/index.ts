@@ -1,17 +1,20 @@
 import express from "express";
-import { exec } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { exec, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { ClaudeFehler, schreibeDrehbuch } from "./claude";
-import { freierName, lade, liste, speichere } from "./projekte";
+import { aktualisiere, freierName, lade, liste, PROJEKTE, ROOT, speichere } from "./projekte";
 import { VORLAGEN } from "../src/drehbuch/anleitung";
-import type { Drehbuch } from "../src/drehbuch/typen";
+import { pruefeDrehbuch } from "../src/drehbuch/pruefen";
+import { STIMMEN, type Drehbuch } from "../src/drehbuch/typen";
 
-// Lokaler Server für das Erklärvideo-Studio: System-Check, Drehbuch von Claude, Projekte.
-// Später: Stimme erzeugen + Rendern aus der App (Phase 4).
+// Lokaler Server für das Erklärvideo-Studio: System-Check, Drehbuch von Claude, Projekte, Stimme.
+// Später: Rendern aus der App (Phase 4).
 
 const PORT = 4710;
 const app = express();
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "4mb" }));
 
 type Check = { name: string; ok: boolean; detail: string; hint?: string };
 
@@ -48,16 +51,26 @@ app.get("/api/vorlagen", (_req, res) => {
   res.json(Object.entries(VORLAGEN).map(([id, v]) => ({ id, name: v.name })));
 });
 
-/* ── Drehbuch schreiben lassen (dauert 30–120 s) → als Auftrag mit Status-Abfrage ── */
-type Auftrag = { status: string; fertig: boolean; fehler?: string[]; fehlerArt?: string; projekt?: string };
+/* ── Aufträge (dauern länger) → Status-Abfrage über /api/auftrag/:id ── */
+type Auftrag = { status: string; fertig: boolean; fehler?: string[]; fehlerArt?: string; projekt?: string; fortschritt?: number };
 const auftraege = new Map<string, Auftrag>();
-
-app.post("/api/drehbuch", (req, res) => {
-  const { thema, vorlage = "tech", format = "quer", stimme = "ava", sekunden = 45 } = req.body ?? {};
-  if (typeof thema !== "string" || thema.trim().length < 3) return res.status(400).json({ fehler: "Bitte ein Thema eingeben (mindestens 3 Zeichen)." });
+const neuerAuftrag = () => {
   const id = randomUUID();
   const a: Auftrag = { status: "Startet …", fertig: false };
   auftraege.set(id, a);
+  return { id, a };
+};
+app.get("/api/auftrag/:id", (req, res) => {
+  const a = auftraege.get(req.params.id);
+  if (!a) return res.status(404).json({ fehler: "Auftrag unbekannt" });
+  res.json(a);
+});
+
+/* Drehbuch von Claude schreiben lassen (30–180 s) */
+app.post("/api/drehbuch", (req, res) => {
+  const { thema, vorlage = "tech", format = "quer", stimme = "ava", sekunden = 45 } = req.body ?? {};
+  if (typeof thema !== "string" || thema.trim().length < 3) return res.status(400).json({ fehler: "Bitte ein Thema eingeben (mindestens 3 Zeichen)." });
+  const { id, a } = neuerAuftrag();
   schreibeDrehbuch({ thema: thema.trim(), vorlage, format: format === "hoch" ? "hoch" : "quer", stimme, sekunden: Number(sekunden) }, (s) => (a.status = s))
     .then((r) => {
       if (!r.drehbuch) {
@@ -74,19 +87,86 @@ app.post("/api/drehbuch", (req, res) => {
   res.json({ id });
 });
 
-app.get("/api/auftrag/:id", (req, res) => {
-  const a = auftraege.get(req.params.id);
-  if (!a) return res.status(404).json({ fehler: "Auftrag unbekannt" });
-  res.json(a);
-});
-
+/* ── Projekte ── */
 app.get("/api/projekte", (_req, res) => res.json(liste()));
 app.get("/api/projekte/:name", (req, res) => {
   const p = lade(req.params.name);
   if (!p) return res.status(404).json({ fehler: "Projekt nicht gefunden" });
   res.json(p);
 });
+// Neues Projekt aus einem vorhandenen Drehbuch (z. B. Kopie eines Beispiels)
+app.post("/api/projekte", (req, res) => {
+  const d = req.body?.drehbuch as Drehbuch | undefined;
+  if (!d || typeof d !== "object") return res.status(400).json({ fehler: "Kein Drehbuch übergeben." });
+  const name = freierName(req.body?.name ?? d.titel ?? "video");
+  speichere(name, d, { name, thema: d.titel ?? name, vorlage: "kopie", erstellt: new Date().toISOString(), versuche: 0, dauerMs: 0 });
+  res.json({ name, fehler: pruefeDrehbuch(d) });
+});
+app.put("/api/projekte/:name", (req, res) => {
+  const d = req.body?.drehbuch as Drehbuch | undefined;
+  if (!d || typeof d !== "object") return res.status(400).json({ fehler: "Kein Drehbuch übergeben." });
+  const r = aktualisiere(req.params.name, d);
+  if (!r) return res.status(404).json({ fehler: "Projekt nicht gefunden" });
+  res.json({ ...r, fehler: pruefeDrehbuch(d) });
+});
 
+/* ── Stimme für ein Projekt erzeugen (tools/ton.py) ── */
+app.post("/api/projekte/:name/ton", (req, res) => {
+  const p = lade(req.params.name);
+  if (!p) return res.status(404).json({ fehler: "Projekt nicht gefunden" });
+  const fehler = pruefeDrehbuch(p.drehbuch);
+  if (fehler.length) return res.status(400).json({ fehler: `Das Drehbuch hat noch ${fehler.length} Fehler – bitte erst beheben.` });
+  const { id, a } = neuerAuftrag();
+  const gesamt = p.drehbuch.szenen.reduce((n, s) => n + s.sprecher.length, 0);
+  let fertigeSaetze = 0;
+  a.status = "Stimme wird erzeugt …";
+  a.fortschritt = 0;
+  // -u: ungepuffert, sonst kommen die Fortschritts-Zeilen erst ganz am Ende an
+  const proc = spawn("python", ["-u", "tools/ton.py", path.join("projekte", p.name, "drehbuch.json")], {
+    cwd: ROOT, windowsHide: true, env: { ...process.env, PYTHONIOENCODING: "utf-8" },
+  });
+  let fehlerText = "";
+  proc.stdout.on("data", (d: Buffer) => {
+    for (const zeile of d.toString("utf8").split(/\r?\n/)) {
+      const m = zeile.match(/^\s+Szene (\d+):/);
+      if (m) {
+        fertigeSaetze++;
+        a.fortschritt = Math.min(0.95, fertigeSaetze / Math.max(1, gesamt));
+        a.status = `Stimme: Satz ${fertigeSaetze} von ${gesamt} (Szene ${m[1]}) …`;
+      } else if (zeile.startsWith("Fertig:")) a.status = "Geräusche und Musik werden gemischt …";
+    }
+  });
+  proc.stderr.on("data", (d: Buffer) => (fehlerText += d.toString("utf8")));
+  proc.on("error", (e) => Object.assign(a, { fertig: true, status: "Fehler", fehler: [`Python nicht gefunden: ${e.message}`] }));
+  proc.on("close", (code) => {
+    if (code === 0) Object.assign(a, { fertig: true, fortschritt: 1, status: "Stimme fertig.", projekt: p.name });
+    else Object.assign(a, { fertig: true, status: "Fehler", fehler: [fehlerText.trim().split(/\r?\n/).slice(-3).join(" ") || `ton.py endete mit Code ${code}`] });
+  });
+  res.json({ id });
+});
+
+/* ── Hörprobe einer Stimme (wird zwischengespeichert) ── */
+app.get("/api/stimmprobe", async (req, res) => {
+  const key = String(req.query.stimme ?? "ava");
+  const tempo = Math.max(-30, Math.min(30, Math.round(Number(req.query.tempo ?? 0)) || 0));
+  const s = STIMMEN[key];
+  if (!s) return res.status(400).json({ fehler: "Unbekannte Stimme" });
+  const ordner = path.join(ROOT, "public", "ton", "_proben");
+  fs.mkdirSync(ordner, { recursive: true });
+  const datei = `probe-${key}-${tempo}.mp3`;
+  const ziel = path.join(ordner, datei);
+  if (!fs.existsSync(ziel)) {
+    const ok = await new Promise<boolean>((resolve) => {
+      const p = spawn("python", ["tools/probe.py", s.id, String(tempo), ziel], { cwd: ROOT, windowsHide: true });
+      p.on("error", () => resolve(false));
+      p.on("close", (code) => resolve(code === 0 && fs.existsSync(ziel)));
+    });
+    if (!ok) return res.status(502).json({ fehler: "Hörprobe konnte nicht erzeugt werden (Internet?)." });
+  }
+  res.json({ url: `/ton/_proben/${datei}` });
+});
+
+fs.mkdirSync(PROJEKTE, { recursive: true });
 app.listen(PORT, () => {
   console.log(`Erklärvideo-Studio Server läuft auf http://localhost:${PORT}`);
 });

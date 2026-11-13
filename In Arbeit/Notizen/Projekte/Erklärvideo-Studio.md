@@ -1,6 +1,6 @@
 ---
 typ: app
-status: in Arbeit (Phase 2 fertig)
+status: in Arbeit (Phase 3 fertig)
 technik: Windows-App + Claude Code (Pro-Abo) + Remotion + edge-tts + FFmpeg
 erstellt: 2026-11-13
 ---
@@ -45,7 +45,8 @@ Windows-App, die aus einer kurzen Beschreibung automatisch ein fertiges animiert
 - [x] Testvideo-Code auf GitHub sichern (in `referenz/`)
 - [x] Phase 1: Drehbuch → Video (7 Bausteine, `tools/ton.py`, `npm run render`, 2 Beispiele)
 - [x] Phase 2: Claude schreibt das Drehbuch (`claude -p`, 3 Vorlagen, automatische Korrektur, Thema-Eingabe in der App)
-- [ ] Phase 3: Oberfläche (Drehbuch-Editor, Sprecher-Auswahl mit Probehören, Einstellungen)
+- [x] Phase 3: Oberfläche (Drehbuch-Editor mit Live-Vorschau, Sprecher mit Probehören, Einstellungen, Stimme erzeugen in der App)
+- [ ] Phase 4: Rendern in der App (Fortschritt, MP4 + Cover, „Szene neu machen“)
 
 ## Notizen
 

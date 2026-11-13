@@ -71,6 +71,27 @@ export const pruefeDrehbuch = (d: unknown): string[] => {
   return f;
 };
 
+/** Alles, was den Ton beeinflusst. Ändert sich das, muss die Stimme neu erzeugt werden. */
+export const tonSchluessel = (d: Drehbuch) =>
+  JSON.stringify({
+    stimme: d.stimme ?? "ava", tempo: d.tempo ?? 0, musik: d.musik ?? true,
+    szenen: d.szenen.map((s) => ({ sprecher: s.sprecher, bei: alleBei(s).map((b) => b.wert) })),
+  });
+
+/** Wörter einer Szene als Auswahl für „bei“ ("Wort" bzw. "Wort#2" bei Wiederholung). */
+export const beiOptionen = (sz: Szene) => {
+  const zaehler = new Map<string, number>();
+  const out: string[] = [];
+  for (const tok of sz.sprecher.flatMap((s) => s.satz.split(/\s+/).filter(Boolean))) {
+    const wort = tok.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
+    if (!norm(wort)) continue;
+    const n = (zaehler.get(norm(wort)) ?? 0) + 1;
+    zaehler.set(norm(wort), n);
+    out.push(n === 1 ? wort : `${wort}#${n}`);
+  }
+  return out;
+};
+
 /** Geschätztes Timing ohne Stimme – für die sofortige Vorschau. */
 export const schaetzeTiming = (d: Drehbuch, fps = 60): Timing => {
   const woerter: Wort[] = [];

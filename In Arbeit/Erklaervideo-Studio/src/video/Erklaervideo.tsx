@@ -101,7 +101,8 @@ export const Erklaervideo: React.FC<ErklaervideoProps> = ({ drehbuch, timing, au
 
   return (
     <AbsoluteFill style={{ backgroundColor: T.bg }}>
-      {audio && <Audio src={staticFile(audio)} />}
+      {/* "ton/x.wav" → aus public/ (Rendern); "/ton/x.wav?v=…" → direkt (App-Vorschau, mit Cache-Schutz) */}
+      {audio && <Audio src={audio.startsWith("/") || audio.startsWith("http") ? audio : staticFile(audio)} />}
       <AbsoluteFill style={{ opacity: fadeIn * fadeOut }}>
         <Hintergrund f={f} W={W} H={H} />
         {drehbuch.szenen.map((sz, i) => {
