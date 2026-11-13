@@ -16,7 +16,7 @@ Zentrale Übersicht über alle Projekte.
 | [[PC Aufräumer]] | Windows-App (C# WPF) | in Arbeit |
 | [[Café Reitschule]] | Restaurant-Website (Demo) | Entwurf v2 fertig |
 | [[Highlight Cutter]] | PC-App: Highlights aus NVIDIA-Aufnahmen schneiden | Idee |
-| [[Erklärvideo-Studio]] | PC-App: Thema eingeben → animiertes Erklärvideo | Idee, 4 Testvideos fertig |
+| [[Erklärvideo-Studio]] | PC-App: Thema eingeben → animiertes Erklärvideo | Bauplan fertig, 4 Testvideos |
 
 Ältere/kleinere Projekte: [[Weitere Projekte]]
 

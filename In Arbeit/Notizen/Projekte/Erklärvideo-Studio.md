@@ -13,7 +13,7 @@ Windows-App, die aus einer kurzen Beschreibung automatisch ein fertiges animiert
 	- Satz des Pythagoras
 	- Koch Szene HD (Qualitäts-Stufe, 60 fps)
 	- Claude Code Erklaerung (Querformat, 7 Szenen, echte Screenshots)
-- Bauplan: noch keiner
+- Bauplan: [[erklaervideo-studio-plan]] (Phasen 0–5, Drehbuch als JSON aus Szenen-Bausteinen)
 
 ## Ablauf in der App
 
@@ -36,8 +36,8 @@ Windows-App, die aus einer kurzen Beschreibung automatisch ein fertiges animiert
 
 ## Offene Punkte
 
-- [ ] Technik der Oberfläche festlegen (C# WPF wie [[PC Aufräumer]] oder Web-Oberfläche)
-- [ ] Bauplan mit Phasen schreiben
+- [ ] Technik der Oberfläche bestätigen (Vorschlag im Bauplan: lokale Web-App im eigenen Fenster statt WPF wie [[PC Aufräumer]])
+- [x] Bauplan mit Phasen schreiben
 - [ ] Szenen-Bibliothek aus den Testvideos herauslösen (wiederverwendbare Bausteine)
 - [ ] Echte lizenzfreie Musik statt synthetischer Akkorde
 - [ ] Remotion-Ordner auf GitHub sichern
