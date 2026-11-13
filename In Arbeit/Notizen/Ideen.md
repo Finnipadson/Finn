@@ -22,6 +22,12 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 	- **Tests**
 		- `remotion/src/Erklaervideo Test` → „Bug-Küche EP 01“, 16 s → `remotion/out/Erklaervideo Test.mp4`
 		- `remotion/src/Satz des Pythagoras` → Mathe-Erklärvideo, 48 s → `remotion/out/Satz des Pythagoras.mp4`
+		- `remotion/src/Koch Szene HD` → Qualitäts-Test (13.11.2026), 18,6 s, 60 fps → `remotion/out/Koch Szene HD.mp4`
+	- **Qualitäts-Stufe (aus Koch Szene HD)**
+		- Figur: Licht/Schatten-Verläufe statt flacher Farben, Augen mit Glanzpunkt und Blickrichtung, Blinzeln, Mund synchron zur Stimme (Lautstärke pro Bild), Arme mit Gelenken (inverse Kinematik), Mütze schwingt nach, Atmen
+		- Szene: Küche mit Tiefenschärfe (unscharfer Hintergrund), Lampe mit Lichtkegel, Gasflammen, Dampf, Funken, Schattenwurf
+		- Kamera: langsame Fahrt, Zoom-Ruck bei wichtigen Momenten, Wackler beim Stempel; Vignette + Filmkorn; 60 fps
+		- Ton: `audio.py` erzeugt Stimme (Ava, satzweise), Geräusche (Plopp, Klick, Brutzeln, Stempel, Ding), Musik mit automatischem Leiserwerden unter der Stimme – alles aus **einer** Zeitliste (`events.json`), die auch die Animation steuert
 	- **App (Weg 1)**
 		- Eigene Windows-App: Eingabefeld, Vorlagen (Mathe/Schule, Tech, Produkt-Intro), Format (Hoch/Quer) wählen, Vorschau, Rendern
 		- **Sprecher-Auswahl**: Liste der Stimmen (z. B. Ava, Seraphina, Florian, Conrad …) mit Probehören-Knopf, Standard = Ava; dazu Schalter „Musik an/aus“ und evtl. Tempo-Regler
