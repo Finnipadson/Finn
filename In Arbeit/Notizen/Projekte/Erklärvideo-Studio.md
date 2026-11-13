@@ -1,6 +1,6 @@
 ---
 typ: app
-status: in Arbeit (Phase 0 fertig)
+status: in Arbeit (Phase 1 fertig)
 technik: Windows-App + Claude Code (Pro-Abo) + Remotion + edge-tts + FFmpeg
 erstellt: 2026-11-13
 ---
@@ -43,7 +43,8 @@ Windows-App, die aus einer kurzen Beschreibung automatisch ein fertiges animiert
 - [ ] Szenen-Bibliothek aus den Testvideos herauslösen (wiederverwendbare Bausteine)
 - [ ] Echte lizenzfreie Musik statt synthetischer Akkorde
 - [x] Testvideo-Code auf GitHub sichern (in `referenz/`)
-- [ ] Phase 1: Drehbuch → Video (6 Kern-Bausteine, Ton-Pipeline als Modul)
+- [x] Phase 1: Drehbuch → Video (7 Bausteine, `tools/ton.py`, `npm run render`, 2 Beispiele)
+- [ ] Phase 2: Claude schreibt das Drehbuch (`claude -p`, Vorlagen, automatische Korrektur)
 
 ## Notizen
 

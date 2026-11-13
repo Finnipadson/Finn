@@ -1,6 +1,6 @@
 # Erklärvideo-Studio – Bauplan
 
-Stand: 13.11.2026 · Status: **Phase 0 fertig**, als Nächstes Phase 1 · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
+Stand: 13.11.2026 · Status: **Phase 1 fertig**, als Nächstes Phase 2 · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
 
 **Ziel:** Thema eingeben → Drehbuch prüfen → Vorschau → fertiges animiertes Erklärvideo (MP4) mit Stimme, Untertiteln, Geräuschen und Musik. Nur für die eigene Nutzung, KI läuft über Claude Code (Pro-Abo).
 
@@ -70,12 +70,14 @@ Jeder Baustein funktioniert in **Hoch- und Querformat** und in jedem **Design-Th
 - **Fertig, wenn:** `npm run dev` startet die (leere) App im eigenen Fenster, alles ist gepusht
 - **Ergebnis:** `start.bat` startet Server (4710) + Oberfläche (5173) und öffnet Edge im App-Modus. Oberfläche mit Schritt-Leiste (Platzhalter), **Live-Vorschau** per `@remotion/player` (Hoch/Quer umschaltbar, Titel live änderbar) und **System-Check** (Node, Claude Code, Python + edge-tts, FFmpeg). Testvideos als Referenz in `referenz/`.
 
-### Phase 1 – Drehbuch → Video (ohne KI)
+### Phase 1 – Drehbuch → Video (ohne KI) ✅ (13.11.2026)
 - JSON-Schema fürs Drehbuch + Prüfung (Fehler verständlich anzeigen)
 - 6 Kern-Bausteine: `titel`, `stichpunkte`, `vergleich`, `ablauf`, `formel`, `abschluss`
 - Ton-Pipeline als Modul (aus `audio.py`): liest das Drehbuch, erzeugt `mix.wav` + Wort-/Marken-Zeiten
 - Eine generische Komposition rendert jedes Drehbuch
 - **Fertig, wenn:** ein handgeschriebenes Drehbuch für „Satz des Pythagoras“ ein Video in der Qualität des Testvideos ergibt
+- **Ergebnis:** Typen + Prüfung (`src/drehbuch/`, `npm run pruefen`), **7 Bausteine** (zusätzlich `geometrie` – für Pythagoras nötig, aus Phase 5 vorgezogen), Ton-Pipeline `tools/ton.py` (Stimme satzweise, Geräusche je `bei`, Musik mit Ducking, `<name>.timing.json`), generische Komposition `Erklaervideo` (Hoch/Quer per `calculateMetadata`, Szenenwechsel mit Blur, Wort-Untertitel), `npm run render`. Statt „Marken“ gibt es **`bei`**: ein Element erscheint beim gesprochenen Wort. Ohne Ton: geschätzte Zeiten für die Sofort-Vorschau. Zwei Beispiele: `beispiele/pythagoras.json` (hoch, 51 s) und `beispiele/claude-code-kurz.json` (quer, 41 s). App-Vorschau zeigt beide.
+- **Gelernt:** optionale Zeitpunkte sind „Infinity“ → Animations-Helfer (`lerp`, `sp`) müssen das abfangen; `interpolate` braucht streng steigende Zeiten.
 
 ### Phase 2 – Claude schreibt das Drehbuch
 - Server ruft `claude -p` mit Anleitung + Schema + Beispiel-Drehbüchern auf, Ergebnis wird geprüft, bei Fehlern automatisch nachgebessert (max. 2 Versuche)

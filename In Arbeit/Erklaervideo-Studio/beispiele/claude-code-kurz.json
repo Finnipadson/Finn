@@ -1,0 +1,90 @@
+{
+  "titel": "Claude Code kurz",
+  "format": "quer",
+  "stimme": "ava",
+  "tempo": -2,
+  "musik": true,
+  "szenen": [
+    {
+      "typ": "titel",
+      "titel": "Claude Code",
+      "unter": "in einer Minute",
+      "sprecher": [
+        { "satz": "Was ist eigentlich Claude Code?", "pause": 0.4 },
+        { "satz": "Ein KI-Assistent, der selbst am Projekt arbeitet.", "pause": 0.6 }
+      ]
+    },
+    {
+      "typ": "vergleich",
+      "kicker": "Der Unterschied",
+      "ueberschrift": "Chatbot oder Claude Code?",
+      "links": {
+        "titel": "Chatbot",
+        "icon": "chat",
+        "bei": "Chatbot",
+        "punkte": [
+          { "text": "Code kopieren und einfügen", "bei": "kopiert" },
+          { "text": "Du testest selbst" }
+        ]
+      },
+      "rechts": {
+        "titel": "Claude Code",
+        "icon": "terminal",
+        "bei": "dagegen",
+        "punkte": [
+          { "text": "Liest und ändert Dateien", "bei": "liest" },
+          { "text": "Führt Befehle aus", "bei": "führt" },
+          { "text": "Prüft das Ergebnis", "bei": "prüft" }
+        ]
+      },
+      "sprecher": [
+        { "satz": "Bei einem Chatbot kopiert man Code hin und her.", "pause": 0.4 },
+        { "satz": "Claude Code dagegen arbeitet direkt im Projektordner.", "pause": 0.3 },
+        { "satz": "Es liest Dateien, führt Befehle aus und prüft das Ergebnis selbst.", "pause": 0.7 }
+      ]
+    },
+    {
+      "typ": "ablauf",
+      "kicker": "So arbeitet es",
+      "ueberschrift": "Eine Schleife, bis es läuft",
+      "form": "kreis",
+      "schritte": [
+        { "text": "Verstehen", "icon": "idee", "bei": "verstehen" },
+        { "text": "Lesen", "icon": "buch", "bei": "lesen" },
+        { "text": "Planen", "icon": "karte", "bei": "planen" },
+        { "text": "Ändern", "icon": "stift", "bei": "ändern" },
+        { "text": "Testen", "icon": "haken", "bei": "testen" }
+      ],
+      "fehler": { "text": "Test fehlgeschlagen", "bei": "fehlschlägt" },
+      "erfolg": { "text": "Funktioniert", "bei": "funktioniert" },
+      "sprecher": [
+        { "satz": "Verstehen, lesen, planen, ändern, testen.", "pause": 0.45, "tempo": -6 },
+        { "satz": "Und wenn ein Test fehlschlägt?", "pause": 0.3 },
+        { "satz": "Dann sucht Claude den Fehler, bis es funktioniert.", "pause": 0.7 }
+      ]
+    },
+    {
+      "typ": "stichpunkte",
+      "kicker": "Ehrlich gesagt",
+      "ueberschrift": "Was man selbst können muss",
+      "punkte": [
+        { "text": "Beschreiben", "unter": "klar sagen, was man will", "icon": "chat", "bei": "beschreiben" },
+        { "text": "Prüfen", "unter": "Ergebnisse kontrollieren", "icon": "lupe", "bei": "prüfen" },
+        { "text": "Entscheiden", "unter": "Richtung vorgeben", "icon": "wegweiser", "bei": "entscheiden" }
+      ],
+      "sprecher": [
+        { "satz": "Man muss aber klar beschreiben, was man will,", "pause": 0.15 },
+        { "satz": "Ergebnisse prüfen und selbst entscheiden.", "pause": 0.7 }
+      ]
+    },
+    {
+      "typ": "abschluss",
+      "text": "Ein schneller Kollege",
+      "unter": "kein Zauberknopf",
+      "bei": "Kollege",
+      "sprecher": [
+        { "satz": "Claude ist eher ein schneller Kollege als ein Zauberknopf.", "pause": 0.2, "tempo": -4 }
+      ]
+    }
+  ]
+}

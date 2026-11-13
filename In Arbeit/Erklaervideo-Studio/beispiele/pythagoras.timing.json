@@ -1,0 +1,698 @@
+{
+ "fps": 60,
+ "dauer": 50.775,
+ "woerter": [
+  {
+   "text": "Okay,",
+   "start": 0.66,
+   "end": 0.995,
+   "szene": 0
+  },
+  {
+   "text": "pass",
+   "start": 1.317,
+   "end": 1.588,
+   "szene": 0
+  },
+  {
+   "text": "auf.",
+   "start": 1.601,
+   "end": 1.936,
+   "szene": 0
+  },
+  {
+   "text": "Der",
+   "start": 2.486,
+   "end": 2.64,
+   "szene": 0
+  },
+  {
+   "text": "Satz",
+   "start": 2.653,
+   "end": 2.95,
+   "szene": 0
+  },
+  {
+   "text": "des",
+   "start": 2.963,
+   "end": 3.13,
+   "szene": 0
+  },
+  {
+   "text": "Pythagoras.",
+   "start": 3.143,
+   "end": 4.032,
+   "szene": 0
+  },
+  {
+   "text": "Klingt",
+   "start": 4.532,
+   "end": 4.803,
+   "szene": 0
+  },
+  {
+   "text": "kompliziert,",
+   "start": 4.803,
+   "end": 5.499,
+   "szene": 0
+  },
+  {
+   "text": "ist",
+   "start": 5.847,
+   "end": 6.027,
+   "szene": 0
+  },
+  {
+   "text": "er",
+   "start": 6.04,
+   "end": 6.117,
+   "szene": 0
+  },
+  {
+   "text": "aber",
+   "start": 6.117,
+   "end": 6.298,
+   "szene": 0
+  },
+  {
+   "text": "gar",
+   "start": 6.31,
+   "end": 6.517,
+   "szene": 0
+  },
+  {
+   "text": "nicht.",
+   "start": 6.53,
+   "end": 6.89,
+   "szene": 0
+  },
+  {
+   "text": "Er",
+   "start": 8.04,
+   "end": 8.156,
+   "szene": 1
+  },
+  {
+   "text": "gilt",
+   "start": 8.169,
+   "end": 8.401,
+   "szene": 1
+  },
+  {
+   "text": "für",
+   "start": 8.414,
+   "end": 8.543,
+   "szene": 1
+  },
+  {
+   "text": "jedes",
+   "start": 8.556,
+   "end": 8.917,
+   "szene": 1
+  },
+  {
+   "text": "Dreieck",
+   "start": 8.917,
+   "end": 9.419,
+   "szene": 1
+  },
+  {
+   "text": "mit",
+   "start": 9.432,
+   "end": 9.613,
+   "szene": 1
+  },
+  {
+   "text": "einem",
+   "start": 9.625,
+   "end": 9.832,
+   "szene": 1
+  },
+  {
+   "text": "rechten",
+   "start": 9.844,
+   "end": 10.244,
+   "szene": 1
+  },
+  {
+   "text": "Winkel.",
+   "start": 10.244,
+   "end": 10.734,
+   "szene": 1
+  },
+  {
+   "text": "Die",
+   "start": 11.434,
+   "end": 11.614,
+   "szene": 1
+  },
+  {
+   "text": "zwei",
+   "start": 11.627,
+   "end": 11.923,
+   "szene": 1
+  },
+  {
+   "text": "kurzen",
+   "start": 11.936,
+   "end": 12.361,
+   "szene": 1
+  },
+  {
+   "text": "Seiten",
+   "start": 12.374,
+   "end": 12.671,
+   "szene": 1
+  },
+  {
+   "text": "heißen",
+   "start": 12.684,
+   "end": 13.07,
+   "szene": 1
+  },
+  {
+   "text": "Katheten,",
+   "start": 13.083,
+   "end": 13.663,
+   "szene": 1
+  },
+  {
+   "text": "a",
+   "start": 14.024,
+   "end": 14.217,
+   "szene": 1
+  },
+  {
+   "text": "und",
+   "start": 14.23,
+   "end": 14.462,
+   "szene": 1
+  },
+  {
+   "text": "b.",
+   "start": 14.475,
+   "end": 14.81,
+   "szene": 1
+  },
+  {
+   "text": "Die",
+   "start": 15.41,
+   "end": 15.5,
+   "szene": 1
+  },
+  {
+   "text": "lange",
+   "start": 15.513,
+   "end": 15.809,
+   "szene": 1
+  },
+  {
+   "text": "Seite",
+   "start": 15.822,
+   "end": 16.157,
+   "szene": 1
+  },
+  {
+   "text": "gegenüber",
+   "start": 16.17,
+   "end": 16.673,
+   "szene": 1
+  },
+  {
+   "text": "ist",
+   "start": 16.673,
+   "end": 16.815,
+   "szene": 1
+  },
+  {
+   "text": "die",
+   "start": 16.827,
+   "end": 16.931,
+   "szene": 1
+  },
+  {
+   "text": "Hypotenuse,",
+   "start": 16.931,
+   "end": 17.742,
+   "szene": 1
+  },
+  {
+   "text": "c.",
+   "start": 18.077,
+   "end": 18.438,
+   "szene": 1
+  },
+  {
+   "text": "Und",
+   "start": 19.188,
+   "end": 19.343,
+   "szene": 1
+  },
+  {
+   "text": "jetzt",
+   "start": 19.356,
+   "end": 19.601,
+   "szene": 1
+  },
+  {
+   "text": "der",
+   "start": 19.601,
+   "end": 19.704,
+   "szene": 1
+  },
+  {
+   "text": "Trick:",
+   "start": 19.717,
+   "end": 20.052,
+   "szene": 1
+  },
+  {
+   "text": "Auf",
+   "start": 20.464,
+   "end": 20.606,
+   "szene": 1
+  },
+  {
+   "text": "jede",
+   "start": 20.619,
+   "end": 20.876,
+   "szene": 1
+  },
+  {
+   "text": "Seite",
+   "start": 20.889,
+   "end": 21.224,
+   "szene": 1
+  },
+  {
+   "text": "kommt",
+   "start": 21.237,
+   "end": 21.534,
+   "szene": 1
+  },
+  {
+   "text": "ein",
+   "start": 21.534,
+   "end": 21.65,
+   "szene": 1
+  },
+  {
+   "text": "Quadrat.",
+   "start": 21.65,
+   "end": 22.294,
+   "szene": 1
+  },
+  {
+   "text": "Die",
+   "start": 22.844,
+   "end": 22.951,
+   "szene": 1
+  },
+  {
+   "text": "zwei",
+   "start": 22.951,
+   "end": 23.234,
+   "szene": 1
+  },
+  {
+   "text": "kleinen",
+   "start": 23.247,
+   "end": 23.637,
+   "szene": 1
+  },
+  {
+   "text": "zusammen",
+   "start": 23.637,
+   "end": 24.08,
+   "szene": 1
+  },
+  {
+   "text": "sind",
+   "start": 24.094,
+   "end": 24.296,
+   "szene": 1
+  },
+  {
+   "text": "genau",
+   "start": 24.296,
+   "end": 24.551,
+   "szene": 1
+  },
+  {
+   "text": "so",
+   "start": 24.564,
+   "end": 24.739,
+   "szene": 1
+  },
+  {
+   "text": "groß",
+   "start": 24.753,
+   "end": 25.102,
+   "szene": 1
+  },
+  {
+   "text": "wie",
+   "start": 25.115,
+   "end": 25.21,
+   "szene": 1
+  },
+  {
+   "text": "das",
+   "start": 25.223,
+   "end": 25.425,
+   "szene": 1
+  },
+  {
+   "text": "große.",
+   "start": 25.425,
+   "end": 25.935,
+   "szene": 1
+  },
+  {
+   "text": "Zähl",
+   "start": 26.635,
+   "end": 26.996,
+   "szene": 1
+  },
+  {
+   "text": "einfach",
+   "start": 27.009,
+   "end": 27.408,
+   "szene": 1
+  },
+  {
+   "text": "die",
+   "start": 27.408,
+   "end": 27.524,
+   "szene": 1
+  },
+  {
+   "text": "Kästchen:",
+   "start": 27.537,
+   "end": 28.169,
+   "szene": 1
+  },
+  {
+   "text": "9",
+   "start": 28.669,
+   "end": 28.763,
+   "szene": 1
+  },
+  {
+   "text": "plus",
+   "start": 28.763,
+   "end": 29.139,
+   "szene": 1
+  },
+  {
+   "text": "16",
+   "start": 29.153,
+   "end": 29.489,
+   "szene": 1
+  },
+  {
+   "text": "ergibt",
+   "start": 29.489,
+   "end": 29.892,
+   "szene": 1
+  },
+  {
+   "text": "25.",
+   "start": 29.905,
+   "end": 30.604,
+   "szene": 1
+  },
+  {
+   "text": "Also:",
+   "start": 31.854,
+   "end": 32.357,
+   "szene": 2
+  },
+  {
+   "text": "a",
+   "start": 32.95,
+   "end": 32.988,
+   "szene": 2
+  },
+  {
+   "text": "Quadrat",
+   "start": 33.001,
+   "end": 33.452,
+   "szene": 2
+  },
+  {
+   "text": "plus",
+   "start": 33.465,
+   "end": 33.865,
+   "szene": 2
+  },
+  {
+   "text": "b",
+   "start": 33.865,
+   "end": 34.019,
+   "szene": 2
+  },
+  {
+   "text": "Quadrat",
+   "start": 34.032,
+   "end": 34.599,
+   "szene": 2
+  },
+  {
+   "text": "gleich",
+   "start": 34.612,
+   "end": 34.947,
+   "szene": 2
+  },
+  {
+   "text": "c",
+   "start": 34.96,
+   "end": 35.231,
+   "szene": 2
+  },
+  {
+   "text": "Quadrat.",
+   "start": 35.243,
+   "end": 35.772,
+   "szene": 2
+  },
+  {
+   "text": "Für",
+   "start": 36.472,
+   "end": 36.614,
+   "szene": 2
+  },
+  {
+   "text": "unser",
+   "start": 36.626,
+   "end": 36.871,
+   "szene": 2
+  },
+  {
+   "text": "Beispiel",
+   "start": 36.884,
+   "end": 37.309,
+   "szene": 2
+  },
+  {
+   "text": "heißt",
+   "start": 37.322,
+   "end": 37.632,
+   "szene": 2
+  },
+  {
+   "text": "das:",
+   "start": 37.644,
+   "end": 37.979,
+   "szene": 2
+  },
+  {
+   "text": "9",
+   "start": 38.479,
+   "end": 38.567,
+   "szene": 2
+  },
+  {
+   "text": "plus",
+   "start": 38.567,
+   "end": 38.918,
+   "szene": 2
+  },
+  {
+   "text": "16",
+   "start": 38.931,
+   "end": 39.253,
+   "szene": 2
+  },
+  {
+   "text": "ergibt",
+   "start": 39.266,
+   "end": 39.678,
+   "szene": 2
+  },
+  {
+   "text": "25.",
+   "start": 39.691,
+   "end": 40.309,
+   "szene": 2
+  },
+  {
+   "text": "Und",
+   "start": 40.859,
+   "end": 41.009,
+   "szene": 2
+  },
+  {
+   "text": "die",
+   "start": 41.022,
+   "end": 41.131,
+   "szene": 2
+  },
+  {
+   "text": "Wurzel",
+   "start": 41.145,
+   "end": 41.566,
+   "szene": 2
+  },
+  {
+   "text": "aus",
+   "start": 41.579,
+   "end": 41.77,
+   "szene": 2
+  },
+  {
+   "text": "25",
+   "start": 41.77,
+   "end": 42.653,
+   "szene": 2
+  },
+  {
+   "text": "ist",
+   "start": 42.666,
+   "end": 42.857,
+   "szene": 2
+  },
+  {
+   "text": "5.",
+   "start": 42.857,
+   "end": 43.346,
+   "szene": 2
+  },
+  {
+   "text": "Merke:",
+   "start": 44.596,
+   "end": 44.986,
+   "szene": 3
+  },
+  {
+   "text": "a",
+   "start": 45.416,
+   "end": 45.483,
+   "szene": 3
+  },
+  {
+   "text": "Quadrat",
+   "start": 45.496,
+   "end": 45.819,
+   "szene": 3
+  },
+  {
+   "text": "plus",
+   "start": 45.832,
+   "end": 46.115,
+   "szene": 3
+  },
+  {
+   "text": "b",
+   "start": 46.128,
+   "end": 46.276,
+   "szene": 3
+  },
+  {
+   "text": "Quadrat",
+   "start": 46.289,
+   "end": 46.625,
+   "szene": 3
+  },
+  {
+   "text": "gleich",
+   "start": 46.639,
+   "end": 46.988,
+   "szene": 3
+  },
+  {
+   "text": "c",
+   "start": 47.002,
+   "end": 47.123,
+   "szene": 3
+  },
+  {
+   "text": "Quadrat.",
+   "start": 47.136,
+   "end": 47.66,
+   "szene": 3
+  },
+  {
+   "text": "Das",
+   "start": 48.26,
+   "end": 48.402,
+   "szene": 3
+  },
+  {
+   "text": "ist",
+   "start": 48.415,
+   "end": 48.544,
+   "szene": 3
+  },
+  {
+   "text": "schon",
+   "start": 48.557,
+   "end": 48.763,
+   "szene": 3
+  },
+  {
+   "text": "alles.",
+   "start": 48.776,
+   "end": 49.175,
+   "szene": 3
+  }
+ ],
+ "szenen": [
+  {
+   "start": 0.0,
+   "ende": 7.58,
+   "bei": {}
+  },
+  {
+   "start": 7.58,
+   "ende": 31.394,
+   "bei": {
+    "Dreieck": 8.917,
+    "Katheten": 13.083,
+    "Hypotenuse": 16.931,
+    "Quadrat": 21.65,
+    "Kästchen": 27.537,
+    "9": 28.669
+   }
+  },
+  {
+   "start": 31.394,
+   "ende": 44.136,
+   "bei": {
+    "a": 32.95,
+    "plus": 33.465,
+    "gleich": 34.612,
+    "Beispiel": 36.884,
+    "ergibt": 39.266,
+    "Wurzel": 41.145
+   }
+  },
+  {
+   "start": 44.136,
+   "ende": 50.775,
+   "bei": {
+    "Merke": 44.596
+   }
+  }
+ ]
+}

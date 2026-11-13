@@ -3,5 +3,6 @@ dist/
 out/
 # Später: gespeicherte Video-Projekte, Renders und Ton-Zwischendateien
 projekte/
+public/ton/
 **/_work/
 *.log

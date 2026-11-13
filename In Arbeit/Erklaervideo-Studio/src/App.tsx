@@ -1,23 +1,36 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Player } from "@remotion/player";
-import { DemoTitel } from "./video/DemoTitel";
+import { dauerInBildern, Erklaervideo } from "./video/Erklaervideo";
+import { pruefeDrehbuch } from "./drehbuch/pruefen";
+import type { Drehbuch, Timing } from "./drehbuch/typen";
 
 type Check = { name: string; ok: boolean; detail: string; hint?: string };
 type Health = { ok: boolean; checks: Check[] };
+
+// Beispiel-Drehbücher + (falls erzeugt) ihre Zeitlisten aus dem Ordner beispiele/
+const dateien = import.meta.glob("../beispiele/*.json", { eager: true, import: "default" }) as Record<string, unknown>;
+const BEISPIELE = Object.entries(dateien)
+  .filter(([p]) => !p.endsWith(".timing.json"))
+  .map(([p, d]) => {
+    const name = p.split("/").pop()!.replace(/\.json$/, "");
+    const timing = (dateien[`../beispiele/${name}.timing.json`] as Timing | undefined) ?? null;
+    return { name, drehbuch: d as Drehbuch, timing };
+  });
 
 const STEPS = [
   { n: 1, label: "Thema", phase: 2 },
   { n: 2, label: "Drehbuch", phase: 3 },
   { n: 3, label: "Einstellungen", phase: 3 },
-  { n: 4, label: "Vorschau", phase: 3 },
+  { n: 4, label: "Vorschau", phase: 1, aktiv: true },
   { n: 5, label: "Rendern", phase: 4 },
 ];
 
 export const App: React.FC = () => {
   const [health, setHealth] = useState<Health | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [format, setFormat] = useState<"hoch" | "quer">("quer");
-  const [titel, setTitel] = useState("Erklärvideo");
+  const [auswahl, setAuswahl] = useState(BEISPIELE[0]?.name ?? "");
+  const [mitTon, setMitTon] = useState(true);
+  const [tonDa, setTonDa] = useState(false);
 
   const loadHealth = () => {
     setHealth(null);
@@ -29,20 +42,31 @@ export const App: React.FC = () => {
   };
   useEffect(loadHealth, []);
 
-  const hoch = format === "hoch";
+  const bsp = BEISPIELE.find((b) => b.name === auswahl);
+  useEffect(() => {
+    setTonDa(false);
+    if (!bsp) return;
+    fetch(`/ton/${bsp.name}.wav`, { method: "HEAD" }).then((r) => setTonDa(r.ok && (r.headers.get("content-type") ?? "").includes("audio"))).catch(() => setTonDa(false));
+  }, [bsp?.name]);
+
+  const fehler = useMemo(() => (bsp ? pruefeDrehbuch(bsp.drehbuch) : []), [bsp]);
+  const nutzeTon = mitTon && tonDa && !!bsp?.timing;
+  const props = bsp ? { drehbuch: bsp.drehbuch, timing: nutzeTon ? bsp.timing : null, audio: nutzeTon ? `ton/${bsp.name}.wav` : null } : null;
+  const hoch = bsp?.drehbuch.format === "hoch";
+
   return (
     <div className="app">
       <header className="top">
         <div className="logo"><span className="play" />Erklärvideo-Studio</div>
-        <div className="phase">Phase 0 · Fundament</div>
+        <div className="phase">Phase 1 · Drehbuch → Video</div>
       </header>
 
       <nav className="steps">
         {STEPS.map((s) => (
-          <div key={s.n} className="step" title={`kommt in Phase ${s.phase}`}>
+          <div key={s.n} className={`step ${s.aktiv ? "aktiv" : ""}`} title={s.aktiv ? "" : `kommt in Phase ${s.phase}`}>
             <span className="num">{s.n}</span>
             <span>{s.label}</span>
-            <span className="soon">Phase {s.phase}</span>
+            {!s.aktiv && <span className="soon">Phase {s.phase}</span>}
           </div>
         ))}
       </nav>
@@ -50,30 +74,41 @@ export const App: React.FC = () => {
       <main className="main">
         <section className="card preview">
           <div className="card-head">
-            <h2>Live-Vorschau</h2>
-            <div className="seg">
-              <button className={!hoch ? "on" : ""} onClick={() => setFormat("quer")}>Quer 16:9</button>
-              <button className={hoch ? "on" : ""} onClick={() => setFormat("hoch")}>Hoch 9:16</button>
+            <h2>Vorschau</h2>
+            <div className="row">
+              <select value={auswahl} onChange={(e) => setAuswahl(e.target.value)}>
+                {BEISPIELE.map((b) => <option key={b.name} value={b.name}>{b.drehbuch.titel} ({b.drehbuch.format})</option>)}
+              </select>
+              <label className="toggle" title={tonDa ? "" : "Noch kein Ton erzeugt: npm run ton -- beispiele/<name>.json"}>
+                <input type="checkbox" checked={mitTon} disabled={!tonDa} onChange={(e) => setMitTon(e.target.checked)} /> mit Stimme
+              </label>
             </div>
           </div>
-          <div className={`player-wrap ${hoch ? "hoch" : "quer"}`}>
-            <Player
-              component={DemoTitel}
-              inputProps={{ titel: titel || " ", unter: "Studio · Phase 0" }}
-              durationInFrames={180}
-              fps={60}
-              compositionWidth={hoch ? 1080 : 1920}
-              compositionHeight={hoch ? 1920 : 1080}
-              style={{ width: "100%", height: "100%" }}
-              controls
-              loop
-              autoPlay
-            />
+          {props && fehler.length === 0 && (
+            <div className={`player-wrap ${hoch ? "hoch" : "quer"}`}>
+              <Player
+                key={`${auswahl}-${nutzeTon}`}
+                component={Erklaervideo}
+                inputProps={props}
+                durationInFrames={dauerInBildern(props.drehbuch, props.timing)}
+                fps={60}
+                compositionWidth={hoch ? 1080 : 1920}
+                compositionHeight={hoch ? 1920 : 1080}
+                style={{ width: "100%", height: "100%" }}
+                controls
+              />
+            </div>
+          )}
+          {fehler.length > 0 && (
+            <div className="err">
+              <b>Das Drehbuch hat Fehler:</b>
+              <ul>{fehler.map((f) => <li key={f}>{f}</li>)}</ul>
+            </div>
+          )}
+          <div className="muted hint-line">
+            {nutzeTon ? "Mit echter Stimme, Geräuschen und Musik." : "Ohne Stimme: Zeiten sind geschätzt (Ton erzeugen mit npm run ton)."}
+            {bsp && <> · {bsp.drehbuch.szenen.length} Szenen: {bsp.drehbuch.szenen.map((s) => s.typ).join(" → ")}</>}
           </div>
-          <label className="field">
-            <span>Titel (Test der Live-Vorschau)</span>
-            <input value={titel} maxLength={24} onChange={(e) => setTitel(e.target.value)} />
-          </label>
         </section>
 
         <section className="card checks">
@@ -95,7 +130,7 @@ export const App: React.FC = () => {
           ))}
           {health && (
             <div className={`summary ${health.ok ? "ok" : "bad"}`}>
-              {health.ok ? "Alles bereit für Phase 1." : "Bitte die rot markierten Punkte beheben."}
+              {health.ok ? "Alles bereit." : "Bitte die rot markierten Punkte beheben."}
             </div>
           )}
         </section>

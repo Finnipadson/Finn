@@ -2,7 +2,7 @@
 
 Lokale Web-App: Thema eingeben → Drehbuch prüfen → Vorschau → animiertes Erklärvideo (MP4) mit Stimme, Untertiteln, Geräuschen und Musik.
 
-**Stand:** Phase 0 (Fundament) – App startet, Live-Vorschau (Remotion-Player) und System-Check funktionieren. Bauplan: [`erklaervideo-studio-plan.md`](erklaervideo-studio-plan.md)
+**Stand:** Phase 1 (Drehbuch → Video) – ein Drehbuch (JSON) wird ohne KI zu einem fertigen Video. Bauplan: [`erklaervideo-studio-plan.md`](erklaervideo-studio-plan.md)
 
 ## Starten
 
@@ -13,20 +13,59 @@ Doppelklick auf **`start.bat`**
 
 Beenden: das Fenster „Erklaervideo-Studio (Server)“ schließen.
 
-Für die Entwicklung:
+## Vom Drehbuch zum Video (Phase 1, Kommandozeile)
 
 ```bash
-npm run dev        # Server + Oberfläche (mit automatischem Neuladen)
-npm run typecheck  # TypeScript prüfen
-npm run studio     # Remotion-Studio für die Video-Bausteine
+npm run pruefen -- beispiele/pythagoras.json   # Drehbuch prüfen (verständliche Fehlermeldungen)
+npm run ton -- beispiele/pythagoras.json       # Stimme + Geräusche + Musik + Zeitliste erzeugen
+npm run render -- beispiele/pythagoras.json    # MP4 nach out/pythagoras.mp4 (60 fps)
+npm run render -- beispiele/x.json --ohne-ton  # ohne Stimme, Zeiten geschätzt
 ```
+
+In der App zeigt **Vorschau** jedes Beispiel aus `beispiele/` sofort – mit echter Stimme, sobald `npm run ton` gelaufen ist, sonst mit geschätzten Zeiten.
+
+## Das Drehbuch
+
+```json
+{
+  "titel": "Satz des Pythagoras", "format": "hoch", "stimme": "ava", "tempo": -3, "musik": true,
+  "szenen": [
+    { "typ": "titel", "titel": "Satz des Pythagoras", "unter": "einfach erklärt",
+      "sprecher": [{ "satz": "Okay, pass auf.", "pause": 0.35 }] },
+    { "typ": "formel",
+      "teile": [{ "text": "a²", "farbe": "a", "bei": "a" }, { "text": "+", "bei": "plus" }],
+      "sprecher": [{ "satz": "Also: a Quadrat plus b Quadrat gleich c Quadrat." }] }
+  ]
+}
+```
+
+- **`sprecher`**: Sätze der Szene, je mit `pause` (Sekunden danach) und optional `tempo` (Prozent, zusätzlich zum Grundtempo).
+- **`bei`**: verknüpft ein Element mit einem gesprochenen Wort dieser Szene – es erscheint genau dann. `"Quadrat#2"` = zweites Vorkommen. Ohne `bei` erscheinen Elemente nacheinander am Szenenanfang.
+- **Stimmen**: `ava` (Standard), `seraphina`, `florian`, `conrad`, `katja`.
+- **Formate**: `hoch` (1080×1920) oder `quer` (1920×1080).
+
+### Szenen-Bausteine
+
+| `typ` | Felder | |
+|---|---|---|
+| `titel` | `titel`, `unter?`, `kicker?` | großer Titel, Buchstaben-Animation |
+| `stichpunkte` | `punkte[]`: `text`, `unter?`, `icon?`, `bei?` (1–5) | Karten mit Icons |
+| `vergleich` | `links`/`rechts`: `titel`, `icon?`, `bei?`, `punkte[]` | links „schlecht“, rechts „gut“ |
+| `ablauf` | `schritte[]` (2–6), `form`: `kreis`/`kette`, `fehler?`, `erfolg?` | Stationen mit laufendem Punkt; Fehler → Extrarunde → Erfolg |
+| `formel` | `teile[]`: `text`, `farbe?`, `bei?`; `schritte[]?`; `merke?` | Formel baut sich auf, Rechenschritte darunter |
+| `geometrie` | `a`, `b`, `beschriftung?`, `dreieck?`/`katheten?`/`hypotenuse?`/`quadrate?`/`raster?`/`werte?` (je `{ "bei" }`) | rechtwinkliges Dreieck mit Quadraten |
+| `abschluss` | `text`, `unter?`, `bei?` | Merksatz mit Rahmen |
+
+Alle Szenen können zusätzlich `kicker` und `ueberschrift` haben.
+Farben: `a`, `b`, `c`, `akzent`, `text`, `gruen`, `rot`, `blau`, `lila`.
+Icons: `chat`, `datei`, `stift`, `terminal`, `haken`, `kreuz`, `idee`, `buch`, `karte`, `lupe`, `wegweiser`, `schild`, `stern`, `person`, `blitz`, `herz`, `zahnrad`, `uhr`, `rakete`, `ziel`.
 
 ## Voraussetzungen
 
 | Was | Wofür | Prüfen |
 |---|---|---|
 | Node.js 20+ | App, Server, Remotion | `node -v` |
-| Claude Code (angemeldet, Pro-Abo) | schreibt später das Drehbuch | `claude --version` |
+| Claude Code (angemeldet, Pro-Abo) | schreibt ab Phase 2 das Drehbuch | `claude --version` |
 | Python + `edge-tts` | Sprecherstimme | `python -m pip install edge-tts` |
 | FFmpeg | Ton-Effekte, Geräusche, Musik | `winget install Gyan.FFmpeg` |
 
@@ -35,13 +74,17 @@ Die App zeigt das alles im **System-Check** an.
 ## Aufbau
 
 ```
+src/drehbuch/          Typen, Prüfung, geschätztes Timing
+src/video/             Remotion: Erklaervideo.tsx (spielt jedes Drehbuch), kit.tsx (Farben, Icons, Helfer)
+src/video/bausteine/   die 7 Szenen-Bausteine
+tools/                 pruefen.ts, ton.py (Ton-Pipeline), render.ts
+beispiele/             Beispiel-Drehbücher (+ erzeugte .timing.json)
 server/index.ts        Lokaler Server (Express): System-Check; später Claude, Stimme, Rendern
-src/App.tsx            Oberfläche
-src/video/             Remotion: Video-Bausteine + Kompositionen (index.ts = Einstieg fürs Rendern)
-referenz/              Die 4 Testvideos (Code + Ton-Skripte) als Vorlage für die Szenen-Bausteine
+referenz/              Die 4 Testvideos (Code + Ton-Skripte) als Vorlage
 ```
 
 ## Hinweise
 
 - Nur für die eigene Nutzung: Die KI läuft über das eigene Claude-Code-Abo (`claude -p`), nicht über einen API-Schlüssel.
-- `projekte/`, Renders und Ton-Zwischendateien sind per `.gitignore` vom Repo ausgeschlossen.
+- `projekte/`, `public/ton/` (Ton-Dateien) und `out/` (Videos) sind per `.gitignore` vom Repo ausgeschlossen – alles neu erzeugbar.
+- edge-tts braucht Internet; bei Aussetzern wird automatisch bis zu 4× wiederholt.

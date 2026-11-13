@@ -1,0 +1,528 @@
+{
+ "fps": 60,
+ "dauer": 40.953,
+ "woerter": [
+  {
+   "text": "Was",
+   "start": 0.66,
+   "end": 0.839,
+   "szene": 0
+  },
+  {
+   "text": "ist",
+   "start": 0.851,
+   "end": 1.043,
+   "szene": 0
+  },
+  {
+   "text": "eigentlich",
+   "start": 1.055,
+   "end": 1.54,
+   "szene": 0
+  },
+  {
+   "text": "Claude",
+   "start": 1.553,
+   "end": 1.897,
+   "szene": 0
+  },
+  {
+   "text": "Code?",
+   "start": 1.897,
+   "end": 2.331,
+   "szene": 0
+  },
+  {
+   "text": "Ein",
+   "start": 2.931,
+   "end": 3.122,
+   "szene": 0
+  },
+  {
+   "text": "KI-Assistent,",
+   "start": 3.135,
+   "end": 4.079,
+   "szene": 0
+  },
+  {
+   "text": "der",
+   "start": 4.423,
+   "end": 4.564,
+   "szene": 0
+  },
+  {
+   "text": "selbst",
+   "start": 4.576,
+   "end": 4.946,
+   "szene": 0
+  },
+  {
+   "text": "am",
+   "start": 4.959,
+   "end": 5.048,
+   "szene": 0
+  },
+  {
+   "text": "Projekt",
+   "start": 5.061,
+   "end": 5.469,
+   "szene": 0
+  },
+  {
+   "text": "arbeitet.",
+   "start": 5.482,
+   "end": 6.081,
+   "szene": 0
+  },
+  {
+   "text": "Bei",
+   "start": 7.331,
+   "end": 7.472,
+   "szene": 1
+  },
+  {
+   "text": "einem",
+   "start": 7.472,
+   "end": 7.676,
+   "szene": 1
+  },
+  {
+   "text": "Chatbot",
+   "start": 7.689,
+   "end": 8.173,
+   "szene": 1
+  },
+  {
+   "text": "kopiert",
+   "start": 8.186,
+   "end": 8.581,
+   "szene": 1
+  },
+  {
+   "text": "man",
+   "start": 8.594,
+   "end": 8.747,
+   "szene": 1
+  },
+  {
+   "text": "Code",
+   "start": 8.76,
+   "end": 9.053,
+   "szene": 1
+  },
+  {
+   "text": "hin",
+   "start": 9.053,
+   "end": 9.257,
+   "szene": 1
+  },
+  {
+   "text": "und",
+   "start": 9.27,
+   "end": 9.436,
+   "szene": 1
+  },
+  {
+   "text": "her.",
+   "start": 9.449,
+   "end": 9.831,
+   "szene": 1
+  },
+  {
+   "text": "Claude",
+   "start": 10.431,
+   "end": 10.725,
+   "szene": 1
+  },
+  {
+   "text": "Code",
+   "start": 10.725,
+   "end": 11.031,
+   "szene": 1
+  },
+  {
+   "text": "dagegen",
+   "start": 11.031,
+   "end": 11.452,
+   "szene": 1
+  },
+  {
+   "text": "arbeitet",
+   "start": 11.465,
+   "end": 11.898,
+   "szene": 1
+  },
+  {
+   "text": "direkt",
+   "start": 11.911,
+   "end": 12.357,
+   "szene": 1
+  },
+  {
+   "text": "im",
+   "start": 12.37,
+   "end": 12.472,
+   "szene": 1
+  },
+  {
+   "text": "Projektordner.",
+   "start": 12.485,
+   "end": 13.352,
+   "szene": 1
+  },
+  {
+   "text": "Es",
+   "start": 13.852,
+   "end": 13.98,
+   "szene": 1
+  },
+  {
+   "text": "liest",
+   "start": 13.993,
+   "end": 14.248,
+   "szene": 1
+  },
+  {
+   "text": "Dateien,",
+   "start": 14.261,
+   "end": 14.783,
+   "szene": 1
+  },
+  {
+   "text": "führt",
+   "start": 15.166,
+   "end": 15.345,
+   "szene": 1
+  },
+  {
+   "text": "Befehle",
+   "start": 15.357,
+   "end": 15.817,
+   "szene": 1
+  },
+  {
+   "text": "aus",
+   "start": 15.829,
+   "end": 16.123,
+   "szene": 1
+  },
+  {
+   "text": "und",
+   "start": 16.123,
+   "end": 16.25,
+   "szene": 1
+  },
+  {
+   "text": "prüft",
+   "start": 16.263,
+   "end": 16.569,
+   "szene": 1
+  },
+  {
+   "text": "das",
+   "start": 16.569,
+   "end": 16.722,
+   "szene": 1
+  },
+  {
+   "text": "Ergebnis",
+   "start": 16.735,
+   "end": 17.181,
+   "szene": 1
+  },
+  {
+   "text": "selbst.",
+   "start": 17.194,
+   "end": 17.692,
+   "szene": 1
+  },
+  {
+   "text": "Verstehen,",
+   "start": 19.042,
+   "end": 19.626,
+   "szene": 2
+  },
+  {
+   "text": "lesen,",
+   "start": 20.006,
+   "end": 20.482,
+   "szene": 2
+  },
+  {
+   "text": "planen,",
+   "start": 20.849,
+   "end": 21.379,
+   "szene": 2
+  },
+  {
+   "text": "ändern,",
+   "start": 21.841,
+   "end": 22.33,
+   "szene": 2
+  },
+  {
+   "text": "testen.",
+   "start": 22.697,
+   "end": 23.322,
+   "szene": 2
+  },
+  {
+   "text": "Und",
+   "start": 23.971,
+   "end": 24.112,
+   "szene": 2
+  },
+  {
+   "text": "wenn",
+   "start": 24.125,
+   "end": 24.265,
+   "szene": 2
+  },
+  {
+   "text": "ein",
+   "start": 24.278,
+   "end": 24.392,
+   "szene": 2
+  },
+  {
+   "text": "Test",
+   "start": 24.405,
+   "end": 24.686,
+   "szene": 2
+  },
+  {
+   "text": "fehlschlägt?",
+   "start": 24.699,
+   "end": 25.4,
+   "szene": 2
+  },
+  {
+   "text": "Dann",
+   "start": 25.9,
+   "end": 26.117,
+   "szene": 2
+  },
+  {
+   "text": "sucht",
+   "start": 26.13,
+   "end": 26.423,
+   "szene": 2
+  },
+  {
+   "text": "Claude",
+   "start": 26.423,
+   "end": 26.704,
+   "szene": 2
+  },
+  {
+   "text": "den",
+   "start": 26.704,
+   "end": 26.844,
+   "szene": 2
+  },
+  {
+   "text": "Fehler,",
+   "start": 26.857,
+   "end": 27.29,
+   "szene": 2
+  },
+  {
+   "text": "bis",
+   "start": 27.609,
+   "end": 27.75,
+   "szene": 2
+  },
+  {
+   "text": "es",
+   "start": 27.762,
+   "end": 27.864,
+   "szene": 2
+  },
+  {
+   "text": "funktioniert.",
+   "start": 27.864,
+   "end": 28.591,
+   "szene": 2
+  },
+  {
+   "text": "Man",
+   "start": 29.941,
+   "end": 30.107,
+   "szene": 3
+  },
+  {
+   "text": "muss",
+   "start": 30.12,
+   "end": 30.324,
+   "szene": 3
+  },
+  {
+   "text": "aber",
+   "start": 30.337,
+   "end": 30.554,
+   "szene": 3
+  },
+  {
+   "text": "klar",
+   "start": 30.566,
+   "end": 30.911,
+   "szene": 3
+  },
+  {
+   "text": "beschreiben,",
+   "start": 30.924,
+   "end": 31.485,
+   "szene": 3
+  },
+  {
+   "text": "was",
+   "start": 31.689,
+   "end": 31.88,
+   "szene": 3
+  },
+  {
+   "text": "man",
+   "start": 31.893,
+   "end": 32.071,
+   "szene": 3
+  },
+  {
+   "text": "will,",
+   "start": 32.072,
+   "end": 32.378,
+   "szene": 3
+  },
+  {
+   "text": "Ergebnisse",
+   "start": 32.728,
+   "end": 33.302,
+   "szene": 3
+  },
+  {
+   "text": "prüfen",
+   "start": 33.314,
+   "end": 33.812,
+   "szene": 3
+  },
+  {
+   "text": "und",
+   "start": 33.825,
+   "end": 33.99,
+   "szene": 3
+  },
+  {
+   "text": "selbst",
+   "start": 34.003,
+   "end": 34.373,
+   "szene": 3
+  },
+  {
+   "text": "entscheiden.",
+   "start": 34.386,
+   "end": 35.011,
+   "szene": 3
+  },
+  {
+   "text": "Claude",
+   "start": 36.361,
+   "end": 36.68,
+   "szene": 4
+  },
+  {
+   "text": "ist",
+   "start": 36.693,
+   "end": 36.906,
+   "szene": 4
+  },
+  {
+   "text": "eher",
+   "start": 36.919,
+   "end": 37.132,
+   "szene": 4
+  },
+  {
+   "text": "ein",
+   "start": 37.145,
+   "end": 37.278,
+   "szene": 4
+  },
+  {
+   "text": "schneller",
+   "start": 37.292,
+   "end": 37.677,
+   "szene": 4
+  },
+  {
+   "text": "Kollege",
+   "start": 37.691,
+   "end": 38.156,
+   "szene": 4
+  },
+  {
+   "text": "als",
+   "start": 38.169,
+   "end": 38.409,
+   "szene": 4
+  },
+  {
+   "text": "ein",
+   "start": 38.409,
+   "end": 38.542,
+   "szene": 4
+  },
+  {
+   "text": "Zauberknopf.",
+   "start": 38.555,
+   "end": 39.353,
+   "szene": 4
+  }
+ ],
+ "szenen": [
+  {
+   "start": 0.0,
+   "ende": 6.871,
+   "bei": {}
+  },
+  {
+   "start": 6.871,
+   "ende": 18.582,
+   "bei": {
+    "Chatbot": 7.689,
+    "kopiert": 8.186,
+    "dagegen": 11.031,
+    "liest": 13.993,
+    "führt": 15.166,
+    "prüft": 16.263
+   }
+  },
+  {
+   "start": 18.582,
+   "ende": 29.481,
+   "bei": {
+    "verstehen": 19.042,
+    "lesen": 20.006,
+    "planen": 20.849,
+    "ändern": 21.841,
+    "testen": 22.697,
+    "fehlschlägt": 24.699,
+    "funktioniert": 27.864
+   }
+  },
+  {
+   "start": 29.481,
+   "ende": 35.901,
+   "bei": {
+    "beschreiben": 30.924,
+    "prüfen": 33.314,
+    "entscheiden": 34.386
+   }
+  },
+  {
+   "start": 35.901,
+   "ende": 40.953,
+   "bei": {
+    "Kollege": 37.691
+   }
+  }
+ ]
+}

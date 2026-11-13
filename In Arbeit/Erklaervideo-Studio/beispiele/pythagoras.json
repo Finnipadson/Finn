@@ -1,0 +1,72 @@
+{
+  "titel": "Satz des Pythagoras",
+  "format": "hoch",
+  "stimme": "ava",
+  "tempo": -3,
+  "musik": true,
+  "szenen": [
+    {
+      "typ": "titel",
+      "kicker": "Mathe kurz",
+      "titel": "Satz des Pythagoras",
+      "unter": "einfach erklärt",
+      "sprecher": [
+        { "satz": "Okay, pass auf.", "pause": 0.35 },
+        { "satz": "Der Satz des Pythagoras.", "pause": 0.3 },
+        { "satz": "Klingt kompliziert, ist er aber gar nicht.", "pause": 0.5 }
+      ]
+    },
+    {
+      "typ": "geometrie",
+      "a": 3,
+      "b": 4,
+      "dreieck": { "bei": "Dreieck" },
+      "katheten": { "bei": "Katheten" },
+      "hypotenuse": { "bei": "Hypotenuse" },
+      "quadrate": { "bei": "Quadrat" },
+      "raster": { "bei": "Kästchen" },
+      "werte": { "bei": "9" },
+      "sprecher": [
+        { "satz": "Er gilt für jedes Dreieck mit einem rechten Winkel.", "pause": 0.5 },
+        { "satz": "Die zwei kurzen Seiten heißen Katheten, a und b.", "pause": 0.4 },
+        { "satz": "Die lange Seite gegenüber ist die Hypotenuse, c.", "pause": 0.55 },
+        { "satz": "Und jetzt der Trick: Auf jede Seite kommt ein Quadrat.", "pause": 0.35 },
+        { "satz": "Die zwei kleinen zusammen sind genau so groß wie das große.", "pause": 0.5, "tempo": -4 },
+        { "satz": "Zähl einfach die Kästchen:", "pause": 0.3 },
+        { "satz": "9 plus 16 ergibt 25.", "pause": 0.6, "tempo": -4 }
+      ]
+    },
+    {
+      "typ": "formel",
+      "kicker": "Die Formel",
+      "teile": [
+        { "text": "a²", "farbe": "a", "bei": "a" },
+        { "text": "+", "bei": "plus" },
+        { "text": "b²", "farbe": "b", "bei": "plus" },
+        { "text": "=", "bei": "gleich" },
+        { "text": "c²", "farbe": "c", "bei": "gleich" }
+      ],
+      "schritte": [
+        { "text": "3² + 4² = c²", "bei": "Beispiel" },
+        { "text": "9 + 16 = 25", "bei": "ergibt" },
+        { "text": "c = √25 = 5", "bei": "Wurzel" }
+      ],
+      "sprecher": [
+        { "satz": "Also: a Quadrat plus b Quadrat gleich c Quadrat.", "pause": 0.5 },
+        { "satz": "Für unser Beispiel heißt das:", "pause": 0.3 },
+        { "satz": "9 plus 16 ergibt 25.", "pause": 0.35 },
+        { "satz": "Und die Wurzel aus 25 ist 5.", "pause": 0.6, "tempo": -5 }
+      ]
+    },
+    {
+      "typ": "abschluss",
+      "text": "a² + b² = c²",
+      "unter": "Merke",
+      "bei": "Merke",
+      "sprecher": [
+        { "satz": "Merke: a Quadrat plus b Quadrat gleich c Quadrat.", "pause": 0.4, "tempo": -4 },
+        { "satz": "Das ist schon alles.", "pause": 0.2 }
+      ]
+    }
+  ]
+}
