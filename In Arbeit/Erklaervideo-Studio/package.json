@@ -1,0 +1,33 @@
+{
+  "name": "erklaervideo-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Thema eingeben → Drehbuch → animiertes Erklärvideo (Remotion + edge-tts + Claude Code)",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n server,web -c cyan,magenta \"tsx watch server/index.ts\" \"vite\"",
+    "server": "tsx server/index.ts",
+    "web": "vite",
+    "typecheck": "tsc --noEmit",
+    "studio": "remotion studio src/video/index.ts"
+  },
+  "dependencies": {
+    "@remotion/player": "4.0.438",
+    "express": "^5.1.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.438"
+  },
+  "devDependencies": {
+    "@remotion/cli": "4.0.438",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.0",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "^4.4.1",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.4",
+    "typescript": "5.9.3",
+    "vite": "^6.3.5"
+  }
+}

@@ -1,0 +1,167 @@
+[
+ {
+  "text": "Ein",
+  "start": 0.096,
+  "end": 0.316
+ },
+ {
+  "text": "Login-Bug",
+  "start": 0.351,
+  "end": 0.825
+ },
+ {
+  "text": "kommt",
+  "start": 0.883,
+  "end": 1.08
+ },
+ {
+  "text": "rein.",
+  "start": 1.126,
+  "end": 1.393
+ },
+ {
+  "text": "Erst",
+  "start": 2.292,
+  "end": 2.581
+ },
+ {
+  "text": "mal",
+  "start": 2.604,
+  "end": 2.755
+ },
+ {
+  "text": "nicht",
+  "start": 2.778,
+  "end": 2.928
+ },
+ {
+  "text": "raten:",
+  "start": 2.963,
+  "end": 3.38
+ },
+ {
+  "text": "Stacktrace",
+  "start": 3.484,
+  "end": 4.039
+ },
+ {
+  "text": "lesen,",
+  "start": 4.062,
+  "end": 4.456
+ },
+ {
+  "text": "Logs",
+  "start": 4.56,
+  "end": 4.838
+ },
+ {
+  "text": "checken,",
+  "start": 4.896,
+  "end": 5.289
+ },
+ {
+  "text": "einen",
+  "start": 5.475,
+  "end": 5.706
+ },
+ {
+  "text": "Test",
+  "start": 5.706,
+  "end": 5.961
+ },
+ {
+  "text": "schreiben,",
+  "start": 5.984,
+  "end": 6.458
+ },
+ {
+  "text": "der",
+  "start": 6.655,
+  "end": 6.782
+ },
+ {
+  "text": "den",
+  "start": 6.817,
+  "end": 6.956
+ },
+ {
+  "text": "Fehler",
+  "start": 6.979,
+  "end": 7.245
+ },
+ {
+  "text": "zeigt.",
+  "start": 7.292,
+  "end": 7.627
+ },
+ {
+  "text": "Dann",
+  "start": 8.542,
+  "end": 8.738
+ },
+ {
+  "text": "den",
+  "start": 8.762,
+  "end": 8.889
+ },
+ {
+  "text": "Aufwand",
+  "start": 8.935,
+  "end": 9.317
+ },
+ {
+  "text": "hochdrehen.",
+  "start": 9.352,
+  "end": 9.838
+ },
+ {
+  "text": "Fünf",
+  "start": 10.752,
+  "end": 11.111
+ },
+ {
+  "text": "Minuten",
+  "start": 11.134,
+  "end": 11.481
+ },
+ {
+  "text": "später:",
+  "start": 11.505,
+  "end": 11.956
+ },
+ {
+  "text": "Test",
+  "start": 12.176,
+  "end": 12.373
+ },
+ {
+  "text": "grün,",
+  "start": 12.465,
+  "end": 12.755
+ },
+ {
+  "text": "und",
+  "start": 12.928,
+  "end": 13.079
+ },
+ {
+  "text": "der",
+  "start": 13.09,
+  "end": 13.206
+ },
+ {
+  "text": "Fix",
+  "start": 13.218,
+  "end": 13.484
+ },
+ {
+  "text": "ist",
+  "start": 13.53,
+  "end": 13.669
+ },
+ {
+  "text": "serviert!",
+  "start": 13.704,
+  "end": 14.109
+ }
+]

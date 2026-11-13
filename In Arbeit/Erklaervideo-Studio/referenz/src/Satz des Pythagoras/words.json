@@ -1,0 +1,577 @@
+[
+ {
+  "text": "Der",
+  "start": 0.1,
+  "end": 0.237
+ },
+ {
+  "text": "Satz",
+  "start": 0.25,
+  "end": 0.5
+ },
+ {
+  "text": "des",
+  "start": 0.55,
+  "end": 0.688
+ },
+ {
+  "text": "Pythagoras,",
+  "start": 0.75,
+  "end": 1.488
+ },
+ {
+  "text": "einfach",
+  "start": 1.688,
+  "end": 2.1
+ },
+ {
+  "text": "erklärt.",
+  "start": 2.15,
+  "end": 2.587
+ },
+ {
+  "text": "Er",
+  "start": 3.562,
+  "end": 3.725
+ },
+ {
+  "text": "gilt",
+  "start": 3.775,
+  "end": 3.975
+ },
+ {
+  "text": "für",
+  "start": 4.013,
+  "end": 4.15
+ },
+ {
+  "text": "jedes",
+  "start": 4.175,
+  "end": 4.513
+ },
+ {
+  "text": "rechtwinklige",
+  "start": 4.537,
+  "end": 5.188
+ },
+ {
+  "text": "Dreieck.",
+  "start": 5.237,
+  "end": 5.675
+ },
+ {
+  "text": "Die",
+  "start": 6.65,
+  "end": 6.825
+ },
+ {
+  "text": "zwei",
+  "start": 6.888,
+  "end": 7.088
+ },
+ {
+  "text": "kurzen",
+  "start": 7.15,
+  "end": 7.525
+ },
+ {
+  "text": "Seiten",
+  "start": 7.537,
+  "end": 7.838
+ },
+ {
+  "text": "am",
+  "start": 7.888,
+  "end": 8.012
+ },
+ {
+  "text": "rechten",
+  "start": 8.037,
+  "end": 8.375
+ },
+ {
+  "text": "Winkel",
+  "start": 8.4,
+  "end": 8.7
+ },
+ {
+  "text": "heißen",
+  "start": 8.725,
+  "end": 9.05
+ },
+ {
+  "text": "Katheten.",
+  "start": 9.062,
+  "end": 9.575
+ },
+ {
+  "text": "Wir",
+  "start": 10.575,
+  "end": 10.812
+ },
+ {
+  "text": "nennen",
+  "start": 10.838,
+  "end": 11.113
+ },
+ {
+  "text": "sie",
+  "start": 11.125,
+  "end": 11.25
+ },
+ {
+  "text": "a",
+  "start": 11.325,
+  "end": 11.425
+ },
+ {
+  "text": "und",
+  "start": 11.475,
+  "end": 11.613
+ },
+ {
+  "text": "b.",
+  "start": 11.662,
+  "end": 11.838
+ },
+ {
+  "text": "Die",
+  "start": 12.85,
+  "end": 12.988
+ },
+ {
+  "text": "lange",
+  "start": 13.025,
+  "end": 13.25
+ },
+ {
+  "text": "Seite",
+  "start": 13.275,
+  "end": 13.562
+ },
+ {
+  "text": "gegenüber",
+  "start": 13.625,
+  "end": 14.062
+ },
+ {
+  "text": "vom",
+  "start": 14.075,
+  "end": 14.275
+ },
+ {
+  "text": "rechten",
+  "start": 14.3,
+  "end": 14.637
+ },
+ {
+  "text": "Winkel",
+  "start": 14.662,
+  "end": 15.037
+ },
+ {
+  "text": "ist",
+  "start": 15.1,
+  "end": 15.262
+ },
+ {
+  "text": "die",
+  "start": 15.275,
+  "end": 15.325
+ },
+ {
+  "text": "Hypotenuse,",
+  "start": 15.375,
+  "end": 16.1
+ },
+ {
+  "text": "c.",
+  "start": 16.262,
+  "end": 16.512
+ },
+ {
+  "text": "Jetzt",
+  "start": 17.512,
+  "end": 17.9
+ },
+ {
+  "text": "kommt",
+  "start": 17.975,
+  "end": 18.163
+ },
+ {
+  "text": "der",
+  "start": 18.175,
+  "end": 18.262
+ },
+ {
+  "text": "Trick:",
+  "start": 18.3,
+  "end": 18.525
+ },
+ {
+  "text": "Baut",
+  "start": 18.775,
+  "end": 18.975
+ },
+ {
+  "text": "man",
+  "start": 19.012,
+  "end": 19.175
+ },
+ {
+  "text": "auf",
+  "start": 19.225,
+  "end": 19.387
+ },
+ {
+  "text": "jede",
+  "start": 19.425,
+  "end": 19.637
+ },
+ {
+  "text": "Seite",
+  "start": 19.663,
+  "end": 19.962
+ },
+ {
+  "text": "ein",
+  "start": 20.025,
+  "end": 20.15
+ },
+ {
+  "text": "Quadrat,",
+  "start": 20.175,
+  "end": 20.675
+ },
+ {
+  "text": "dann",
+  "start": 20.975,
+  "end": 21.175
+ },
+ {
+  "text": "sind",
+  "start": 21.175,
+  "end": 21.4
+ },
+ {
+  "text": "die",
+  "start": 21.413,
+  "end": 21.5
+ },
+ {
+  "text": "zwei",
+  "start": 21.562,
+  "end": 21.812
+ },
+ {
+  "text": "kleinen",
+  "start": 21.875,
+  "end": 22.25
+ },
+ {
+  "text": "Quadrate",
+  "start": 22.275,
+  "end": 22.762
+ },
+ {
+  "text": "zusammen",
+  "start": 22.812,
+  "end": 23.275
+ },
+ {
+  "text": "genau",
+  "start": 23.312,
+  "end": 23.575
+ },
+ {
+  "text": "so",
+  "start": 23.613,
+  "end": 23.762
+ },
+ {
+  "text": "groß",
+  "start": 23.825,
+  "end": 24.1
+ },
+ {
+  "text": "wie",
+  "start": 24.137,
+  "end": 24.2
+ },
+ {
+  "text": "das",
+  "start": 24.238,
+  "end": 24.375
+ },
+ {
+  "text": "große.",
+  "start": 24.438,
+  "end": 24.85
+ },
+ {
+  "text": "Also:",
+  "start": 25.837,
+  "end": 26.288
+ },
+ {
+  "text": "a",
+  "start": 26.488,
+  "end": 26.575
+ },
+ {
+  "text": "Quadrat",
+  "start": 26.65,
+  "end": 27.075
+ },
+ {
+  "text": "plus",
+  "start": 27.163,
+  "end": 27.413
+ },
+ {
+  "text": "b",
+  "start": 27.475,
+  "end": 27.55
+ },
+ {
+  "text": "Quadrat",
+  "start": 27.613,
+  "end": 28.062
+ },
+ {
+  "text": "gleich",
+  "start": 28.15,
+  "end": 28.4
+ },
+ {
+  "text": "c",
+  "start": 28.462,
+  "end": 28.587
+ },
+ {
+  "text": "Quadrat.",
+  "start": 28.65,
+  "end": 29.125
+ },
+ {
+  "text": "Ein",
+  "start": 30.1,
+  "end": 30.312
+ },
+ {
+  "text": "Beispiel:",
+  "start": 30.363,
+  "end": 30.938
+ },
+ {
+  "text": "a",
+  "start": 31.113,
+  "end": 31.212
+ },
+ {
+  "text": "ist",
+  "start": 31.275,
+  "end": 31.438
+ },
+ {
+  "text": "3",
+  "start": 31.45,
+  "end": 31.663
+ },
+ {
+  "text": "und",
+  "start": 31.738,
+  "end": 31.887
+ },
+ {
+  "text": "b",
+  "start": 31.95,
+  "end": 32.05
+ },
+ {
+  "text": "ist",
+  "start": 32.112,
+  "end": 32.288
+ },
+ {
+  "text": "4.",
+  "start": 32.325,
+  "end": 32.65
+ },
+ {
+  "text": "3",
+  "start": 32.712,
+  "end": 32.819
+ },
+ {
+  "text": "mal",
+  "start": 32.819,
+  "end": 33.138
+ },
+ {
+  "text": "3",
+  "start": 33.175,
+  "end": 33.388
+ },
+ {
+  "text": "ist",
+  "start": 33.45,
+  "end": 33.638
+ },
+ {
+  "text": "9,",
+  "start": 33.638,
+  "end": 33.95
+ },
+ {
+  "text": "4",
+  "start": 34.087,
+  "end": 34.2
+ },
+ {
+  "text": "mal",
+  "start": 34.2,
+  "end": 34.538
+ },
+ {
+  "text": "4",
+  "start": 34.55,
+  "end": 34.775
+ },
+ {
+  "text": "ist",
+  "start": 34.837,
+  "end": 35.013
+ },
+ {
+  "text": "16.",
+  "start": 35.038,
+  "end": 35.575
+ },
+ {
+  "text": "9",
+  "start": 35.612,
+  "end": 35.718
+ },
+ {
+  "text": "plus",
+  "start": 35.718,
+  "end": 36.138
+ },
+ {
+  "text": "16",
+  "start": 36.138,
+  "end": 36.612
+ },
+ {
+  "text": "ergibt",
+  "start": 36.65,
+  "end": 36.913
+ },
+ {
+  "text": "25.",
+  "start": 36.95,
+  "end": 37.975
+ },
+ {
+  "text": "Die",
+  "start": 38.913,
+  "end": 39.05
+ },
+ {
+  "text": "Wurzel",
+  "start": 39.1,
+  "end": 39.425
+ },
+ {
+  "text": "aus",
+  "start": 39.475,
+  "end": 39.663
+ },
+ {
+  "text": "25",
+  "start": 39.688,
+  "end": 40.575
+ },
+ {
+  "text": "ist",
+  "start": 40.625,
+  "end": 40.775
+ },
+ {
+  "text": "5,",
+  "start": 40.812,
+  "end": 41.15
+ },
+ {
+  "text": "also",
+  "start": 41.312,
+  "end": 41.625
+ },
+ {
+  "text": "ist",
+  "start": 41.688,
+  "end": 41.875
+ },
+ {
+  "text": "c",
+  "start": 41.888,
+  "end": 42.038
+ },
+ {
+  "text": "gleich",
+  "start": 42.1,
+  "end": 42.668
+ },
+ {
+  "text": "5.",
+  "start": 42.668,
+  "end": 42.763
+ },
+ {
+  "text": "Merke:",
+  "start": 42.763,
+  "end": 43.163
+ },
+ {
+  "text": "a",
+  "start": 43.362,
+  "end": 43.475
+ },
+ {
+  "text": "Quadrat",
+  "start": 43.538,
+  "end": 43.962
+ },
+ {
+  "text": "plus",
+  "start": 44.05,
+  "end": 44.3
+ },
+ {
+  "text": "b",
+  "start": 44.362,
+  "end": 44.438
+ },
+ {
+  "text": "Quadrat",
+  "start": 44.5,
+  "end": 44.95
+ },
+ {
+  "text": "gleich",
+  "start": 45.025,
+  "end": 45.263
+ },
+ {
+  "text": "c",
+  "start": 45.325,
+  "end": 45.462
+ },
+ {
+  "text": "Quadrat.",
+  "start": 45.525,
+  "end": 46.013
+ }
+]

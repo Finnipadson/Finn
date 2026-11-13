@@ -1,6 +1,6 @@
 # Erklärvideo-Studio – Bauplan
 
-Stand: 13.11.2026 · Status: Planung · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
+Stand: 13.11.2026 · Status: **Phase 0 fertig**, als Nächstes Phase 1 · Projektnotiz: `Notizen/Projekte/Erklärvideo-Studio.md`
 
 **Ziel:** Thema eingeben → Drehbuch prüfen → Vorschau → fertiges animiertes Erklärvideo (MP4) mit Stimme, Untertiteln, Geräuschen und Musik. Nur für die eigene Nutzung, KI läuft über Claude Code (Pro-Abo).
 
@@ -64,10 +64,11 @@ Jeder Baustein funktioniert in **Hoch- und Querformat** und in jedem **Design-Th
 
 ## Phasen
 
-### Phase 0 – Fundament
+### Phase 0 – Fundament ✅ (13.11.2026)
 - Projektordner anlegen (Remotion + Express + Vite/React), `.gitignore`, `README.md` mit Start/Build
 - Bestehenden `remotion`-Ordner mit den 4 Testvideos ins Repo übernehmen bzw. als Referenz sichern
 - **Fertig, wenn:** `npm run dev` startet die (leere) App im eigenen Fenster, alles ist gepusht
+- **Ergebnis:** `start.bat` startet Server (4710) + Oberfläche (5173) und öffnet Edge im App-Modus. Oberfläche mit Schritt-Leiste (Platzhalter), **Live-Vorschau** per `@remotion/player` (Hoch/Quer umschaltbar, Titel live änderbar) und **System-Check** (Node, Claude Code, Python + edge-tts, FFmpeg). Testvideos als Referenz in `referenz/`.
 
 ### Phase 1 – Drehbuch → Video (ohne KI)
 - JSON-Schema fürs Drehbuch + Prüfung (Fehler verständlich anzeigen)

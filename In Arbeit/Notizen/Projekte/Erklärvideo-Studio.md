@@ -1,6 +1,6 @@
 ---
 typ: app
-status: idee
+status: in Arbeit (Phase 0 fertig)
 technik: Windows-App + Claude Code (Pro-Abo) + Remotion + edge-tts + FFmpeg
 erstellt: 2026-11-13
 ---
@@ -14,6 +14,8 @@ Windows-App, die aus einer kurzen Beschreibung automatisch ein fertiges animiert
 	- Koch Szene HD (Qualitäts-Stufe, 60 fps)
 	- Claude Code Erklaerung (Querformat, 7 Szenen, echte Screenshots)
 - Bauplan: [[erklaervideo-studio-plan]] (Phasen 0–5, Drehbuch als JSON aus Szenen-Bausteinen)
+- App: Ordner `Erklaervideo-Studio/`, starten mit **`start.bat`** (öffnet eigenes Fenster), Anleitung in [[Erklaervideo-Studio/README|README]]
+- Testvideo-Code als Referenz: `Erklaervideo-Studio/referenz/`
 
 ## Ablauf in der App
 
@@ -40,7 +42,8 @@ Windows-App, die aus einer kurzen Beschreibung automatisch ein fertiges animiert
 - [x] Bauplan mit Phasen schreiben
 - [ ] Szenen-Bibliothek aus den Testvideos herauslösen (wiederverwendbare Bausteine)
 - [ ] Echte lizenzfreie Musik statt synthetischer Akkorde
-- [ ] Remotion-Ordner auf GitHub sichern
+- [x] Testvideo-Code auf GitHub sichern (in `referenz/`)
+- [ ] Phase 1: Drehbuch → Video (6 Kern-Bausteine, Ton-Pipeline als Modul)
 
 ## Notizen
 

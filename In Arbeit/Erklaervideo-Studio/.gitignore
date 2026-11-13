@@ -1,0 +1,7 @@
+node_modules/
+dist/
+out/
+# Später: gespeicherte Video-Projekte, Renders und Ton-Zwischendateien
+projekte/
+**/_work/
+*.log
