@@ -25,13 +25,29 @@ PC-App, in die man NVIDIA-Bildschirmaufnahmen (ShadowPlay/NVIDIA App) lädt und 
 - **Kombination**: Ton als Vorfilter, Bild als Bestätigung.
 - Schneiden mit **FFmpeg** (schnell und ohne Qualitätsverlust per Stream-Copy, genau auf den Frame nur mit Neu-Kodierung).
 
+## Entscheidungen (2026-11-14)
+
+- [x] Spiel: zuerst **Apex Legends**, später weitere Spiele (Erkennung pro Spiel als austauschbares „Spielprofil“)
+- [x] Clip-Länge: Standard ca. 10 s um den Kill, die App darf aber selbst entscheiden: Kampfbeginn (erste Schüsse/Treffer) bis kurz nach dem letzten Kill; nahe Kills werden zu einem Clip zusammengefasst
+- [x] Ergebnis: Highlights aus den Aufnahmen schneiden und zu **einem Video** zusammenfügen
+- [x] Technik: **Python + FFmpeg + OpenCV** (Bild- und Tonauswertung geht dort am besten), Bedienung als lokale Web-Oberfläche
+- [x] Mehrwert gegenüber NVIDIA: Aufnahmen von 2–30 min, in denen die Hälfte der Zeit nichts passiert, auf die Action eindampfen
+
+## Ist-Stand der Aufnahmen (geprüft 2026-11-14)
+
+- Ordner `Videos\NVIDIA\Apex Legends\`, Dateien `… .DVR.mp4` (Instant Replay)
+- 2560×1440, 120 fps, H.264, eine AAC-Stereospur (Spiel + evtl. Mikro gemischt)
+- ca. 85 Mbit/s → 2,5 min ≈ 1,6 GB
+- Anfang der DVR-Dateien hat kaputte Frames (normal bei Instant Replay), Schnitt muss das abfangen
+- FFmpeg 8.1 und Python 3.14 sind installiert
+
 ## Offene Fragen
 
-- [ ] Für welche Spiele zuerst? (Davon hängt die Kill-Erkennung ab.)
-- [ ] Wie viele Sekunden vor/nach einem Kill sollen in den Clip?
-- [ ] Nur Clips oder auch fertiges Montage-Video (mit Musik, Übergängen)?
-- [ ] Technik: C# WPF (wie PC Aufräumer) oder Python?
-- [ ] NVIDIA hat für manche Spiele eine eigene „Highlights“-Funktion: Was soll die App besser machen?
+- [ ] Zählen Knocks (niedergeschlagen) auch als Highlight oder nur Kills?
+- [ ] Sollen eigene Tode / Champion-Sieg mit rein?
+- [ ] Montage: Musik darunter? Übergänge oder harte Schnitte?
+- [ ] Format: nur 16:9 (YouTube) oder auch hochkant (TikTok/Shorts)?
+- [ ] Ist dein Mikro in der Aufnahme? (Stört die Tonerkennung, ggf. im Video stummschalten)
 
 ## Notizen
 
