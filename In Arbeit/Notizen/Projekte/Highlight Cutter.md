@@ -56,6 +56,11 @@ PC-App, in die man NVIDIA-Bildschirmaufnahmen (ShadowPlay/NVIDIA App) lädt und 
 
 - [ ] **Übersicht „Meine Videos“ in der App**: alle bisher erstellten Highlight-Videos (aus `Videos\Highlights`) als Liste/Galerie mit Vorschaubild, Datum, Länge, Format (16:9/9:16); abspielen, herunterladen bzw. speichern unter, im Ordner zeigen, löschen *(Idee 2026-11-14)*
 - [ ] **Clips direkt in der App anschauen**: erstellte Videos und die einzelnen Clips darin in einem großen eingebauten Player abspielen (ohne externen Videoplayer), z. B. Kapitelmarken pro Clip zum Springen, Vollbild, nächster/vorheriger Clip *(Idee 2026-11-14; heute gibt es schon die Vorschau vor dem Export und einen Player auf der Fertig-Seite, aber keinen für ältere Videos)*
+- [ ] **Clip-Bewertung / Best-of**: jeder Clip bekommt Punkte (Anzahl Kills, Squad-Wipe, Champion, Schaden) → Option „nur die besten X Minuten“ *(Idee 2026-11-14)*
+- [ ] **Kill-Einblendung**: kurzer Text wie „3 KILLS“ oder „SQUAD WIPE“ am Anfang des Clips *(Idee 2026-11-14)*
+- [ ] **Kampfbeginn auch übers Bild**: Trefferanzeige/Schadenszahlen zusätzlich zum Ton auswerten, damit lange Gefechte mit Pausen > 10 s komplett im Clip landen *(Idee 2026-11-14)*
+- [ ] **Thumbnail vorschlagen**: bestes Standbild (z. B. Kill-Moment) automatisch als YouTube-Vorschaubild exportieren *(Idee 2026-11-14)*
+- [ ] **Weitere Spiele**: neue Spielprofile (z. B. Valorant, Fortnite, CS2); welche Spiele, ist noch offen *(Idee 2026-11-14)*
 
 ## Notizen
 
