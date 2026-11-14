@@ -51,10 +51,11 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 		- Farben und Schriften aus einem Design herauslesen (Farbpalette)
 - [ ] **Datei-Austausch mit Kollegen** (14.11.2026)
 	- Idee: Große Dateien (Videos, Clips, Ordner, Spiele-Mods …) schnell an Kollegen schicken, weil Discord nur kleine Dateien erlaubt
-	- **Machbar: ja.** Mögliche Wege:
-		- **Direkt von PC zu PC (WebRTC, Favorit)**: Webseite öffnen, Datei reinziehen, Link/Code an den Kollegen schicken, die Datei geht direkt zwischen den Rechnern; keine Größengrenze, kein Speicherplatz nötig, kostenlos. Nachteil: Beide müssen gleichzeitig online sein
-		- **Eigener kleiner Server auf dem eigenen PC** (z. B. über Cloudflare Tunnel oder Tailscale erreichbar): Dateien hochladen, Kollegen laden sie später per Link; der PC muss dafür an sein
-		- **Mit Cloud-Speicher**: Dateien bleiben abrufbar, auch wenn man offline ist, kostet aber ab einer gewissen Menge Geld
+	- **Entschieden (14.11.2026): Direkt von PC zu PC (WebRTC)**
+		- Webseite öffnen, Datei reinziehen, Link an den Kollegen schicken, die Datei geht direkt von Rechner zu Rechner
+		- Keine Größengrenze, kein Speicherplatz auf einem Server nötig, kostenlos
+		- Haken: Beide müssen gleichzeitig online sein (Seite offen lassen, bis die Übertragung fertig ist)
+	- Verworfen: eigener Server auf dem PC (PC muss immer an sein), Cloud-Speicher (kostet ab einer gewissen Menge)
 	- Mögliche Funktionen (Vorschläge):
 		- Drag & Drop, ganze Ordner (automatisch als ZIP), Fortschrittsbalken mit Geschwindigkeit
 		- Link mit Ablaufzeit und optionalem Passwort, Verschlüsselung
