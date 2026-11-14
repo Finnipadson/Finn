@@ -64,4 +64,4 @@ PC-App, in die man NVIDIA-Bildschirmaufnahmen (ShadowPlay/NVIDIA App) lädt und 
 
 ## Notizen
 
--
+- 2026-11-14: Oberfläche neu im Editor-Layout (Vorbild: Dribbble-Shot „ClipPilot“ von Potara Studio): Icon-Leiste, Clip-Raster links, große Vorschau mit Scrub-Leiste, Clip-Details rechts (Feinschnitt, Momente), Montage-Zeitleiste unten (Clip-Enden dort ziehbar). Farben neutral schwarz + Blau, Icon blau. Entwürfe in `HighlightCutter/design-entwurf/`.

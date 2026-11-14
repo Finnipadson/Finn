@@ -96,25 +96,6 @@ function setzeMock(an) {
   if (an) $('#demo').hidden = false;
 }
 
-// ------------------------------------------------------------------ Ansichten
-function zeigeView(v) {
-  S.view = v;
-  for (const name of ['aufnahmen', 'clips', 'fertig']) $('#v-' + name).hidden = name !== v;
-  $('#a-aufnahmen').hidden = v !== 'aufnahmen';
-  $('#a-clips').hidden = v !== 'clips';
-  if (v !== 'clips') { $('#player').pause(); S.montage = false; montageKnopf(); }
-  if (v !== 'fertig') $('#ergebnis-player').pause();
-  for (const b of $$('.step')) {
-    const ziel = b.dataset.view;
-    const erreichbar = ziel === 'aufnahmen' || (ziel === 'clips' && S.clips !== null) || (ziel === 'fertig' && !!S.exportErgebnis);
-    b.disabled = !erreichbar;
-    b.classList.toggle('erreichbar', erreichbar);
-    b.classList.toggle('aktiv', ziel === v);
-  }
-  $('#main').scrollTop = 0;
-  if (v === 'aufnahmen') zeigeWeiterKnopf();
-}
-
 // ------------------------------------------------------------------ 1 · Aufnahmen
 async function ladeVideos() {
   S.geladen = false;
@@ -425,24 +406,102 @@ async function oeffne(pfad, aktion) {
   try { await api('/api/oeffnen', { method: 'POST', body: { pfad, aktion } }); } catch (e) { toast(e.message); }
 }
 
-// ------------------------------------------------------------------ 2 · Clips
-function clipNach(id) { return S.clips.find((c) => c._id === id); }
+
+// ------------------------------------------------------------------ Ansichten (Editor-Layout)
+S.tab = 'clip';          // rechtes Paneel: 'clip' | 'einst'
+S.mSkala = null;         // feste Montage-Länge, solange in der Zeitleiste gezogen wird
+
+const ANSICHT_TEILE = {
+  aufnahmen: ['#v-aufnahmen', '#a-aufnahmen'],
+  clips: ['#v-clips', '#buehne', '#a-clips', '#montage-panel'],
+  clipsLeer: ['#clips-leer'],
+  fertig: ['#v-fertig'],
+};
+
+function zeigeView(v) {
+  S.view = v;
+  document.body.dataset.view = v;
+  const leer = v === 'clips' && (!S.clips || !S.clips.length);
+  const sichtbar = new Set(v === 'clips' ? ANSICHT_TEILE[leer ? 'clipsLeer' : 'clips'] : ANSICHT_TEILE[v]);
+  for (const teile of Object.values(ANSICHT_TEILE)) for (const s of teile) $(s).hidden = !sichtbar.has(s);
+  $('#btn-export').classList.toggle('aus-leer', leer);
+  $('#seg-format-mini').classList.toggle('aus-leer', leer);
+  if (v !== 'clips') { $('#player').pause(); S.montage = false; montageKnopf(); }
+  if (v !== 'fertig') $('#ergebnis-player').pause();
+  for (const b of $$('.step, .rail-btn[data-view]')) {
+    const ziel = b.dataset.view;
+    const erreichbar = ziel === 'aufnahmen' || (ziel === 'clips' && S.clips !== null) || (ziel === 'fertig' && !!S.exportErgebnis);
+    b.disabled = !erreichbar;
+    b.classList.toggle('erreichbar', erreichbar);
+    b.classList.toggle('aktiv', ziel === v);
+  }
+  // Einstellungen: ein Block, hängt je nach Ansicht in der passenden Seitenleiste
+  const platz = v === 'aufnahmen' ? '#einst-platz-aufnahmen' : '#einst-platz-clips';
+  if ($('#einst-block').parentElement !== $(platz)) $(platz).append($('#einst-block'));
+  $('#main').scrollTop = 0;
+  renderProjekt();
+  if (v === 'aufnahmen') zeigeWeiterKnopf();
+}
+
+function renderProjekt() {
+  if (S.view === 'aufnahmen' || !S.analyseVideos || !S.analyseVideos.length) {
+    $('#projekt').textContent = 'Highlight Cutter';
+    $('#projekt-sub').textContent = '';
+    return;
+  }
+  const bekannt = new Map(alleVideos().map((v) => [v.pfad, v]));
+  const erste = bekannt.get(S.analyseVideos[0]);
+  const spiel = erste && erste.spiel !== 'Eigene Dateien' ? erste.spiel : videoName(S.analyseVideos[0]).replace(/\.\w+$/, '');
+  const datum = erste && erste.datum ? new Date(erste.datum) : null;
+  $('#projekt').textContent = datum && !isNaN(datum) ? `${spiel} · ${datum.toLocaleDateString('de-DE')}` : spiel;
+  const n = S.analyseVideos.length;
+  $('#projekt-sub').textContent = `${n} ${n === 1 ? 'Aufnahme' : 'Aufnahmen'}`;
+}
+
+function zeigeTab(t) {
+  S.tab = t;
+  $$('#a-clips .tab').forEach((b) => b.classList.toggle('an', b.dataset.tab === t));
+  $('#tab-clip').hidden = t !== 'clip';
+  $('#tab-einst').hidden = t !== 'einst';
+}
+
+// ------------------------------------------------------------------ 2 · Clips – Daten
+function clipNach(id) { return (S.clips || []).find((c) => c._id === id); }
 function videoDauer(c) { const a = S.analysen[c.video]; return a ? a.dauer : Math.max(c.ende + 30, 60); }
 function videoName(p) { return p.split(/[\\/]/).pop(); }
-
 function aktiveClips() { return (S.clips || []).filter((c) => c.aktiv); }
+function uebergang() { return S.einst ? S.einst.uebergang : 0; }
 
 function gesamtLaenge() {
   const a = aktiveClips();
   const summe = a.reduce((s, c) => s + (c.ende - c.start), 0);
-  return Math.max(0, summe - Math.max(0, a.length - 1) * (S.einst ? S.einst.uebergang : 0));
+  return Math.max(0, summe - Math.max(0, a.length - 1) * uebergang());
 }
+
+function bildUrl(video, t, breite) {
+  return `/api/bild?pfad=${encodeURIComponent(video)}&t=${Math.max(0, t).toFixed(1)}&breite=${breite}`;
+}
+
+function grundKlasse(g) {
+  return /champion/i.test(g) ? 'champion' : /tod/i.test(g) ? 'tod' : /knock/i.test(g) ? 'knock' : '';
+}
+const EV_NAMEN = { kill: 'Kill', knock: 'Knock', tod: 'Eigener Tod', champion: 'Champion' };
+function videoEvents(c) { return (S.analysen[c.video] || { events: c.events }).events || []; }
 
 function renderStats() {
   const a = aktiveClips();
-  $('#stat-clips').textContent = S.clips && a.length !== S.clips.length ? `${a.length}/${S.clips.length}` : String(a.length);
-  $('#stat-kills').textContent = a.reduce((s, c) => s + c.events.filter((e) => e.typ === 'kill').length, 0);
+  const n = (S.clips || []).length;
+  const kills = a.reduce((s, c) => s + c.events.filter((e) => e.typ === 'kill').length, 0);
+  $('#stat-clips').textContent = n && a.length !== n ? `${a.length}/${n}` : String(a.length);
+  $('#stat-kills').textContent = kills;
   $('#stat-laenge').textContent = fmtLaenge(gesamtLaenge());
+  $('#stat-titel').textContent = `${n} ${n === 1 ? 'Highlight' : 'Highlights'}`;
+  const nA = S.analyseVideos.length;
+  $('#clips-sub').textContent = `${a.length} im Video · aus ${nA} ${nA === 1 ? 'Aufnahme' : 'Aufnahmen'}`;
+  const u = uebergang();
+  $('#montage-info').textContent = a.length
+    ? `${a.length} ${a.length === 1 ? 'Clip' : 'Clips'} · ${fmtLaenge(gesamtLaenge())} min · ${u > 0 ? 'Übergang ' + komma(u) + ' s' : 'harte Schnitte'}`
+    : 'Kein Clip ist an';
   $('#btn-export').disabled = !a.length;
   $('#btn-montage').disabled = !a.length;
   renderExportInfo();
@@ -451,25 +510,18 @@ function renderStats() {
 function renderExportInfo() {
   if (!S.einst) return;
   const e = S.einst;
-  const fmt = e.format === '9:16' ? `Hochkant 1080×1920` : `${e.hoehe}p`;
+  const fmt = e.format === '9:16' ? 'Hochkant 1080×1920' : `${e.hoehe}p`;
   const ueb = e.uebergang > 0 ? `Übergang ${komma(e.uebergang)} s` : 'harte Schnitte';
-  $('#export-info').textContent = `${fmt} · ${e.fps} fps · ${ueb}`;
+  $('#export-info').textContent = `${fmtLaenge(gesamtLaenge())} min · ${fmt} · ${e.fps} fps · ${ueb}`;
 }
 
-function grundKlasse(g) { return /champion/i.test(g) ? 'champion' : /tod/i.test(g) ? 'tod' : ''; }
-
+// ------------------------------------------------------------------ Clip-Raster (links)
 function renderClips() {
-  const box = $('#clip-liste');
-  box.innerHTML = '';
   const n = S.clips.length;
-  $('#clips-sub').textContent = n
-    ? `${n} ${n === 1 ? 'Clip' : 'Clips'} aus ${S.analyseVideos.length} ${S.analyseVideos.length === 1 ? 'Aufnahme' : 'Aufnahmen'}. Schalte Clips an oder aus, schieb Start und Ende, ändere die Reihenfolge.`
-    : 'Diesmal war nichts dabei.';
-  $('#a-clips').classList.toggle('leer-modus', !n);
   if (!n) {
     const extraKnopf = !S.einst.eigene_tode || !S.einst.champion
       ? '<button class="btn" data-aktion="mit-toden">Mit eigenen Toden + Champion nochmal suchen</button>' : '';
-    box.innerHTML = `
+    $('#clips-leer').innerHTML = `
       <div class="leer">
         <div class="leer-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div>
         <h3>Keine Highlights gefunden</h3>
@@ -482,78 +534,70 @@ function renderClips() {
         <button class="btn primary" data-aktion="zurueck">Andere Aufnahmen wählen</button>
         ${extraKnopf}
       </div>`;
+    S.pid = null;
     renderStats();
+    if (S.view === 'clips') zeigeView('clips');
     return;
   }
-  const tpl = $('#t-clip');
+  const box = $('#kacheln');
+  box.innerHTML = '';
+  const tpl = $('#t-kachel');
   S.clips.forEach((c, i) => {
     const el = tpl.content.firstElementChild.cloneNode(true);
     el.dataset.id = c._id;
     const t = c.events.length ? c.events[0].t : (c.start + c.ende) / 2;
-    $('img', el).src = `/api/bild?pfad=${encodeURIComponent(c.video)}&t=${t.toFixed(1)}&breite=384`;
-    aktualisiereClip(el, c, i);
+    $('img', el).src = bildUrl(c.video, t, 320);
+    aktualisiereKachel(el, c, i);
     box.append(el);
   });
+  if (!clipNach(S.pid)) {
+    const erst = aktiveClips()[0] || S.clips[0];
+    waehleClip(erst, false);
+  } else {
+    renderDetail();
+  }
+  renderMontage();
   renderStats();
+  if (S.view === 'clips') zeigeView('clips');
 }
 
-function fenster(c) {
-  const dauer = videoDauer(c);
-  const rand = Math.max(8, (c.ende - c.start) * 0.6);
-  return [Math.max(0, c.start - rand), Math.min(dauer, c.ende + rand)];
-}
+function kachelEl(id) { return $(`.kachel[data-id="${id}"]`); }
 
-function aktualisiereClip(el, c, i = S.clips.indexOf(c)) {
-  if (!c._fenster || (!S.drag && (c.start < c._fenster[0] || c.ende > c._fenster[1]))) c._fenster = fenster(c);
-  const [w0, w1] = c._fenster;
-  const pos = (t) => ((t - w0) / (w1 - w0)) * 100;
+function aktualisiereKachel(el, c, i = S.clips.indexOf(c)) {
   el.classList.toggle('aus', !c.aktiv);
-  el.classList.toggle('spielt', S.pid === c._id);
-  if (S.pid !== c._id) $('.tl-kopf', el).hidden = true;
+  el.classList.toggle('gewaehlt', S.pid === c._id);
   $('.nr', el).textContent = '#' + (i + 1);
+  $('.dauer', el).textContent = fmtLaenge(c.ende - c.start);
   const g = $('.grund', el);
   g.textContent = c.grund;
   g.className = 'grund ' + grundKlasse(c.grund);
-  $('.clip-quelle', el).textContent = `${videoName(c.video)} · bei ${fmtZeit(c.start, false)}`;
-  $('.clip-quelle', el).title = c.video;
-  $('.clip-dauer', el).innerHTML = `${komma(c.ende - c.start)}<small>s</small>`;
-  $('.t-start', el).textContent = fmtZeit(c.start);
-  $('.t-ende', el).textContent = fmtZeit(c.ende);
-  const an = $('.clip-an input', el);
-  an.checked = c.aktiv;
-  $('.an-text', el).textContent = c.aktiv ? 'Drin' : 'Raus';
-  $('[data-move="-1"]', el).disabled = i === 0;
-  $('[data-move="1"]', el).disabled = i === S.clips.length - 1;
-  const b = $('.tl-bereich', el);
-  b.style.left = pos(c.start) + '%';
-  b.style.width = (pos(c.ende) - pos(c.start)) + '%';
-  // Event-Marker: alle Events dieses Videos im sichtbaren Fenster (außerhalb des Clips gedimmt)
-  const tl = $('.tl', el);
-  $$('.tl-ev, .tl-zeit', tl).forEach((m) => m.remove());
-  const events = (S.analysen[c.video] || { events: c.events }).events;
-  const NAMEN = { kill: 'Kill', knock: 'Knock', tod: 'Eigener Tod', champion: 'Champion' };
-  for (const ev of events) {
-    if (ev.t < w0 || ev.t > w1) continue;
-    const m = document.createElement('span');
-    m.className = 'tl-ev ' + ev.typ;
-    m.style.left = pos(ev.t) + '%';
-    if (ev.t < c.start || ev.t > c.ende) m.style.opacity = '.35';
-    m.title = `${NAMEN[ev.typ] || ev.typ} bei ${fmtZeit(ev.t)}`;
-    tl.append(m);
-  }
+  $('.k-zeit', el).textContent = fmtZeit(c.start, false);
+  el.title = `${c.grund} · ${videoName(c.video)} bei ${fmtZeit(c.start, false)}`;
+  $('.k-an', el).title = c.aktiv ? 'Ist im Video – klicken zum Weglassen' : 'Nicht im Video – klicken zum Verwenden';
 }
 
-function clipEl(id) { return $(`.clip[data-id="${id}"]`); }
-function aktualisiereNach(id) { const el = clipEl(id); const c = clipNach(id); if (el && c) aktualisiereClip(el, c); }
+function aktualisiereAuswahl() {
+  $$('.kachel').forEach((el) => el.classList.toggle('gewaehlt', el.dataset.id === S.pid));
+  $$('.m-strip').forEach((el) => el.classList.toggle('gewaehlt', el.dataset.id === S.pid));
+  renderDetail();
+}
 
-function justiere(c, feld, delta) {
-  const dauer = videoDauer(c);
-  if (feld === 'start') c.start = runde(klemme(c.start + delta, 0, c.ende - 1));
-  else c.ende = runde(klemme(c.ende + delta, c.start + 1, dauer));
-  aktualisiereNach(c._id);
+function waehleClip(c, abspielen) {
+  if (!c) return;
+  if (abspielen) { S.montage = false; montageKnopf(); }
+  ladeClip(c, c.start, !!abspielen);
+  const el = kachelEl(c._id);
+  if (el) el.scrollIntoView({ block: 'nearest' });
+}
+
+function setzeAktiv(c, an) {
+  c.aktiv = an;
+  const el = kachelEl(c._id);
+  if (el) aktualisiereKachel(el, c);
+  if (S.pid === c._id) aktualisiereDetail();
+  renderMontage();
   renderStats();
   speichereSitzung();
-  if (S.pid === c._id) zeigeBild(c, feld === 'start' ? c.start : Math.max(c.start, c.ende - 0.05));
 }
 
 function verschiebe(id, richtung) {
@@ -565,11 +609,140 @@ function verschiebe(id, richtung) {
   speichereSitzung();
 }
 
-// Zeitleiste: Griffe ziehen (Start/Ende), Bereich ziehen (verschieben), Spur klicken (springen)
+// Reihenfolge per Drag & Drop im Raster
+let ziehId = null;
+function initKachelDnD(box) {
+  const ziel = (e) => {
+    const el = e.target.closest('.kachel');
+    if (!el || el.dataset.id === ziehId) return null;
+    const r = el.getBoundingClientRect();
+    return { el, vor: e.clientX < r.left + r.width / 2 };
+  };
+  box.addEventListener('dragstart', (e) => {
+    const el = e.target.closest('.kachel');
+    if (!el) return;
+    ziehId = el.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', ziehId);
+    setTimeout(() => el.classList.add('zieht'), 0);
+  });
+  box.addEventListener('dragover', (e) => {
+    if (!ziehId) return;
+    e.preventDefault();
+    $$('.kachel', box).forEach((k) => k.classList.remove('ziel-vor', 'ziel-nach'));
+    const z = ziel(e);
+    if (z) z.el.classList.add(z.vor ? 'ziel-vor' : 'ziel-nach');
+  });
+  box.addEventListener('drop', (e) => {
+    if (!ziehId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const z = ziel(e);
+    if (z) {
+      const von = S.clips.findIndex((c) => c._id === ziehId);
+      const [c] = S.clips.splice(von, 1);
+      let nach = S.clips.findIndex((x) => x._id === z.el.dataset.id);
+      if (!z.vor) nach++;
+      S.clips.splice(nach, 0, c);
+      renderClips();
+      speichereSitzung();
+    }
+  });
+  box.addEventListener('dragend', () => {
+    ziehId = null;
+    $$('.kachel', box).forEach((k) => k.classList.remove('zieht', 'ziel-vor', 'ziel-nach'));
+  });
+}
+
+// ------------------------------------------------------------------ Clip-Details (rechts)
+function renderDetail() {
+  const box = $('#detail');
+  const c = clipNach(S.pid);
+  if (!c) { box.innerHTML = '<div class="d-sec keine-momente">Wähl links einen Clip aus.</div>'; box.dataset.id = ''; $('#tab-clip-name').textContent = 'Clip'; return; }
+  if (box.dataset.id !== c._id) {
+    box.innerHTML = '';
+    box.append($('#t-detail').content.cloneNode(true));
+    box.dataset.id = c._id;
+    c._fenster = fenster(c);
+  }
+  aktualisiereDetail();
+}
+
+function fenster(c) {
+  const dauer = videoDauer(c);
+  const rand = Math.max(8, (c.ende - c.start) * 0.6);
+  return [Math.max(0, c.start - rand), Math.min(dauer, c.ende + rand)];
+}
+
+function aktualisiereDetail() {
+  const box = $('#detail');
+  const c = clipNach(S.pid);
+  if (!c || box.dataset.id !== c._id) return;
+  const i = S.clips.indexOf(c);
+  $('#tab-clip-name').textContent = 'Clip ' + (i + 1);
+  const g = $('.grund', box);
+  g.textContent = c.grund;
+  g.className = 'grund ' + grundKlasse(c.grund);
+  $('.d-dauer', box).innerHTML = `${komma(c.ende - c.start)}<small>s</small>`;
+  $('.d-quelle', box).textContent = videoName(c.video);
+  $('.d-quelle', box).title = c.video;
+  $('.t-start', box).textContent = fmtZeit(c.start);
+  $('.t-ende', box).textContent = fmtZeit(c.ende);
+  $('.d-an', box).checked = c.aktiv;
+  $('[data-move="-1"]', box).disabled = i === 0;
+  $('[data-move="1"]', box).disabled = i === S.clips.length - 1;
+
+  // Feinschnitt-Leiste
+  if (!c._fenster || (!S.drag && (c.start < c._fenster[0] || c.ende > c._fenster[1]))) c._fenster = fenster(c);
+  const [w0, w1] = c._fenster;
+  const pos = (t) => ((t - w0) / (w1 - w0)) * 100;
+  const b = $('.tl-bereich', box);
+  b.style.left = pos(c.start) + '%';
+  b.style.width = (pos(c.ende) - pos(c.start)) + '%';
+  const tl = $('.tl', box);
+  $$('.tl-ev', tl).forEach((m) => m.remove());
+  const events = videoEvents(c);
+  for (const ev of events) {
+    if (ev.t < w0 || ev.t > w1) continue;
+    const m = document.createElement('span');
+    m.className = 'tl-ev ' + ev.typ;
+    m.style.left = pos(ev.t) + '%';
+    if (ev.t < c.start || ev.t > c.ende) m.style.opacity = '.35';
+    m.title = `${EV_NAMEN[ev.typ] || ev.typ} bei ${fmtZeit(ev.t)}`;
+    tl.append(m);
+  }
+
+  // Momente-Liste (nur beim Ziehen nicht ständig neu bauen)
+  if (!S.drag) {
+    const nah = events.filter((ev) => ev.t >= w0 && ev.t <= w1);
+    $('.momente', box).innerHTML = nah.length
+      ? nah.map((ev) => `<button class="moment ${ev.typ} ${ev.t < c.start || ev.t > c.ende ? 'draussen' : ''}" data-t="${ev.t}"
+          title="${ev.t < c.start || ev.t > c.ende ? 'Liegt außerhalb des Clips – ' : ''}Klicken zum Hinspringen"><i></i>${EV_NAMEN[ev.typ] || ev.typ}<small>${fmtZeit(ev.t)}</small></button>`).join('')
+      : '<div class="keine-momente">Keine erkannten Momente in der Nähe.</div>';
+  }
+}
+
+function nachAenderung(c) {
+  const el = kachelEl(c._id);
+  if (el) aktualisiereKachel(el, c);
+  aktualisiereDetail();
+  renderStats();
+}
+
+function justiere(c, feld, delta) {
+  const dauer = videoDauer(c);
+  if (feld === 'start') c.start = runde(klemme(c.start + delta, 0, c.ende - 1));
+  else c.ende = runde(klemme(c.ende + delta, c.start + 1, dauer));
+  nachAenderung(c);
+  renderMontage();
+  speichereSitzung();
+  if (S.pid === c._id) zeigeBild(c, feld === 'start' ? c.start : Math.max(c.start, c.ende - 0.05));
+}
+
+// Feinschnitt-Leiste: Griffe ziehen (Start/Ende), Bereich ziehen (verschieben), Spur klicken (springen)
 function zeitleisteStart(e) {
   const tl = e.target.closest('.tl');
-  const el = e.target.closest('.clip');
-  const c = clipNach(el.dataset.id);
+  const c = clipNach(S.pid);
   if (!c || e.button !== 0) return;
   e.preventDefault();
   const rect = tl.getBoundingClientRect();
@@ -578,16 +751,9 @@ function zeitleisteStart(e) {
   const modus = e.target.classList.contains('links') ? 'start'
     : e.target.classList.contains('rechts') ? 'ende'
       : e.target.classList.contains('tl-bereich') ? 'schieben' : 'springen';
-  if (modus === 'springen') {
-    const t = tBei(e.clientX);
-    if (S.pid !== c._id) ladeClip(c, t, false); else zeigeBild(c, t);
-    return;
-  }
+  if (modus === 'springen') { zeigeBild(c, tBei(e.clientX)); return; }
   const t0 = tBei(e.clientX), s0 = c.start, e0 = c.ende, dauer = videoDauer(c);
-  S.drag = true;
-  tl.setPointerCapture(e.pointerId);
-  let letzterSeek = 0;
-  const bewegen = (ev) => {
+  ziehe(tl, e, (ev) => {
     const t = tBei(ev.clientX);
     if (modus === 'start') c.start = runde(klemme(t, 0, c.ende - 1));
     else if (modus === 'ende') c.ende = runde(klemme(t, c.start + 1, dauer));
@@ -596,73 +762,146 @@ function zeitleisteStart(e) {
       c.start = runde(s0 + d);
       c.ende = runde(e0 + d);
     }
-    aktualisiereClip(el, c);
-    renderStats();
+    return modus === 'ende' ? c.ende : c.start;
+  }, c);
+}
+
+// Gemeinsamer Zieh-Ablauf für Feinschnitt-Leiste und Montage-Griffe
+function ziehe(ziel, e, bewege, c) {
+  S.drag = true;
+  S.mSkala = Math.max(gesamtLaenge(), 1);
+  try { ziel.setPointerCapture(e.pointerId); } catch { /* egal */ }
+  let letzterSeek = 0;
+  const bewegen = (ev) => {
+    const t = bewege(ev);
+    nachAenderung(c);
+    renderMontage(false);
     const jetzt = performance.now();
-    if (jetzt - letzterSeek > 120) {
-      letzterSeek = jetzt;
-      const ziel = modus === 'ende' ? c.ende : c.start;
-      if (S.pid === c._id) zeigeBild(c, ziel); else ladeClip(c, ziel, false);
-    }
+    if (jetzt - letzterSeek > 120) { letzterSeek = jetzt; zeigeBild(c, t); }
   };
   const ende = () => {
     S.drag = false;
-    tl.removeEventListener('pointermove', bewegen);
-    tl.removeEventListener('pointerup', ende);
-    tl.removeEventListener('pointercancel', ende);
+    S.mSkala = null;
+    ziel.removeEventListener('pointermove', bewegen);
+    ziel.removeEventListener('pointerup', ende);
+    ziel.removeEventListener('pointercancel', ende);
     c._fenster = fenster(c);
-    aktualisiereClip(el, c);
+    nachAenderung(c);
+    renderMontage();
     speichereSitzung();
   };
-  tl.addEventListener('pointermove', bewegen);
-  tl.addEventListener('pointerup', ende);
-  tl.addEventListener('pointercancel', ende);
+  ziel.addEventListener('pointermove', bewegen);
+  ziel.addEventListener('pointerup', ende);
+  ziel.addEventListener('pointercancel', ende);
 }
 
-// Reihenfolge per Drag & Drop am Griff
-let ziehId = null;
-function initClipDnD(box) {
-  box.addEventListener('pointerdown', (e) => {
-    const g = e.target.closest('.griff');
-    if (g) g.closest('.clip').draggable = true;
+// ------------------------------------------------------------------ Montage-Zeitleiste (unten)
+function montageLayout() {
+  const a = aktiveClips();
+  const u = uebergang();
+  const teile = [];
+  let t = 0;
+  a.forEach((c, i) => {
+    const d = c.ende - c.start;
+    if (i > 0) t -= Math.min(u, d / 2);
+    teile.push({ c, s: t, d });
+    t += d;
   });
-  box.addEventListener('dragstart', (e) => {
-    const el = e.target.closest('.clip');
-    if (!el || !el.draggable) return;
-    ziehId = el.dataset.id;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', ziehId);
-    setTimeout(() => el.classList.add('zieht'), 0);
+  return { teile, laenge: Math.max(t, 0.001) };
+}
+
+function renderMontage(voll = true) {
+  const { teile, laenge } = montageLayout();
+  const skala = S.mSkala ? Math.max(S.mSkala, laenge) : laenge;
+  const pz = (t) => (t / skala) * 100;
+  const spur = $('#spur-clips');
+
+  // Streifen: beim Ziehen nur verschieben, sonst neu bauen (Bilder kommen aus dem Cache)
+  const vorhanden = $$('.m-strip', spur);
+  const gleich = !voll && vorhanden.length === teile.length && vorhanden.every((el, i) => el.dataset.id === teile[i].c._id);
+  if (!gleich) {
+    spur.innerHTML = '';
+    const breite = spur.clientWidth || 800;
+    teile.forEach(({ c, d }, i) => {
+      const el = document.createElement('div');
+      el.className = 'm-strip' + (c._id === S.pid ? ' gewaehlt' : '');
+      el.dataset.id = c._id;
+      el.title = `#${S.clips.indexOf(c) + 1} · ${c.grund} · ${komma(d)} s`;
+      const anzahl = klemme(Math.round(((d / laenge) * breite) / 92), 1, 6);
+      for (let k = 0; k < anzahl; k++) {
+        const t = Math.round((c.start + (d * (k + 0.5)) / anzahl) / 2) * 2;   // auf 2 s gerundet → Cache-Treffer
+        const img = document.createElement('img');
+        img.src = bildUrl(c.video, t, 160);
+        img.alt = '';
+        img.loading = 'lazy';
+        el.append(img);
+      }
+      el.insertAdjacentHTML('beforeend', `<span class="t">#${S.clips.indexOf(c) + 1}</span><span class="m-griff links" data-griff="start"></span><span class="m-griff rechts" data-griff="ende"></span>`);
+      spur.append(el);
+      void i;
+    });
+  }
+  $$('.m-strip', spur).forEach((el, i) => {
+    el.style.left = pz(teile[i].s) + '%';
+    el.style.width = pz(teile[i].d) + '%';
   });
-  box.addEventListener('dragover', (e) => {
-    if (!ziehId) return;
-    const el = e.target.closest('.clip');
-    e.preventDefault();
-    $$('.clip', box).forEach((c) => c.classList.remove('ziel-oben', 'ziel-unten'));
-    if (!el || el.dataset.id === ziehId) return;
-    const r = el.getBoundingClientRect();
-    el.classList.add(e.clientY < r.top + r.height / 2 ? 'ziel-oben' : 'ziel-unten');
-  });
-  box.addEventListener('drop', (e) => {
-    if (!ziehId) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const el = e.target.closest('.clip');
-    if (el && el.dataset.id !== ziehId) {
-      const oben = el.classList.contains('ziel-oben');
-      const von = S.clips.findIndex((c) => c._id === ziehId);
-      const [c] = S.clips.splice(von, 1);
-      let nach = S.clips.findIndex((x) => x._id === el.dataset.id);
-      if (!oben) nach++;
-      S.clips.splice(nach, 0, c);
-      renderClips();
-      speichereSitzung();
+  $$('.m-ueb', spur).forEach((m) => m.remove());
+  if (uebergang() > 0) teile.slice(1).forEach(({ s }) => spur.insertAdjacentHTML('beforeend', `<span class="m-ueb" style="left:${pz(s + Math.min(uebergang(), 1) / 2)}%" title="Überblendung"></span>`));
+
+  // Momente
+  const mom = $('#spur-momente');
+  mom.innerHTML = '';
+  for (const { c, s } of teile) {
+    for (const ev of videoEvents(c)) {
+      if (ev.t < c.start || ev.t > c.ende) continue;
+      mom.insertAdjacentHTML('beforeend', `<span class="m-ev ${ev.typ}" style="left:${pz(s + ev.t - c.start)}%" title="${EV_NAMEN[ev.typ] || ev.typ}"></span>`);
     }
-  });
-  box.addEventListener('dragend', () => {
-    ziehId = null;
-    $$('.clip', box).forEach((c) => { c.draggable = false; c.classList.remove('zieht', 'ziel-oben', 'ziel-unten'); });
-  });
+  }
+
+  // Lineal
+  const schritte = [2, 5, 10, 15, 20, 30, 60, 120, 300];
+  const schritt = schritte.find((x) => skala / x <= 9) || 600;
+  let html = '';
+  for (let t = 0; t <= skala + 0.01; t += schritt) html += `<span style="left:${Math.max(pz(t), 1.2)}%">${fmtLaenge(t)}</span>`;
+  $('#lineal').innerHTML = html;
+
+  $$('.montage-leer', $('#montage')).forEach((m) => m.remove());
+  if (!teile.length) $('#montage').insertAdjacentHTML('beforeend', '<div class="montage-leer">Kein Clip ist an – schalte links einen an.</div>');
+  S._montage = { teile, skala };
+}
+
+function montageZeitBei(x) {
+  const r = $('#montage').getBoundingClientRect();
+  return klemme((x - r.left) / r.width, 0, 1) * (S._montage ? S._montage.skala : 0);
+}
+
+function montageKlick(e) {
+  if (e.button !== 0 || !S._montage) return;
+  const griff = e.target.closest('.m-griff');
+  const strip = e.target.closest('.m-strip');
+  if (griff && strip && strip.dataset.id === S.pid) { montageGriff(e, griff.dataset.griff); return; }
+  if (strip && strip.dataset.id !== S.pid) { waehleClip(clipNach(strip.dataset.id), false); return; }
+  // Leere Stelle / Lineal / gewählter Streifen: an diese Stelle der Montage springen
+  const t = montageZeitBei(e.clientX);
+  const teil = S._montage.teile.find((x) => t >= x.s && t <= x.s + x.d) || S._montage.teile[S._montage.teile.length - 1];
+  if (!teil) return;
+  const ziel = teil.c.start + klemme(t - teil.s, 0, teil.d);
+  if (teil.c._id !== S.pid) ladeClip(teil.c, ziel, false); else zeigeBild(teil.c, ziel);
+}
+
+function montageGriff(e, feld) {
+  e.preventDefault();
+  const c = clipNach(S.pid);
+  if (!c) return;
+  const breite = $('#montage').getBoundingClientRect().width;
+  const sProPx = Math.max(gesamtLaenge(), 1) / breite;
+  const x0 = e.clientX, s0 = c.start, e0 = c.ende, dauer = videoDauer(c);
+  ziehe($('#montage'), e, (ev) => {
+    const d = (ev.clientX - x0) * sProPx;
+    if (feld === 'start') c.start = runde(klemme(s0 + d, 0, c.ende - 1));
+    else c.ende = runde(klemme(e0 + d, c.start + 1, dauer));
+    return feld === 'start' ? c.start : c.ende;
+  }, c);
 }
 
 // ------------------------------------------------------------------ Vorschau-Player
@@ -671,16 +910,17 @@ const P = () => $('#player');
 function ladeClip(c, t, abspielen) {
   const p = P();
   const src = '/api/video?pfad=' + encodeURIComponent(c.video);
-  const vorher = S.pid;
+  const wechsel = S.pid !== c._id;
   S.pid = c._id;
-  if (vorher && vorher !== c._id) aktualisiereNach(vorher);
-  aktualisiereNach(c._id);
+  if (wechsel) aktualisiereAuswahl();
   $('#player-leer').hidden = true;
   const los = () => {
     p.currentTime = t;
     if (abspielen) p.play().catch(() => {});
     else p.pause();
   };
+  // Standbild als Platzhalter, bis das Video an der Stelle ist (und falls es die Vorschau nicht abspielen kann)
+  p.poster = bildUrl(c.video, t, 1280);
   if (p.dataset.src !== src) {
     p.dataset.src = src;
     p.src = src;
@@ -689,25 +929,28 @@ function ladeClip(c, t, abspielen) {
 }
 
 function zeigeBild(c, t) {
+  if (S.pid !== c._id || !P().getAttribute('src')) { ladeClip(c, t, false); return; }
   const p = P();
   p.pause();
   p.currentTime = t;
 }
 
-function spiele(c) {
-  S.montage = false;
-  montageKnopf();
-  ladeClip(c, c.start, true);
-}
-
 function playPause() {
   const p = P();
   const c = S.pid && clipNach(S.pid);
-  if (!c) { const erst = aktiveClips()[0] || (S.clips || [])[0]; if (erst) spiele(erst); return; }
+  if (!c) { const erst = aktiveClips()[0] || (S.clips || [])[0]; if (erst) waehleClip(erst, true); return; }
   if (p.paused) {
+    if (!p.getAttribute('src')) { ladeClip(c, c.start, true); return; }
     if (p.currentTime >= c.ende - 0.1 || p.currentTime < c.start - 0.5) p.currentTime = c.start;
     p.play().catch(() => {});
   } else p.pause();
+}
+
+function nachbar(richtung) {
+  if (!S.clips || !S.clips.length) return;
+  const i = S.clips.findIndex((c) => c._id === S.pid);
+  const j = klemme((i < 0 ? 0 : i + richtung), 0, S.clips.length - 1);
+  if (j !== i) waehleClip(S.clips[j], !P().paused);
 }
 
 function montageKnopf() {
@@ -723,6 +966,23 @@ function starteMontage() {
   montageKnopf();
 }
 
+// Scrub-Leiste unter der Vorschau (springt innerhalb des gewählten Clips)
+function scrubStart(e) {
+  const c = clipNach(S.pid);
+  if (!c || e.button !== 0) return;
+  e.preventDefault();
+  const el = $('#scrub');
+  const r = el.getBoundingClientRect();
+  const setze = (x) => zeigeBild(c, c.start + klemme((x - r.left) / r.width, 0, 1) * (c.ende - c.start));
+  setze(e.clientX);
+  try { el.setPointerCapture(e.pointerId); } catch { /* egal */ }
+  const bewegen = (ev) => setze(ev.clientX);
+  const ende = () => { el.removeEventListener('pointermove', bewegen); el.removeEventListener('pointerup', ende); el.removeEventListener('pointercancel', ende); };
+  el.addEventListener('pointermove', bewegen);
+  el.addEventListener('pointerup', ende);
+  el.addEventListener('pointercancel', ende);
+}
+
 function playerSchleife() {
   const p = P();
   const c = S.pid && S.clips ? clipNach(S.pid) : null;
@@ -733,24 +993,39 @@ function playerSchleife() {
       if (naechster) ladeClip(naechster, naechster.start, true);
       else { p.pause(); p.currentTime = c.ende; S.montage = false; montageKnopf(); }
     }
-    const rel = p.currentTime - c.start;
-    const nr = S.clips.indexOf(c) + 1;
-    $('#player-zeit').textContent = `#${nr} · ${fmtZeit(klemme(rel, 0, c.ende - c.start))} / ${fmtZeit(c.ende - c.start)}`;
-    const el = clipEl(c._id);
-    if (el && c._fenster) {
-      const k = $('.tl-kopf', el);
+    const len = c.ende - c.start;
+    const rel = klemme(p.currentTime - c.start, 0, len);
+    const anteil = p.getAttribute('src') ? (len > 0 ? rel / len : 0) : 0;
+    $('#scrub-voll').style.width = anteil * 100 + '%';
+    $('#scrub-knopf').style.left = anteil * 100 + '%';
+    $('#zeit-links').textContent = fmtZeit(p.getAttribute('src') ? rel : 0);
+    $('#zeit-rechts').textContent = fmtZeit(len);
+    const a = aktiveClips();
+    $('#player-zeit').textContent = c.aktiv
+      ? `Clip ${S.clips.indexOf(c) + 1} · ${a.indexOf(c) + 1} von ${a.length} im Video`
+      : `Clip ${S.clips.indexOf(c) + 1} · nicht im Video`;
+    // Abspielkopf in der Feinschnitt-Leiste
+    const k = $('#detail .tl-kopf');
+    if (k && c._fenster) {
       const [w0, w1] = c._fenster;
       const t = p.currentTime;
-      k.hidden = t < w0 || t > w1 || !p.src;
+      k.hidden = t < w0 || t > w1 || !p.getAttribute('src');
       k.style.left = ((t - w0) / (w1 - w0)) * 100 + '%';
     }
+    // Abspielkopf in der Montage
+    const mk = $('#m-kopf');
+    const teil = S._montage && S._montage.teile.find((x) => x.c === c);
+    if (teil && p.getAttribute('src')) {
+      mk.hidden = false;
+      mk.style.left = ((teil.s + rel) / S._montage.skala) * 100 + '%';
+    } else mk.hidden = true;
   }
   const btn = $('#btn-play');
   const spielt = !p.paused;
   if (btn.dataset.spielt !== String(spielt)) {
     btn.dataset.spielt = String(spielt);
     btn.innerHTML = spielt
-      ? '<svg viewBox="0 0 24 24"><rect x="7" y="5" width="3.5" height="14" class="fill"/><rect x="13.5" y="5" width="3.5" height="14" class="fill"/></svg>'
+      ? '<svg viewBox="0 0 24 24"><rect x="6.5" y="5" width="3.8" height="14" rx="1" class="fill"/><rect x="13.7" y="5" width="3.8" height="14" rx="1" class="fill"/></svg>'
       : '<svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" class="fill"/></svg>';
   }
   requestAnimationFrame(playerSchleife);
@@ -760,7 +1035,7 @@ function playerSchleife() {
 let speicherTimer = null;
 function renderEinst() {
   const e = S.einst;
-  $$('#seg-format button').forEach((b) => b.classList.toggle('an', b.dataset.format === e.format));
+  $$('#seg-format button, #seg-format-mini button').forEach((b) => b.classList.toggle('an', b.dataset.format === e.format));
   $('#e-tode').checked = e.eigene_tode;
   $('#e-champion').checked = e.champion;
   $('#e-uebergang').value = e.uebergang;
@@ -775,7 +1050,10 @@ function renderEinst() {
 function setzeEinst(k, v) {
   S.einst[k] = v;
   renderEinst();
-  renderStats();
+  if (S.clips && S.clips.length) {
+    renderStats();
+    if (k === 'uebergang') renderMontage(false);
+  }
   pruefeAnalyseHinweis();
   clearTimeout(speicherTimer);
   speicherTimer = setTimeout(async () => {
@@ -828,6 +1106,7 @@ function zeigeWeiterKnopf() {
     S.analysen = d.analysen || {};
     S.analyseVideos = d.analyseVideos || [];
     S.analyseEinst = d.analyseEinst || null;
+    S.pid = null;
     b.hidden = true;
     zeigeView('clips');
     renderClips();
@@ -837,7 +1116,12 @@ function zeigeWeiterKnopf() {
 
 // ------------------------------------------------------------------ Ereignisse verdrahten
 function verdrahte() {
-  $$('.step').forEach((b) => b.addEventListener('click', () => { if (!b.disabled) zeigeView(b.dataset.view); }));
+  $$('.step, .rail-btn[data-view]').forEach((b) => b.addEventListener('click', () => { if (!b.disabled) zeigeView(b.dataset.view); }));
+  $('#rail-einst').addEventListener('click', () => {
+    if (S.view === 'aufnahmen') { $('#einst-block').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    if (S.clips && S.clips.length) { zeigeView('clips'); zeigeTab('einst'); }
+    else zeigeView('aufnahmen');
+  });
 
   // Aufnahmen-Liste (Delegation)
   $('#liste').addEventListener('click', (e) => {
@@ -900,53 +1184,79 @@ function verdrahte() {
     dropDateien([...e.dataTransfer.files]);
   });
 
-  // Clips (Delegation)
-  const box = $('#clip-liste');
-  box.addEventListener('click', (e) => {
+  // Keine Highlights
+  $('#clips-leer').addEventListener('click', (e) => {
     const akt = e.target.closest('[data-aktion]');
-    if (akt) {
-      if (akt.dataset.aktion === 'zurueck') zeigeView('aufnahmen');
-      if (akt.dataset.aktion === 'mit-toden') {
-        S.einst.eigene_tode = true; S.einst.champion = true;
-        setzeEinst('champion', true);
-        starteAnalyse(S.analyseVideos);
-      }
-      return;
+    if (!akt) return;
+    if (akt.dataset.aktion === 'zurueck') zeigeView('aufnahmen');
+    if (akt.dataset.aktion === 'mit-toden') {
+      S.einst.eigene_tode = true;
+      setzeEinst('champion', true);
+      starteAnalyse(S.analyseVideos);
     }
-    const el = e.target.closest('.clip');
+  });
+
+  // Clip-Raster
+  const box = $('#kacheln');
+  box.addEventListener('click', (e) => {
+    const el = e.target.closest('.kachel');
     if (!el) return;
     const c = clipNach(el.dataset.id);
+    if (e.target.closest('.k-an')) { setzeAktiv(c, !c.aktiv); return; }
+    if (S.pid !== c._id) waehleClip(c, false);
+  });
+  box.addEventListener('dblclick', (e) => {
+    const el = e.target.closest('.kachel');
+    if (el && !e.target.closest('.k-an')) waehleClip(clipNach(el.dataset.id), true);
+  });
+  box.addEventListener('keydown', (e) => {
+    const el = e.target.closest('.kachel');
+    if (el && e.key === 'Enter') { e.preventDefault(); waehleClip(clipNach(el.dataset.id), true); }
+  });
+  initKachelDnD(box);
+
+  // Details
+  const d = $('#detail');
+  d.addEventListener('click', (e) => {
+    const c = clipNach(S.pid);
+    if (!c) return;
     const j = e.target.closest('[data-j]');
     if (j) { justiere(c, j.dataset.j, parseFloat(j.dataset.d)); return; }
     const m = e.target.closest('[data-move]');
     if (m) { verschiebe(c._id, parseInt(m.dataset.move, 10)); return; }
-    if (e.target.closest('.thumb')) spiele(c);
+    const mo = e.target.closest('.moment');
+    if (mo) zeigeBild(c, Math.max(0, parseFloat(mo.dataset.t) - 1.5));
   });
-  box.addEventListener('change', (e) => {
-    if (!e.target.matches('.clip-an input')) return;
-    const c = clipNach(e.target.closest('.clip').dataset.id);
-    c.aktiv = e.target.checked;
-    aktualisiereNach(c._id);
-    renderStats();
-    speichereSitzung();
+  d.addEventListener('change', (e) => {
+    if (e.target.matches('.d-an')) setzeAktiv(clipNach(S.pid), e.target.checked);
   });
-  box.addEventListener('pointerdown', (e) => { if (e.target.closest('.tl')) zeitleisteStart(e); });
-  initClipDnD(box);
+  d.addEventListener('pointerdown', (e) => { if (e.target.closest('.tl')) zeitleisteStart(e); });
+  $$('#a-clips .tab').forEach((b) => b.addEventListener('click', () => zeigeTab(b.dataset.tab)));
 
+  // Montage
+  $('#montage').addEventListener('pointerdown', montageKlick);
+  window.addEventListener('resize', () => { if (S.view === 'clips' && S.clips && S.clips.length) renderMontage(); });
+
+  // Player
   $('#btn-play').addEventListener('click', playPause);
   $('#player').addEventListener('click', playPause);
+  $('#btn-prev').addEventListener('click', () => nachbar(-1));
+  $('#btn-next').addEventListener('click', () => nachbar(1));
+  $('#scrub').addEventListener('pointerdown', scrubStart);
   $('#btn-montage').addEventListener('click', starteMontage);
   $('#btn-export').addEventListener('click', starteExport);
   $('#btn-neu-berechnen').addEventListener('click', () => starteAnalyse(S.analyseVideos));
+  $('#btn-neu-berechnen-klein').addEventListener('click', () => starteAnalyse(S.analyseVideos));
   $('#player').addEventListener('error', () => {
     if ($('#player').getAttribute('src')) toast('Dieses Video kann die Vorschau nicht abspielen (Format?). Der Export klappt trotzdem.');
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key !== ' ' || S.view !== 'clips' || !$('#auftrag').hidden) return;
-    if (e.target.closest('input, textarea, select')) return;
-    e.preventDefault();
-    playPause();
+    if (S.view !== 'clips' || !$('#auftrag').hidden) return;
+    if (e.target.closest && e.target.closest('input, textarea, select, summary')) return;
+    if (e.key === ' ') { e.preventDefault(); playPause(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); nachbar(-1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); nachbar(1); }
   });
 
   // Auftrag
@@ -961,7 +1271,7 @@ function verdrahte() {
   $('#btn-neue-runde').addEventListener('click', () => { zeigeView('aufnahmen'); });
 
   // Einstellungen
-  $$('#seg-format button').forEach((b) => b.addEventListener('click', () => setzeEinst('format', b.dataset.format)));
+  $$('#seg-format button, #seg-format-mini button').forEach((b) => b.addEventListener('click', () => setzeEinst('format', b.dataset.format)));
   $('#e-tode').addEventListener('change', (e) => setzeEinst('eigene_tode', e.target.checked));
   $('#e-champion').addEventListener('change', (e) => setzeEinst('champion', e.target.checked));
   $('#e-uebergang').addEventListener('input', (e) => setzeEinst('uebergang', parseFloat(e.target.value)));
