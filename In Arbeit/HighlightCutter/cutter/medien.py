@@ -28,7 +28,8 @@ def info(pfad: str | Path) -> VideoInfo:
     """Grunddaten eines Videos per ffprobe."""
     pfad = str(Path(pfad).resolve())
     out = subprocess.run(
-        [FFPROBE, "-v", "error", "-show_entries",
+        # kleine Probe: bei kaputten DVR-Anfängen sonst ~1 s statt 0,05 s
+        [FFPROBE, "-v", "error", "-analyzeduration", "0", "-probesize", "32768", "-show_entries",
          "format=duration:stream=codec_type,width,height,avg_frame_rate",
          "-of", "json", pfad],
         capture_output=True, text=True, check=True, creationflags=FENSTERLOS,

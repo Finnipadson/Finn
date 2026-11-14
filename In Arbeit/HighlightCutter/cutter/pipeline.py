@@ -18,7 +18,7 @@ CACHE = DATEN / "cache"
 AUSGABE = Path.home() / "Videos" / "Highlights"
 
 # Erhöhen, wenn sich die Erkennung ändert → alte Cache-Einträge werden ignoriert
-ERKENNUNG_VERSION = 1
+ERKENNUNG_VERSION = 2
 
 
 def _cache_datei(video: Path, profil: str) -> Path:
@@ -40,6 +40,26 @@ def erkenne(video: str | Path, profil: str = "apex", cache: bool = True,
     return analyse
 
 
+def _ohne_kaputten_anfang(clips: list[Clip], video: str | Path) -> list[Clip]:
+    """Manche DVR-Dateien sind am Anfang bis zu ~1 min unlesbar: Clips dort kürzen/weglassen,
+    damit Oberfläche und Export dieselben Grenzen zeigen."""
+    if not clips or clips[0].start > 120:
+        return clips
+    try:
+        sauber = _schnitt.erster_sauberer_zeitpunkt(str(Path(video).resolve()))
+    except Exception:   # noqa: BLE001 – Prüfung ist nur eine Verbesserung
+        return clips
+    if sauber <= 0:
+        return clips
+    ergebnis = []
+    for c in clips:
+        if c.ende - 1.0 <= sauber:
+            continue
+        c.start = max(c.start, round(sauber, 3))
+        ergebnis.append(c)
+    return ergebnis
+
+
 def analysiere(videos: list[str | Path], einstellungen: Einstellungen, profil: str = "apex",
                cache: bool = True, fortschritt: Fortschritt = None,
                abbrechen: Abbruch | None = None) -> tuple[list[Analyse], list[Clip]]:
@@ -56,6 +76,7 @@ def analysiere(videos: list[str | Path], einstellungen: Einstellungen, profil: s
         a = erkenne(video, profil, cache, lambda x, t: teil(0.9 * x, t), abbrechen)
         pruefe_abbruch(abbrechen)
         c = _clips.plane_clips(a, einstellungen, lambda x, t: teil(0.9 + 0.1 * x, t), abbrechen)
+        c = _ohne_kaputten_anfang(c, video)
         analysen.append(a)
         alle_clips.extend(c)
     melde(fortschritt, 1.0, f"{len(alle_clips)} Clips gefunden")

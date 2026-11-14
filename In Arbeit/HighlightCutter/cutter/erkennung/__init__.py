@@ -1,11 +1,15 @@
 """Phase 1 – Ereignisse (Kill, Knock, eigener Tod, Champion) im Video erkennen. Bereich von Agent 1."""
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
-from ..schema import Abbruch, Analyse, Fortschritt
+from .. import medien
+from ..schema import Abbruch, Analyse, Fortschritt, melde, pruefe_abbruch
+from . import profile as _profile
+from .lesen import lese_bereiche
 
-PROFILE = ["apex"]
+PROFILE = _profile.PROFILE
 
 
 def erkenne(video: str | Path, profil: str = "apex",
@@ -16,4 +20,32 @@ def erkenne(video: str | Path, profil: str = "apex",
     - abbrechen.is_set() regelmäßig prüfen → Abgebrochen werfen (schema.pruefe_abbruch)
     - Typen: "kill", "knock", "tod" (eigener Tod), "champion"
     """
-    raise NotImplementedError("Phase 1 noch nicht gebaut")
+    video = Path(video).resolve()
+    modul = _profile.lade(profil)
+    pruefe_abbruch(abbrechen)
+    melde(fortschritt, 0.0, "Video wird geöffnet")
+    info = medien.info(video)
+    dauer = max(info.dauer, 0.001)
+    auswertung = modul.neue_auswertung()
+
+    letzte_meldung = 0.0
+    frames = lese_bereiche(video, modul.BEREICHE, fps=modul.FPS)
+    try:
+        for t, bilder in frames:
+            pruefe_abbruch(abbrechen)
+            auswertung.frame(t, bilder)
+            jetzt = time.monotonic()
+            if jetzt - letzte_meldung >= 0.5:
+                letzte_meldung = jetzt
+                melde(fortschritt, 0.98 * t / dauer, f"Erkennung {_mmss(t)} / {_mmss(dauer)}")
+    finally:
+        frames.close()   # beendet FFmpeg auch bei Abbruch
+
+    events = auswertung.ergebnis(dauer)
+    melde(fortschritt, 1.0, f"{len(events)} Ereignisse erkannt")
+    return Analyse(str(video), round(info.dauer, 3), profil, events)
+
+
+def _mmss(s: float) -> str:
+    s = int(max(0, s))
+    return f"{s // 60}:{s % 60:02d}"

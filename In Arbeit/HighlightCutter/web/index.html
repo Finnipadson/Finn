@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Highlight Cutter</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <img src="icon.svg" alt="" width="30" height="30">
+    <span class="brand-name">HIGHLIGHT<b>CUTTER</b></span>
+  </div>
+  <nav class="steps" aria-label="Ablauf">
+    <button class="step" data-view="aufnahmen"><i>1</i><span>Aufnahmen</span></button>
+    <span class="step-line"></span>
+    <button class="step" data-view="clips"><i>2</i><span>Highlights</span></button>
+    <span class="step-line"></span>
+    <button class="step" data-view="fertig"><i>3</i><span>Video</span></button>
+  </nav>
+  <span id="demo" class="demo" hidden title="Erkennung/Schnitt sind noch nicht fertig gebaut – die Clips sind erfunden, die Zeiten aber echt abspielbar.">DEMO-DATEN</span>
+</header>
+
+<div class="layout">
+  <main id="main">
+    <!-- 1 · Aufnahmen -->
+    <section id="v-aufnahmen" class="view">
+      <div class="view-head">
+        <div>
+          <h1>Aufnahmen wählen</h1>
+          <p class="sub">Wähl eine oder mehrere Runden – alle Highlights landen in einem Video.</p>
+        </div>
+        <div class="tools">
+          <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+            <input id="suche" type="search" placeholder="Suchen …" autocomplete="off"></label>
+          <button id="btn-neu-laden" class="btn ghost icon" title="Liste neu laden"><svg viewBox="0 0 24 24"><path d="M19 12a7 7 0 1 1-2.05-4.95M19 4v4h-4"/></svg></button>
+        </div>
+      </div>
+
+      <div id="drop" class="drop">
+        <svg viewBox="0 0 24 24"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>
+        <div><b>Eigene Videos hier reinziehen</b><span>oder</span></div>
+        <button id="btn-datei" class="btn">Datei auswählen …</button>
+      </div>
+
+      <div id="liste" class="liste"></div>
+    </section>
+
+    <!-- 2 · Highlights -->
+    <section id="v-clips" class="view" hidden>
+      <div class="view-head">
+        <div>
+          <h1>Highlights</h1>
+          <p class="sub" id="clips-sub">Schalte Clips an oder aus, schieb Start und Ende, ändere die Reihenfolge.</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><span id="stat-clips">0</span><small>Clips</small></div>
+          <div class="stat"><span id="stat-kills">0</span><small>Kills</small></div>
+          <div class="stat hot"><span id="stat-laenge">0:00</span><small>Videolänge</small></div>
+        </div>
+      </div>
+      <div id="hinweis-neu" class="banner" hidden>
+        <span>Du hast „Eigene Tode“ oder „Champion“ geändert. Das wirkt sich erst aus, wenn die Highlights neu berechnet werden (deine Anpassungen gehen dabei verloren).</span>
+        <button id="btn-neu-berechnen" class="btn small">Neu berechnen</button>
+      </div>
+      <div id="clip-liste" class="clip-liste"></div>
+    </section>
+
+    <!-- 3 · Fertig -->
+    <section id="v-fertig" class="view" hidden>
+      <div class="fertig">
+        <div class="fertig-kopf">
+          <span class="badge-ok">FERTIG</span>
+          <h1>Dein Highlight-Video ist da</h1>
+          <p class="sub" id="fertig-info"></p>
+        </div>
+        <video id="ergebnis-player" controls preload="metadata"></video>
+        <div class="fertig-knoepfe">
+          <button id="btn-ordner" class="btn primary">Im Ordner zeigen</button>
+          <button id="btn-abspielen" class="btn">Im Videoplayer öffnen</button>
+          <button id="btn-zurueck-clips" class="btn ghost">Clips weiter bearbeiten</button>
+          <button id="btn-neue-runde" class="btn ghost">Neue Aufnahmen</button>
+        </div>
+        <p class="pfad" id="fertig-pfad"></p>
+      </div>
+    </section>
+  </main>
+
+  <aside id="aside">
+    <!-- Seitenleiste Aufnahmen -->
+    <div id="a-aufnahmen" class="card">
+      <h2>Auswahl</h2>
+      <div id="auswahl-info" class="auswahl-info"></div>
+      <ul id="auswahl-chips" class="chips"></ul>
+      <button id="btn-finden" class="btn primary big" disabled>
+        <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3" class="fill"/></svg>
+        Highlights finden
+      </button>
+      <button id="btn-weiter" class="btn ghost wide" hidden></button>
+    </div>
+
+    <!-- Seitenleiste Clips -->
+    <div id="a-clips" class="card player-card" hidden>
+      <div class="player-wrap">
+        <video id="player" preload="metadata" playsinline></video>
+        <div id="player-leer" class="player-leer">Klick auf ein Vorschaubild, um den Clip anzusehen</div>
+      </div>
+      <div class="player-leiste">
+        <button id="btn-play" class="btn small icon" title="Abspielen / Pause (Leertaste)"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" class="fill"/></svg></button>
+        <span id="player-zeit" class="player-zeit">–</span>
+        <button id="btn-montage" class="btn small">▶ Alle nacheinander</button>
+      </div>
+      <button id="btn-export" class="btn primary big">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" class="fill"/></svg>
+        Video erstellen
+      </button>
+      <p class="mini" id="export-info"></p>
+    </div>
+
+    <!-- Einstellungen (immer sichtbar) -->
+    <div class="card settings">
+      <h2>Einstellungen</h2>
+      <div class="feld">
+        <span class="label">Format</span>
+        <div class="segment" id="seg-format">
+          <button data-format="16:9"><span class="fmt quer"></span><b>16:9</b><small>YouTube</small></button>
+          <button data-format="9:16"><span class="fmt hoch"></span><b>9:16</b><small>TikTok · Shorts</small></button>
+        </div>
+      </div>
+      <label class="schalter-zeile">
+        <span><b>Eigene Tode</b><small>Clips, in denen du rausfliegst</small></span>
+        <input type="checkbox" id="e-tode" class="schalter">
+      </label>
+      <label class="schalter-zeile">
+        <span><b>Champion-Sieg</b><small>Das Ende einer gewonnenen Runde</small></span>
+        <input type="checkbox" id="e-champion" class="schalter">
+      </label>
+      <div class="feld">
+        <span class="label">Übergang <output id="o-uebergang"></output></span>
+        <input type="range" id="e-uebergang" min="0" max="1" step="0.1">
+      </div>
+      <details class="fein">
+        <summary>Feinschliff</summary>
+        <div class="feld"><span class="label">Nach dem letzten Kill <output id="o-nachlauf"></output></span>
+          <input type="range" id="e-nachlauf" min="0" max="10" step="0.5"></div>
+        <div class="feld"><span class="label">Kills zusammenfassen bis <output id="o-zusammenfassen"></output></span>
+          <input type="range" id="e-zusammenfassen" min="0" max="30" step="1"></div>
+        <div class="feld"><span class="label">Kampfbeginn höchstens <output id="o-max_vorlauf"></output></span>
+          <input type="range" id="e-max_vorlauf" min="5" max="60" step="1"></div>
+        <p class="mini">Diese drei wirken bei der nächsten Analyse.</p>
+      </details>
+      <p class="mini" id="ausgabe-ordner"></p>
+    </div>
+  </aside>
+</div>
+
+<!-- Auftrag (Analyse / Export) -->
+<div id="auftrag" class="overlay" hidden>
+  <div class="auftrag-karte" role="dialog" aria-modal="true" aria-labelledby="auftrag-titel">
+    <div class="auftrag-kopf">
+      <h2 id="auftrag-titel">Suche Highlights</h2>
+      <span id="auftrag-prozent" class="prozent">0 %</span>
+    </div>
+    <div class="balken"><div id="auftrag-balken"></div></div>
+    <p id="auftrag-text" class="auftrag-text">Startet …</p>
+    <p id="auftrag-fehler" class="fehler-box" hidden></p>
+    <div class="auftrag-knoepfe">
+      <button id="btn-abbrechen" class="btn ghost">Abbrechen</button>
+      <button id="btn-nochmal" class="btn primary" hidden>Nochmal versuchen</button>
+      <button id="btn-schliessen" class="btn" hidden>Schließen</button>
+    </div>
+  </div>
+</div>
+
+<div id="drop-overlay" class="drop-overlay" hidden><div>Loslassen zum Hinzufügen</div></div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+
+<template id="t-clip">
+  <article class="clip">
+    <button class="griff" title="Ziehen zum Verschieben" aria-label="Verschieben"><svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg></button>
+    <button class="thumb" title="Vorschau abspielen">
+      <img alt="" loading="lazy">
+      <span class="nr"></span>
+      <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></span>
+    </button>
+    <div class="clip-body">
+      <div class="clip-zeile1">
+        <span class="grund"></span>
+        <span class="clip-quelle"></span>
+        <span class="clip-dauer"></span>
+      </div>
+      <div class="tl">
+        <div class="tl-spur"></div>
+        <div class="tl-bereich"><span class="tl-griff links"></span><span class="tl-griff rechts"></span></div>
+        <div class="tl-kopf" hidden></div>
+      </div>
+      <div class="clip-zeile3">
+        <div class="justier"><span>Start</span>
+          <button data-j="start" data-d="-0.5">−0,5</button><b class="t-start"></b><button data-j="start" data-d="0.5">+0,5</button></div>
+        <div class="justier"><span>Ende</span>
+          <button data-j="ende" data-d="-0.5">−0,5</button><b class="t-ende"></b><button data-j="ende" data-d="0.5">+0,5</button></div>
+        <div class="reihe">
+          <button data-move="-1" title="Nach oben">▲</button>
+          <button data-move="1" title="Nach unten">▼</button>
+        </div>
+      </div>
+    </div>
+    <label class="clip-an" title="Clip im Video verwenden"><input type="checkbox" class="schalter"><span class="an-text"></span></label>
+  </article>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>

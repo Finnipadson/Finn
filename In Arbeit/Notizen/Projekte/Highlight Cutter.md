@@ -1,6 +1,6 @@
 ---
 typ: app
-status: geplant
+status: fertig (v1, Apex)
 technik: Python + FFmpeg + OpenCV, lokale Web-Oberfläche
 erstellt: 2026-11-12
 ---
@@ -8,7 +8,8 @@ erstellt: 2026-11-12
 PC-App, in die man NVIDIA-Bildschirmaufnahmen (ShadowPlay/NVIDIA App) lädt und die daraus automatisch die Highlights wie Kills herausschneidet. *Name ist nur ein Arbeitstitel.*
 
 - Datei/Ordner: `In Arbeit/HighlightCutter/`
-- Bauplan: `HighlightCutter/highlight-cutter-plan.md` (5 Phasen)
+- Bauplan: `HighlightCutter/highlight-cutter-plan.md` (alle 5 Phasen fertig, 2026-11-14; bekannte Grenzen dort)
+- Start: `HighlightCutter/start.bat` (Desktop-Icon per `verknuepfung.ps1`), fertige Videos landen in `Videos\Highlights`
 - Verwandt: [[PC Aufräumer]] erkennt Spielaufnahmen schon beim Scan
 
 ## Ziele

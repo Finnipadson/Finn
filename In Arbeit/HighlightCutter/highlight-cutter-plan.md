@@ -58,8 +58,20 @@ Projektnotiz: `Notizen/Projekte/Highlight Cutter.md`
 
 ## Stand
 
-- [ ] Phase 1
-- [ ] Phase 2
-- [ ] Phase 3
-- [ ] Phase 4
-- [ ] Phase 5
+Gebaut 2026-11-14 von 4 parallelen Agenten (Phase 5 auf Agent 1 + 4 verteilt), danach zusammengefügt.
+
+- [x] Phase 1 – Kill-Zähler oben rechts (Ziffern-Templates) + „KNOCKED DOWN“/„ELIMINATED“ + Todes-Zusammenfassung + Champion-Banner. Ground Truth: 15/15 Kills, 18/18 Knocks, 0 Fehlalarme. Nur Keyframes (4/s) → ~4 s pro 150-s-Aufnahme
+- [x] Phase 2 – Regeln + Kampfbeginn über Ton (Schuss-Salven, Sprache aussortiert). 6/7 Gefechte im Sollbereich
+- [x] Phase 3 – NVENC, je Clip eigener Lauf, Überblendungen einzeln, ~6× Echtzeit. Hochkant = 4:5-Ausschnitt + unscharfer Hintergrund. Erkennt kaputten DVR-Anfang (`erster_sauberer_zeitpunkt`)
+- [x] Phase 4 – Flask-Server + Web-Oberfläche, `start.bat`, `verknuepfung.ps1`
+- [x] Phase 5 – Tod/Champion-Erkennung, Einstellungen gemerkt, Analyse-Cache (`daten/cache`)
+- [x] Gesamttest: 87 pytest grün; 3 echte Aufnahmen → 6 Clips → 16:9 und 9:16 (65 s für beide); Oberfläche mit echter Erkennung durchgeklickt
+
+## Bekannte Grenzen / Ideen
+
+- Lange Gefechte mit Pausen > 10 s: nur die letzte Phase wird als Kampfbeginn erkannt
+- Schwellen für Ton aus 4 Aufnahmen, echte Discord-Stimmen ungetestet
+- Ziffern-Templates 6–9 aus je nur 1 Beispiel; andere Modi (TDM) und Auflösungen ungetestet
+- Tod/Champion-Zeitpunkt = Erscheinen der Zusammenfassung/des Banners
+- Keine echte 30-min-Aufnahme vorhanden (alle DVR-Clips ≤ 150 s), Geschwindigkeit hochgerechnet
+- Option: Feld `start_quelle` (Ton/geschätzt) im Clip für die Oberfläche

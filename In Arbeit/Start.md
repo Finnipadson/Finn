@@ -15,7 +15,7 @@ Zentrale Übersicht über alle Projekte.
 | [[Stapelfieber]] | Online-Kartenspiel (Artifact) | spielbar |
 | [[PC Aufräumer]] | Windows-App (C# WPF) | in Arbeit |
 | [[Café Reitschule]] | Restaurant-Website (Demo) | Entwurf v2 fertig |
-| [[Highlight Cutter]] | PC-App: Highlights aus NVIDIA-Aufnahmen schneiden | geplant (5 Phasen) |
+| [[Highlight Cutter]] | PC-App: Highlights aus NVIDIA-Aufnahmen schneiden | fertig v1 (Apex, alle 5 Phasen) |
 | [[Erklärvideo-Studio]] | PC-App: Thema eingeben → animiertes Erklärvideo | fertig (Phase 5: 4 Designs, 9 Bausteine, Musik-Stimmungen, Desktop-Icon) |
 
 Ältere/kleinere Projekte: [[Weitere Projekte]]
