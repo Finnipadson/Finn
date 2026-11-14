@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 import subprocess
 import threading
+import time
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,6 +21,8 @@ from ..medien import FENSTERLOS, FFMPEG, FFPROBE
 
 # Bezugsgröße: alle Pixelangaben der Profile beziehen sich auf ein 2560×1440-Bild
 REF_B, REF_H = 2560, 1440
+# So lange darf FFmpeg ohne ein einziges Bild bleiben, bevor der Lauf als hängend gilt (s)
+WACHHUND_S = 60.0
 
 
 @dataclass(frozen=True)
@@ -181,6 +184,21 @@ def _ein_lauf(video: str, bereiche: list[Bereich], fps: float, nur_keyframes: bo
 
     leser = threading.Thread(target=stderr_lesen, daemon=True)
     leser.start()
+
+    # Wachhund: An kaputten Stellen bleibt FFmpeg manchmal einfach stehen (kein Bild, keine CPU-Last).
+    # Kommt WACHHUND_S lang kein Bild, wird der Lauf beendet; lese_bereiche setzt dahinter neu an.
+    aktiv = [time.monotonic()]
+    ende_signal = threading.Event()
+
+    def wachhund() -> None:
+        while not ende_signal.wait(1.0):
+            if proc.poll() is not None:
+                return
+            if time.monotonic() - aktiv[0] > WACHHUND_S:
+                proc.kill()
+                return
+
+    threading.Thread(target=wachhund, daemon=True).start()
     groesse = breite * hoehe * 3
     assert proc.stdout is not None
     try:
@@ -188,6 +206,7 @@ def _ein_lauf(video: str, bereiche: list[Bereich], fps: float, nur_keyframes: bo
             puffer = _lese_genau(proc.stdout, groesse)
             if puffer is None:
                 break
+            aktiv[0] = time.monotonic()
             with zeiten_da:
                 while not zeiten and not fertig[0]:
                     zeiten_da.wait(5)
@@ -202,6 +221,7 @@ def _ein_lauf(video: str, bereiche: list[Bereich], fps: float, nur_keyframes: bo
                 y += h
             yield t, teile_out
     finally:
+        ende_signal.set()
         if proc.poll() is None:
             proc.kill()      # auch bei Abbruch durch den Aufrufer (generator.close())
         proc.wait()

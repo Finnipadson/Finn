@@ -18,7 +18,7 @@ CACHE = DATEN / "cache"
 AUSGABE = Path.home() / "Videos" / "Highlights"
 
 # Erhöhen, wenn sich die Erkennung ändert → alte Cache-Einträge werden ignoriert
-ERKENNUNG_VERSION = 2
+ERKENNUNG_VERSION = 3   # 3: kaputter DVR-Anfang wird bei der Erkennung übersprungen
 
 
 def _cache_datei(video: Path, profil: str) -> Path:
@@ -34,7 +34,11 @@ def erkenne(video: str | Path, profil: str = "apex", cache: bool = True,
     if cache and datei.exists():
         melde(fortschritt, 1.0, "Aus Zwischenspeicher")
         return Analyse.aus_dict(json.loads(datei.read_text(encoding="utf-8")))
-    analyse = _erkennung.erkenne(video, profil, fortschritt, abbrechen)
+    try:
+        sauber = _schnitt.erster_sauberer_zeitpunkt(str(video))
+    except Exception:   # noqa: BLE001 – Prüfung ist nur eine Verbesserung
+        sauber = 0.0
+    analyse = _erkennung.erkenne(video, profil, fortschritt, abbrechen, ab=sauber)
     CACHE.mkdir(parents=True, exist_ok=True)
     datei.write_text(json.dumps(analyse.als_dict(), ensure_ascii=False, indent=1), encoding="utf-8")
     return analyse

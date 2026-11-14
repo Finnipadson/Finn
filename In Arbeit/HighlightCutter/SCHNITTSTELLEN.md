@@ -22,7 +22,9 @@ dort etwas Neues: im Abschlussbericht beschreiben, nicht selbst ändern.
 
 ## Phase 1 – `cutter/erkennung/` (Agent 1)
 
-`erkenne(video, profil="apex", fortschritt, abbrechen) -> Analyse`
+`erkenne(video, profil="apex", fortschritt, abbrechen, ab=0.0) -> Analyse`
+
+- `ab`: Frames davor nicht auswerten. `pipeline` übergibt `schnitt.erster_sauberer_zeitpunkt(video)` – kaputte DVR-Anfänge enthalten veraltete HUD-Reste (z. B. den Kill-Stand vom Ende), die sonst den Zähler falsch vorbelegen.
 
 - Spielprofile in `cutter/erkennung/profile/<spiel>.py`, Apex zuerst. HUD-Bereiche **relativ** zur Bildgröße angeben (andere Auflösungen).
 - Nur kleine Bildausschnitte auswerten, nicht ganze 1440p-Frames → Ziel: 30 min Aufnahme in < 3 min analysiert.
