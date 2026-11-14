@@ -62,6 +62,7 @@ PC-App, in die man NVIDIA-Bildschirmaufnahmen (ShadowPlay/NVIDIA App) lädt und 
 - [x] **Thumbnail vorschlagen** *(erledigt 2026-11-14: 4 Vorschläge aus Kill-Momenten oder aktuelles Bild → `<Video> - Thumbnail.jpg`)*
 - [ ] **Weitere Spiele**: neue Spielprofile (z. B. Valorant, Fortnite, CS2); welche Spiele, ist noch offen *(Idee 2026-11-14)*
 - [ ] **Echte .exe zum Weitergeben**: App per PyInstaller als Windows-Programm packen, FFmpeg gleich mit dabei → Kollegen müssen nichts installieren (kein Python, kein FFmpeg). Nachteile: Datei ca. 200–300 MB, Windows warnt beim ersten Start bei unsignierter .exe *(Idee 2026-11-14)*
+- [ ] **Eigenes App-Fenster statt Edge**: Oberfläche per `pywebview` (nutzt das in Windows eingebaute WebView2) in einem eigenen Fenster öffnen → kein Konsolenfenster, eigenes Icon in der Taskleiste, wirkt wie ein normales Windows-Programm. Passt gut zusammen mit der .exe *(Idee 2026-11-14)*
 
 ## Notizen
 
