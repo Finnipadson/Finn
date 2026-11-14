@@ -13,9 +13,10 @@ from ..medien import FENSTERLOS, FFMPEG
 from ..schema import Abbruch, Clip, Einstellungen, Fortschritt
 from .ffmpeg_lauf import SchnittFehler
 from .quelle import KURZ_PROBEN, erster_sauberer_zeitpunkt
+from .render import kapitel as _kapitel
 from .render import rendere as _rendere
 
-__all__ = ["rendere", "vorschaubild", "erster_sauberer_zeitpunkt", "SchnittFehler"]
+__all__ = ["rendere", "kapitel", "vorschaubild", "erster_sauberer_zeitpunkt", "SchnittFehler"]
 
 # Vorschaubilder unterhalb dieser Sekunde auf den sauberen Dateianfang schieben
 # (darüber wurde bei keiner Aufnahme ein kaputter Anfang gemessen; spart den Scan)
@@ -30,6 +31,12 @@ def rendere(clips: list[Clip], ziel: str | Path, einstellungen: Einstellungen,
     Gibt den Pfad der fertigen Datei zurück. Bei Abbruch keine halbe Zieldatei liegen lassen.
     """
     return _rendere(clips, ziel, einstellungen, fortschritt, abbrechen)
+
+
+def kapitel(clips: list[Clip], einstellungen: Einstellungen) -> list[dict]:
+    """Kapitel (ein Kapitel je aktivem Clip) so, wie `rendere` sie ins MP4 schreibt:
+    [{start, ende, titel, kills: [s…], quelle, quelle_start}] – Zeiten im fertigen Video."""
+    return _kapitel(clips, einstellungen)
 
 
 def vorschaubild(video: str | Path, t: float, breite: int = 320) -> bytes:

@@ -54,14 +54,15 @@ PC-App, in die man NVIDIA-Bildschirmaufnahmen (ShadowPlay/NVIDIA App) lädt und 
 
 ## Offene Punkte / Ideen
 
-- [ ] **Übersicht „Meine Videos“ in der App**: alle bisher erstellten Highlight-Videos (aus `Videos\Highlights`) als Liste/Galerie mit Vorschaubild, Datum, Länge, Format (16:9/9:16); abspielen, herunterladen bzw. speichern unter, im Ordner zeigen, löschen *(Idee 2026-11-14)*
-- [ ] **Clips direkt in der App anschauen**: erstellte Videos und die einzelnen Clips darin in einem großen eingebauten Player abspielen (ohne externen Videoplayer), z. B. Kapitelmarken pro Clip zum Springen, Vollbild, nächster/vorheriger Clip *(Idee 2026-11-14; heute gibt es schon die Vorschau vor dem Export und einen Player auf der Fertig-Seite, aber keinen für ältere Videos)*
+- [x] **Übersicht „Meine Videos“ in der App** *(erledigt 2026-11-14: Bereich „Videos“ mit Galerie, Speichern unter, Löschen in den Papierkorb)*
+- [x] **Clips direkt in der App anschauen** *(erledigt 2026-11-14: Player mit Kapiteln je Clip, ←/→, Vollbild F; Kapitel stehen im MP4)*
 - [ ] **Clip-Bewertung / Best-of**: jeder Clip bekommt Punkte (Anzahl Kills, Squad-Wipe, Champion, Schaden) → Option „nur die besten X Minuten“ *(Idee 2026-11-14)*
 - [ ] **Kill-Einblendung**: kurzer Text wie „3 KILLS“ oder „SQUAD WIPE“ am Anfang des Clips *(Idee 2026-11-14)*
 - [ ] **Kampfbeginn auch übers Bild**: Trefferanzeige/Schadenszahlen zusätzlich zum Ton auswerten, damit lange Gefechte mit Pausen > 10 s komplett im Clip landen *(Idee 2026-11-14)*
-- [ ] **Thumbnail vorschlagen**: bestes Standbild (z. B. Kill-Moment) automatisch als YouTube-Vorschaubild exportieren *(Idee 2026-11-14)*
+- [x] **Thumbnail vorschlagen** *(erledigt 2026-11-14: 4 Vorschläge aus Kill-Momenten oder aktuelles Bild → `<Video> - Thumbnail.jpg`)*
 - [ ] **Weitere Spiele**: neue Spielprofile (z. B. Valorant, Fortnite, CS2); welche Spiele, ist noch offen *(Idee 2026-11-14)*
 
 ## Notizen
 
 - 2026-11-14: Oberfläche neu im Editor-Layout (Vorbild: Dribbble-Shot „ClipPilot“ von Potara Studio): Icon-Leiste, Clip-Raster links, große Vorschau mit Scrub-Leiste, Clip-Details rechts (Feinschnitt, Momente), Montage-Zeitleiste unten (Clip-Enden dort ziehbar). Farben neutral schwarz + Blau, Icon blau. Entwürfe in `HighlightCutter/design-entwurf/`.
+- 2026-11-14: Fix: kaputter DVR-Anfang wird bei der Erkennung übersprungen (veraltete HUD-Reste verschluckten echte Kills); FFmpeg-Wachhund (60 s ohne Bild → Neustart).

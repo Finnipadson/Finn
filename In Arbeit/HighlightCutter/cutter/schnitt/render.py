@@ -144,6 +144,41 @@ def plane(clips: list[Clip], einstellungen: Einstellungen) -> Plan:
     return plan
 
 
+def kapitel_aus_plan(plan: Plan) -> list[dict]:
+    """Ein Kapitel je Clip, Zeiten im fertigen Video (s). Ein Kapitel beginnt mit der Überblendung
+    in den Clip. `kills` = Zeitpunkte der eigenen Kills im fertigen Video (für Thumbnail-Vorschläge)."""
+    out: list[dict] = []
+    bild = 0
+    for t in plan.teile:
+        start = bild / plan.fps
+        laenge = t.bilder / plan.fps
+        kills = sorted(round(start + (e.t - t.start), 3) for e in t.clip.events
+                       if e.typ == "kill" and t.start <= e.t <= t.start + laenge)
+        out.append({"start": round(start, 3), "ende": 0.0, "titel": t.clip.grund, "kills": kills,
+                    "quelle": t.clip.video, "quelle_start": round(t.start, 3)})
+        bild += t.bilder - t.ende
+    for i, k in enumerate(out):
+        k["ende"] = out[i + 1]["start"] if i + 1 < len(out) else round(plan.dauer, 3)
+    return out
+
+
+def kapitel(clips: list[Clip], einstellungen: Einstellungen) -> list[dict]:
+    """Kapitel so, wie `rendere` sie mit denselben Clips und Einstellungen schreibt."""
+    return kapitel_aus_plan(plane(clips, einstellungen))
+
+
+def _ffmetadata(kapitel_liste: list[dict]) -> str:
+    def esc(s: str) -> str:
+        for z in ("\\", "=", ";", "#", "\n"):
+            s = s.replace(z, "\\" + z)
+        return s
+    zeilen = [";FFMETADATA1", "title=Highlight Cutter"]
+    for i, k in enumerate(kapitel_liste, 1):
+        zeilen += ["[CHAPTER]", "TIMEBASE=1/1000", f"START={int(round(k['start'] * 1000))}",
+                   f"END={int(round(k['ende'] * 1000))}", f"title={esc(f'#{i} ' + str(k['titel']))}"]
+    return "\n".join(zeilen) + "\n"
+
+
 def _samples(bilder: int, fps: int) -> int:
     return int(round(bilder * TON_RATE / fps))
 
@@ -333,7 +368,11 @@ class _Lauf:
                     while daten := ein_w.readframes(1 << 18):
                         aus_w.writeframes(daten)
         fps = self.plan.fps
+        # Kapitel (ein Kapitel je Clip) direkt ins MP4 – bleiben beim Kopieren/Umbenennen erhalten
+        meta = self.datei("kapitel.txt")
+        meta.write_text(_ffmetadata(kapitel_aus_plan(self.plan)), encoding="utf-8")
         arg = ["-f", "h264", "-framerate", str(fps), "-i", str(video), "-i", str(ton),
+               "-f", "ffmetadata", "-i", str(meta), "-map_chapters", "2",
                "-map", "0:v", "-map", "1:a", "-c:v", "copy",
                # exakte Zeitstempel (Bild n = n/fps); sonst rundet der Roh-H.264-Leser auf 1/1,2 MHz
                "-bsf:v", f"setts=pts=N/({fps}*TB):dts=N/({fps}*TB):duration=1/({fps}*TB)",

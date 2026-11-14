@@ -382,24 +382,9 @@ async function starteExport() {
   const a = await verfolge(id, 'Video wird erstellt', starteExport);
   if (!a) return;
   S.exportErgebnis = a.ergebnis;
-  zeigeFertig();
-}
-
-function zeigeFertig() {
-  const r = S.exportErgebnis;
-  const p = $('#ergebnis-player');
-  p.src = '/api/video?pfad=' + encodeURIComponent(r.pfad) + '&v=' + Date.now();
-  const info = () => {
-    const teile = [];
-    if (isFinite(p.duration)) teile.push(p.duration < 60 ? Math.round(p.duration) + ' s' : fmtLaenge(p.duration) + ' min');
-    if (r.groesse) teile.push(fmtGroesse(r.groesse));
-    teile.push(S.einst.format === '9:16' ? 'Hochkant 9:16' : 'Quer 16:9');
-    $('#fertig-info').textContent = teile.join(' · ');
-  };
-  info();
-  p.addEventListener('loadedmetadata', info, { once: true });
-  $('#fertig-pfad').textContent = r.pfad;
-  zeigeView('fertig');
+  S.vsel = a.ergebnis.pfad;
+  S.vneu = a.ergebnis.pfad;
+  zeigeView('videos');
 }
 
 async function oeffne(pfad, aktion) {
@@ -415,7 +400,7 @@ const ANSICHT_TEILE = {
   aufnahmen: ['#v-aufnahmen', '#a-aufnahmen'],
   clips: ['#v-clips', '#buehne', '#a-clips', '#montage-panel'],
   clipsLeer: ['#clips-leer'],
-  fertig: ['#v-fertig'],
+  videos: ['#v-videos', '#vbuehne', '#a-videos'],
 };
 
 function zeigeView(v) {
@@ -427,10 +412,10 @@ function zeigeView(v) {
   $('#btn-export').classList.toggle('aus-leer', leer);
   $('#seg-format-mini').classList.toggle('aus-leer', leer);
   if (v !== 'clips') { $('#player').pause(); S.montage = false; montageKnopf(); }
-  if (v !== 'fertig') $('#ergebnis-player').pause();
+  if (v !== 'videos') $('#vplayer').pause();
   for (const b of $$('.step, .rail-btn[data-view]')) {
     const ziel = b.dataset.view;
-    const erreichbar = ziel === 'aufnahmen' || (ziel === 'clips' && S.clips !== null) || (ziel === 'fertig' && !!S.exportErgebnis);
+    const erreichbar = ziel === 'aufnahmen' || (ziel === 'clips' && S.clips !== null) || ziel === 'videos';
     b.disabled = !erreichbar;
     b.classList.toggle('erreichbar', erreichbar);
     b.classList.toggle('aktiv', ziel === v);
@@ -441,10 +426,11 @@ function zeigeView(v) {
   $('#main').scrollTop = 0;
   renderProjekt();
   if (v === 'aufnahmen') zeigeWeiterKnopf();
+  if (v === 'videos') ladeMeineVideos();
 }
 
 function renderProjekt() {
-  if (S.view === 'aufnahmen' || !S.analyseVideos || !S.analyseVideos.length) {
+  if (S.view !== 'clips' || !S.analyseVideos || !S.analyseVideos.length) {
     $('#projekt').textContent = 'Highlight Cutter';
     $('#projekt-sub').textContent = '';
     return;
@@ -1252,6 +1238,7 @@ function verdrahte() {
   });
 
   document.addEventListener('keydown', (e) => {
+    if (S.view === 'videos' && $('#auftrag').hidden && $('#frage').hidden) { videoTaste(e); return; }
     if (S.view !== 'clips' || !$('#auftrag').hidden) return;
     if (e.target.closest && e.target.closest('input, textarea, select, summary')) return;
     if (e.key === ' ') { e.preventDefault(); playPause(); }
@@ -1264,11 +1251,8 @@ function verdrahte() {
   $('#btn-schliessen').addEventListener('click', () => { $('#auftrag').hidden = true; });
   $('#btn-nochmal').addEventListener('click', () => { $('#auftrag').hidden = true; if (nochmalAktion) nochmalAktion(); });
 
-  // Fertig
-  $('#btn-ordner').addEventListener('click', () => oeffne(S.exportErgebnis.pfad, 'zeigen'));
-  $('#btn-abspielen').addEventListener('click', () => oeffne(S.exportErgebnis.pfad, 'abspielen'));
-  $('#btn-zurueck-clips').addEventListener('click', () => zeigeView('clips'));
-  $('#btn-neue-runde').addEventListener('click', () => { zeigeView('aufnahmen'); });
+  // Meine Videos
+  verdrahteVideos();
 
   // Einstellungen
   $$('#seg-format button, #seg-format-mini button').forEach((b) => b.addEventListener('click', () => setzeEinst('format', b.dataset.format)));
@@ -1278,6 +1262,419 @@ function verdrahte() {
   for (const k of ['nachlauf', 'zusammenfassen', 'max_vorlauf']) {
     $('#e-' + k).addEventListener('input', (e) => setzeEinst(k, parseFloat(e.target.value)));
   }
+}
+
+// ------------------------------------------------------------------ 3 · Meine Videos
+S.meineVideos = [];
+S.vsel = null;           // Pfad des gewählten Videos
+S.vneu = null;           // gerade exportiertes Video (Abzeichen „Neu“)
+S.vkap = null;           // {dauer, kapitel, kills} des gewählten Videos
+S.vthumbs = null;        // Thumbnail-Vorschläge [{t, grund}]
+S.vthumbWahl = null;     // gewählter Vorschlag (Index)
+
+const VP = () => $('#vplayer');
+const gewaehltesVideo = () => S.meineVideos.find((v) => v.pfad === S.vsel) || null;
+
+async function ladeMeineVideos() {
+  try {
+    const d = await api('/api/meine-videos');
+    S.meineVideos = d.videos;
+    S.videoOrdner = d.ordner;
+  } catch (e) {
+    toast(e.message);
+    S.meineVideos = [];
+  }
+  if (!gewaehltesVideo()) S.vsel = S.meineVideos.length ? S.meineVideos[0].pfad : null;
+  renderVideoKacheln();
+  await waehleVideo(S.vsel, false);
+}
+
+function renderVideoKacheln() {
+  const box = $('#video-kacheln');
+  const n = S.meineVideos.length;
+  $('#videos-sub').textContent = n ? `${n} ${n === 1 ? 'Video' : 'Videos'} in ${S.videoOrdner || 'Videos\\Highlights'}` : '';
+  if (!n) {
+    box.innerHTML = `<div class="videos-leer">Noch keine Highlight-Videos.<br>Erstelle eins unter „Highlights“ → „Video erstellen“.</div>`;
+    return;
+  }
+  box.innerHTML = S.meineVideos.map((v) => {
+    const t = Math.min(v.dauer * 0.35, Math.max(0, v.dauer - 0.5));
+    const datum = new Date(v.datum);
+    return `
+      <article class="kachel ${v.pfad === S.vsel ? 'gewaehlt' : ''} ${v.pfad === S.vneu ? 'neu' : ''}" data-pfad="${esc(v.pfad)}" tabindex="0" title="${esc(v.name)}">
+        <div class="k-bild">
+          <img alt="" loading="lazy" src="${bildUrl(v.pfad, t, 320)}">
+          <span class="fmt-badge ${v.format === '9:16' ? 'hoch' : ''}">${v.format}</span>
+          ${v.thumbnail ? '<span class="thumb-ok" title="Thumbnail gespeichert"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' : ''}
+          <span class="dauer">${fmtLaenge(v.dauer)}</span>
+        </div>
+        <div class="vk-zeile"><b>${isNaN(datum) ? esc(v.name) : esc(fmtDatum(v.datum))}</b><small>${v.kapitel ? v.kapitel + ' Clips' : fmtGroesse(v.groesse)}</small></div>
+      </article>`;
+  }).join('');
+}
+
+async function waehleVideo(pfad, abspielen) {
+  S.vsel = pfad;
+  S.vthumbs = null;
+  S.vthumbWahl = null;
+  $$('#video-kacheln .kachel').forEach((k) => k.classList.toggle('gewaehlt', k.dataset.pfad === pfad));
+  const p = VP();
+  const v = gewaehltesVideo();
+  if (!v) {
+    p.removeAttribute('src');
+    p.load();
+    $('#vplayer-leer').hidden = false;
+    $('#vplayer-leer').textContent = S.meineVideos.length ? 'Wähl links ein Video aus' : 'Noch keine Videos';
+    S.vkap = null;
+    renderKapitelLeiste();
+    renderVideoDetail();
+    return;
+  }
+  $('#vplayer-leer').hidden = true;
+  const src = '/api/video?pfad=' + encodeURIComponent(v.pfad);
+  if (p.dataset.src !== src) {
+    p.dataset.src = src;
+    p.poster = bildUrl(v.pfad, Math.min(v.dauer * 0.35, Math.max(0, v.dauer - 0.5)), 1280);
+    p.src = src;
+  }
+  if (abspielen) p.play().catch(() => {});
+  S.vkap = { dauer: v.dauer, kapitel: [], kills: [] };
+  renderKapitelLeiste();
+  renderVideoDetail();
+  try {
+    const k = await api('/api/kapitel?pfad=' + encodeURIComponent(v.pfad));
+    if (S.vsel !== pfad) return;
+    S.vkap = k;
+  } catch { /* ohne Kapitel weiter */ }
+  renderKapitelLeiste();
+  renderVideoDetail();
+}
+
+// ---- Kapitel-Zeitleiste
+function vDauer() {
+  const p = VP();
+  return isFinite(p.duration) && p.duration > 0 ? p.duration : (S.vkap ? S.vkap.dauer : 0) || 0;
+}
+
+function renderKapitelLeiste() {
+  const box = $('#kap-segmente');
+  const kap = S.vkap ? S.vkap.kapitel : [];
+  const d = vDauer();
+  if (!kap.length || !d) { box.innerHTML = ''; return; }
+  box.innerHTML = kap.map((k, i) => {
+    const l = (k.start / d) * 100;
+    const w = Math.max(0.3, ((k.ende - k.start) / d) * 100);
+    return `<span style="left:${l}%;width:calc(${w}% - ${i < kap.length - 1 ? 3 : 0}px)" title="${esc(k.titel)}"></span>`;
+  }).join('');
+}
+
+function aktuellesKapitel(t = VP().currentTime) {
+  const kap = S.vkap ? S.vkap.kapitel : [];
+  let i = -1;
+  kap.forEach((k, j) => { if (t >= k.start - 0.01) i = j; });
+  return i;
+}
+
+function springeKapitel(richtung) {
+  const kap = S.vkap ? S.vkap.kapitel : [];
+  const p = VP();
+  if (!kap.length) { p.currentTime = klemme(p.currentTime + richtung * 5, 0, vDauer()); return; }
+  const i = aktuellesKapitel();
+  let ziel;
+  if (richtung < 0) ziel = i >= 0 && p.currentTime - kap[i].start > 2 ? i : i - 1;
+  else ziel = i + 1;
+  if (ziel < 0) ziel = 0;
+  if (ziel >= kap.length) return;
+  p.currentTime = kap[ziel].start + 0.01;
+}
+
+function vPlayPause() {
+  const p = VP();
+  if (!p.getAttribute('src')) return;
+  if (p.paused) { if (p.ended) p.currentTime = 0; p.play().catch(() => {}); } else p.pause();
+}
+
+function vVollbild() {
+  const b = $('#vbuehne');
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else b.requestFullscreen().catch(() => toast('Vollbild ist hier nicht möglich.'));
+}
+
+function vScrubStart(e) {
+  const p = VP();
+  if (e.button !== 0 || !p.getAttribute('src')) return;
+  e.preventDefault();
+  const el = $('#vscrub');
+  const r = el.getBoundingClientRect();
+  const setze = (x) => { p.currentTime = klemme((x - r.left) / r.width, 0, 1) * vDauer(); };
+  setze(e.clientX);
+  try { el.setPointerCapture(e.pointerId); } catch { /* egal */ }
+  const bewegen = (ev) => setze(ev.clientX);
+  const ende = () => { el.removeEventListener('pointermove', bewegen); el.removeEventListener('pointerup', ende); el.removeEventListener('pointercancel', ende); };
+  el.addEventListener('pointermove', bewegen);
+  el.addEventListener('pointerup', ende);
+  el.addEventListener('pointercancel', ende);
+}
+
+function vSchleife() {
+  const p = VP();
+  if (S.view === 'videos') {
+    const d = vDauer();
+    const t = p.getAttribute('src') ? p.currentTime : 0;
+    const anteil = d ? klemme(t / d, 0, 1) : 0;
+    $('#vscrub-voll').style.width = anteil * 100 + '%';
+    $('#vscrub-knopf').style.left = anteil * 100 + '%';
+    $('#vzeit-links').textContent = fmtLaenge(t);
+    $('#vzeit-rechts').textContent = fmtLaenge(d);
+    const kap = S.vkap ? S.vkap.kapitel : [];
+    const i = aktuellesKapitel(t);
+    const name = i >= 0 ? kap[i].titel.replace(/^#\d+\s*/, '') : '';
+    const kname = $('#kapitel-name');
+    const text = i >= 0 ? `${esc(name)}<small>Kapitel ${i + 1} von ${kap.length}</small>` : (gewaehltesVideo() && !kap.length ? '<small>Ohne Kapitel</small>' : '');
+    if (kname.dataset.text !== text) { kname.dataset.text = text; kname.innerHTML = text; }
+    $('#vkapitel-pos').textContent = gewaehltesVideo() ? `${fmtLaenge(t)} / ${fmtLaenge(d)}` : '';
+    $$('#kapitel-liste .moment').forEach((m, j) => m.classList.toggle('jetzt', j === i));
+    const btn = $('#btn-vplay');
+    const spielt = !p.paused;
+    if (btn.dataset.spielt !== String(spielt)) {
+      btn.dataset.spielt = String(spielt);
+      btn.innerHTML = spielt
+        ? '<svg viewBox="0 0 24 24"><rect x="6.5" y="5" width="3.8" height="14" rx="1" class="fill"/><rect x="13.7" y="5" width="3.8" height="14" rx="1" class="fill"/></svg>'
+        : '<svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" class="fill"/></svg>';
+    }
+    $('#btn-vton').classList.toggle('aus', p.muted);
+  }
+  requestAnimationFrame(vSchleife);
+}
+
+function videoTaste(e) {
+  if (e.target.closest && e.target.closest('input, textarea, select, summary')) return;
+  if (e.key === ' ') { e.preventDefault(); vPlayPause(); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); springeKapitel(-1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); springeKapitel(1); }
+  else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); vVollbild(); }
+  else if (e.key === 'm' || e.key === 'M') { VP().muted = !VP().muted; }
+}
+
+// ---- Detail-Paneel rechts
+function renderVideoDetail() {
+  const box = $('#video-detail');
+  const v = gewaehltesVideo();
+  if (!v) { box.innerHTML = '<div class="d-sec keine-momente">Kein Video ausgewählt.</div>'; return; }
+  const kap = S.vkap ? S.vkap.kapitel : [];
+  const datum = new Date(v.datum);
+  const hoch = v.format === '9:16';
+  box.innerHTML = `
+    <div class="d-sec">
+      <div class="v-titel">${esc(v.name)}</div>
+      <div class="v-ordner">${esc((S.videoOrdner || '') + (v.ordner ? '\\' + v.ordner.replace(/\//g, '\\') : ''))}</div>
+      <dl class="v-fakten">
+        <dt>Erstellt</dt><dd>${isNaN(datum) ? '–' : esc(fmtDatum(v.datum))}</dd>
+        <dt>Länge</dt><dd>${fmtLaenge(v.dauer)} min</dd>
+        <dt>Format</dt><dd>${hoch ? 'Hochkant 9:16' : 'Quer 16:9'} · ${v.breite}×${v.hoehe}</dd>
+        <dt>Größe</dt><dd>${fmtGroesse(v.groesse)}</dd>
+        <dt>Clips</dt><dd>${kap.length || v.kapitel || '–'}</dd>
+      </dl>
+    </div>
+    <div class="d-sec">
+      <div class="v-aktionen">
+        <button class="btn" data-v="zeigen"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Im Ordner</button>
+        <button class="btn" data-v="abspielen"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8 8M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>Windows-Player</button>
+        <button class="btn" data-v="kopie"><svg viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14"/></svg>Speichern unter …</button>
+        <button class="btn gefahr" data-v="loeschen"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Löschen</button>
+      </div>
+    </div>
+    <div class="d-sec">
+      <h4>Kapitel</h4>
+      <div class="kapitel-liste" id="kapitel-liste">
+        ${kap.length ? kap.map((k, i) => `<button class="moment" data-kap="${i}"><span class="nr">${fmtLaenge(k.start)}</span>${esc(k.titel.replace(/^#\d+\s*/, '') || 'Clip ' + (i + 1))}${k.kills && k.kills.length ? `<small>${k.kills.length} Kill${k.kills.length === 1 ? '' : 's'}</small>` : ''}</button>`).join('')
+          : '<div class="keine-momente">Dieses Video hat keine Kapitel. Videos, die vor diesem Update erstellt wurden, laufen ganz normal – nur ohne Sprungmarken.</div>'}
+      </div>
+    </div>
+    <div class="d-sec" id="thumb-sec">
+      <h4>Thumbnail</h4>
+      <div id="thumb-inhalt"></div>
+    </div>`;
+  renderThumbBereich();
+}
+
+function renderThumbBereich() {
+  const box = $('#thumb-inhalt');
+  const v = gewaehltesVideo();
+  if (!box || !v) return;
+  const hoch = v.format === '9:16';
+  const aktuell = v.thumbnail
+    ? `<div class="thumb-aktuell"><img alt="Gespeichertes Thumbnail" src="/api/thumbnail-bild?pfad=${encodeURIComponent(v.pfad)}&v=${Date.now()}"><p class="mini">Gespeichert: ${esc(v.thumbnail.split(/[\\/]/).pop())}</p></div>` : '';
+  if (S.vthumbs === null) {
+    box.innerHTML = `
+      <p class="mini" style="margin-top:0">${hoch ? 'Hochkant 1080×1920 für Shorts' : '1280×720 für YouTube'} – wird neben dem Video gespeichert.</p>
+      <div class="thumb-knoepfe">
+        <button class="btn small primary" data-thumb="vorschlagen">Thumbnail vorschlagen</button>
+        <button class="btn small" data-thumb="aktuell" title="Nimmt genau das Bild, an dem der Player gerade steht">Aktuelles Bild verwenden</button>
+      </div>${aktuell}`;
+    return;
+  }
+  if (S.vthumbs === 'laedt') { box.innerHTML = '<div class="thumbs-laedt">Suche die besten Momente …</div>'; return; }
+  box.innerHTML = `
+    <div class="thumbs ${hoch ? 'hoch' : ''}">
+      ${S.vthumbs.map((x, i) => `<button class="thumb-wahl ${i === S.vthumbWahl ? 'an' : ''}" data-wahl="${i}" title="${esc(x.grund)}">
+        <img alt="" src="${bildUrl(v.pfad, x.t, hoch ? 360 : 480)}"><small>${esc(x.grund.replace(/^#\d+\s*/, ''))}</small></button>`).join('')}
+    </div>
+    <div class="thumb-knoepfe">
+      <button class="btn small primary" data-thumb="speichern" ${S.vthumbWahl === null ? 'disabled' : ''}>Als Thumbnail speichern</button>
+      <button class="btn small" data-thumb="aktuell">Aktuelles Bild verwenden</button>
+      <button class="btn small ghost" data-thumb="zurueck">Schließen</button>
+    </div>${aktuell}`;
+}
+
+async function thumbVorschlagen() {
+  const v = gewaehltesVideo();
+  if (!v) return;
+  S.vthumbs = 'laedt';
+  renderThumbBereich();
+  try {
+    const liste = await api('/api/thumbnail-vorschlaege?pfad=' + encodeURIComponent(v.pfad));
+    if (S.vsel !== v.pfad) return;
+    S.vthumbs = liste;
+    S.vthumbWahl = liste.length ? 0 : null;
+    if (liste.length) { VP().pause(); VP().currentTime = liste[0].t; }
+  } catch (e) {
+    S.vthumbs = null;
+    toast(e.message);
+  }
+  renderThumbBereich();
+}
+
+async function thumbSpeichern(t) {
+  const v = gewaehltesVideo();
+  if (!v) return;
+  try {
+    const d = await api('/api/thumbnail', { method: 'POST', body: { pfad: v.pfad, t } });
+    v.thumbnail = d.pfad;
+    S.vthumbs = null;
+    S.vthumbWahl = null;
+    renderVideoKacheln();
+    renderThumbBereich();
+    toast(`Thumbnail gespeichert: ${d.name}`, { art: 'ok', knopf: 'Im Ordner zeigen', aktion: () => oeffne(d.pfad, 'zeigen'), dauer: 6000 });
+  } catch (e) { toast(e.message); }
+}
+
+// ---- Aktionen
+async function videoKopieren(v) {
+  toast('Dialog „Speichern unter“ ist offen – falls du ihn nicht siehst, liegt er hinter diesem Fenster.', { dauer: 3500 });
+  let d;
+  try { d = await api('/api/speichern-unter', { method: 'POST', body: { pfad: v.pfad } }); } catch (e) { toast(e.message); return; }
+  if (d.abgebrochen) return;
+  const a = await verfolge(d.id, 'Video wird kopiert', null);
+  if (!a) return;
+  toast(`Gespeichert als ${a.ergebnis.name}`, { art: 'ok', knopf: 'Im Ordner zeigen', aktion: () => oeffne(a.ergebnis.pfad, 'zeigen'), dauer: 7000 });
+  if (S.videoOrdner && a.ergebnis.pfad.toLowerCase().startsWith(S.videoOrdner.toLowerCase())) ladeMeineVideos();
+}
+
+function frage(titel, text, ja) {
+  return new Promise((resolve) => {
+    $('#frage-titel').textContent = titel;
+    $('#frage-text').textContent = text;
+    $('#frage-ja').textContent = ja;
+    $('#frage').hidden = false;
+    $('#frage-nein').focus();
+    const fertig = (wert) => {
+      $('#frage').hidden = true;
+      $('#frage-ja').onclick = $('#frage-nein').onclick = null;
+      document.removeEventListener('keydown', taste, true);
+      resolve(wert);
+    };
+    const taste = (e) => { if (e.key === 'Escape') { e.stopPropagation(); fertig(false); } };
+    document.addEventListener('keydown', taste, true);
+    $('#frage-ja').onclick = () => fertig(true);
+    $('#frage-nein').onclick = () => fertig(false);
+  });
+}
+
+async function videoLoeschen(v) {
+  const ok = await frage('Video löschen?', `„${v.name}“ (${fmtGroesse(v.groesse)})${v.thumbnail ? ' und sein Thumbnail werden' : ' wird'} in den Papierkorb verschoben. Von dort kannst du es wiederherstellen.`, 'In den Papierkorb');
+  if (!ok) return;
+  const p = VP();
+  p.pause();
+  p.removeAttribute('src');
+  p.dataset.src = '';
+  p.load();                       // Datei freigeben, sonst ist sie noch geöffnet
+  const i = S.meineVideos.indexOf(v);
+  try {
+    await api('/api/loeschen', { method: 'POST', body: { pfad: v.pfad } });
+  } catch (e) { toast(e.message); waehleVideo(v.pfad, false); return; }
+  toast(`„${v.name}“ liegt jetzt im Papierkorb.`, { art: 'ok' });
+  if (S.exportErgebnis && S.exportErgebnis.pfad === v.pfad) S.exportErgebnis = null;
+  const naechstes = S.meineVideos[i + 1] || S.meineVideos[i - 1];
+  S.vsel = naechstes ? naechstes.pfad : null;
+  ladeMeineVideos();
+}
+
+function verdrahteVideos() {
+  const box = $('#video-kacheln');
+  box.addEventListener('click', (e) => {
+    const k = e.target.closest('.kachel');
+    if (k && k.dataset.pfad !== S.vsel) waehleVideo(k.dataset.pfad, false);
+  });
+  box.addEventListener('dblclick', (e) => {
+    const k = e.target.closest('.kachel');
+    if (k) waehleVideo(k.dataset.pfad, true);
+  });
+  box.addEventListener('keydown', (e) => {
+    const k = e.target.closest('.kachel');
+    if (k && e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); waehleVideo(k.dataset.pfad, true); }
+  });
+  $('#btn-videos-neu').addEventListener('click', ladeMeineVideos);
+
+  const p = VP();
+  p.addEventListener('click', vPlayPause);
+  p.addEventListener('dblclick', vVollbild);
+  p.addEventListener('loadedmetadata', renderKapitelLeiste);
+  p.addEventListener('error', () => {
+    if (p.getAttribute('src')) toast('Dieses Video kann die Vorschau nicht abspielen. „Windows-Player“ öffnet es extern.');
+  });
+  $('#btn-vplay').addEventListener('click', vPlayPause);
+  $('#btn-vprev').addEventListener('click', () => springeKapitel(-1));
+  $('#btn-vnext').addEventListener('click', () => springeKapitel(1));
+  $('#btn-vton').addEventListener('click', () => { p.muted = !p.muted; });
+  $('#btn-vvoll').addEventListener('click', vVollbild);
+  $('#vscrub').addEventListener('pointerdown', vScrubStart);
+
+  $('#video-detail').addEventListener('click', (e) => {
+    const v = gewaehltesVideo();
+    if (!v) return;
+    const akt = e.target.closest('[data-v]');
+    if (akt) {
+      const a = akt.dataset.v;
+      if (a === 'zeigen' || a === 'abspielen') oeffne(v.pfad, a);
+      else if (a === 'kopie') videoKopieren(v);
+      else if (a === 'loeschen') videoLoeschen(v);
+      return;
+    }
+    const kap = e.target.closest('[data-kap]');
+    if (kap && S.vkap) { p.currentTime = S.vkap.kapitel[+kap.dataset.kap].start + 0.01; return; }
+    const w = e.target.closest('[data-wahl]');
+    if (w) {
+      S.vthumbWahl = +w.dataset.wahl;
+      p.pause();
+      p.currentTime = S.vthumbs[S.vthumbWahl].t;
+      renderThumbBereich();
+      return;
+    }
+    const th = e.target.closest('[data-thumb]');
+    if (th) {
+      const a = th.dataset.thumb;
+      if (a === 'vorschlagen') thumbVorschlagen();
+      else if (a === 'zurueck') { S.vthumbs = null; S.vthumbWahl = null; renderThumbBereich(); }
+      else if (a === 'speichern' && S.vthumbWahl !== null) thumbSpeichern(S.vthumbs[S.vthumbWahl].t);
+      else if (a === 'aktuell') {
+        if (!p.getAttribute('src')) { toast('Erst ein Video auswählen.'); return; }
+        p.pause();
+        thumbSpeichern(p.currentTime);
+      }
+    }
+  });
+  requestAnimationFrame(vSchleife);
 }
 
 async function start() {

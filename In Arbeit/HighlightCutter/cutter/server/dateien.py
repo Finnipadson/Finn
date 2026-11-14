@@ -126,6 +126,63 @@ def waehle_pfade() -> list[dict]:
         _dialog_lock.release()
 
 
+_SPEICHERN_SKRIPT = r"""
+import json, sys, tkinter as tk
+from tkinter import filedialog
+root = tk.Tk()
+root.withdraw()
+root.attributes("-topmost", True)
+root.lift()
+root.focus_force()
+pfad = filedialog.asksaveasfilename(parent=root, title="Highlight Cutter - Video speichern unter",
+    initialdir=sys.argv[1], initialfile=sys.argv[2], defaultextension=".mp4",
+    filetypes=[("MP4-Video", "*.mp4")])
+root.destroy()
+print(json.dumps(pfad or ""))
+"""
+
+
+def waehle_speicherort(video: Path) -> Path | None:
+    """Windows-Dialog „Speichern unter“ (wie waehle_pfade in eigenem Prozess). None = abgebrochen."""
+    if not _dialog_lock.acquire(blocking=False):
+        raise DialogBelegt()
+    try:
+        python = Path(sys.executable)
+        if python.name.lower() == "pythonw.exe":
+            python = python.with_name("python.exe")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        out = subprocess.run([str(python), "-c", _SPEICHERN_SKRIPT, str(Path.home() / "Videos"), video.name],
+                             capture_output=True, text=True, encoding="utf-8", timeout=900, env=env,
+                             creationflags=medien.FENSTERLOS).stdout.strip()
+        pfad = json.loads(out.splitlines()[-1]) if out else ""
+        if not pfad:
+            return None
+        p = Path(pfad)
+        return p if p.suffix.lower() == ".mp4" else p.with_suffix(".mp4")
+    finally:
+        _dialog_lock.release()
+
+
+def in_papierkorb(pfad: Path) -> None:
+    """Verschiebt eine Datei in den Windows-Papierkorb (SHFileOperationW mit FOF_ALLOWUNDO)."""
+    import ctypes
+    from ctypes import wintypes
+
+    class SHFILEOPSTRUCTW(ctypes.Structure):
+        _fields_ = [("hwnd", wintypes.HWND), ("wFunc", ctypes.c_uint), ("pFrom", wintypes.LPCWSTR),
+                    ("pTo", wintypes.LPCWSTR), ("fFlags", ctypes.c_ushort), ("fAnyOperationsAborted", wintypes.BOOL),
+                    ("hNameMappings", ctypes.c_void_p), ("lpszProgressTitle", wintypes.LPCWSTR)]
+
+    FO_DELETE = 3
+    FOF_SILENT, FOF_NOCONFIRMATION, FOF_ALLOWUNDO, FOF_NOERRORUI = 0x4, 0x10, 0x40, 0x400
+    op = SHFILEOPSTRUCTW(None, FO_DELETE, str(pfad) + "\0", None,
+                         FOF_SILENT | FOF_NOCONFIRMATION | FOF_ALLOWUNDO | FOF_NOERRORUI, False, None, None)
+    fehler = ctypes.windll.shell32.SHFileOperationW(ctypes.byref(op))
+    if fehler or op.fAnyOperationsAborted or pfad.exists():
+        raise OSError(f"Die Datei konnte nicht in den Papierkorb verschoben werden (Code {fehler}). "
+                      "Ist sie noch in einem Videoplayer geöffnet?")
+
+
 # ---------------------------------------------------------------- Explorer / Player
 def zeige_im_ordner(pfad: Path) -> None:
     subprocess.Popen(f'explorer /select,"{pfad}"')

@@ -243,3 +243,36 @@ def test_echt_clip_ab_null_ohne_kaputte_bilder(tmp_path):
     # Müllbilder sind fast einfarbig grau/grün → kaum Detail; echte Spielszenen haben viel Detail
     detail = np.abs(np.diff(bilder, axis=2)).mean(axis=(1, 2, 3))
     assert detail.min() > 2.0, detail.argmin()
+
+
+# --------------------------------------------------------------------------- Kapitel
+
+def test_kapitel_im_mp4(quellen, tmp_path):
+    """Jeder Clip wird ein Kapitel im fertigen MP4; Kill-Zeiten landen im passenden Kapitel."""
+    from cutter.schema import Event
+    clips = [Clip(str(quellen["a"]), k + 0.1, k + 2.3, f"Clip {k}", [Event(k + 1.1, "kill", 0.9, "")])
+             for k in range(0, 6, 2)]
+    e = Einstellungen(format="16:9", uebergang=0.3, fps=60)
+    ziel = render.rendere(clips, tmp_path / "kap.mp4", e)
+    out = subprocess.run([FFPROBE, "-v", "error", "-show_chapters", "-of", "json", str(ziel)],
+                         capture_output=True, text=True, check=True, encoding="utf-8").stdout
+    kap_mp4 = json.loads(out)["chapters"]
+    kap = render.kapitel(clips, e)
+    assert len(kap_mp4) == len(kap) == 3
+    for i, (m, k) in enumerate(zip(kap_mp4, kap)):
+        assert m["tags"]["title"] == f"#{i + 1} Clip {2 * i}"
+        assert abs(float(m["start_time"]) - k["start"]) < 0.01
+        assert abs(float(m["end_time"]) - k["ende"]) < 0.01
+        assert len(k["kills"]) == 1 and k["start"] < k["kills"][0] < k["ende"]
+        assert abs(k["kills"][0] - (k["start"] + 1.0)) < 0.02     # Kill 1,0 s nach Clipstart
+    # Kapitel schließen lückenlos aneinander an und enden mit dem Video
+    assert kap[0]["start"] == 0.0
+    assert all(a["ende"] == b["start"] for a, b in zip(kap, kap[1:]))
+    assert abs(kap[-1]["ende"] - render.plane(clips, e).dauer) < 0.01
+
+
+def test_ffmetadata_maskiert_sonderzeichen():
+    text = render._ffmetadata([{"start": 0.0, "ende": 1.5, "titel": "a=b;c#d\\e"}])
+    assert text.startswith(";FFMETADATA1\n")
+    assert "START=0\nEND=1500\n" in text
+    assert "title=\\#1 a\\=b\\;c\\#d\\\\e\n" in text

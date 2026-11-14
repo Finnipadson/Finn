@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -96,7 +97,160 @@ def rendere(clips: list[Clip], einstellungen: Einstellungen, ziel: str | Path | 
             fortschritt: Fortschritt = None, abbrechen: Abbruch | None = None) -> Path:
     ziel = Path(ziel) if ziel else standard_ziel(einstellungen)
     ziel.parent.mkdir(parents=True, exist_ok=True)
-    return _schnitt.rendere(clips, ziel, einstellungen, fortschritt, abbrechen)
+    pfad = Path(_schnitt.rendere(clips, ziel, einstellungen, fortschritt, abbrechen))
+    try:
+        speichere_kapitel(pfad, _schnitt.kapitel(clips, einstellungen))
+    except Exception:   # noqa: BLE001 – Kill-Momente sind nur ein Extra für Thumbnail-Vorschläge
+        pass
+    return pfad
+
+
+# --------------------------------------------------------------------------- Meine Videos
+# Die Kapitel stehen im MP4 selbst. Zusätzlich merkt sich die App je Video die Kill-Momente
+# (für Thumbnail-Vorschläge) in daten/videos/<Dateigröße>.json – die Größe bleibt beim Kopieren
+# und Umbenennen gleich.
+
+def _kapitel_datei(groesse: int) -> Path:
+    return DATEN / "videos" / f"{groesse}.json"
+
+
+def speichere_kapitel(video: str | Path, kapitel: list[dict]) -> None:
+    video = Path(video)
+    datei = _kapitel_datei(video.stat().st_size)
+    datei.parent.mkdir(parents=True, exist_ok=True)
+    datei.write_text(json.dumps({"name": video.name, "kapitel": kapitel}, ensure_ascii=False, indent=1),
+                     encoding="utf-8")
+
+
+def _gespeicherte_kapitel(video: Path) -> list[dict]:
+    try:
+        d = json.loads(_kapitel_datei(video.stat().st_size).read_text(encoding="utf-8"))
+        return list(d.get("kapitel") or [])
+    except (OSError, ValueError, AttributeError):
+        return []
+
+
+_details_cache: dict[tuple, dict] = {}
+
+
+def video_details(video: str | Path) -> dict:
+    """Dauer, Bildgröße und Kapitel eines fertigen Videos (ffprobe, zwischengespeichert)."""
+    video = Path(video).resolve()
+    st = video.stat()
+    schluessel = (str(video), st.st_size, int(st.st_mtime))
+    if schluessel in _details_cache:
+        return _details_cache[schluessel]
+    from .medien import FENSTERLOS, FFPROBE
+    out = subprocess.run(
+        [FFPROBE, "-v", "error", "-show_chapters", "-show_entries",
+         "format=duration:stream=codec_type,width,height", "-of", "json", str(video)],
+        capture_output=True, text=True, encoding="utf-8", check=True, timeout=30, creationflags=FENSTERLOS,
+    ).stdout
+    d = json.loads(out or "{}")
+    v = next((s for s in d.get("streams", []) if s.get("codec_type") == "video"), {})
+    kapitel = []
+    for k in d.get("chapters", []):
+        titel = (k.get("tags") or {}).get("title", "")
+        kapitel.append({"start": round(float(k.get("start_time", 0)), 3),
+                        "ende": round(float(k.get("end_time", 0)), 3), "titel": titel})
+    ergebnis = {"dauer": round(float((d.get("format") or {}).get("duration") or 0), 3),
+                "breite": int(v.get("width") or 0), "hoehe": int(v.get("height") or 0), "kapitel": kapitel}
+    _details_cache[schluessel] = ergebnis
+    return ergebnis
+
+
+def _ist_highlight_video(p: Path) -> bool:
+    return (p.is_file() and p.suffix.lower() == ".mp4" and not p.name.lower().endswith(".teil.mp4")
+            and not any(teil.startswith(".hc-schnitt-") for teil in p.parts))
+
+
+def thumbnail_pfad(video: Path) -> Path:
+    return video.with_name(f"{video.stem} - Thumbnail.jpg")
+
+
+def meine_videos() -> list[dict]:
+    """Alle fertigen Highlight-Videos im Ausgabeordner (inkl. Unterordner), neueste zuerst."""
+    if not AUSGABE.is_dir():
+        return []
+    liste = []
+    for p in AUSGABE.rglob("*.mp4"):
+        if not _ist_highlight_video(p):
+            continue
+        st = p.stat()
+        try:
+            det = video_details(p)
+        except (OSError, subprocess.SubprocessError, ValueError):
+            det = {"dauer": 0.0, "breite": 0, "hoehe": 0, "kapitel": []}
+        ordner = p.parent.relative_to(AUSGABE).as_posix()
+        thumb = thumbnail_pfad(p)
+        liste.append({
+            "pfad": str(p), "name": p.stem, "ordner": "" if ordner == "." else ordner,
+            "datum": datetime.fromtimestamp(st.st_mtime).isoformat(timespec="seconds"),
+            "groesse": st.st_size, "dauer": det["dauer"], "breite": det["breite"], "hoehe": det["hoehe"],
+            "format": "9:16" if det["hoehe"] > det["breite"] else "16:9",
+            "kapitel": len(det["kapitel"]), "thumbnail": str(thumb) if thumb.is_file() else None,
+        })
+    liste.sort(key=lambda v: v["datum"], reverse=True)
+    return liste
+
+
+def kapitel(video: str | Path) -> dict:
+    """Kapitel aus dem MP4 + gemerkte Kill-Momente: {kapitel: [{start, ende, titel, kills}], kills: [s…]}."""
+    video = Path(video).resolve()
+    det = video_details(video)
+    gemerkt = _gespeicherte_kapitel(video)
+    kap = [dict(k, kills=[]) for k in det["kapitel"]]
+    if gemerkt and (not kap or len(gemerkt) == len(kap)):
+        if not kap:
+            kap = [{"start": g["start"], "ende": g["ende"], "titel": f"#{i} {g.get('titel', '')}", "kills": []}
+                   for i, g in enumerate(gemerkt, 1)]
+        for k, g in zip(kap, gemerkt):
+            k["kills"] = [t for t in g.get("kills", []) if 0 <= t <= det["dauer"]]
+    return {"dauer": det["dauer"], "kapitel": kap, "kills": sorted(t for k in kap for t in k["kills"])}
+
+
+def thumbnail_vorschlaege(video: str | Path, anzahl: int = 4) -> list[dict]:
+    """Bis zu `anzahl` Zeitpunkte für ein Thumbnail: Kill-Momente aus den Clips mit den meisten
+    Kills zuerst (je Clip einer); ohne Kill-Daten gleichmäßig verteilte Standbilder."""
+    k = kapitel(video)
+    dauer = k["dauer"]
+    vorschlaege: list[dict] = []
+    mit_kills = sorted((x for x in k["kapitel"] if x["kills"]), key=lambda x: (-len(x["kills"]), x["start"]))
+    for x in mit_kills:
+        # kurz nach dem letzten Kill: Meldung „ELIMINATED“/Zähler sind dann sichtbar
+        t = min(x["kills"][-1] + 0.4, x["ende"] - 0.1, dauer - 0.1)
+        n = len(x["kills"])
+        vorschlaege.append({"t": round(max(0.0, t), 2), "grund": f"{x['titel']} · {n} Kill{'s' if n != 1 else ''}"})
+        if len(vorschlaege) >= anzahl:
+            return vorschlaege
+    abstand = min(2.0, dauer / 8)          # bei kurzen Videos dürfen Vorschläge näher beieinander liegen
+    for anteil in (0.2, 0.4, 0.6, 0.8, 0.1, 0.9, 0.3, 0.7, 0.5):
+        if len(vorschlaege) >= anzahl:
+            break
+        t = round(dauer * anteil, 2)
+        if all(abs(t - v["t"]) > abstand for v in vorschlaege):
+            vorschlaege.append({"t": t, "grund": f"Standbild bei {int(t // 60)}:{int(t % 60):02d}"})
+    return vorschlaege
+
+
+def speichere_thumbnail(video: str | Path, t: float) -> Path:
+    """Standbild bei t als JPEG neben dem Video: 16:9 → 1280×720 (YouTube), 9:16 → 1080×1920 (Shorts)."""
+    from .medien import FENSTERLOS, FFMPEG
+    video = Path(video).resolve()
+    det = video_details(video)
+    w, h = (1080, 1920) if det["hoehe"] > det["breite"] else (1280, 720)
+    t = min(max(0.0, float(t)), max(0.0, det["dauer"] - 0.05))
+    ziel = thumbnail_pfad(video)
+    teil = ziel.with_name(ziel.stem + ".teil.jpg")
+    try:
+        subprocess.run(
+            [FFMPEG, "-y", "-v", "error", "-ss", f"{t:.3f}", "-i", str(video), "-frames:v", "1",
+             "-vf", f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h}", "-q:v", "2", str(teil)],
+            capture_output=True, check=True, timeout=60, creationflags=FENSTERLOS)
+        os.replace(teil, ziel)
+    finally:
+        teil.unlink(missing_ok=True)
+    return ziel
 
 
 def vorschaubild(video: str | Path, t: float, breite: int = 320) -> bytes:

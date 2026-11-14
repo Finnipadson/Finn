@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import threading
 from collections import OrderedDict
 from pathlib import Path
@@ -321,11 +322,109 @@ def erstelle_app() -> Flask:
     @app.post("/api/oeffnen")
     def oeffnen():
         d = json_body()
-        p = video_pfad(d.get("pfad"))
+        roh = d.get("pfad")
+        if isinstance(roh, str) and roh.lower().endswith(" - thumbnail.jpg") and d.get("aktion") != "abspielen":
+            p = Path(roh)   # gespeichertes Thumbnail im Ordner zeigen (nur im Highlights-Ordner)
+            if not p.is_absolute() or not p.is_file() or pipeline.AUSGABE.resolve() not in p.resolve().parents:
+                raise Ungueltig("Thumbnail nicht gefunden.", 404)
+            dateien.zeige_im_ordner(p.resolve())
+            return jsonify(ok=True)
+        p = video_pfad(roh)
         if d.get("aktion") == "abspielen":
             dateien.abspielen(p)
         else:
             dateien.zeige_im_ordner(p)
         return jsonify(ok=True)
 
+    # --- Meine Videos
+    @app.get("/api/meine-videos")
+    def meine_videos():
+        return jsonify(ordner=str(pipeline.AUSGABE), videos=pipeline.meine_videos())
+
+    @app.get("/api/kapitel")
+    def kapitel():
+        return jsonify(pipeline.kapitel(video_pfad(request.args.get("pfad"))))
+
+    @app.get("/api/thumbnail-vorschlaege")
+    def thumbnail_vorschlaege():
+        return jsonify(pipeline.thumbnail_vorschlaege(video_pfad(request.args.get("pfad"))))
+
+    @app.get("/api/thumbnail-bild")
+    def thumbnail_bild():
+        p = highlight_pfad(request.args.get("pfad"))
+        bild = pipeline.thumbnail_pfad(p)
+        if not bild.is_file():
+            raise Ungueltig("Für dieses Video gibt es noch kein Thumbnail.", 404)
+        return send_file(bild, mimetype="image/jpeg", max_age=0)
+
+    @app.post("/api/thumbnail")
+    def thumbnail():
+        d = json_body()
+        p = highlight_pfad(d.get("pfad"))
+        try:
+            t = float(d.get("t", 0))
+        except (TypeError, ValueError):
+            raise Ungueltig("t muss eine Zahl sein.")
+        if not math.isfinite(t):
+            raise Ungueltig("t muss eine Zahl sein.")
+        ziel = pipeline.speichere_thumbnail(p, t)
+        return jsonify(pfad=str(ziel), name=ziel.name)
+
+    @app.post("/api/speichern-unter")
+    def speichern_unter():
+        p = video_pfad(json_body().get("pfad"))
+        try:
+            ziel = dateien.waehle_speicherort(p)
+        except dateien.DialogBelegt:
+            raise Ungueltig("Ein Dateidialog ist schon offen (evtl. hinter diesem Fenster).", 409)
+        if ziel is None:
+            return jsonify(abgebrochen=True)
+        if ziel.resolve() == p:
+            raise Ungueltig("Das ist dieselbe Datei – bitte einen anderen Ort oder Namen wählen.")
+        if dateien.nvidia_ordner() in ziel.resolve().parents:
+            raise Ungueltig("In den NVIDIA-Aufnahmeordner wird nichts geschrieben – bitte anderen Ort wählen.")
+        a = auftraege.starte("kopie", _kopie_arbeit(p, ziel))
+        return jsonify(id=a.id, ziel=str(ziel))
+
+    @app.post("/api/loeschen")
+    def loeschen():
+        p = highlight_pfad(json_body().get("pfad"))
+        thumb = pipeline.thumbnail_pfad(p)
+        dateien.in_papierkorb(p)
+        if thumb.is_file():
+            try:
+                dateien.in_papierkorb(thumb)   # zugehöriges Thumbnail gleich mit
+            except OSError:
+                pass
+        return jsonify(ok=True, name=p.name)
+
     return app
+
+
+def highlight_pfad(roh: object) -> Path:
+    """Wie video_pfad, aber nur für Videos im Ausgabeordner (dort darf die App schreiben/löschen)."""
+    p = video_pfad(roh)
+    if pipeline.AUSGABE.resolve() not in p.parents:
+        raise Ungueltig("Das geht nur mit Videos im Highlights-Ordner.", 403)
+    return p
+
+
+def _kopie_arbeit(quelle: Path, ziel: Path):
+    def arbeit(a: auftraege.Auftrag) -> dict:
+        from ..schema import pruefe_abbruch
+        gesamt = max(1, quelle.stat().st_size)
+        ziel.parent.mkdir(parents=True, exist_ok=True)
+        teil = ziel.with_name(ziel.name + ".teil")
+        kopiert = 0
+        try:
+            with open(quelle, "rb") as ein, open(teil, "wb") as aus:
+                while stueck := ein.read(8 * 1024 * 1024):
+                    pruefe_abbruch(a.abbrechen)
+                    aus.write(stueck)
+                    kopiert += len(stueck)
+                    a.melde(kopiert / gesamt, f"Kopiere {kopiert / 1e6:.0f} von {gesamt / 1e6:.0f} MB …")
+            os.replace(teil, ziel)
+        finally:
+            teil.unlink(missing_ok=True)
+        return {"pfad": str(ziel), "name": ziel.name}
+    return arbeit

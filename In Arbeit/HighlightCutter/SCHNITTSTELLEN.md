@@ -47,6 +47,8 @@ dort etwas Neues: im Abschlussbericht beschreiben, nicht selbst ändern.
 
 `rendere(clips, ziel, einstellungen, fortschritt, abbrechen) -> Path`, `vorschaubild(video, t, breite=320) -> bytes` (JPEG)
 
+- `kapitel(clips, einstellungen) -> [{start, ende, titel, kills, quelle, quelle_start}]` – Zeiten im fertigen Video. `rendere` schreibt dieselben Kapitel (Titel `#n <grund>`) per FFMETADATA ins MP4; `pipeline.rendere` merkt sich zusätzlich die Kill-Momente in `DATEN/videos/<Dateigröße>.json` (für Thumbnail-Vorschläge).
+
 - Nur `aktiv`-Clips, in Listenreihenfolge, können aus verschiedenen Videos stammen.
 - Überblendung `uebergang` s (Bild + Ton), 0 = harter Schnitt. Keine Musik.
 - 16:9: Höhe `hoehe` (1080), 9:16: 1080×1920 (Mitte ausschneiden, dahinter unscharfer Hintergrund – oder sinnvollere Lösung, im Bericht begründen).
@@ -72,5 +74,12 @@ HTTP-API (JSON):
 | `GET/PUT /api/einstellungen` | Einstellungen laden/speichern (`pipeline.DATEN/einstellungen.json`) |
 | `POST /api/oeffnen {pfad}` | Datei im Explorer zeigen |
 | `POST /api/pfad-waehlen` | optional: Windows-Dateidialog für Videos außerhalb von `Videos\NVIDIA` |
+| `GET /api/meine-videos` | fertige Videos in `pipeline.AUSGABE` (inkl. Unterordner): `{ordner, videos:[{pfad, name, ordner, datum, groesse, dauer, breite, hoehe, format, kapitel, thumbnail}]}` |
+| `GET /api/kapitel?pfad=` | `{dauer, kapitel:[{start, ende, titel, kills}], kills}` (Kapitel aus dem MP4 + gemerkte Kill-Momente) |
+| `GET /api/thumbnail-vorschlaege?pfad=` | bis zu 4 `{t, grund}`: Kill-Momente (meiste Kills zuerst), sonst verteilte Standbilder |
+| `POST /api/thumbnail {pfad, t}` | speichert `<Video> - Thumbnail.jpg` daneben (16:9 → 1280×720, 9:16 → 1080×1920); nur im Highlights-Ordner |
+| `GET /api/thumbnail-bild?pfad=<video>` | gespeichertes Thumbnail (JPEG) |
+| `POST /api/speichern-unter {pfad}` | Dialog „Speichern unter“, dann Kopier-Auftrag → `{id, ziel}` oder `{abgebrochen: true}` |
+| `POST /api/loeschen {pfad}` | Video (+ Thumbnail) in den Papierkorb; nur im Highlights-Ordner |
 
 Solange Phase 1–3 noch `NotImplementedError` werfen: Platzhalter in `cutter/server/mock.py` (Umgebungsvariable `HC_MOCK=1`).
