@@ -1,14 +1,14 @@
 ---
 typ: app
-status: idee
-technik: offen (Vorschlag: C# WPF oder Python + FFmpeg)
+status: geplant
+technik: Python + FFmpeg + OpenCV, lokale Web-Oberfläche
 erstellt: 2026-11-12
 ---
 
 PC-App, in die man NVIDIA-Bildschirmaufnahmen (ShadowPlay/NVIDIA App) lädt und die daraus automatisch die Highlights wie Kills herausschneidet. *Name ist nur ein Arbeitstitel.*
 
-- Datei/Ordner: noch keiner
-- Bauplan: noch keiner (Vorlage *Spielplan* bzw. eigener Plan, wenn es losgeht)
+- Datei/Ordner: `In Arbeit/HighlightCutter/`
+- Bauplan: `HighlightCutter/highlight-cutter-plan.md` (5 Phasen)
 - Verwandt: [[PC Aufräumer]] erkennt Spielaufnahmen schon beim Scan
 
 ## Ziele
@@ -41,13 +41,15 @@ PC-App, in die man NVIDIA-Bildschirmaufnahmen (ShadowPlay/NVIDIA App) lädt und 
 - Anfang der DVR-Dateien hat kaputte Frames (normal bei Instant Replay), Schnitt muss das abfangen
 - FFmpeg 8.1 und Python 3.14 sind installiert
 
+- [x] Knocks: nur wenn danach ein Kill kommt
+- [x] Eigene Tode / Champion: optional (Schalter in der App)
+- [x] Montage: keine Musik, kurze Übergänge
+- [x] Format: 16:9 oder 9:16, in der App wählbar
+- [x] Mikro: eigenes nicht, aber Stimmen von Kollegen möglich → Ton nur als Hilfe, Bild entscheidet
+
 ## Offene Fragen
 
-- [ ] Zählen Knocks (niedergeschlagen) auch als Highlight oder nur Kills?
-- [ ] Sollen eigene Tode / Champion-Sieg mit rein?
-- [ ] Montage: Musik darunter? Übergänge oder harte Schnitte?
-- [ ] Format: nur 16:9 (YouTube) oder auch hochkant (TikTok/Shorts)?
-- [ ] Ist dein Mikro in der Aufnahme? (Stört die Tonerkennung, ggf. im Video stummschalten)
+- keine
 
 ## Notizen
 
