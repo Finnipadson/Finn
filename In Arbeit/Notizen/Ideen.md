@@ -40,6 +40,15 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 		- Ruft im Hintergrund Claude Code auf (`claude -p "…"`) → läuft über das Pro-Abo, Stimme + Rendern kostenlos
 		- Nur für eigene Nutzung; zum Weitergeben/Verkaufen bräuchte es einen API-Schlüssel (Kosten pro Video)
 	- **Noch offen:** Musik, schönere Figuren
+- [ ] **Eigene Design-Sammlung** (14.11.2026)
+	- Idee: App als persönliche Bibliothek für Website-Designs, App-Vorlagen (Templates), UI-Komponenten usw. – alles an einem Ort, durchsuchbar, mit Vorschau
+	- Startmaterial ist schon da: `Desktop\Claude\Design-Referenzen` (5 Website-Templates, z. B. AUREAS, Dashdark X, Spacekit) und `Desktop\Claude\Website Components` (Accordion, Footer, Countdown, Suchfunktion, Bewertungen …)
+	- Mögliche Funktionen (Vorschläge):
+		- Kacheln mit Vorschaubild, Filter nach Art (Website, App, Komponente) und Stil (dunkel, hell, verspielt …), Tags + Suche
+		- Live-Vorschau direkt in der App, auch in Handy-Breite
+		- Neues hinzufügen per Ordner, Datei oder Screenshot; Vorschaubild automatisch erzeugen
+		- „Für Projekt verwenden“: Vorlage bzw. Komponente in ein neues Projekt kopieren oder Claude als Vorlage geben
+		- Farben und Schriften aus einem Design herauslesen (Farbpalette)
 
 ## Sonstiges
 
