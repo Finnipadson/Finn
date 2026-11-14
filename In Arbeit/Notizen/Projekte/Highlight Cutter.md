@@ -55,6 +55,7 @@ PC-App, in die man NVIDIA-Bildschirmaufnahmen (ShadowPlay/NVIDIA App) lädt und 
 ## Offene Punkte / Ideen
 
 - [ ] **Übersicht „Meine Videos“ in der App**: alle bisher erstellten Highlight-Videos (aus `Videos\Highlights`) als Liste/Galerie mit Vorschaubild, Datum, Länge, Format (16:9/9:16); abspielen, herunterladen bzw. speichern unter, im Ordner zeigen, löschen *(Idee 2026-11-14)*
+- [ ] **Clips direkt in der App anschauen**: erstellte Videos und die einzelnen Clips darin in einem großen eingebauten Player abspielen (ohne externen Videoplayer), z. B. Kapitelmarken pro Clip zum Springen, Vollbild, nächster/vorheriger Clip *(Idee 2026-11-14; heute gibt es schon die Vorschau vor dem Export und einen Player auf der Fertig-Seite, aber keinen für ältere Videos)*
 
 ## Notizen
 
