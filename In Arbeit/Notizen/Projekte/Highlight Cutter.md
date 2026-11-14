@@ -61,6 +61,7 @@ PC-App, in die man NVIDIA-Bildschirmaufnahmen (ShadowPlay/NVIDIA App) lädt und 
 - [ ] **Kampfbeginn auch übers Bild**: Trefferanzeige/Schadenszahlen zusätzlich zum Ton auswerten, damit lange Gefechte mit Pausen > 10 s komplett im Clip landen *(Idee 2026-11-14)*
 - [x] **Thumbnail vorschlagen** *(erledigt 2026-11-14: 4 Vorschläge aus Kill-Momenten oder aktuelles Bild → `<Video> - Thumbnail.jpg`)*
 - [ ] **Weitere Spiele**: neue Spielprofile (z. B. Valorant, Fortnite, CS2); welche Spiele, ist noch offen *(Idee 2026-11-14)*
+- [ ] **Echte .exe zum Weitergeben**: App per PyInstaller als Windows-Programm packen, FFmpeg gleich mit dabei → Kollegen müssen nichts installieren (kein Python, kein FFmpeg). Nachteile: Datei ca. 200–300 MB, Windows warnt beim ersten Start bei unsignierter .exe *(Idee 2026-11-14)*
 
 ## Notizen
 
