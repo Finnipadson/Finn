@@ -49,6 +49,18 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 		- Neues hinzufügen per Ordner, Datei oder Screenshot; Vorschaubild automatisch erzeugen
 		- „Für Projekt verwenden“: Vorlage bzw. Komponente in ein neues Projekt kopieren oder Claude als Vorlage geben
 		- Farben und Schriften aus einem Design herauslesen (Farbpalette)
+- [ ] **Datei-Austausch mit Kollegen** (14.11.2026)
+	- Idee: Große Dateien (Videos, Clips, Ordner, Spiele-Mods …) schnell an Kollegen schicken, weil Discord nur kleine Dateien erlaubt
+	- **Machbar: ja.** Mögliche Wege:
+		- **Direkt von PC zu PC (WebRTC, Favorit)**: Webseite öffnen, Datei reinziehen, Link/Code an den Kollegen schicken, die Datei geht direkt zwischen den Rechnern; keine Größengrenze, kein Speicherplatz nötig, kostenlos. Nachteil: Beide müssen gleichzeitig online sein
+		- **Eigener kleiner Server auf dem eigenen PC** (z. B. über Cloudflare Tunnel oder Tailscale erreichbar): Dateien hochladen, Kollegen laden sie später per Link; der PC muss dafür an sein
+		- **Mit Cloud-Speicher**: Dateien bleiben abrufbar, auch wenn man offline ist, kostet aber ab einer gewissen Menge Geld
+	- Mögliche Funktionen (Vorschläge):
+		- Drag & Drop, ganze Ordner (automatisch als ZIP), Fortschrittsbalken mit Geschwindigkeit
+		- Link mit Ablaufzeit und optionalem Passwort, Verschlüsselung
+		- „Freunde“-Liste: Kollegen direkt auswählen statt Link kopieren
+		- Link direkt in Discord teilen (z. B. per Bot oder Webhook)
+		- Abgebrochene Übertragungen fortsetzen
 
 ## Sonstiges
 
