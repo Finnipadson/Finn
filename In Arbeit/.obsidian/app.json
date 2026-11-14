@@ -10,6 +10,10 @@
     "PCAufraeumer/src/PCAufraeumer/bin/",
     "PCAufraeumer/src/PCAufraeumer/obj/",
     "PCAufraeumer/tests/PCAufraeumer.Tests/bin/",
-    "PCAufraeumer/tests/PCAufraeumer.Tests/obj/"
+    "PCAufraeumer/tests/PCAufraeumer.Tests/obj/",
+    "Erklaervideo-Studio/node_modules/",
+    "HighlightCutter/.venv/",
+    "HighlightCutter/arbeit/",
+    "HighlightCutter/daten/"
   ]
 }
