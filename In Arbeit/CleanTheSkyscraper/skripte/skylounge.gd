@@ -83,7 +83,7 @@ func _etage(e: Dictionary) -> void:
 	var k := Node3D.new()
 	k.visible = false
 	add_child(k)
-	var bm := Bau.matt("e9e3d8", 0.35) if e.id == "lounge" else Bau.matt("cdb89a", 0.5)
+	var bm := Bau.matt("cfc7ba", 0.35) if e.id == "lounge" else Bau.matt("b89f80", 0.5)
 	RaumBau.flaeche(k, innen, boden, bm)
 	RaumBau.flaeche(k, innen, decke, Bau.matt("2a2f3a", 0.8), false)
 	RaumBau.waende(k, innen, boden, decke, RaumBau.glas("cfe8ff", 0.08))
@@ -151,7 +151,7 @@ func _theke(k: Node3D, boden: float, w: int, r: float, art: String, name: String
 	for j in 3:
 		RaumBau.box(t, Vector3(5.4, 0.05, 0.36), Vector3(0, 0.9 + j * 0.65, 2.42), RaumBau.leuchte("ffcf8a", 0.9))
 	RaumBau.schrift(t, name.to_upper(), Vector3(0, 2.95, 2.4), PI, 96, 0.006, Color(farbe))
-	RaumBau.modell(t, "leute/" + figur, Vector3(0, 0, 1.3), 2.5, PI)
+	RaumBau.modell(t, "leute/" + figur, Vector3(1.7, 0, 1.3), 2.5, PI)
 	var gl := ["essen/glass", "essen/soda-bottle", "essen/cup-coffee", "essen/mug"]
 	for j in 8:
 		RaumBau.modell(t, gl[j % gl.size()], Vector3(-2.4 + j * 0.65, 1.0 + (j % 3) * 0.65, 2.35), 1.2)
@@ -302,7 +302,7 @@ func _theke_ring(k: Node3D, boden: float, a: float, art: String, name: String, h
 	var lm := RaumBau.leuchte(farbe, 1.8)
 	_leucht.append(lm)
 	RaumBau.box(t, Vector3(4.0, 0.06, 0.04), Vector3(0, 0.25, -0.37), lm)
-	RaumBau.modell(t, "leute/" + figur, Vector3(0, 0, 1.1), 2.5, PI)
+	RaumBau.modell(t, "leute/" + figur, Vector3(1.2, 0, 1.1), 2.5, PI)
 	RaumBau.schrift(t, name.to_upper(), Vector3(0, 1.6, -0.36), PI, 60, 0.006, Color(farbe))
 	raum.rechtecke.append(_rect_um(mitte, d, Vector2(2.2, 0.5)))
 	raum.rechtecke.append(_rect_um(d * 9.1, d, Vector2(1.0, 0.5)))

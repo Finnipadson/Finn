@@ -21,6 +21,11 @@ Steuerung (Phase 1, Gondel):
 - In der Werkstatt unter „Einstellungen“: Tauben, Sandsturm und Windböen an/aus
 - **Händler** auf dem Platz: zu Fuß vor einen Stand gehen und **E** drücken (Putzmittel-Boosts, Mode & Farben, Snacks)
 - **Casino** (dunkles Gebäude mit Leuchtschrift hinter einer Flügelspitze): hineingehen, vor Blackjack-Tisch, Glücksrad, Banditen oder Rubbellos-Theke **E** drücken. Nur Spielgeld, Einsatz 10 € bis 10 % des Geldes (höchstens 5.000 €)
+- **Sky-Lounge**: Express-Aufzug unten am Turm (Glashäuschen zwischen zwei Flügeln), E drücken. Lounge (200 m), Restaurant (500 m) und Aussichtsplattform (800 m) sind frei, sobald das Seil so hoch reicht. Bars mit Spezial-Boosts, Designer- und Exklusiv-Möbel
+- **Aufzug im Casino** (links neben dem Eingang): Arcade-Halle (1. Stock) und dein **Penthouse** (Dach)
+- **Arcade**: Greifautomat (WASD/Pfeile Kralle bewegen, Leertaste greifen), Kapsel-Automat. Gewinne landen im Penthouse-Lager
+- **Penthouse**: am Tablet Möbel kaufen und unter „Meine Sachen“ aufstellen; Vorschau mit der Blickrichtung zielen, R/Mausrad drehen, Klick abstellen, X ins Lager, Esc abbrechen; vor einem Möbel E = umstellen. Aufgestellte Gegenstände geben Boni (je seltener, desto stärker)
+- **P: Erfolge und Statistik** (auch an der Vitrine im Penthouse). Jeder Erfolg gibt Geld und einen Pokal für die Vitrine
 - Beim Putzen zusätzlich **rechte Maustaste halten: umschauen**, das Werkzeug bleibt am Glas
 - Esc: Maus frei
 
@@ -50,13 +55,23 @@ shader/auto.gdshader   Kenney-Autos mit eigener Lackfarbe pro Auto (Lack-Feld de
 tools/verkehr_test.gd  Verkehr ohne Bild prüfen: godot --path . --headless --script tools/verkehr_test.gd
 skripte/stadtdetails.gd  Stadt im Dubai-Stil: See mit Fontänen-Show, Palmen (Platz, See, Mittelstreifen), Laternen – alles als MultiMesh
 shader/wasser.gdshader, fontaene.gdshader, palme.gdshader  Wasser, Fontänen (Choreografie im Shader, 48 s), Palmen-Farben
-modelle/               Kenney-Modelle (CC0): laden/ (Mini Market), leute/ (Mini Characters), essen/ (Food Kit), stadt/ (City Kit Commercial), natur/ (Palmen aus dem Pirate Kit), autos/ (Car Kit), strasse/ (City Kit Roads: Ampeln, Schilderbrücken) – je mit Textures/ und Lizenz
+modelle/               Kenney-Modelle (CC0): moebel/ (Furniture Kit), laden/ (Mini Market), leute/ (Mini Characters), essen/ (Food Kit), stadt/ (City Kit Commercial), natur/ (Palmen aus dem Pirate Kit), autos/ (Car Kit), strasse/ (City Kit Roads: Ampeln, Schilderbrücken) – je mit Textures/ und Lizenz
 tools/messen.gd        Größen aller Modelle ausgeben: godot --path . --headless --script tools/messen.gd
 skripte/haendler_menu.gd  Menü der Stände: Boosts kaufen, Aussehen kaufen/anziehen
 skripte/casino.gd       Begehbares Casino (Gebäude, Innenraum, vier Stationen, Kollisions-Rechtecke)
 skripte/casino_menu.gd  Spielfenster: Blackjack, Glücksrad, Einarmiger Bandit, Rubbellos
 skripte/casino_regeln.gd  Regeln, Auszahlungen und Einsatzgrenzen der Casino-Spiele (zum Ausbalancieren)
 skripte/album.gd       Sammelalbum (Taste B)
+skripte/extras.gd      Steuerung der Extras: Ort (draußen, Lounge-Etagen, Arcade, Penthouse), Aufzugfahrt, Tasten E/P/R/X, Hinweise
+skripte/skylounge.gd   Express-Aufzug am Turm + Sky-Lounge (Stockwerk 48), Restaurant (120), Aussichtsplattform (800 m)
+skripte/penthouse.gd   Penthouse oben im Casino-Hochhaus: Glaswände, Vitrine mit Pokalen, Tablet, Möbel platzieren
+skripte/arcade.gd      Arcade-Halle (1. Stock Casino-Hochhaus): Greifautomaten (Spiel mit eigener Kamera), Kapsel-Automaten
+skripte/extras_menu.gd Menüs: Aufzüge, Möbel-Läden + Einrichten, Kapsel-Automat, Erfolge + Statistik
+skripte/erfolge.gd     Liste der 29 Erfolge (Geld + Pokal) und Prüfung
+skripte/moebel.gd      Modelle der Penthouse-Gegenstände (Kenney Furniture Kit), Einfärben, Seltenheits-Leuchten
+skripte/raum_bau.gd    Bausteine für Innenräume (Boden/Decke/Glaswand aus Grundriss, Lichter, Schrift, Kenney-Modelle)
+skripte/extras_test.gd Tests 24–28
+shader/seltenheit.gdshader  leuchtender Rand in der Farbe der Seltenheit (auch Vorschau grün/rot beim Platzieren)
 skripte/ereignisse.gd  Tauben, Windböen, Sandsturm (Zeiten oben im Skript)
 shader/boden.gdshader  Boden: Platz, Park, Straßenraster, Übergang in die Wüste
 skripte/hud.gd         Anzeigen: saubere Fenster, Geld, Höhe, Fenster-Fortschritt, „+1 €“
@@ -95,6 +110,11 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=22 --geld=20000`: Fahrzeuge, Hotbar, Mausrad, roter Werkzeug-Kiosk
 - `godot --path . --headless --script tools/seiten_test.gd`: jedes Fenster gehört genau einer Turmseite
 - `--ansicht=17`: Casino von außen, innen und vor jeder Station (Testbilder)
+- `--ansicht=24 --geld=10000`: Erfolge + Statistik (Zählen, Geld, Speichern/Laden, Taste P)
+- `--ansicht=25 --geld=200000`: Sky-Lounge (Aufzug mit Sperre, Glaswand, Bar-Boost, Designer-Laden, Restaurant, Plattform)
+- `--ansicht=26 --geld=200000`: Penthouse (Möbel kaufen, aufstellen, drehen, Kollision, umstellen, Lager, Pokale)
+- `--ansicht=27 --geld=200000`: Arcade (Greifautomat mit Tasten, Treffer/Daneben, Kapsel-Automat, Chancen)
+- `--ansicht=28`: Testbilder der Extras (alle 1,5 s eine Ansicht, Bildnummern stehen als `BILD n frame=…` auf der Konsole)
 - `--ansicht=15`: nacheinander vor jedem Kiosk, erst von weitem, dann von nah (Testbilder)
 - `--ansicht=14 --geld=10000`: Händler-Test (alle Stände, echte Knöpfe, Wirkung der Boosts und Farben)
 - `--ansicht=13`: Aussteigen, Laufen, Kollision, Einsteigen, Einstellungen-Knöpfe

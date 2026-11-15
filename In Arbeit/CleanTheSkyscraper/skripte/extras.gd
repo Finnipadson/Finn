@@ -58,6 +58,14 @@ func menue_offen() -> bool:
 func drinnen() -> bool:
 	return ort != ""
 
+# Anzeige oben links (Höhe), "" = draußen
+func ort_name() -> String:
+	match ort:
+		"": return ""
+		"arcade": return "Arcade-Halle · 1. Stock"
+		"penthouse": return "Penthouse · %d m" % int(penthouse.boden)
+		_: return "%s · %d m" % [sky.etagen[ort].name, sky.etagen[ort].meter]
+
 func _process(dt: float) -> void:
 	_uhr += dt
 	if spiel.ansicht == 0 or spiel.ansicht == 24:

@@ -483,7 +483,7 @@ func _process(dt: float) -> void:
 		wirtschaft.geld += bonus
 		hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [int(spieler.y), bonus], 3.5)
 		_speichern()
-	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv)
+	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv, extras.ort_name())
 	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen()
 	laeufer.set_process(not menue)
 	laeufer.gesperrt = menue

@@ -349,6 +349,12 @@ func _blick(p: Vector3, ziel: Vector3) -> void:
 	l.yaw = atan2(-d.x, -d.z)
 	l.pitch = atan2(d.y, Vector2(d.x, d.z).length())
 
+# Bild fertig: Bildnummer ausgeben (für das Sammelbild aus --write-movie)
+func _foto(nr: int) -> void:
+	await _warte(1.4)
+	print("BILD %d frame=%d" % [nr, Engine.get_frames_drawn()])
+	await _warte(0.1)
+
 func _bilder() -> void:
 	w.stufen.winde = 27
 	w.geld = 500000
@@ -356,32 +362,32 @@ func _bilder() -> void:
 	var l := s.laeufer
 	# 0: Express-Aufzug unten
 	_blick(Vector3(9, 2.2, 36), Vector3(0, 4, 17))
-	await _warte(1.5)
+	await _foto(0)
 	# 1–2: Lounge
 	x._teleport("lounge")
 	_blick(Vector3(0, x.sky.etagen.lounge.boden + 1.7, 6), Vector3(26, x.sky.etagen.lounge.boden + 1.0, 15))
-	await _warte(1.5)
+	await _foto(1)
 	_vor(_station("bar"))
-	await _warte(1.5)
+	await _foto(2)
 	# 3: Restaurant
 	x._teleport("restaurant")
-	_blick(Vector3(4, x.sky.etagen.restaurant.boden + 1.8, 2), Vector3(-15, x.sky.etagen.restaurant.boden + 0.8, 10))
-	await _warte(1.5)
+	_blick(Vector3(-4.4, x.sky.etagen.restaurant.boden + 1.8, 8.3), Vector3(-13.9, x.sky.etagen.restaurant.boden + 0.6, 8.0))
+	await _foto(3)
 	# 4–5: Plattform von außen und innen
 	x._teleport("unten")
 	l.raum = {"poly": RaumBau.kreis(200.0), "boden": 0.0}
 	_blick(Vector3(26, 812, 30), Vector3(0, 801, 0))
-	await _warte(1.5)
+	await _foto(4)
 	x._teleport("plattform")
 	_blick(Vector3(-2, 801.7, 6.5), Vector3(-10, 799.0, 2))
-	await _warte(1.5)
+	await _foto(5)
 	# 6–7: Arcade + Greifautomat
 	x._teleport("arcade")
 	var m := x.arcade.mitte
 	_blick(Vector3(m.x + 8, x.arcade.boden + 1.9, m.y + 6), Vector3(m.x - 6, x.arcade.boden + 1.0, m.y - 6))
-	await _warte(1.5)
+	await _foto(6)
 	x._greif_starten(0)
-	await _warte(1.5)
+	await _foto(7)
 	x.arcade.spiel = -1
 	l.cam.current = true
 	# 8: Penthouse mit Möbeln + Blick zum Turm, 9: Vitrine
@@ -399,24 +405,24 @@ func _bilder() -> void:
 	x._teleport("penthouse")
 	var pm := x.penthouse.mitte
 	_blick(Vector3(pm.x + 6, x.penthouse.boden + 2.2, pm.y + 7), Vector3(pm.x - 8, x.penthouse.boden + 0.6, pm.y - 7))
-	await _warte(1.5)
+	await _foto(8)
 	_vor(_station("vitrine"))
 	l.pitch = -0.15
-	await _warte(1.5)
+	await _foto(9)
 	# 10–13: Menüs
 	x.menu.oeffnen("erfolge", "Erfolge")
-	await _warte(1.5)
+	await _foto(10)
 	x.menu.reiter = 1
 	x.menu.aufbauen()
-	await _warte(1.5)
+	await _foto(11)
 	x.menu.oeffnen("katalog", "Möbel-Tablet")
-	await _warte(1.5)
+	await _foto(12)
 	x.menu.reiter = 1
 	x.menu.aufbauen()
-	await _warte(1.5)
+	await _foto(13)
 	x.menu.oeffnen("aufzug_turm", "Express-Aufzug")
 	x.menu.oberstes = 120
 	x.menu.aufbauen()
-	await _warte(1.5)
+	await _foto(14)
 	x.menu.schliessen()
 	get_tree().quit()

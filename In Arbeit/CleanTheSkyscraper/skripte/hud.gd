@@ -145,10 +145,13 @@ static func punkte(n: int) -> String:
 		aus += s[i]
 	return aus
 
-func zeige(sauber: int, gesamt: int, euro: int, meter: float, stockwerk: int, zu_fuss := false) -> void:
+func zeige(sauber: int, gesamt: int, euro: int, meter: float, stockwerk: int, zu_fuss := false, ort := "") -> void:
 	zahl.text = "%s / %s" % [punkte(sauber), punkte(gesamt)]
 	geld.text = "%s €" % punkte(euro)
-	hoehe.text = "Am Boden · zu Fuß" if zu_fuss else "%d m · Stockwerk %d" % [int(meter), stockwerk + 1]
+	if ort != "":
+		hoehe.text = ort
+	else:
+		hoehe.text = "Am Boden · zu Fuß" if zu_fuss else "%d m · Stockwerk %d" % [int(meter), stockwerk + 1]
 
 func boosts(t: String) -> void:
 	boost_l.text = t

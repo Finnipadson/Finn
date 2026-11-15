@@ -192,7 +192,7 @@ func _greifautomat(p: Vector2, nr: int) -> void:
 	cam.fov = 50.0
 	cam.near = 0.05
 	a.add_child(cam)
-	cam.look_at_from_position(Vector3(0.0, 1.95, b + 1.15), Vector3(0, 1.25, 0), Vector3.UP)
+	cam.transform = Transform3D(Basis(), Vector3(0.0, 2.3, b + 1.0)).looking_at(Vector3(0, 1.3, 0), Vector3.UP)
 	var auto := {"knoten": a, "kralle": kralle, "seil": seil, "kopf": kopf, "finger": finger, "preise": [], "cam": cam, "mitte": p}
 	automaten.append(auto)
 	_kralle_setzen(auto, Vector2.ZERO, OBEN_Y, 1.0)
