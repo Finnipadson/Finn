@@ -18,6 +18,7 @@ var schalter := {}
 var frei := false
 var spiel := false
 var test_geld := -1
+var spiel_knoten: Spiel
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
@@ -37,6 +38,7 @@ func _ready() -> void:
 	if ansicht == 0 or ansicht >= 5:
 		spiel = true
 		var s := Spiel.new()
+		spiel_knoten = s
 		add_child(s)
 		s.starten(turm, welt, ansicht, frei, test_geld)
 		_grafik()
@@ -116,13 +118,20 @@ func _startansicht() -> void:
 # Kantenglättung und Licht-Effekte (Standard + Test-Schalter)
 func _grafik() -> void:
 	var vp := get_viewport()
-	# Standard (gemessen gegen eine fein berechnete Referenz): 2-faches Supersampling + MSAA 4x, kein TAA
-	# (TAA wackelt das Bild minimal und wirkt dadurch unruhiger)
-	vp.use_taa = schalter.get("taa", 0) == 1
+	# Standard „Ruhiges Bild“ (Einstellung, an): TAA + 1,7-faches Supersampling + MSAA 4x. Gemessen mit
+	# tools/flimmern.py: deutlich weniger Flimmern beim Bewegen, kein sichtbares Nachziehen, Zittern im Stand
+	# unter einer Helligkeitsstufe, schneller als vorher (ca. 131 statt 118 FPS).
+	# Aus: wie früher 2-faches Supersampling + MSAA 4x ohne TAA.
+	var ruhig := true
+	if spiel_knoten:
+		ruhig = spiel_knoten.wirtschaft.einstellungen.get("ruhiges_bild", true)
+	if schalter.has("taa"):
+		ruhig = schalter.taa == 1
+	vp.use_taa = ruhig
 	vp.msaa_3d = schalter.get("msaa", 2) as Viewport.MSAA
 	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_SMAA if schalter.get("smaa", 0) == 1 else Viewport.SCREEN_SPACE_AA_DISABLED
 	# Supersampling: intern höher rendern (scale in Zehnteln, 20 = 2-fach); FSR2 bringt eigene Glättung mit
-	vp.scaling_3d_scale = schalter.get("scale", 20) / 10.0
+	vp.scaling_3d_scale = schalter.get("scale", 17 if ruhig else 20) / 10.0
 	if schalter.get("fsr", 0) == 1:
 		vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR2
 		vp.use_taa = false

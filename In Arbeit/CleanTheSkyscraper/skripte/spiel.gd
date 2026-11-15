@@ -137,6 +137,8 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 
 # Werkzeug + Upgrades auf die Gondel übertragen
 func _ausruestung() -> void:
+	if get_parent().has_method("_grafik"):
+		get_parent()._grafik()   # Einstellung „Ruhiges Bild“
 	spieler.werkzeug_setzen(wirtschaft.werkzeug())
 	var ka := wirtschaft.kosmetik_aktiv
 	spieler.aussehen(wirtschaft.kosmetik(ka.gondel).farbe, wirtschaft.kosmetik(ka.kleidung).farbe, wirtschaft.kosmetik(ka.schwamm).farbe)
@@ -803,12 +805,12 @@ func _lauf_test(dt: float) -> void:
 		7:
 			if demo_zeit > 7.2:
 				_lt = -1
-				for n in ["ein_tauben", "ein_sandsturm"]:
+				for n in ["ein_tauben", "ein_sandsturm", "ein_ruhiges_bild"]:
 					var b: Button = shop.find_child(n, true, false)
 					if b:
 						b.pressed.emit()
 					await get_tree().process_frame
-				print("TEST einstellungen: %s erlaubt_ereignisse=%s" % [wirtschaft.einstellungen, ereignisse.erlaubt])
+				print("TEST einstellungen: %s erlaubt_ereignisse=%s taa=%s scale=%s" % [wirtschaft.einstellungen, ereignisse.erlaubt, get_viewport().use_taa, get_viewport().scaling_3d_scale])
 				_taste(KEY_TAB)
 
 # 17: Casino von außen, innen und jede Station (für Testbilder)

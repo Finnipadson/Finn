@@ -161,6 +161,13 @@ func _einstellungen(s: VBoxContainer) -> void:
 		k3.name = "ein_" + k
 		k3.pressed.connect(_umschalten_einstellung.bind(k))
 		s.add_child(UiGlas.karte(namen[k][0], namen[k][1], k3, namen[k][2], Color("9fb3c8")))
+	s.add_child(UiGlas.ueberschrift("GRAFIK"))
+	var ruhig: bool = wirtschaft.einstellungen.ruhiges_bild
+	var k4 := UiGlas.knopf("An" if ruhig else "Aus", "an" if ruhig else "aus")
+	k4.custom_minimum_size = Vector2(90, 38)
+	k4.name = "ein_ruhiges_bild"
+	k4.pressed.connect(_umschalten_einstellung.bind("ruhiges_bild"))
+	s.add_child(UiGlas.karte("Ruhiges Bild", "Weniger Flimmern beim Fahren und Drehen. Aus: im Stand minimal schärfer, flimmert mehr.", k4, "RB", Color("9fb3c8")))
 	s.add_child(UiGlas.ueberschrift("SPIELSTAND"))
 	var reset := UiGlas.knopf("Wirklich? Nochmal klicken" if reset_bestaetigen else "Neues Spiel", "gefahr")
 	reset.custom_minimum_size = Vector2(220, 38)
