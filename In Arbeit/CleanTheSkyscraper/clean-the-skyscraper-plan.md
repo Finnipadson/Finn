@@ -94,7 +94,18 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - Test `--ansicht=13`: aussteigen, weglaufen, Einsteigen zu weit weg wird abgelehnt, an der Gondel stoppen, einsteigen, Einstellungen über die echten Knöpfe ausschalten. Alles bestanden.
    - **Noch offen:** Die Taube landet manchmal knapp außerhalb des Bildes (man sieht sie anfliegen). Die Terrassen selbst sind noch schlichte Dächer ohne Deko.
 4. [ ] **Automatik:** Helfer, Putzroboter, Drohnen, eventuell Fortschritt auch während man nicht spielt
-4b. [ ] **Am Boden (Wunsch des Users):** Händler und Casinos auf den Stellplätzen – noch genauer besprechen (was verkaufen Händler, wie funktioniert das Casino, echtes Geld bleibt außen vor)
+4b. [ ] **Am Boden: Händler und Casino** (Entscheidungen des Users, 15.11.2026)
+   - **Händler** auf dem Stellplatz „Händler“: Stände mit Figur, hingehen und E drücken öffnet ein Menü.
+     - *Putzmittel-Boosts:* zum Beispiel Glanzspray (eine Zeit lang schneller putzen) und Goldpolitur (eine Zeit lang doppeltes Geld pro Fenster).
+     - *Aussehen:* Farben für Gondel und Werkzeug, Arbeitskleidung/Helm. Nur Optik.
+     - *Snacks mit Effekt:* Kaffee (Gondel fährt eine Zeit lang schneller), Eis (mehr Reichweite) und Ähnliches.
+   - **Casino** als **begehbares Gebäude** auf dem Stellplatz „Casino“: Man geht hinein, drinnen stehen die Spiele einzeln, jeweils mit E an der Station.
+     - Blackjack-Tisch
+     - Glücksrad
+     - Einarmiger Bandit (Putz-Symbole: Schwamm, Eimer, Fenster, Taube …)
+     - Rubbellose (passt zum Reiben)
+   - Bezahlt wird nur mit Spielgeld, es gibt nie Käufe mit echtem Geld. Einsatzgrenzen, damit man sich nicht in einer Minute alles verspielt.
+   - Offen: Der Stellplatz für das Casino (18 × 18 m) wird für ein begehbares Gebäude wahrscheinlich größer; Preise und Dauer der Boosts noch festlegen.
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 
 ## Offene Fragen
