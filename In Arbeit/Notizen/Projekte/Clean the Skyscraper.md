@@ -50,6 +50,12 @@ Ausgewählte Ladenideen (15.11.2026) – die Läden sollen auf **verschiedene Ho
 - [ ] **Souvenirshop**: Andenken für erreichte Meilensteine (Mini-Wüstennadel, Schneekugel …), im Penthouse aufstellen
 - [ ] **Goldschmuck-Laden**: glitzerndes Schaufenster neben dem Casino, Luxus-Statussymbole (z. B. goldene Gondel)
 
+Mehrspielermodus (15.11.2026, Wünsche des Users):
+- [ ] **Koop**: bis zu **4 Spieler** putzen gemeinsam **denselben Turm**, jedes Fenster zählt für alle
+- [ ] **Verbinden per Code**: einer erstellt das Spiel und schickt Freunden einen Code, die anderen geben ihn ein (übers Internet)
+- [ ] **Gemeinsame Kasse**: ein Spielstand beim Gastgeber – Geld, Fenster und alles Gekaufte gehören allen
+- Technik-Notiz: machbar mit Godot-Netzwerk (Multiplayer-API); für „Code eingeben“ übers Internet braucht es einen kleinen Vermittlungs-/Relay-Dienst. Größter Umbau bisher (Fenster-Zustand, Geld, Helfer, Gondeln, Menüs abgleichen) – am besten nach dem Feinschliff als eigene Phase
+
 ## Notizen
 
 - Turm ist erfunden (kein Burj-Khalifa-Nachbau: Name und Form sind geschützt)
