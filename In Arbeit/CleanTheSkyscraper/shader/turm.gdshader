@@ -15,6 +15,12 @@ uniform float dreckig = 0.45;
 uniform float raum_fenster = 3.0;
 uniform float raum_tiefe = 6.0;
 uniform float innen_hell = 0.55;
+// Spielzustand (FensterZustand): Dreck pro Fenster + feine Wisch-Masken
+uniform bool mit_zustand = false;
+uniform sampler2D zustand : filter_nearest;
+uniform sampler2D wisch : filter_linear;
+uniform vec2 zustand_px = vec2(1.0, 1.0);
+uniform vec2 slots = vec2(16.0, 4.0);
 
 varying vec3 wp;
 varying vec3 wt;
@@ -86,9 +92,20 @@ void fragment() {
 	vec3 innen = raum(rp, rid, r, aw);
 	// Dreck
 	float dreck = step(1.0 - dreckig, hs(id + 17.3));
+	float maske = 1.0;
+	if (mit_zustand) {
+		vec4 zs = texture(zustand, (id + 0.5) / zustand_px);
+		dreck = zs.r;
+		float slot = floor(zs.g * 255.0 + 0.5) - 1.0;
+		if (slot >= 0.0) {
+			vec2 sp = vec2(mod(slot, slots.x), floor(slot / slots.x));
+			vec2 lp = clamp(vec2(f.x, rp.y), vec2(0.5 / 32.0, 0.5 / 64.0), vec2(1.0 - 0.5 / 32.0, 1.0 - 0.5 / 64.0));
+			maske = texture(wisch, (sp + lp) / slots).r;
+		}
+	}
 	float schl = vn(vec2(f.x * 6.0 + id.x * 3.1, f.y * 1.5 + id.y * 2.7)) * 0.6 + vn(f * 14.0 + id * 5.0) * 0.4;
 	float rand = smoothstep(0.25, 0.0, min(min(f.x, 1.0 - f.x) * 2.0, (f.y - band_anteil) * 2.5));
-	float d = dreck * clamp(schl * 0.9 + rand * 0.5, 0.0, 1.0);
+	float d = dreck * clamp((schl * 0.9 + rand * 0.5) * (mit_zustand ? 1.25 : 1.0), 0.0, 1.0) * maske;
 	// In der Ferne Mittelwerte statt Details
 	float fern = smoothstep(0.2, 0.8, max(fwidth(c.x), fwidth(c.y) * 2.0)) * 0.85;
 	vec3 glas = mix(glas_tint * 0.12, schmutz_farbe, clamp(d * 0.9, 0.0, 0.75));

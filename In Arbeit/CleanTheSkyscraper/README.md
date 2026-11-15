@@ -8,12 +8,15 @@
 - `start.bat --editor`: öffnet das Projekt im Godot-Editor
 - Godot 4.7 muss installiert sein (`winget install GodotEngine.GodotEngine`)
 
-Steuerung im Moment (Phase 0, freie Kamera):
+Steuerung (Phase 1, Gondel):
 - Klick: Maus fangen
-- WASD: fliegen
-- Q/E: runter/hoch
-- Shift: schnell
-- Esc: Maus wieder frei
+- Maus: umschauen
+- **Linke Maustaste halten + Maus bewegen: putzen**
+- A/D: an der Fassade entlang
+- W/S: hoch/runter (bis Stockwerk 18, mit `--frei` alle)
+- Esc: Maus frei
+
+Freie Kamera zum Anschauen: `--ansicht=1` bis `4` (WASD fliegen, Q/E runter/hoch, Shift schnell).
 
 ## Aufbau
 
@@ -23,7 +26,10 @@ szenen/haupt.tscn      Startszene
 skripte/bau.gd         Bau: Grundrisse, Fassaden-Mesh aus Stockwerken, Rahmen (MultiMesh), Materialien
 skripte/turm.gd        Turm „Wüstennadel“: Form, Spitze, Fenster-Nummerierung, fassaden_punkt()
 skripte/welt.gd        Welt: Himmel, Licht, Wüste, Stadt
-skripte/haupt.gd       Startszene: Welt + Turm + Kamera, Testansichten
+skripte/haupt.gd       Startszene: Welt + Turm, Spiel (Gondel, Geld, Funkeln) oder freie Kamera/Testansichten
+skripte/spieler.gd     Gondel mit Ich-Ansicht: fahren, umschauen, Schwamm reiben → _stempel()
+skripte/fenster_zustand.gd  Dreck pro Fenster (Datentextur) + feine Wisch-Masken (Atlas, 64 Slots)
+skripte/hud.gd         Anzeigen: saubere Fenster, Geld, Höhe, Fenster-Fortschritt, „+1 €“
 shader/turm.gdshader   Glas des Turms: Räume hinter den Fenstern (Interior Mapping), Dreck, Ferne
 shader/fassade.gdshader  einfache Fassade der Stadt
 shader/himmel.gdshader   Himmel mit Comic-Wolken
@@ -44,6 +50,8 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=2`: Fassade nah, ein Fenster rot markiert. Damit lässt sich prüfen, ob die Nummerierung und die Fenster im Shader übereinstimmen.
 - `--ansicht=3`: Aussicht aus Stockwerk 150
 - `--ansicht=4`: Testfahrt an der Fassade (zum Messen von Flimmern)
+- `--ansicht=5`: Spiel-Demo, der Schwamm putzt automatisch in Schlangenlinien
+- `--ansicht=6`: Gondel-Testfahrt um die Flügelspitze und über die Stufe (mit `--frei`)
 
 Grafik-Schalter zum Vergleichen: `--taa=0|1 --msaa=0..3 --smaa=0|1 --scale=10..20 --fsr=0|1 --ssr=0|1 --ssil=0|1`, dazu `--fpstest=1` (gibt nach 6 s die FPS aus und beendet).
 

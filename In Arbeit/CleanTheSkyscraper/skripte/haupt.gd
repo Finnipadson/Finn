@@ -1,9 +1,9 @@
 extends Node3D
-# Startszene (Phase 0): Welt + Turm + freie Kamera zum Umschauen.
+# Startszene: Welt + Turm. Normal = Spiel (Gondel, Putzen). Mit --ansicht=1..4 freie Kamera / Testansichten.
 # Testbilder: godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansicht=N
-#   1 = Turm von weitem, 2 = Fassade nah (mit Markierung eines Fensters), 3 = Aussicht von oben,
-#   4 = Testfahrt an der Fassade (zum Messen von Flimmern). Grafik-Schalter zum Testen: --taa=0|1 --ssr=0|1 --ssil=0|1 --msaa=0..3 --smaa=0|1
-#   (Standard: TAA an, MSAA 4x, SSR an, SSIL aus – gemessen am wenigsten Flimmern)
+#   1 = Turm von weitem, 2 = Fassade nah (Fenster markiert), 3 = Aussicht von oben, 4 = Testfahrt (Flimmern),
+#   5 = Spiel-Demo (automatisch geputzte Fenster, Schwamm am Glas). --frei: alle Stockwerke ohne Sperre
+#   Grafik-Schalter: --taa=0|1 --ssr=0|1 --ssil=0|1 --msaa=0..3 --smaa=0|1 --scale=10..20 --fsr=0|1 --fpstest=1
 
 var welt: Welt
 var turm: Turm
@@ -14,11 +14,22 @@ var info: Label
 var ansicht := 0
 var fahrt := Vector3.ZERO
 var schalter := {}
+var frei := false
+# Spiel
+var spiel := false
+var zustand: FensterZustand
+var spieler: Spieler
+var hud: Hud
+var geld := 0
+var demo_zeit := 0.0
+const ERSTER_ABSCHNITT := 18   # Phase 1: nur bis zur ersten Stufe (Stockwerk 18)
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--ansicht="):
 			ansicht = int(a.split("=")[1])
+		if a == "--frei":
+			frei = true
 		for k in ["taa", "ssr", "ssil", "msaa", "smaa", "scale", "fsr", "fpstest"]:
 			if a.begins_with("--%s=" % k):
 				schalter[k] = int(a.split("=")[1])
@@ -26,6 +37,9 @@ func _ready() -> void:
 	add_child(welt)
 	turm = Turm.new()
 	add_child(turm)
+	if ansicht == 0 or ansicht >= 5:
+		_spiel_starten()
+		return
 	cam = Camera3D.new()
 	cam.far = 40000.0
 	cam.fov = 60.0
@@ -114,6 +128,8 @@ func _hud() -> void:
 
 # ---------------------------------------------------------------- freie Kamera
 func _unhandled_input(e: InputEvent) -> void:
+	if spiel:
+		return
 	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -125,7 +141,115 @@ func _unhandled_input(e: InputEvent) -> void:
 
 var fps_zeit := 0.0
 
+# ---------------------------------------------------------------- Spiel
+func _spiel_starten() -> void:
+	spiel = true
+	zustand = FensterZustand.new(turm)
+	zustand.verbinde(turm.glas)
+	turm.glas.set_shader_parameter("mit_zustand", true)
+	spieler = Spieler.new()
+	add_child(spieler)
+	var oberste := (Turm.STOCKWERKE if frei else ERSTER_ABSCHNITT) * Turm.STOCK_H - 2.6
+	spieler.setup(turm, zustand, 2, 236.0, oberste)
+	spieler.fenster_sauber.connect(_fenster_sauber)
+	hud = Hud.new()
+	add_child(hud)
+	_grafik()
+	if ansicht >= 5:
+		spieler.gesperrt = true
+		spieler.yaw = 0.25
+		spieler.pitch = 0.05
+
+func _fenster_sauber(f: int, spalte: int) -> void:
+	var lohn := 1 + f / 10
+	geld += lohn
+	hud.pop("+%d €" % lohn)
+	_funkeln(spieler.fenster_mitte(f, spalte))
+
+func _funkeln(p: Vector3) -> void:
+	var t := CPUParticles3D.new()
+	var qm := QuadMesh.new()
+	qm.size = Vector2(0.16, 0.16)
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.albedo_color = Color(1.0, 0.95, 0.75)
+	m.albedo_texture = _funkel_textur()
+	qm.material = m
+	t.mesh = qm
+	t.amount = 28
+	t.one_shot = true
+	t.explosiveness = 0.85
+	t.lifetime = 0.9
+	t.direction = Vector3.UP
+	t.spread = 180.0
+	t.gravity = Vector3.ZERO
+	t.initial_velocity_min = 0.6
+	t.initial_velocity_max = 1.6
+	t.scale_amount_min = 0.5
+	t.scale_amount_max = 1.3
+	t.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	t.emission_box_extents = Vector3(0.6, 1.2, 0.05)
+	t.position = p
+	add_child(t)
+	t.emitting = true
+	get_tree().create_timer(1.5).timeout.connect(t.queue_free)
+
+var _funkel_tex: Texture2D
+func _funkel_textur() -> Texture2D:
+	if _funkel_tex == null:
+		var g := Gradient.new()
+		g.set_color(0, Color(1, 1, 1, 1))
+		g.set_color(1, Color(1, 1, 1, 0))
+		var gt := GradientTexture2D.new()
+		gt.gradient = g
+		gt.fill = GradientTexture2D.FILL_RADIAL
+		gt.fill_from = Vector2(0.5, 0.5)
+		gt.fill_to = Vector2(0.5, 0.0)
+		gt.width = 64
+		gt.height = 64
+		_funkel_tex = gt
+	return _funkel_tex
+
+func _spiel_takt(dt: float) -> void:
+	if ansicht == 5:
+		_demo(dt)
+	elif ansicht == 6:
+		# Testfahrt: seitlich um die Flügelspitze und nach oben über eine Stufe
+		spieler.weg += 5.0 * dt
+		spieler.y = minf(spieler.y + 6.0 * dt, 30 * Turm.STOCK_H)
+	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, geld, spieler.y, spieler.stock)
+	if spieler.wischt:
+		var u := fposmod(spieler.weg + spieler.schwamm_off.x * spieler.richtung, turm.umfaenge[spieler.stock]) / Turm.FENSTER_B
+		var f := turm.stockwerk_bei(spieler.y + spieler.schwamm_off.y)
+		hud.fortschritt(zustand.fortschritt(f, int(u)), true)
+	else:
+		hud.fortschritt(0.0, false)
+
+# Testbild: der Schwamm fährt automatisch in Schlangenlinien über die Fenster vor der Gondel –
+# genau derselbe Weg wie beim Putzen mit der Maus (Spieler._wischen → _stempel → FensterZustand)
+func _demo(dt: float) -> void:
+	demo_zeit += dt
+	spieler.wischt = true
+	var reihen := 14
+	var dauer := 0.32                       # Sekunden pro Reihe
+	var r := mini(int(demo_zeit / dauer), reihen - 1)
+	var t := fmod(demo_zeit, dauer) / dauer
+	if r % 2 == 1:
+		t = 1.0 - t
+	spieler.schwamm_off = Vector2(lerpf(-1.7, 1.2, t), lerpf(0.35, 2.5, float(r) / (reihen - 1)))
+
 func _process(dt: float) -> void:
+	if spiel:
+		_spiel_takt(dt)
+		if schalter.has("fpstest"):
+			fps_zeit += dt
+			if fps_zeit > 6.0:
+				print("FPS: %d" % Engine.get_frames_per_second())
+				get_tree().quit()
+		return
 	cam.position += fahrt * dt
 	if schalter.has("fpstest"):
 		fps_zeit += dt

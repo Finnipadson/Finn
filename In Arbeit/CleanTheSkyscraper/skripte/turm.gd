@@ -101,6 +101,29 @@ func fenster_id(f: int, weg: float) -> int:
 		return -1
 	return fenster_basis[f] + spalte
 
+# Weg entlang des Umfangs von Stockwerk f, der einem Punkt (x, z) am nächsten liegt
+func naechster_weg(f: int, q: Vector2) -> float:
+	var p: PackedVector2Array = stockwerke[f].poly
+	var bester := INF
+	var ergebnis := 0.0
+	var weg := 0.0
+	for k in p.size():
+		var a := p[k]
+		var b := p[(k + 1) % p.size()]
+		var lang := a.distance_to(b)
+		var t := clampf((q - a).dot(b - a) / maxf(lang * lang, 0.0001), 0.0, 1.0)
+		var dist := q.distance_to(a.lerp(b, t))
+		if dist < bester:
+			bester = dist
+			ergebnis = weg + t * lang
+		weg += lang
+	return ergebnis
+
+func gleicher_grundriss(f1: int, f2: int) -> bool:
+	if f1 < 0 or f2 < 0 or f1 >= STOCKWERKE or f2 >= STOCKWERKE:
+		return false
+	return stockwerke[f1].poly == stockwerke[f2].poly
+
 func stockwerk_bei(y: float) -> int:
 	return clampi(int(floor(y / STOCK_H)), 0, STOCKWERKE - 1)
 
