@@ -29,6 +29,7 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 - [ ] Phase 5: Feinschliff (Sound, Effekte, Menü, .exe)
 - [x] Ansicht: Ich-Ansicht aus der Gondel (15.11.2026)
 - [x] Spielgefühl: komplett entspannt, kein Scheitern (15.11.2026)
+- [x] Putzen durch Reiben mit der Maus, Gondel frei fahren, Texte auf Deutsch, Spieldauer 10–20 Stunden (15.11.2026)
 - [ ] Offene Frage (vor Phase 4): Fortschritt, während man nicht spielt (Idle)?
 
 ## Notizen

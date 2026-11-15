@@ -20,6 +20,10 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
 - **Plattform:** PC (Windows), Maus und Tastatur, Export als .exe.
 - **Ansicht:** Ich-Ansicht aus der Gondel (entschieden 15.11.2026): eigene Hände mit Werkzeug im Bild wie im Strand-Test, Blick frei nach links/rechts/unten (Tiefe sehen!), Fenster direkt vor einem.
 - **Spielgefühl:** komplett entspannt, man kann nicht scheitern (entschieden 15.11.2026). Wind, Tauben und Sandsturm stören nur (Gondel schaukelt, Fenster werden wieder dreckig), kosten aber nichts.
+- **Putzen:** Reiben mit gedrückter Maus, der Dreck verschwindet dort, wo man wischt (entschieden 15.11.2026).
+- **Gondel:** frei fahren mit A/D und W/S, stufenlos an der Fassade entlang (entschieden).
+- **Sprache:** Deutsch, nur der Titel bleibt „Clean the Skyscraper“ (entschieden).
+- **Spieldauer:** etwa 10 bis 20 Stunden bis alle Fenster sauber sind (entschieden); Werkzeuge und Upgrades machen einen immer schneller.
 - **Look:** leicht stilisiert, nicht fotorealistisch (bewusst so entschieden, 15.11.2026).
 - **Speichern:** JSON in `user://` (Godot-Benutzerordner).
 - **Prüfen:** Testbilder per `--write-movie` mit festen Ansichten (`--ansicht=N`), wie im Grafik-Test.
