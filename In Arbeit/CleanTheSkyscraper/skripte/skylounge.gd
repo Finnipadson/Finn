@@ -88,12 +88,12 @@ func _aufzug_unten() -> void:
 	RaumBau.box(k, Vector3(tb + 0.2, 0.12, 0.16), Vector3(0, 3.0, vorn + 0.05), alu)
 	# Vordach: flache weiße Platte mit Alukante, Spots darunter, Schrift an der Kante
 	var dach_t := 3.2
-	RaumBau.box(k, Vector3(breite + 1.6, 0.32, dach_t), Vector3(0, hoch - 2.1, vorn + dach_t * 0.5), weiss)
-	RaumBau.box(k, Vector3(breite + 1.64, 0.06, dach_t + 0.04), Vector3(0, hoch - 2.27, vorn + dach_t * 0.5), alu)
+	RaumBau.box(k, Vector3(breite - 0.4, 0.32, dach_t), Vector3(0, hoch - 2.1, vorn + dach_t * 0.5), weiss)
+	RaumBau.box(k, Vector3(breite - 0.36, 0.06, dach_t + 0.04), Vector3(0, hoch - 2.27, vorn + dach_t * 0.5), alu)
 	var spot := RaumBau.leuchte("fff4e0", 2.2)
 	for ix in 5:
 		for iz in 2:
-			var sp := RaumBau.zyl(k, 0.09, 0.02, Vector3(-4.0 + ix * 2.0, hoch - 2.28, vorn + 0.9 + iz * 1.4), spot, 16)
+			var sp := RaumBau.zyl(k, 0.09, 0.02, Vector3(-3.6 + ix * 1.8, hoch - 2.28, vorn + 0.9 + iz * 1.4), spot, 16)
 			sp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	RaumBau.licht(k, Vector3(0, hoch - 2.8, vorn + 1.6), "fff1dc", 1.2, 8.0)
 	var titel := RaumBau.schrift(k, "SKY LOUNGE", Vector3(0, hoch - 2.1, vorn + dach_t + 0.02), 0.0, 96, 0.0075, Color("2b3440"), false)
@@ -104,9 +104,9 @@ func _aufzug_unten() -> void:
 	for seite in [-1.0, 1.0]:
 		var d := Vector2(seite * cos(PI / 6.0), sin(PI / 6.0))          # entlang der Wand von der Ecke weg
 		var nrm: Vector2 = Vector2(-d.y, d.x) * seite                        # zeigt in die Lobby
-		# Steinverkleidung über die ganze Wand (verdeckt die Turmfenster hinter der Lobby) und 4,5 m daneben
-		# nach außen, damit der Eingang einen ruhigen Rahmen hat; feine Fugen
-		var lang := l + 4.5
+		# Steinverkleidung über die ganze Wand (verdeckt die Turmfenster hinter der Lobby) und ein Fenster
+		# (1,5 m) daneben nach außen; feine Fugen
+		var lang := l + Turm.FENSTER_B
 		var wm: Vector2 = ecke + d * (lang * 0.5) + nrm * 0.15
 		var wn := Node3D.new()
 		wn.position = Vector3(wm.x, 0, wm.y)
