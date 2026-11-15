@@ -27,6 +27,7 @@ var aktiv := "schwamm"
 var stufen := {"motor": 0, "arm": 0, "winde": 0}
 var album := {}                 # Szenen-Typ (als Text) -> wie oft entdeckt
 var hoechster_abschnitt := 0     # für den Bonus beim ersten Erreichen einer neuen Höhe
+var einstellungen := {"tauben": true, "sandsturm": true, "wind": true}
 
 func lohn(stockwerk: int) -> int:
 	return 1 + LOHN_JE_ABSCHNITT * (stockwerk / ABSCHNITT)
@@ -82,7 +83,7 @@ func oberstes_stockwerk() -> int:
 
 # ---------------------------------------------------------------- Speichern
 func speichern() -> Dictionary:
-	return {"geld": geld, "besitz": besitz, "aktiv": aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt}
+	return {"geld": geld, "besitz": besitz, "aktiv": aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen}
 
 func laden(d: Dictionary) -> void:
 	geld = int(d.get("geld", 0))
@@ -99,6 +100,9 @@ func laden(d: Dictionary) -> void:
 	for k in al:
 		album[str(k)] = int(al[k])
 	hoechster_abschnitt = int(d.get("hoechster_abschnitt", 0))
+	var e: Dictionary = d.get("einstellungen", {})
+	for k in einstellungen:
+		einstellungen[k] = bool(e.get(k, true))
 	var s: Dictionary = d.get("stufen", {})
 	for k in stufen:
 		stufen[k] = clampi(int(s.get(k, 0)), 0, UPGRADES[k].max)

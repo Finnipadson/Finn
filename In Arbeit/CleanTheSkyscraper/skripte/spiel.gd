@@ -15,6 +15,7 @@ var hud: Hud
 var shop: Shop
 var album: Album
 var ereignisse: Ereignisse
+var laeufer: Laeufer
 var wirtschaft := Wirtschaft.new()
 var ansicht := 0
 var frei := false
@@ -61,6 +62,12 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	ereignisse = Ereignisse.new()
 	add_child(ereignisse)
 	ereignisse.setup(spieler, zustand, turm, welt, hud)
+	ereignisse.erlaubt = wirtschaft.einstellungen
+	laeufer = Laeufer.new()
+	add_child(laeufer)
+	laeufer.setup(turm, welt)
+	for sp in welt.stellplaetze:
+		laeufer.hindernisse.append(sp.rect)
 	_ausruestung()
 	if ansicht >= 5 and ansicht <= 7:
 		spieler.gesperrt = true
@@ -75,6 +82,8 @@ func _ausruestung() -> void:
 	spieler.tempo_faktor = wirtschaft.tempo_faktor()
 	spieler.reich_seite = wirtschaft.reichweite_seite()
 	spieler.reich_oben = wirtschaft.reichweite_oben()
+	if ereignisse:
+		ereignisse.erlaubt = wirtschaft.einstellungen
 	var oberste := Turm.STOCKWERKE if frei else wirtschaft.oberstes_stockwerk()
 	spieler.max_y = oberste * Turm.STOCK_H - 2.6
 	_speichern()
@@ -115,11 +124,40 @@ func _input(e: InputEvent) -> void:
 		spieler.gesperrt = album.offen or (ansicht >= 5 and ansicht <= 7)
 		spieler.wischt = false
 		get_viewport().set_input_as_handled()
+	elif e.keycode == KEY_E and not shop.offen and not album.offen:
+		_ein_aus()
 	elif e.keycode >= KEY_1 and e.keycode <= KEY_5 and not shop.offen:
 		var i: int = e.keycode - KEY_1
 		if i < Wirtschaft.WERKZEUGE.size() and wirtschaft.ausruesten(Wirtschaft.WERKZEUGE[i].id):
 			_ausruestung()
 			hud.meldung(Wirtschaft.WERKZEUGE[i].name, 1.2)
+
+# ---------------------------------------------------------------- Aussteigen / Einsteigen
+const UNTEN := 0.5        # Gondelboden so tief = ganz unten, man kann aussteigen
+const EINSTEIG_WEIT := 4.0
+
+func _ein_aus() -> void:
+	if spieler.aktiv:
+		if spieler.y > UNTEN:
+			hud.meldung("Fahr mit S ganz nach unten, um auszusteigen.", 2.0)
+			return
+		var n := spieler.normal
+		var pos := spieler.gondel.global_position + n * 2.2
+		spieler.aktiv = false
+		laeufer.aktivieren(pos, atan2(n.x, n.z), spieler.gondel.global_position)
+		hud.steuerung(true)
+	else:
+		if _abstand_gondel() > EINSTEIG_WEIT:
+			hud.meldung("Geh zurück zur Gondel, um einzusteigen.", 2.0)
+			return
+		laeufer.deaktivieren()
+		spieler.aktiv = true
+		spieler.cam.current = true
+		hud.steuerung(false)
+
+func _abstand_gondel() -> float:
+	var g := spieler.gondel.global_position
+	return Vector2(laeufer.position.x - g.x, laeufer.position.z - g.z).length()
 
 # ---------------------------------------------------------------- Speichern
 func _lesen() -> Dictionary:
@@ -167,6 +205,7 @@ func _process(dt: float) -> void:
 		10: _speicher_test(dt)
 		11: _szenen_test(dt)
 		12: _ereignis_test(dt)
+		13: _lauf_test(dt)
 	if ansicht == 0 or ansicht == 12:
 		ereignisse.takt(dt)
 	# Neue Höhe erreicht (je 6 Stockwerke = ein Abschnitt): einmaliger Bonus + Aussicht feiern
@@ -177,7 +216,12 @@ func _process(dt: float) -> void:
 		wirtschaft.geld += bonus
 		hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [int(spieler.y), bonus], 3.5)
 		_speichern()
-	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock)
+	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv)
+	laeufer.set_process(not (shop.offen or album.offen))
+	if spieler.aktiv:
+		hud.status("E: Gondel verlassen" if spieler.y <= UNTEN else "")
+	else:
+		hud.status("E: in die Gondel einsteigen" if _abstand_gondel() <= EINSTEIG_WEIT else "")
 	hud.freigeschaltet(Turm.STOCKWERKE if frei else wirtschaft.oberstes_stockwerk())
 	if spieler.wischt and spieler.wz_art == "wisch":
 		var u := fposmod(spieler.weg + spieler.schwamm_off.x * spieler.richtung, turm.umfaenge[spieler.stock]) / Turm.FENSTER_B
@@ -342,6 +386,67 @@ func _szenen_test(_dt: float) -> void:
 			_fenster_sauber(f, sp)
 		spieler.pitch = 0.18
 		print("TEST album: %s" % [wirtschaft.album])
+
+# 13: unten aussteigen, zum Turm laufen (muss vorher stoppen), zurück und einsteigen
+var _lt := 0
+func _lauf_test(dt: float) -> void:
+	demo_zeit += dt
+	var mitte := get_viewport().get_visible_rect().size * 0.5
+	match _lt:
+		0:
+			spieler.y = 0.3
+			if demo_zeit > 0.4:
+				_klick(mitte, true)
+				_klick(mitte, false)
+				_taste(KEY_E)
+				_lt = 1
+		1:
+			if demo_zeit > 0.7:
+				print("TEST ausgestiegen: zu_fuss=%s kamera_laeufer=%s" % [not spieler.aktiv, laeufer.cam.current])
+				_halte(KEY_S, true)       # rückwärts vom Turm weg
+				_lt = 2
+		2:
+			if demo_zeit > 2.7:
+				_halte(KEY_S, false)
+				print("TEST weggelaufen: abstand_gondel=%.1f" % _abstand_gondel())
+				_taste(KEY_E)             # zu weit weg → darf nicht einsteigen
+				_lt = 3
+		3:
+			if demo_zeit > 3.0:
+				print("TEST zu weit weg: noch zu Fuß=%s" % (not spieler.aktiv))
+				_halte(KEY_W, true)       # zurück Richtung Gondel/Turm
+				_lt = 4
+		4:
+			if demo_zeit > 6.5:
+				_halte(KEY_W, false)
+				print("TEST an der Gondel gestoppt: abstand=%.1f (>= 1.9)" % _abstand_gondel())
+				_taste(KEY_E)
+				_lt = 5
+		5:
+			if demo_zeit > 6.8:
+				print("TEST eingestiegen: in_gondel=%s kamera_gondel=%s" % [spieler.aktiv, spieler.cam.current])
+				_lt = 6
+		6:
+			# Einstellungen über die echten Knöpfe in der Werkstatt ausschalten
+			_taste(KEY_TAB)
+			_lt = 7
+		7:
+			if demo_zeit > 7.2:
+				_lt = -1
+				for n in ["ein_tauben", "ein_sandsturm"]:
+					var b: Button = shop.find_child(n, true, false)
+					if b:
+						b.pressed.emit()
+					await get_tree().process_frame
+				print("TEST einstellungen: %s erlaubt_ereignisse=%s" % [wirtschaft.einstellungen, ereignisse.erlaubt])
+				_taste(KEY_TAB)
+
+func _halte(k: Key, gedrueckt: bool) -> void:
+	var e := InputEventKey.new()
+	e.keycode = k
+	e.physical_keycode = k
+	e.pressed = gedrueckt
+	Input.parse_input_event(e)
 
 # 12: Taube, Windböe und Sandsturm sofort auslösen
 var _et := 0

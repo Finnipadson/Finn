@@ -7,6 +7,8 @@ const HORIZONT := Color("e9dcc4")
 
 var rng := RandomNumberGenerator.new()
 var env: Environment
+var haeuser: Array = []        # Rect2 (x, z) aller Häuser – für die Kollision zu Fuß
+var stellplaetze: Array = []    # {name, pos, rect} – Plätze für spätere Händler/Casino
 var himmel: ShaderMaterial
 var sonne: DirectionalLight3D
 const STURM_FARBE := Color("c9955a")
@@ -16,6 +18,7 @@ func _ready() -> void:
 	_umgebung()
 	_boden()
 	_stadt()
+	_stellplaetze()
 
 func _umgebung() -> void:
 	env = Environment.new()
@@ -92,6 +95,46 @@ func _boden() -> void:
 		duene.rotation.y = rng.randf() * TAU
 		add_child(duene)
 
+# Markierte Flächen auf dem Platz, auf denen später Händler oder ein Casino stehen sollen
+func _stellplaetze() -> void:
+	for sp in [["Händler", 35.0], ["Casino", 155.0]]:
+		var a := deg_to_rad(sp[1])
+		var mitte := Vector2(cos(a), sin(a)) * 150.0
+		var flaeche := MeshInstance3D.new()
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(18, 18)
+		flaeche.mesh = pm
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color("d9cfbd")
+		m.roughness = 0.9
+		flaeche.material_override = m
+		flaeche.position = Vector3(mitte.x, 0.03, mitte.y)
+		add_child(flaeche)
+		for k in 4:   # gelbe Randmarkierung
+			var b := MeshInstance3D.new()
+			var bm := BoxMesh.new()
+			bm.size = Vector3(18.4, 0.04, 0.3) if k < 2 else Vector3(0.3, 0.04, 18.4)
+			b.mesh = bm
+			b.material_override = Bau.matt("f2c230", 0.6)
+			var o := Vector3(0, 0, 9.0 * (1 if k == 0 else -1)) if k < 2 else Vector3(9.0 * (1 if k == 2 else -1), 0, 0)
+			b.position = Vector3(mitte.x, 0.05, mitte.y) + o
+			add_child(b)
+		var pfahl := Bau.zylinder(0.06, 0.06, 2.2, Bau.matt("5b5f66"), 8)
+		pfahl.position = Vector3(mitte.x, 1.1, mitte.y)
+		add_child(pfahl)
+		var schild := Label3D.new()
+		schild.text = "Demnächst:
+%s" % sp[0]
+		schild.font_size = 96
+		schild.pixel_size = 0.006
+		schild.outline_size = 18
+		schild.modulate = Color("1f5fae")
+		schild.outline_modulate = Color.WHITE
+		schild.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+		schild.position = Vector3(mitte.x, 2.7, mitte.y)
+		add_child(schild)
+		stellplaetze.append({"name": sp[0], "pos": Vector3(mitte.x, 0, mitte.y), "rect": Rect2(mitte - Vector2(0.15, 0.15), Vector2(0.3, 0.3))})
+
 func _stadt() -> void:
 	var mats := [
 		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("6d8aa3"), "rahmen": Color("e6dccb"), "bruestung": Color("d8c9b0"), "stock": 3.5, "fenster_breite": 2.2, "dreckig": 0.2, "band_anteil": 0.35, "metall": 0.4}),
@@ -111,6 +154,7 @@ func _stadt() -> void:
 				if rng.randf() < 0.08:
 					hoch += 25
 				var poly := Bau.rechteck(bx, bz, x + (rng.randf() - 0.5) * 10.0, z + (rng.randf() - 0.5) * 10.0)
+				haeuser.append(Rect2(poly[0], Vector2(bx, bz)))
 				var stw := []
 				for k in maxi(hoch, 2):
 					stw.append({"poly": poly, "y0": k * 3.5, "h": 3.5})

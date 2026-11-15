@@ -86,8 +86,14 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - **Stadt:** `shader/boden.gdshader` mit Straßenraster zwischen den Blöcken, gestrichelten Mittellinien, Platz aus Platten mit Grünring um den Turm und unregelmäßigem, weichem Übergang in die Wüste. Der Kreisrand ist weg.
      - **Terrassen/Höhen:** Beim ersten Erreichen eines neuen Abschnitts (je 6 Stockwerke) gibt es einen Höhenbonus von 25× Lohn mit Meldung. Gespeichert werden `album` und `hoechster_abschnitt`.
      - Tests: `--ansicht=11` (alle 10 Szenen vor der Gondel), `--ansicht=12` (Taube, Böe, Sandsturm sofort). Alle alten Tests (8, 9, 10) laufen weiter, rund 160 FPS in 1440p.
+   - **Nachtrag (Wünsche des Users, 15.11.2026):**
+     - **Einstellungen** in der Werkstatt: Tauben, Sandsturm und Windböen einzeln an/aus, mitgespeichert (`wirtschaft.einstellungen`). Ausschalten beendet einen laufenden Sturm sofort, ohne Einstauben.
+     - **Zu Fuß am Boden** (`skripte/laeufer.gd`): Ist die Gondel ganz unten, steigt man mit **E** aus. Danach WASD, Shift rennen, Leertaste springen, Maus umschauen. Turm, Häuser und die geparkte Gondel sind fest (Turm-Grundriss + Häuser-Rechtecke aus `welt.haeuser`). Zurück an der Gondel (≤ 4 m) steigt man mit **E** wieder ein. Der HUD zeigt „E: Gondel verlassen / einsteigen“ und wechselt die Steuerungshilfe.
+     - **Stellplätze** auf dem Platz (`welt.stellplaetze`): zwei markierte Flächen mit Schild „Demnächst: Händler“ und „Demnächst: Casino“ – dort kommen später Händler/Casinos hin (Idee des Users, noch nicht geplant).
+     - Test `--ansicht=13`: aussteigen, weglaufen, Einsteigen zu weit weg wird abgelehnt, an der Gondel stoppen, einsteigen, Einstellungen über die echten Knöpfe ausschalten. Alles bestanden.
    - **Noch offen:** Die Taube landet manchmal knapp außerhalb des Bildes (man sieht sie anfliegen). Die Terrassen selbst sind noch schlichte Dächer ohne Deko.
 4. [ ] **Automatik:** Helfer, Putzroboter, Drohnen, eventuell Fortschritt auch während man nicht spielt
+4b. [ ] **Am Boden (Wunsch des Users):** Händler und Casinos auf den Stellplätzen – noch genauer besprechen (was verkaufen Händler, wie funktioniert das Casino, echtes Geld bleibt außen vor)
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 
 ## Offene Fragen

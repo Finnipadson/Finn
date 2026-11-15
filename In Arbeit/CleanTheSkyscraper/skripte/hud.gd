@@ -13,6 +13,7 @@ var kreuz: ColorRect
 var bis: Label
 var meld: Label
 var meld_tween: Tween
+var status_l: Label
 
 func _ready() -> void:
 	wurzel = Control.new()
@@ -58,6 +59,10 @@ func _ready() -> void:
 	hinweis.label_settings.outline_size = 6
 	hinweis.label_settings.outline_color = Color("123a6b")
 	_platz(hinweis, 0.5, 1.0, 0, -14)
+	status_l = _label(wurzel, "", 18, "ffffff")
+	status_l.label_settings.outline_size = 7
+	status_l.label_settings.outline_color = Color("2e6b3d")
+	_platz(status_l, 0.5, 1.0, 0, -62)
 	meld = _label(wurzel, "", 20, "ffffff")
 	meld.label_settings.outline_size = 8
 	meld.label_settings.outline_color = Color("123a6b")
@@ -131,10 +136,20 @@ static func punkte(n: int) -> String:
 		aus += s[i]
 	return aus
 
-func zeige(sauber: int, gesamt: int, euro: int, meter: float, stockwerk: int) -> void:
+func zeige(sauber: int, gesamt: int, euro: int, meter: float, stockwerk: int, zu_fuss := false) -> void:
 	zahl.text = "%s / %s" % [punkte(sauber), punkte(gesamt)]
 	geld.text = "%s €" % punkte(euro)
-	hoehe.text = "%d m · Stockwerk %d" % [int(meter), stockwerk + 1]
+	hoehe.text = "Am Boden · zu Fuß" if zu_fuss else "%d m · Stockwerk %d" % [int(meter), stockwerk + 1]
+
+# kurzer Hinweis über der Steuerung (z. B. „E: Gondel verlassen“)
+func status(t: String) -> void:
+	status_l.text = t
+
+func steuerung(zu_fuss: bool) -> void:
+	if zu_fuss:
+		hinweis.text = "Zu Fuß: WASD laufen · Shift rennen · Leertaste springen · Maus umschauen · E an der Gondel: einsteigen\nTab: Werkstatt · B: Album · Esc: Maus frei"
+	else:
+		hinweis.text = "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · Tab: Werkstatt · B: Album · 1–5: Werkzeug · Esc: Maus frei"
 
 func freigeschaltet(stockwerke: int) -> void:
 	bis.text = "Seil reicht bis Stockwerk %d" % stockwerke

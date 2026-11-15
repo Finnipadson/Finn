@@ -147,6 +147,14 @@ func aufbauen() -> void:
 		if id == "winde":
 			info = "%s  Jetzt bis Stockwerk %d." % [u.text, wirtschaft.oberstes_stockwerk()]
 		liste.add_child(_zeile(u.name, info, knopf2))
+	liste.add_child(_ueberschrift("Einstellungen"))
+	var namen := {"tauben": ["Tauben", "Tauben bekleckern ab und zu ein sauberes Fenster."], "sandsturm": ["Sandsturm", "Ab und zu ein Sandsturm, danach sind ein paar Fenster staubig."], "wind": ["Windböen", "Die Gondel schaukelt, Putzen wird etwas ungenauer."]}
+	for k in namen:
+		var an: bool = wirtschaft.einstellungen[k]
+		var knopf3 := _knopf("An" if an else "Aus", Color("2e8b3d") if an else Color("8a96a3"))
+		knopf3.name = "ein_" + k
+		knopf3.pressed.connect(_umschalten_einstellung.bind(k))
+		liste.add_child(_zeile(namen[k][0], namen[k][1], knopf3))
 
 func _ueberschrift(t: String) -> Label:
 	var l := _text(t.to_upper(), 15, "7a9cc0")
@@ -180,6 +188,11 @@ func _nehmen(id: String) -> void:
 func _kaufe_upgrade(id: String) -> void:
 	if wirtschaft.kaufe_upgrade(id):
 		geaendert.emit()
+	aufbauen()
+
+func _umschalten_einstellung(k: String) -> void:
+	wirtschaft.einstellungen[k] = not wirtschaft.einstellungen[k]
+	geaendert.emit()
 	aufbauen()
 
 func _reset() -> void:

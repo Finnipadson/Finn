@@ -51,6 +51,7 @@ var strahl: MeshInstance3D    # Wasserstrahl des Hochdruckreinigers
 var arm: MeshInstance3D
 var gesperrt := false         # true = keine Eingaben (Testbilder, Shop offen)
 var wind := 0.0               # 0..1, wird von Ereignisse gesetzt: Gondel schaukelt
+var aktiv := true             # false = ausgestiegen, man läuft zu Fuß (Gondel bleibt unten stehen)
 var _gesperrt_zeit := 0.0
 
 func setup(t: Turm, z: FensterZustand, start_stock: int, start_weg: float, oberste_hoehe: float) -> void:
@@ -167,7 +168,7 @@ func werkzeug_setzen(w: Dictionary) -> void:
 
 # ---------------------------------------------------------------- Eingaben
 func _input(e: InputEvent) -> void:
-	if gesperrt:
+	if gesperrt or not aktiv:
 		return
 	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_RIGHT:
 		rechts_gedrueckt = e.pressed
@@ -220,7 +221,7 @@ func _begrenzen() -> void:
 # ---------------------------------------------------------------- Ablauf
 func _process(dt: float) -> void:
 	_gesperrt_zeit = maxf(0.0, _gesperrt_zeit - dt)
-	if not gesperrt:
+	if not gesperrt and aktiv:
 		var seite := 0.0
 		var hoch := 0.0
 		if Input.is_key_pressed(KEY_D): seite += 1.0
@@ -246,7 +247,13 @@ func _process(dt: float) -> void:
 				letzter_stempel = Vector2(INF, INF)
 		else:
 			_wischen()
-	_hand()
+	werkzeug.visible = aktiv
+	arm.visible = aktiv
+	if not aktiv:
+		wischt = false
+		strahl.visible = false
+	else:
+		_hand()
 	zustand.aktualisieren()
 
 func _platzieren(dt: float) -> void:

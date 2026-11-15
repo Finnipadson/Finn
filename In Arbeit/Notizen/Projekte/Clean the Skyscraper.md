@@ -26,6 +26,9 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 - [x] Phase 2: Fortschritt und Wirtschaft (Werkstatt mit Tab, 5 Werkzeuge, Motor/Teleskoparm/Seilwinde, Speichern + Laden)
 - [ ] Balance testen (Ziel 10–20 h), Zahlen in `wirtschaft.gd`
 - [x] Phase 3: Leben am Turm (10 Szenen + Sammelalbum mit B, Tauben, Windböen, Sandsturm, Straßen + Platz, Höhenbonus); dazu Rechtsklick beim Putzen = umschauen
+- [x] Tauben/Sandsturm/Wind an- und ausschaltbar (Werkstatt → Einstellungen)
+- [x] Gondel unten verlassen (E) und auf dem Platz herumlaufen, Stellplätze für Händler/Casino markiert
+- [ ] Händler und Casinos auf den Stellplätzen (Idee des Users, genauer besprechen)
 - [ ] Phase 4: Automatik (Helfer, Roboter, Drohnen)
 - [ ] Phase 5: Feinschliff (Sound, Effekte, Menü, .exe)
 - [x] Ansicht: Ich-Ansicht aus der Gondel (15.11.2026)

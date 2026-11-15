@@ -28,6 +28,7 @@ var sturm_zeit := STURM_ERSTER
 var sturm_phase := 0            # 0 ruhig, 1 Warnung, 2 Sturm
 var sturm_staerke := 0.0
 var sand: CPUParticles3D
+var erlaubt := {"tauben": true, "sandsturm": true, "wind": true}   # aus den Einstellungen
 
 func setup(s: Spieler, z: FensterZustand, t: Turm, w: Welt, h: Hud) -> void:
 	spieler = s
@@ -75,7 +76,8 @@ func _tauben(dt: float) -> void:
 	taube_zeit -= dt
 	if taube_zeit <= 0.0:
 		taube_zeit = rng.randf_range(TAUBE_ABSTAND.x, TAUBE_ABSTAND.y)
-		taube_jetzt()
+		if erlaubt.tauben:
+			taube_jetzt()
 	for tb in tauben.duplicate():
 		var n: Node3D = tb.knoten
 		tb.t += dt
@@ -175,8 +177,12 @@ func _wind(dt: float) -> void:
 		if wind_ziel > 0.0:
 			wind_ziel = 0.0
 			wind_zeit = rng.randf_range(WIND_RUHE.x, WIND_RUHE.y)
-		else:
+		elif erlaubt.wind:
 			boe_jetzt()
+		else:
+			wind_zeit = 5.0
+	if not erlaubt.wind:
+		wind_ziel = 0.0
 	wind = move_toward(wind, wind_ziel, dt * 0.25)
 	spieler.wind = wind
 
@@ -191,7 +197,10 @@ func _sturm(dt: float) -> void:
 	match sturm_phase:
 		0:
 			if sturm_zeit <= 0.0:
-				sturm_jetzt()
+				if erlaubt.sandsturm:
+					sturm_jetzt()
+				else:
+					sturm_zeit = 30.0
 		1:
 			if sturm_zeit <= 0.0:
 				sturm_phase = 2
@@ -205,11 +214,16 @@ func _sturm(dt: float) -> void:
 					hud.meldung("Der Sandsturm ist vorbei. %d Fenster in deiner Nähe sind eingestaubt." % n, 4.0)
 				else:
 					hud.meldung("Der Sandsturm ist vorbei.", 3.0)
+	if not erlaubt.sandsturm and sturm_phase != 0:
+		sturm_phase = 0   # abgeschaltet: Sturm sofort beenden, nichts einstauben
+		sturm_zeit = 30.0
 	var ziel := 1.0 if sturm_phase == 2 else 0.0
 	sturm_staerke = move_toward(sturm_staerke, ziel, dt * 0.15)
 	welt.sandsturm(sturm_staerke)
 	sand.emitting = sturm_staerke > 0.15
-	sand.global_position = spieler.cam.global_position
+	var kamera := get_viewport().get_camera_3d()
+	if kamera:
+		sand.global_position = kamera.global_position
 	if sturm_phase == 2:
 		wind = maxf(wind, sturm_staerke * 0.8)
 		spieler.wind = wind
