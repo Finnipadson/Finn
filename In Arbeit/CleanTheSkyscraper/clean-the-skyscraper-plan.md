@@ -93,7 +93,8 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - **Stadt näher am Turm** (Wunsch des Users): Platz nur noch 125 m Radius (`Welt.PLATZ_R`, Boden-Shader `plaza_r`), Häuser ab dort, nah am Turm dichter (85 %) und höher, Stellplätze auf 104 m.
      - Test `--ansicht=13`: aussteigen, weglaufen, Einsteigen zu weit weg wird abgelehnt, an der Gondel stoppen, einsteigen, Einstellungen über die echten Knöpfe ausschalten. Alles bestanden.
    - **Noch offen:** Die Taube landet manchmal knapp außerhalb des Bildes (man sieht sie anfliegen). Die Terrassen selbst sind noch schlichte Dächer ohne Deko.
-4. [ ] **Automatik:** Helfer, Putzroboter, Drohnen, eventuell Fortschritt auch während man nicht spielt
+4. [ ] **Automatik:** Helfer, Putzroboter, Drohnen – **nur während man spielt, kein Idle-Fortschritt** (Entscheidung des Users, 15.11.2026)
+   - Vorschlag: Putzkräfte (früh, günstig) → Putzroboter (fährt eine Spalte ab) → Drohnenschwarm (spät, auch über den Wolken). Helfer putzen nur in schon erreichten Stockwerken, damit Selberputzen der Hauptteil bleibt. HUD-Anzeige „Helfer: +N Fenster/Minute“.
 4b. [x] **Am Boden: Händler und Casino** (Entscheidungen des Users, 15.11.2026) – **Händler und Casino fertig**
    - **Händler** auf dem Stellplatz „Händler“: Stände mit Figur, hingehen und E drücken öffnet ein Menü.
      - *Putzmittel-Boosts:* zum Beispiel Glanzspray (eine Zeit lang schneller putzen) und Goldpolitur (eine Zeit lang doppeltes Geld pro Fenster).
@@ -164,7 +165,7 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
 
 ## Offene Fragen
 
-- Gibt es Fortschritt, während man nicht spielt (Idle), oder nur durch eigenes Putzen?
+- ~~Gibt es Fortschritt, während man nicht spielt (Idle)?~~ Entschieden 15.11.2026: **Nein**, Helfer arbeiten nur, solange man spielt.
 
 ## Stand
 
