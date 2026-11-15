@@ -17,6 +17,12 @@ var rng := RandomNumberGenerator.new()
 var palmen_xf: Array = [[], []]    # Transform3D je Palmen-Art
 var lampen_xf: Array = []
 var palmen_mat: ShaderMaterial
+var bank_xf: Array = []
+var kuebel_xf: Array = []
+var busch_xf: Array = []
+var eimer_xf: Array = []
+var leute_zahl := 0
+const FIGUREN := ["leute/character-female-a", "leute/character-female-c", "leute/character-male-b", "leute/character-male-e", "leute/character-worker"]
 
 func baue(w: Welt) -> void:
 	welt = w
@@ -25,12 +31,19 @@ func baue(w: Welt) -> void:
 	_platz_palmen()
 	_see_palmen()
 	_alleen()
+	_platz_moebel()
+	_see_baenke()
+	_fussgaenger()
+	_leute()
 	palmen_mat = ShaderMaterial.new()
 	palmen_mat.shader = load("res://shader/palme.gdshader")
 	palmen_mat.set_shader_parameter("farben", load("res://modelle/natur/Textures/colormap.png"))
 	for i in PALMEN.size():
-		_mm_aus_modell("res://modelle/%s.glb" % PALMEN[i], palmen_xf[i])
+		_mm_aus_modell("res://modelle/%s.glb" % PALMEN[i], palmen_xf[i], palmen_mat)
+	_mm_aus_modell("res://modelle/natur/plant_bushDetailed.glb", busch_xf)
 	_lampen_mm()
+	_moebel_mm()
+	print("Stadtdetails: %d Bänke, %d Pflanzkübel, %d Mülleimer, %d Leute" % [bank_xf.size(), kuebel_xf.size(), eimer_xf.size(), leute_zahl])
 
 # ---------------------------------------------------------------- See mit Fontänen
 func _see() -> void:
@@ -145,10 +158,10 @@ func _fontaenen() -> void:
 		basis.add_child(mi)
 
 # ---------------------------------------------------------------- Palmen + Laternen
-func _palme(p: Vector2, hindernis := true) -> void:
+func _palme(p: Vector2, hindernis := true, hoehe := 0.0) -> void:
 	var s := rng.randf_range(2.3, 3.1)
 	var b := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * s)
-	palmen_xf[0 if rng.randf() < 0.55 else 1].append(Transform3D(b, Vector3(p.x, 0, p.y)))
+	palmen_xf[0 if rng.randf() < 0.55 else 1].append(Transform3D(b, Vector3(p.x, hoehe, p.y)))
 	if hindernis:
 		welt.hindernisse.append(Rect2(p - Vector2(0.45, 0.45), Vector2(0.9, 0.9)))
 
@@ -205,7 +218,9 @@ func _alleen() -> void:
 				var zur_kreuzung := absf(fposmod(s - RASTER * 0.5, RASTER) - RASTER * 0.5)
 				var p := Vector2(c, s) if richtung == 0 else Vector2(s, c)
 				var quer := Vector2(1, 0) if richtung == 0 else Vector2(0, 1)
-				if zur_kreuzung > 11.0 and _frei_fuer_allee(p):
+				var k_lo := floorf((s - RASTER * 0.5) / RASTER) * RASTER + RASTER * 0.5
+				var da := welt.stueck_da(Vector2(c, k_lo) if richtung == 0 else Vector2(k_lo, c), Vector2(c, k_lo + RASTER) if richtung == 0 else Vector2(k_lo + RASTER, c))
+				if da and zur_kreuzung > 20.0 and _frei_fuer_allee(p):
 					if nr % LAMPE_ALLE == LAMPE_ALLE - 1:
 						_lampe(p, quer)
 					else:
@@ -225,7 +240,7 @@ func _frei_fuer_allee(p: Vector2) -> bool:
 	return not welt.casino_rect.grow(8.0).has_point(p)
 
 # MultiMesh(es) aus allen MeshInstance3D eines Modells
-func _mm_aus_modell(pfad: String, xf: Array) -> void:
+func _mm_aus_modell(pfad: String, xf: Array, mat: Material = null) -> void:
 	if xf.is_empty():
 		return
 	if not ResourceLoader.exists(pfad):
@@ -242,8 +257,8 @@ func _mm_aus_modell(pfad: String, xf: Array) -> void:
 			mm.set_instance_transform(i, t * mi.xf)
 		var mmi := MultiMeshInstance3D.new()
 		mmi.multimesh = mm
-		if palmen_mat:
-			mmi.material_override = palmen_mat
+		if mat:
+			mmi.material_override = mat
 		add_child(mmi)
 	szene.free()
 
@@ -313,3 +328,210 @@ func _lampen_mm() -> void:
 	km.emission_energy_multiplier = 0.6
 	mmi2.material_override = km
 	add_child(mmi2)
+
+# ---------------------------------------------------------------- Sitzbänke, Pflanzkübel, Mülleimer, Leute
+# Bank: schaut nach −Z (Lehne hinten bei +Z). blick = Richtung, in die man auf der Bank schaut.
+func _bank(p: Vector2, blick: Vector2) -> void:
+	var b := Basis.looking_at(Vector3(blick.x, 0, blick.y), Vector3.UP)
+	bank_xf.append(Transform3D(b, Vector3(p.x, 0, p.y)))
+	welt.hindernisse.append(Rect2(p - Vector2(0.8, 0.8), Vector2(1.6, 1.6)))
+
+func _kuebel(p: Vector2, mit_palme := false) -> void:
+	kuebel_xf.append(Transform3D(Basis(Vector3.UP, rng.randf() * 0.2), Vector3(p.x, 0, p.y)))
+	if mit_palme:
+		_palme(p, false, 0.55)
+	else:
+		var s := rng.randf_range(4.2, 5.0)
+		busch_xf.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * s), Vector3(p.x, 0.6, p.y)))
+	welt.hindernisse.append(Rect2(p - Vector2(0.85, 0.85), Vector2(1.7, 1.7)))
+
+func _eimer(p: Vector2) -> void:
+	eimer_xf.append(Transform3D(Basis.IDENTITY, Vector3(p.x, 0, p.y)))
+	welt.hindernisse.append(Rect2(p - Vector2(0.3, 0.3), Vector2(0.6, 0.6)))
+
+func _winkel_frei(a: float, liste: Array, abstand: float) -> bool:
+	for w in liste:
+		if absf(wrapf(a - deg_to_rad(w), -PI, PI)) < deg_to_rad(abstand):
+			return false
+	return true
+
+const FLUEGEL_WINKEL := [30.0, 150.0, 270.0]
+
+# Platz: Bänke vor dem Palmenring (Blick zum Turm), Mülleimer, Pflanzkübel in den Lücken zwischen den Flügeln
+func _platz_moebel() -> void:
+	var n := 40
+	for i in n:
+		var a := TAU * (i + 0.5) / n
+		if not _winkel_frei(a, Welt.STAND_WINKEL, 9.0):
+			continue
+		var r := Vector2(cos(a), sin(a))
+		_bank(r * 80.0, -r)
+		if i % 4 == 0:
+			_eimer(r * 80.0 + r.orthogonal() * 1.6)
+	for i in 24:
+		var a := TAU * i / 24.0
+		if not _winkel_frei(a, FLUEGEL_WINKEL, 20.0) or not _winkel_frei(a, Welt.STAND_WINKEL, 9.0):
+			continue
+		_kuebel(Vector2(cos(a), sin(a)) * 58.0)
+
+# See: Bänke mit Blick aufs Wasser
+func _see_baenke() -> void:
+	var l := welt.see_umriss(4.5, 2.0)
+	var weg := 0.0
+	for i in l.size():
+		var a: Vector2 = l[i]
+		var b: Vector2 = l[(i + 1) % l.size()]
+		weg += a.distance_to(b)
+		if weg < 20.0 or a.length() < Welt.PLATZ_R + 2.0:
+			continue
+		weg = 0.0
+		var innen := (b - a).normalized().orthogonal()
+		if welt.see_abstand(a + innen) > welt.see_abstand(a):
+			innen = -innen
+		_bank(a, innen)
+
+# Fußgängerzonen: wo früher Straßen zum Turm führten (Straßenstück fehlt), stehen Pflanzkübel mit Palmen und Büschen
+func _fussgaenger() -> void:
+	var k0 := int(500.0 / RASTER) + 1
+	for richtung in 2:
+		for k in range(-k0, k0):
+			var c := RASTER * (k + 0.5)
+			for j in range(-k0, k0):
+				var k_lo := RASTER * (j + 0.5)
+				var a := Vector2(c, k_lo) if richtung == 0 else Vector2(k_lo, c)
+				var b := Vector2(c, k_lo + RASTER) if richtung == 0 else Vector2(k_lo + RASTER, c)
+				if welt.stueck_da(a, b):
+					continue
+				var nr := 0
+				var s := k_lo + 12.0
+				while s <= k_lo + RASTER - 12.0:
+					var p := Vector2(c, s) if richtung == 0 else Vector2(s, c)
+					s += 10.0
+					if p.length() < Welt.PLATZ_R + 6.0 or welt.see_abstand(p) < Welt.PROMENADE + 3.0 or welt.casino_rect.grow(6.0).has_point(p):
+						continue
+					var quer := Vector2(1, 0) if richtung == 0 else Vector2(0, 1)
+					match nr % 3:
+						0: _kuebel(p, true)
+						1:
+							_bank(p + quer * 1.2, quer)
+							_bank(p - quer * 1.2, -quer)
+						2: _kuebel(p, false)
+					if nr % 6 == 1:
+						_eimer(p + quer * 3.2)
+					nr += 1
+
+# Leute, die auf dem Platz und an der Promenade herumstehen (Kenney Mini Characters, Ruhe-Animation)
+func _leute() -> void:
+	var orte := []
+	for i in 16:
+		var a := rng.randf() * TAU
+		if not _winkel_frei(a, FLUEGEL_WINKEL, 22.0) or not _winkel_frei(a, Welt.STAND_WINKEL, 8.0):
+			continue
+		orte.append(Vector2(cos(a), sin(a)) * rng.randf_range(40.0, 72.0))
+	var l := welt.see_umriss(8.0, 3.0)
+	for i in 14:
+		var q: Vector2 = l[rng.randi() % l.size()]
+		if q.length() > Welt.PLATZ_R + 2.0:
+			orte.append(q)
+	for o in orte:
+		var p: Vector2 = o
+		for j in rng.randi_range(1, 2):   # einzeln oder zu zweit
+			var q := p + Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)) * (0.0 if j == 0 else 1.3)
+			var f := _figur(FIGUREN[rng.randi() % FIGUREN.size()], q)
+			var ziel := welt.see_mitte() if welt.see_abstand(q) < 30.0 else (p if j > 0 else Vector2.ZERO)
+			if j == 0 and welt.see_abstand(q) >= 30.0:
+				ziel = Vector2.ZERO
+			var d := ziel - q
+			if d.length() > 0.1:
+				f.rotation.y = atan2(d.x, d.y)   # Kenney-Figuren schauen nach +Z
+			welt.hindernisse.append(Rect2(q - Vector2(0.35, 0.35), Vector2(0.7, 0.7)))
+			leute_zahl += 1
+
+func _figur(name: String, p: Vector2) -> Node3D:
+	var n: Node3D = load("res://modelle/%s.glb" % name).instantiate()
+	n.position = Vector3(p.x, 0, p.y)
+	n.scale = Vector3.ONE * 2.3
+	add_child(n)
+	var ap := n.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if ap:
+		var wahl := ""
+		for a in ap.get_animation_list():
+			if "idle" in a.to_lower():
+				wahl = a
+				break
+		if wahl != "":
+			ap.get_animation(wahl).loop_mode = Animation.LOOP_LINEAR
+			ap.play(wahl)
+			ap.seek(rng.randf() * 2.0, true)
+	return n
+
+func _moebel_mm() -> void:
+	var stein := Bau.matt("d6d0c4", 0.7)
+	var holz := Bau.matt("a8744a", 0.65)
+	var erde := Bau.matt("4a3a2a", 1.0)
+	var dunkel := Bau.metall("3a3e45", 0.4, 0.6)
+	# Bank: zwei Steinblöcke + Holzsitz + Lehne
+	var bank := ArrayMesh.new()
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for x in [-0.72, 0.72]:
+		_quader(st, Vector3(0.36, 0.42, 0.5), Vector3(x, 0.21, 0))
+	st.commit(bank)
+	bank.surface_set_material(0, stein)
+	st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in 4:
+		_quader(st, Vector3(2.0, 0.06, 0.11), Vector3(0, 0.45, -0.19 + k * 0.13))
+	for k in 2:
+		_quader(st, Vector3(2.0, 0.11, 0.05), Vector3(0, 0.66 + k * 0.15, 0.25))
+	_quader(st, Vector3(0.06, 0.4, 0.06), Vector3(-0.72, 0.62, 0.27))
+	_quader(st, Vector3(0.06, 0.4, 0.06), Vector3(0.72, 0.62, 0.27))
+	st.commit(bank)
+	bank.surface_set_material(1, holz)
+	_mm_mesh(bank, bank_xf)
+	# Pflanzkübel: heller Betonkasten mit Erde
+	var kuebel := ArrayMesh.new()
+	st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_quader(st, Vector3(1.6, 0.55, 1.6), Vector3(0, 0.275, 0))
+	_quader(st, Vector3(1.7, 0.06, 1.7), Vector3(0, 0.56, 0))
+	st.commit(kuebel)
+	kuebel.surface_set_material(0, stein)
+	st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_quader(st, Vector3(1.4, 0.04, 1.4), Vector3(0, 0.6, 0))
+	st.commit(kuebel)
+	kuebel.surface_set_material(1, erde)
+	_mm_mesh(kuebel, kuebel_xf)
+	# Mülleimer
+	var eimer := ArrayMesh.new()
+	st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var z := CylinderMesh.new()
+	z.top_radius = 0.27
+	z.bottom_radius = 0.24
+	z.height = 0.9
+	z.radial_segments = 12
+	z.rings = 1
+	st.append_from(z, 0, Transform3D(Basis.IDENTITY, Vector3(0, 0.45, 0)))
+	st.commit(eimer)
+	eimer.surface_set_material(0, dunkel)
+	_mm_mesh(eimer, eimer_xf)
+
+func _quader(st: SurfaceTool, g: Vector3, p: Vector3) -> void:
+	var bm := BoxMesh.new()
+	bm.size = g
+	st.append_from(bm, 0, Transform3D(Basis.IDENTITY, p))
+
+func _mm_mesh(mesh: Mesh, xf: Array) -> void:
+	if xf.is_empty():
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = mesh
+	mm.instance_count = xf.size()
+	for i in xf.size():
+		mm.set_instance_transform(i, xf[i])
+	var mi := MultiMeshInstance3D.new()
+	mi.multimesh = mm
+	add_child(mi)

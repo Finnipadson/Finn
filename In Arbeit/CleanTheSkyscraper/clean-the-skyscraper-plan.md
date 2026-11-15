@@ -150,6 +150,16 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - Test `tools/verkehr_test.gd` (60 s ohne Bild): nie Autos beider Richtungen gleichzeitig auf einer Kreuzung, niemand fährt bei Rot – bestanden.
      - Leistung danach: 120–170 FPS in 1440p.
      - Autos fahren durch Fußgänger hindurch (keine Kollision mit dem Läufer).
+4d. [x] **Rückmeldung des Users zur Stadt (15.11.2026)** – fertig
+   - **Straßen enden an Kreuzungen:** Eine Straße gibt es nur zwischen zwei „guten“ Kreuzungen (`Welt.kreuzung_ok`, `stueck_da`, `arme`, `querverkehr`; der Boden-Shader rechnet genauso). Kreuzungen erst 30 m hinter dem Platz, 14 m hinter der See-Promenade und nicht am Casino. Was früher als Stummel zum Turm oder zum See lief, ist jetzt Fußgängerzone.
+   - **Verkehr als Ringe:** Jede Spur fährt hin, wendet auf der End-Kreuzung (nur bei Grün) und fährt zurück – keine Autos tauchen mehr auf oder ab. Test `tools/verkehr_test.gd` bestanden.
+   - **Palmen** auf den Mittelstreifen erst 20 m nach der Kreuzung (vorher 11 m, standen fast auf der Kreuzung).
+   - **Boden:** Platz und Promenade mit polierten Steinplatten in Ringen um den Turm (Granitbänder), Gehwege mit 0,75-m-Platten und Bordstein, Blumenbeete mit einzelnen Blüten im Grünring.
+   - **Mehr Details** (`StadtDetails`): ca. 140 Bänke, 100 Pflanzkübel (mit Palmen oder Büschen aus dem Kenney Nature Kit, CC0), 34 Mülleimer, 33 Leute (Kenney Mini Characters) auf dem Platz und an der Promenade; Fußgängerzonen mit Kübeln und Bänken.
+   - **Hochhäuser der Stadt mit sauberen Fenstern** (`dreckig` = 0).
+   - **Casino im Sockel eines Hochhauses:** Glasfassade außen wie die anderen Türme (`_verkleidung()`), 34 Stockwerke darüber (`_turm_drauf()`), Leuchtschrift an der Fassade über dem Eingang. Innen unverändert.
+   - **Start zu Fuß:** Man startet neben der Gondel unten. Die Gondel merkt sich die letzte Höhe und fährt beim Einsteigen mit 30 m/s dorthin zurück (`Spiel.letzte_hoehe`, `express`). Test `--ansicht=18`.
+   - **Werkzeug-Kiosk** (grün, vierter Kiosk) mit fünf neuen Profi-Werkzeugen: Mikrofaser-Schwamm 350 €, Profi-Schwamm XXL 1.800 €, Teleskop-Abzieher 3.500 €, Dampfreiniger 9.000 €, Wasserlanze Turbo 25.000 € (`Wirtschaft.WERKZEUGE` mit `haendler: true`). Tasten 1–9 und 0. Die Werkstatt zeigt sie erst nach dem Kauf; ihre Liste scrollt jetzt. Test `--ansicht=19 --geld=1000`.
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 
 ## Offene Fragen

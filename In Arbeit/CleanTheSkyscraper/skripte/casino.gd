@@ -156,12 +156,6 @@ func _gebaeude() -> void:
 		var zm: float = s * (TUER * 0.5 + lang * 0.5)
 		_box(Vector3(WAND, HOCH, lang), Vector3(-mw, HOCH * 0.5, zm), dunkel)
 		_fest(-h, zm - lang * 0.5, -h + WAND, zm + lang * 0.5)
-		# Glasband links und rechts der Tür (dunkles Spiegelglas, von außen)
-		var glas := Bau.metall("27405f", 0.08, 0.7)
-		_box(Vector3(0.06, 3.0, lang - 2.4), Vector3(-h - 0.02, 2.2, zm), glas)
-		for k in 6:   # goldene Lisenen
-			var z: float = s * (TUER * 0.5 + 0.6 + k * (lang - 1.2) / 5.0)
-			_box(Vector3(0.14, HOCH, 0.14), Vector3(-h - 0.05, HOCH * 0.5, z), gold)
 		# Leuchtstreifen an den vorderen Ecken
 		var lm := _leuchte("ff3fa0" if s < 0 else "35c8ff")
 		_leucht.append(lm)
@@ -200,17 +194,83 @@ func _gebaeude() -> void:
 		busch.position = Vector3(-h - 1.0, 1.4, s * 4.6)
 		add_child(busch)
 		_fest(-h - 1.6, s * 4.6 - 0.6, -h - 0.4, s * 4.6 + 0.6)
-	# Leuchtschrift auf dem Dach (zur Turmseite) mit Rückwand
-	_box(Vector3(0.3, 3.6, 15.0), Vector3(-h + 0.6, HOCH + 2.1, 0), dunkel)
-	_box(Vector3(0.34, 0.14, 15.2), Vector3(-h + 0.6, HOCH + 3.95, 0), gold)
-	_schrift("CASINO", Vector3(-h + 0.42, HOCH + 2.15, 0), -PI / 2.0, 220, 0.0135, Color(1.0, 0.82, 0.3))
+	# Außen: Glasfassade wie bei den Hochhäusern der Stadt, darüber der Turm (Casino ist das Erdgeschoss)
+	_verkleidung()
+	_turm_drauf()
+	# Leuchtschrift an der Fassade über dem Eingang, mit dunkler Tafel und Lichterkette
+	_box(Vector3(0.12, 1.7, 11.0), Vector3(-h - 0.14, TUER_H + 1.75, 0), dunkel)
+	_box(Vector3(0.14, 0.1, 11.2), Vector3(-h - 0.15, TUER_H + 2.62, 0), gold)
+	_box(Vector3(0.14, 0.1, 11.2), Vector3(-h - 0.15, TUER_H + 0.88, 0), gold)
+	_schrift("CASINO", Vector3(-h - 0.22, TUER_H + 1.75, 0), -PI / 2.0, 200, 0.0105, Color(1.0, 0.82, 0.3))
 	var stern := _leuchte("ffd060", 3.0)
 	_leucht.append(stern)
-	for k in 13:   # Lichterkette unter der Schrift
-		_box(Vector3(0.08, 0.16, 0.16), Vector3(-h + 0.42, HOCH + 0.62, -6.6 + k * 1.1), stern)
-	# kleinere Schrift an den beiden Seitenwänden
-	_schrift("CASINO", Vector3(0, HOCH - 1.6, -h - 0.03), PI, 160, 0.012, Color(1.0, 0.82, 0.3))
-	_schrift("CASINO", Vector3(0, HOCH - 1.6, h + 0.03), 0.0, 160, 0.012, Color(1.0, 0.82, 0.3))
+	for k in 11:
+		_box(Vector3(0.08, 0.14, 0.14), Vector3(-h - 0.22, TUER_H + 0.95, -5.0 + k * 1.0), stern)
+	# kleinere Schrift an den beiden Seiten
+	for s2 in [-1.0, 1.0]:
+		_box(Vector3(9.0, 1.3, 0.12), Vector3(0, HOCH - 1.5, s2 * (h + 0.14)), dunkel)
+		_schrift("CASINO", Vector3(0, HOCH - 1.5, s2 * (h + 0.22)), PI if s2 < 0 else 0.0, 160, 0.0095, Color(1.0, 0.82, 0.3))
+
+const TURM_STOCKWERKE := 34     # so viele Stockwerke (je 3,5 m) stehen über dem Casino
+
+func _fassaden_mat() -> ShaderMaterial:
+	return Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("8fb1c9"), "rahmen": Color("9aa3ad"), "bruestung": Color("8a929c"), "stock": 3.5, "fenster_breite": 1.8, "dreckig": 0.0, "metall": 0.7})
+
+# Glasfassade außen um das Erdgeschoss (Innenwände bleiben dunkel); vorne mit Tür-Öffnung
+func _verkleidung() -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var o := HALB + 0.06
+	var y0 := 0.25
+	var y1 := HOCH + 0.3
+	var t := TUER * 0.5
+	# [von, bis, unten, oben] in Gebäude-Koordinaten (x, z), Außenseite links der Laufrichtung
+	var stuecke := [
+		[Vector2(o, -o), Vector2(o, o), y0, y1],          # hinten (+X)
+		[Vector2(o, o), Vector2(-o, o), y0, y1],          # Seite +Z
+		[Vector2(-o, -o), Vector2(o, -o), y0, y1],        # Seite −Z
+		[Vector2(-o, o), Vector2(-o, t), y0, y1],         # vorne neben der Tür
+		[Vector2(-o, -t), Vector2(-o, -o), y0, y1],
+		[Vector2(-o, t), Vector2(-o, -t), TUER_H, y1],    # über der Tür
+	]
+	var weg := 0.0
+	for e in stuecke:
+		var a: Vector2 = e[0]
+		var b: Vector2 = e[1]
+		var u0: float = e[2]
+		var u1: float = e[3]
+		var n2 := (b - a).normalized().orthogonal()
+		if n2.dot((a + b) * 0.5) < 0.0:
+			n2 = -n2
+		var n := Vector3(n2.x, 0, n2.y)
+		var lang := a.distance_to(b)
+		var ecken := [[a, weg, u0], [b, weg + lang, u0], [b, weg + lang, u1], [a, weg, u0], [b, weg + lang, u1], [a, weg, u1]]
+		# Vorderseite = im Uhrzeigersinn von außen gesehen
+		var p0 := Vector3(a.x, u0, a.y)
+		var p1 := Vector3(b.x, u0, b.y)
+		var p2 := Vector3(b.x, u1, b.y)
+		if (p2 - p0).cross(p1 - p0).dot(n) < 0.0:
+			ecken = [[a, weg, u0], [b, weg + lang, u1], [b, weg + lang, u0], [a, weg, u0], [a, weg, u1], [b, weg + lang, u1]]
+		var tg := Vector3(b.x - a.x, 0, b.y - a.y).normalized()
+		for k in ecken:
+			st.set_normal(n)
+			st.set_tangent(Plane(tg, 1.0))
+			st.set_uv(Vector2(k[1], k[2]))
+			var q: Vector2 = k[0]
+			st.add_vertex(Vector3(q.x, k[2], q.y))
+		weg += lang
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = _fassaden_mat()
+	add_child(mi)
+
+# Hochhaus über dem Casino, gleiche Fassade
+func _turm_drauf() -> void:
+	var poly := Bau.rechteck(HALB * 2.0 + 0.12, HALB * 2.0 + 0.12)
+	var stw := []
+	for k in TURM_STOCKWERKE:
+		stw.append({"poly": poly, "y0": HOCH + 0.3 + k * 3.5, "h": 3.5})
+	add_child(Bau.baue(stw, _fassaden_mat(), Bau.matt("bdb3a3")))
 
 # ---------------------------------------------------------------- Innenraum
 func _teppich() -> ImageTexture:

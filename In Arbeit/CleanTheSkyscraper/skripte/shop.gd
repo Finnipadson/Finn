@@ -7,6 +7,7 @@ signal neues_spiel
 
 var wirtschaft: Wirtschaft
 var fenster: PanelContainer
+var scroll: ScrollContainer
 var liste: VBoxContainer
 var geld_label: Label
 var offen := false
@@ -56,10 +57,14 @@ func setup(w: Wirtschaft) -> void:
 	kopf.add_child(geld_label)
 	liste = VBoxContainer.new()
 	liste.add_theme_constant_override("separation", 6)
-	vb.add_child(liste)
+	liste.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll = ScrollContainer.new()   # lange Liste: scrollen statt aus dem Bild ragen
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.add_child(liste)
+	vb.add_child(scroll)
 	var fuss := HBoxContainer.new()
 	vb.add_child(fuss)
-	var hinweis := _text("Tab oder Esc: schließen · Zahlen 1–5: Werkzeug wechseln", 14, "2b5b8f")
+	var hinweis := _text("Tab oder Esc: schließen · Zahlen 1–0: Werkzeug wechseln", 14, "2b5b8f")
 	hinweis.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hinweis.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	fuss.add_child(hinweis)
@@ -110,6 +115,7 @@ func umschalten() -> void:
 
 # Liste neu füllen (nach jedem Kauf)
 func aufbauen() -> void:
+	scroll.custom_minimum_size = Vector2(0, maxf(240.0, get_viewport().get_visible_rect().size.y - 190.0))
 	for c in liste.get_children():
 		c.queue_free()
 	geld_label.text = "%s €" % Hud.punkte(wirtschaft.geld)
@@ -124,12 +130,17 @@ func aufbauen() -> void:
 		elif hat:
 			knopf = _knopf("Nehmen", Color("1f5fae"))
 			knopf.pressed.connect(_nehmen.bind(w.id))
+		elif w.get("haendler", false):
+			continue   # Profi-Werkzeuge gibt es nur am Werkzeug-Kiosk
 		else:
 			knopf = _knopf("Kaufen · %s €" % Hud.punkte(int(w.preis)), Color("e08a1e"))
 			knopf.disabled = wirtschaft.geld < int(w.preis)
 			knopf.pressed.connect(_kaufe_werkzeug.bind(w.id))
 		knopf.name = "wz_" + w.id
-		liste.add_child(_zeile("%d  %s" % [i + 1, w.name], w.text, knopf))
+		liste.add_child(_zeile("%d  %s" % [(i + 1) % 10, w.name], w.text, knopf))
+	var hinweis_kiosk := _text("Profi-Werkzeuge (größere Schwämme, Dampfreiniger …) gibt es am grünen Werkzeug-Kiosk auf dem Platz.", 13, "2b5b8f")
+	hinweis_kiosk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	liste.add_child(hinweis_kiosk)
 	liste.add_child(_ueberschrift("Gondel"))
 	for id in Wirtschaft.UPGRADES:
 		var u: Dictionary = Wirtschaft.UPGRADES[id]

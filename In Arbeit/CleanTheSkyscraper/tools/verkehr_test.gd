@@ -42,9 +42,8 @@ func _process(_d: float) -> bool:
 					var k := Vector2(kx + dx, kz + dz)
 					if absf(p.x - k.x) < 6.5 and absf(p.y - k.y) < 6.5:
 						auf_kreuzung[k] = int(auf_kreuzung.get(k, 0)) | (1 << int(sp.achse))
-						# 2 s nach Beginn von Rot darf niemand dieser Achse mehr auf der Kreuzung sein
 						var t := fposmod(v.zeit + (0.0 if sp.achse == 0 else (Verkehr.GRUEN + Verkehr.GELB + Verkehr.ALLE_ROT)), 2.0 * (Verkehr.GRUEN + Verkehr.GELB + Verkehr.ALLE_ROT))
-						if t > Verkehr.GRUEN + Verkehr.GELB + 2.0 and schritt > 150:
+						if t > Verkehr.GRUEN + Verkehr.GELB + Verkehr.ALLE_ROT and schritt > 150:   # spätestens nach „alle rot“ muss die Kreuzung frei sein
 							bei_rot_drin += 1
 		for k in auf_kreuzung:
 			if auf_kreuzung[k] == 3 and schritt > 150:

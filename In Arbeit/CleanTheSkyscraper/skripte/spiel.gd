@@ -1,7 +1,7 @@
 class_name Spiel
 extends Node3D
 # Das eigentliche Spiel: Gondel + Putzen + Geld + Shop + Speichern.
-# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 16 Casino, 17 Casino-Bilder.
+# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 15 Kiosk-Bilder, 16 Casino, 17 Casino-Bilder, 18 Start zu Fuß, 19 Werkzeug-Kiosk.
 
 const SPIELSTAND := "user://spielstand.json"
 const TESTSTAND := "user://spielstand_test.json"
@@ -95,8 +95,17 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		spieler.gesperrt = true
 		spieler.yaw = 0.25
 		spieler.pitch = 0.05
+	# Man startet zu Fuß neben der Gondel (unten). Die Gondel merkt sich die letzte Höhe und fährt beim Einsteigen dorthin zurück.
+	if ansicht == 0 or ansicht == 18:
+		if ansicht == 18:
+			spieler.y = 20.0      # Test: so tun, als wäre man zuletzt auf 20 m gewesen
+		letzte_hoehe = spieler.y if spieler.y > UNTEN + 1.0 else 0.0
+		spieler.y = 0.3
+		start_zu_fuss = 2
 	if ansicht == 0 and stand.is_empty():
-		hud.meldung("Willkommen! Halte die linke Maustaste und reibe das Fenster sauber.\nTab öffnet die Werkstatt.", 7.0)
+		hud.meldung("Willkommen! Geh zur Gondel am Turm und drück E zum Einsteigen.\nDann mit der linken Maustaste das Fenster sauber reiben – Tab öffnet die Werkstatt.", 8.0)
+	elif ansicht == 0 and letzte_hoehe > 0.0:
+		hud.meldung("Willkommen zurück! Steig mit E in die Gondel – sie fährt dich zurück auf %d m." % int(letzte_hoehe), 6.0)
 
 # Werkzeug + Upgrades auf die Gondel übertragen
 func _ausruestung() -> void:
@@ -173,8 +182,8 @@ func _input(e: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif e.keycode == KEY_E and not shop.offen and not album.offen:
 		_ein_aus()
-	elif e.keycode >= KEY_1 and e.keycode <= KEY_5 and not shop.offen:
-		var i: int = e.keycode - KEY_1
+	elif e.keycode >= KEY_0 and e.keycode <= KEY_9 and not shop.offen and not hmenu.offen and not cmenu.offen:
+		var i: int = 9 if e.keycode == KEY_0 else e.keycode - KEY_1
 		if i < Wirtschaft.WERKZEUGE.size() and wirtschaft.ausruesten(Wirtschaft.WERKZEUGE[i].id):
 			_ausruestung()
 			hud.meldung(Wirtschaft.WERKZEUGE[i].name, 1.2)
@@ -182,6 +191,10 @@ func _input(e: InputEvent) -> void:
 # ---------------------------------------------------------------- Aussteigen / Einsteigen
 const UNTEN := 0.5        # Gondelboden so tief = ganz unten, man kann aussteigen
 const EINSTEIG_WEIT := 4.0
+const EXPRESS := 30.0     # m/s: Gondel fährt nach dem Einsteigen zur letzten Höhe
+var letzte_hoehe := 0.0   # beim Start zu Fuß: dort war die Gondel zuletzt
+var express := false
+var start_zu_fuss := 0    # zählt Bilder bis zum Aussteigen am Anfang
 
 func _ein_aus() -> void:
 	if spieler.aktiv:
@@ -211,6 +224,10 @@ func _ein_aus() -> void:
 		spieler.aktiv = true
 		spieler.cam.current = true
 		hud.steuerung(false)
+		if letzte_hoehe > UNTEN + 1.0:
+			express = true
+			spieler.gesperrt = true
+			hud.meldung("Die Gondel fährt zurück auf %d m …" % int(letzte_hoehe), 3.0)
 
 func _abstand_gondel() -> float:
 	var g := spieler.gondel.global_position
@@ -230,7 +247,7 @@ func _speichern() -> void:
 		"version": 1,
 		"wirtschaft": wirtschaft.speichern(),
 		"sauber": zustand.speichern(),
-		"stock": spieler.stock, "weg": spieler.weg, "y": spieler.y,
+		"stock": spieler.stock, "weg": spieler.weg, "y": maxf(spieler.y, letzte_hoehe),
 	}
 	var f := FileAccess.open(pfad, FileAccess.WRITE)
 	if f:
@@ -251,6 +268,17 @@ func _neues_spiel() -> void:
 
 # ---------------------------------------------------------------- Ablauf
 func _process(dt: float) -> void:
+	if start_zu_fuss > 0:
+		start_zu_fuss -= 1
+		if start_zu_fuss == 0 and spieler.aktiv:
+			_ein_aus()
+	if express:
+		var ziel_y := minf(letzte_hoehe, spieler.max_y)
+		spieler.y = move_toward(spieler.y, ziel_y, EXPRESS * dt)
+		if absf(spieler.y - ziel_y) < 0.01:
+			express = false
+			letzte_hoehe = 0.0
+			spieler.gesperrt = shop.offen or album.offen
 	match ansicht:
 		5: _demo(dt)
 		6:
@@ -267,6 +295,8 @@ func _process(dt: float) -> void:
 		15: _kiosk_bilder(dt)
 		16: _casino_test(dt)
 		17: _casino_bilder(dt)
+		18: _start_test(dt)
+		19: _werkzeug_test(dt)
 	if ansicht == 0 or ansicht == 12:
 		ereignisse.takt(dt)
 	# Neue Höhe erreicht (je 6 Stockwerke = ein Abschnitt): einmaliger Bonus + Aussicht feiern
@@ -465,12 +495,13 @@ func _kiosk_bilder(dt: float) -> void:
 	if spieler.aktiv:
 		spieler.y = 0.3
 		_ein_aus()
-	var i := mini(int(demo_zeit / 1.5), 2) if demo_zeit < 4.5 else mini(int((demo_zeit - 4.5) / 1.5), 2)
+	var n := haendler.vorne.size()
+	var i := mini(int(demo_zeit / 1.5), n - 1) if demo_zeit < 1.5 * n else mini(int((demo_zeit - 1.5 * n) / 1.5), n - 1)
 	var v: Vector2 = haendler.vorne[i]
 	var r := v.normalized()
-	var weit := 7.0 if demo_zeit < 4.5 else 1.6   # danach jeden Kiosk von nah
+	var weit := 7.0 if demo_zeit < 1.5 * n else 1.6   # danach jeden Kiosk von nah
 	laeufer.position = Vector3(v.x - r.x * weit, 0, v.y - r.y * weit)
-	laeufer.yaw = atan2(-r.x, -r.y) + (0.25 if demo_zeit < 4.5 else 0.0)
+	laeufer.yaw = atan2(-r.x, -r.y) + (0.25 if demo_zeit < 1.5 * n else 0.0)
 	laeufer.pitch = 0.02
 
 # 14: zu den Ständen gehen, mit E öffnen, über die echten Knöpfe kaufen, Wirkung prüfen
@@ -896,3 +927,66 @@ func _taste(k: Key) -> void:
 		e.physical_keycode = k
 		e.pressed = gedrueckt
 		Input.parse_input_event(e)
+
+# 18: Start zu Fuß neben der Gondel, einsteigen, Express-Fahrt zurück auf die letzte Höhe (20 m)
+func _start_test(dt: float) -> void:
+	demo_zeit += dt
+	if _st_schritt == 0 and demo_zeit > 0.3:
+		_st_schritt = 1
+		print("TEST start zu Fuß: zu_fuss=%s kamera_laeufer=%s gondel_y=%.1f letzte_hoehe=%.1f abstand=%.1f" % [not spieler.aktiv, laeufer.cam.current, spieler.y, letzte_hoehe, _abstand_gondel()])
+		var ev := InputEventKey.new()
+		ev.keycode = KEY_E
+		ev.pressed = true
+		Input.parse_input_event(ev)
+	elif _st_schritt == 1 and demo_zeit > 0.6:
+		_st_schritt = 2
+		print("TEST eingestiegen: in_gondel=%s express=%s gesperrt=%s" % [spieler.aktiv, express, spieler.gesperrt])
+	elif _st_schritt == 2 and demo_zeit > 3.5:
+		_st_schritt = 3
+		print("TEST express fertig: gondel_y=%.1f (soll 20) express=%s gesperrt=%s gespeicherte_hoehe=%.1f" % [spieler.y, express, spieler.gesperrt, maxf(spieler.y, letzte_hoehe)])
+
+var _st_schritt := 0
+
+# 19: zum Werkzeug-Kiosk gehen, mit E öffnen, Mikrofaser-Schwamm kaufen, mit Taste 1 / 6 wechseln
+var _wt := 0
+func _werkzeug_test(dt: float) -> void:
+	demo_zeit += dt
+	match _wt:
+		0:
+			if demo_zeit > 0.4:
+				spieler.y = 0.3
+				if spieler.aktiv:
+					_ein_aus()
+				var i := 3
+				var v: Vector2 = haendler.vorne[i]
+				laeufer.position = Vector3(v.x, 0, v.y)
+				_wt = 1
+		1:
+			if demo_zeit > 0.8:
+				_taste(KEY_E)
+				_wt = 2
+		2:
+			if demo_zeit > 1.1:
+				var b: Button = hmenu.find_child("w_mikro", true, false)
+				var vorher := wirtschaft.geld
+				if b and not b.disabled:
+					b.pressed.emit()
+				print("TEST werkzeug-kiosk offen=%s stand=%s gekauft=%s aktiv=%s geld %d → %d (soll -350) modell=%s rx=%.2f" % [hmenu.offen, hmenu.stand, "mikro" in wirtschaft.besitz, wirtschaft.aktiv, vorher, wirtschaft.geld, spieler.wz_id, spieler.wz_rx])
+				var gesperrt_knopf: Button = hmenu.find_child("w_lanze", true, false)
+				print("TEST teures werkzeug gesperrt=%s" % (gesperrt_knopf != null and gesperrt_knopf.disabled))
+				_taste(KEY_E)
+				_wt = 3
+		3:
+			if demo_zeit > 1.5:
+				_taste(KEY_1)
+				_wt = 4
+		4:
+			if demo_zeit > 1.7:
+				var nach1 := spieler.wz_id
+				_taste(KEY_6)
+				print("TEST tasten: menü_zu=%s taste1=%s" % [not hmenu.offen, nach1])
+				_wt = 5
+		5:
+			if demo_zeit > 1.9:
+				print("TEST taste6=%s" % spieler.wz_id)
+				_wt = 6

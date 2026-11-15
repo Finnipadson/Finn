@@ -14,7 +14,7 @@ var sonne: DirectionalLight3D
 const STURM_FARBE := Color("c9955a")
 const PLATZ_R := 100.0          # Radius des Platzes um den Turm (Boden-Shader: plaza_r)
 const STAND_R := 74.0           # Händler-Stände: Abstand zur Turmmitte
-const STAND_WINKEL := [-30.0, 90.0, 210.0]   # in den Lücken zwischen den drei Turmflügeln
+const STAND_WINKEL := [-45.0, 90.0, 210.0, -15.0]   # in den Lücken zwischen den drei Turmflügeln (Putzmittel, Mode, Snacks, Werkzeuge)
 const CASINO_WINKEL := 30.0     # hinter der Spitze eines Flügels, schon in der Stadt
 const CASINO_R := 128.0
 const CASINO_GROESSE := 30.0
@@ -27,12 +27,20 @@ const SEE_NAH := 112.0          # vordere Kante (Abstand zur Turmmitte)
 const SEE_HALB := Vector2(50.0, 85.0)   # halbe Größe: x = weg vom Turm, y = quer
 const SEE_RUND := 35.0          # Eckenradius
 const PROMENADE := 16.0         # gepflasterter Rand um den See (Boden-Shader)
+# Straßen gibt es nur zwischen zwei „guten“ Kreuzungen – so endet jede Straße an einer Kreuzung (Boden-Shader macht dasselbe)
+const RASTER := 75.0            # Straßen liegen bei 37,5 + 75·k
+const KREUZ_PLATZ := 30.0       # Kreuzungen erst so weit hinter dem Platzrand
+const KREUZ_SEE := 14.0         # … und so weit hinter der See-Promenade
+const KREUZ_CASINO := 15.0      # … und nicht in der Nähe des Casinos
+var boden_mat: ShaderMaterial
 
 func _ready() -> void:
 	rng.seed = 11
 	_umgebung()
 	_boden()
 	_stellplaetze()   # zuerst, damit die Stadt das Casino-Grundstück frei lässt
+	var cr := casino_rect.grow(KREUZ_CASINO)
+	boden_mat.set_shader_parameter("casino", Vector4(cr.position.x, cr.position.y, cr.end.x, cr.end.y))
 	_stadt()
 	var details := StadtDetails.new()
 	add_child(details)
@@ -107,6 +115,9 @@ func _boden() -> void:
 	bm.set_shader_parameter("see_rund", SEE_RUND)
 	bm.set_shader_parameter("promenade", PROMENADE)
 	bm.set_shader_parameter("allee_r", StadtDetails.ALLEE_BIS)
+	bm.set_shader_parameter("kreuz_platz", KREUZ_PLATZ)
+	bm.set_shader_parameter("kreuz_see", KREUZ_SEE)
+	boden_mat = bm
 	add_child(b)
 	for i in 40: # Dünen am Horizont
 		var a := rng.randf() * TAU
@@ -141,9 +152,9 @@ func _stellplaetze() -> void:
 
 func _stadt() -> void:
 	var mats := [
-		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("6d8aa3"), "rahmen": Color("e6dccb"), "bruestung": Color("d8c9b0"), "stock": 3.5, "fenster_breite": 2.2, "dreckig": 0.2, "band_anteil": 0.35, "metall": 0.4}),
-		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("5c7f8f"), "rahmen": Color("c9b79a"), "bruestung": Color("bba78a"), "stock": 3.5, "fenster_breite": 2.6, "dreckig": 0.2, "band_anteil": 0.4, "metall": 0.3}),
-		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("8fb1c9"), "rahmen": Color("9aa3ad"), "bruestung": Color("8a929c"), "stock": 3.5, "fenster_breite": 1.8, "dreckig": 0.1, "metall": 0.7}),
+		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("6d8aa3"), "rahmen": Color("e6dccb"), "bruestung": Color("d8c9b0"), "stock": 3.5, "fenster_breite": 2.2, "dreckig": 0.0, "band_anteil": 0.35, "metall": 0.4}),
+		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("5c7f8f"), "rahmen": Color("c9b79a"), "bruestung": Color("bba78a"), "stock": 3.5, "fenster_breite": 2.6, "dreckig": 0.0, "band_anteil": 0.4, "metall": 0.3}),
+		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("8fb1c9"), "rahmen": Color("9aa3ad"), "bruestung": Color("8a929c"), "stock": 3.5, "fenster_breite": 1.8, "dreckig": 0.0, "metall": 0.7}),
 	]
 	var dach := Bau.matt("bdb3a3")
 	var x := -1500.0
@@ -215,3 +226,27 @@ func see_umriss(abstand: float, schritt := 4.0) -> PackedVector2Array:
 		for i in n:
 			pts.append(see_welt(von.lerp(bis, float(i) / n)))
 	return pts
+
+# ---------------------------------------------------------------- Straßennetz
+func kreuzung_ok(k: Vector2) -> bool:
+	if k.length() < PLATZ_R + KREUZ_PLATZ:
+		return false
+	if see_abstand(k) < PROMENADE + KREUZ_SEE:
+		return false
+	return not casino_rect.grow(KREUZ_CASINO).has_point(k)
+
+# Straßenstück zwischen zwei benachbarten Kreuzungen
+func stueck_da(a: Vector2, b: Vector2) -> bool:
+	return kreuzung_ok(a) and kreuzung_ok(b)
+
+# Arme einer Kreuzung: [+x, −x, +z, −z]
+func arme(k: Vector2) -> Array:
+	var l := []
+	for d in [Vector2(RASTER, 0), Vector2(-RASTER, 0), Vector2(0, RASTER), Vector2(0, -RASTER)]:
+		l.append(kreuzung_ok(k) and stueck_da(k, k + d))
+	return l
+
+# Hat die Kreuzung Querverkehr zur Achse (0 = Straße entlang z, 1 = entlang x)?
+func querverkehr(k: Vector2, achse: int) -> bool:
+	var a := arme(k)
+	return (a[0] or a[1]) if achse == 0 else (a[2] or a[3])

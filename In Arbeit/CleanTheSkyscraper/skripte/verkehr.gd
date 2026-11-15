@@ -18,7 +18,8 @@ const AUTO_DREH := 0.0         # falls die Modelle nach hinten schauen: PI
 # Ampel-Takt (s): Richtung A grün, gelb, alle rot, Richtung B grün, gelb, alle rot
 const GRUEN := 11.0
 const GELB := 2.5
-const ALLE_ROT := 1.5
+const ALLE_ROT := 2.5
+const WENDE_TEMPO := 7.0        # m/s beim Wenden am Ende einer Straße
 const MODELLE := ["sedan", "suv", "suv-luxury", "sedan-sports", "hatchback-sports", "van", "taxi", "police", "delivery", "truck"]
 const ANTEIL := [22, 16, 14, 8, 8, 6, 12, 3, 6, 5]     # wie oft jedes Modell vorkommt
 const EIGENE_FARBE := [true, true, true, true, true, true, false, false, true, true]
@@ -26,7 +27,7 @@ const LACKE := ["f2f2f0", "f2f2f0", "e8e8e6", "b9bdc2", "9aa0a8", "1c1d20", "262
 
 var welt: Welt
 var rng := RandomNumberGenerator.new()
-var spuren: Array = []        # {achse, c, richtung, start, ende, laenge, autos: Array}
+var spuren: Array = []        # Ringe: {achse, c, s0, s1, lang, ring, halte, A, R, C, autos}
 var autos: Array = []         # {spur, u, v, vmax, modell, farbe}
 var mm: Array = []            # MultiMesh je Modell
 var zahl: Array = []          # Autos je Modell
@@ -55,13 +56,8 @@ func ampel(achse: int) -> int:
 	return 2
 
 # ---------------------------------------------------------------- Straßen in Spuren zerlegen
-func strasse_frei(p: Vector2) -> bool:
-	if p.length() < Welt.PLATZ_R + 10.0:
-		return false
-	if welt.see_abstand(p) < Welt.PROMENADE + 3.0:
-		return false
-	return not welt.casino_rect.grow(8.0).has_point(p)
-
+# Jede Spur ist ein Ring über ein durchgehendes Straßenstück von Kreuzung s0 bis Kreuzung s1:
+# hin (rechte Seite), auf der Kreuzung s1 wenden, zurück, auf der Kreuzung s0 wenden. So tauchen nie Autos auf oder ab.
 func _punkt(achse: int, c: float, s: float) -> Vector2:
 	return Vector2(c, s) if achse == 0 else Vector2(s, c)
 
@@ -70,25 +66,39 @@ func _spuren() -> void:
 	for achse in 2:
 		for k in range(-k0, k0):
 			var c := RASTER * (k + 0.5)
-			if absf(c) > BEREICH - 20.0:
-				continue
-			var lang := sqrt(BEREICH * BEREICH - c * c)
-			# freie Abschnitte suchen (Platz, See und Casino unterbrechen die Straße)
-			var s := -lang
-			var start := INF
-			while s <= lang + 2.0:
-				var frei := strasse_frei(_punkt(achse, c, s)) and s < lang
-				if frei and start == INF:
-					start = s
-				elif not frei and start != INF:
-					# Enden mitten in einen Block legen (dort tauchen die Autos auf/ab, nicht auf einer Kreuzung)
-					var a0 := RASTER * ceilf(start / RASTER)
-					var a1 := RASTER * floorf(s / RASTER)
-					if a1 - a0 >= RASTER:
-						for richtung in [1, -1]:
-							spuren.append({"achse": achse, "c": c, "richtung": richtung, "start": a0, "ende": a1, "laenge": a1 - a0, "autos": []})
-					start = INF
-				s += 2.0
+			var s0 := INF
+			var s_vor := 0.0
+			for j in range(-k0, k0 + 1):
+				var s := RASTER * (j + 0.5)
+				var drin := _punkt(achse, c, s).length() < BEREICH - 10.0 and welt.kreuzung_ok(_punkt(achse, c, s))
+				var weiter := drin and s0 != INF and welt.stueck_da(_punkt(achse, c, s_vor), _punkt(achse, c, s))
+				if s0 != INF and not weiter:
+					if s_vor > s0:
+						_spur(achse, c, s0, s_vor)
+					s0 = INF
+				if drin and s0 == INF:
+					s0 = s
+				s_vor = s
+			if s0 != INF and s_vor > s0:
+				_spur(achse, c, s0, s_vor)
+
+func _spur(achse: int, c: float, s0: float, s1: float) -> void:
+	var lang := s1 - s0
+	var halb := PI * SPUR
+	var halte := PackedFloat32Array()
+	var s := s0 + RASTER
+	while s <= s1 + 0.1:          # hin: Kreuzungen nach s0 (auch die Wende-Kreuzung s1)
+		if welt.querverkehr(_punkt(achse, c, s), achse):
+			halte.append(s - s0 - HALTELINIE)
+		s += RASTER
+	s = s1 - RASTER
+	while s >= s0 - 0.1:          # zurück: Kreuzungen vor s1 (auch die Wende-Kreuzung s0)
+		if welt.querverkehr(_punkt(achse, c, s), achse):
+			halte.append(lang + halb + (s1 - s) - HALTELINIE)
+		s -= RASTER
+	var A := Vector2(0, 1) if achse == 0 else Vector2(1, 0)
+	spuren.append({"achse": achse, "c": c, "s0": s0, "s1": s1, "lang": lang, "ring": 2.0 * lang + 2.0 * halb,
+		"halte": halte, "A": A, "R": Vector2(-A.y, A.x), "C": Vector2(c, 0) if achse == 0 else Vector2(0, c), "autos": []})
 
 func _autos() -> void:
 	var summe := 0
@@ -99,7 +109,7 @@ func _autos() -> void:
 	for si in spuren.size():
 		var sp: Dictionary = spuren[si]
 		var u := rng.randf_range(0.0, 20.0)
-		while u < sp.laenge - 5.0:
+		while u < float(sp.ring) - 30.0:
 			var wahl := rng.randi_range(0, summe - 1)
 			var m := 0
 			while wahl >= ANTEIL[m]:
@@ -213,60 +223,78 @@ func _spur_fahren(sp: Dictionary, dt: float) -> void:
 	var n := liste.size()
 	if n == 0:
 		return
-	var laenge: float = sp.laenge
-	var richtung: int = sp.richtung
-	var achse: int = sp.achse
-	var licht := ampel(achse)
-	var h := Vector2(0, richtung) if achse == 0 else Vector2(richtung, 0)
-	var rechts := Vector2(-h.y, h.x)
-	var winkel := atan2(h.x, h.y) + AUTO_DREH
-	var dreh := Vector2(cos(winkel), sin(winkel)) * MASS
-	var start: float = sp.start
-	var c: float = sp.c
+	var ring: float = sp.ring
+	var lang: float = sp.lang
+	var halb := PI * SPUR
+	var licht := ampel(sp.achse)
+	var halte: PackedFloat32Array = sp.halte
 	for i in n:
 		var a: Dictionary = liste[i]
 		var vorne: Dictionary = liste[(i - 1 + n) % n]     # Autos sind in Fahrtrichtung sortiert (Ring)
 		var u: float = a.u
 		var frei := 1e9
 		if n > 1:
-			frei = fposmod(float(vorne.u) - u, laenge) - ABSTAND
-		# Haltelinie vor der nächsten Kreuzung
+			frei = fposmod(float(vorne.u) - u, ring) - ABSTAND
+		# Haltelinie vor der nächsten Kreuzung mit Querverkehr
 		if licht != 0:
-			var s := _s_von_u(sp, u)
-			var kreuz := _naechste_kreuzung(s, richtung)
-			var bis := (kreuz - HALTELINIE * richtung - s) * richtung
-			var anhalten := licht == 2 or bis > 10.0       # bei Gelb nur anhalten, wenn es noch geht
-			if anhalten and bis > -0.5 and _in_spur(sp, kreuz):
-				frei = minf(frei, bis)
+			for h in halte:
+				var bis := h - u
+				if bis > -0.5:
+					# bei Gelb nur anhalten, wenn es noch geht – vor dem Wenden immer (Wenden dauert länger)
+					var wende := absf(h - (lang - HALTELINIE)) < 0.1 or absf(h - (2.0 * lang + halb - HALTELINIE)) < 0.1
+					if licht == 2 or bis > 10.0 or wende:
+						frei = minf(frei, bis)
+					break
 		var ziel := minf(float(a.vmax), sqrt(2.0 * BREMSEN * maxf(frei - 0.5, 0.0)))
+		# vor dem Wenden langsamer werden
+		var bis_wende := 0.0
+		if u < lang:
+			bis_wende = lang - u
+		elif u >= lang + halb and u < 2.0 * lang + halb:
+			bis_wende = 2.0 * lang + halb - u
+		ziel = minf(ziel, sqrt(WENDE_TEMPO * WENDE_TEMPO + 2.0 * BREMSEN * bis_wende))
 		var v: float = a.v
 		v = ziel if ziel < v else minf(ziel, v + ANFAHREN * dt)
 		a.v = v
 		u += v * dt
 		a.u = u
-		_lage(a, u, laenge, start, richtung, achse, c, rechts, dreh)
-	# das vorderste Auto fährt am Ende hinaus und kommt hinten wieder herein
-	while float(liste[0].u) >= laenge:
+		_lage(a, u, sp)
+	# das vorderste Auto hat den Ring einmal umrundet: hinten einreihen
+	while float(liste[0].u) >= ring:
 		var raus: Dictionary = liste.pop_front()
-		raus.u = float(raus.u) - laenge
-		_lage(raus, raus.u, laenge, start, richtung, achse, c, rechts, dreh)
+		raus.u = float(raus.u) - ring
+		_lage(raus, raus.u, sp)
 		liste.push_back(raus)
+	# Halte-Liste ist nach u sortiert, damit „break“ oben stimmt
+	pass
 
-func _lage(a: Dictionary, u: float, laenge: float, start: float, richtung: int, achse: int, c: float, rechts: Vector2, dreh: Vector2) -> void:
-	var s := start + u if richtung == 1 else start + laenge - u
-	var p := (Vector2(c, s) if achse == 0 else Vector2(s, c)) + rechts * SPUR
-	a.pos = Vector3(p.x, p.y, clampf(minf(u, laenge - u) * 0.125, 0.0, 1.0))   # an den Enden ein- und ausblenden
-	a.dreh = dreh
-
-func _s_von_u(sp: Dictionary, u: float) -> float:
-	return sp.start + u if sp.richtung == 1 else sp.ende - u
-
-func _naechste_kreuzung(s: float, richtung: int) -> float:
-	var q := (s + richtung * (HALTELINIE - 0.5) - RASTER * 0.5) / RASTER
-	return RASTER * 0.5 + RASTER * (ceilf(q) if richtung == 1 else floorf(q))
-
-func _in_spur(sp: Dictionary, s: float) -> bool:
-	return s > sp.start + 4.0 and s < sp.ende - 4.0
+func _lage(a: Dictionary, u: float, sp: Dictionary) -> void:
+	var A: Vector2 = sp.A
+	var R: Vector2 = sp.R
+	var C: Vector2 = sp.C
+	var s0: float = sp.s0
+	var s1: float = sp.s1
+	var lang: float = sp.lang
+	var halb := PI * SPUR
+	var p: Vector2
+	var d: Vector2
+	if u < lang:
+		p = C + A * (s0 + u) + R * SPUR
+		d = A
+	elif u < lang + halb:
+		var t := (u - lang) / SPUR
+		p = C + A * (s1 + SPUR * sin(t)) + R * (SPUR * cos(t))
+		d = A * cos(t) - R * sin(t)
+	elif u < 2.0 * lang + halb:
+		p = C + A * (s1 - (u - lang - halb)) - R * SPUR
+		d = -A
+	else:
+		var t := (u - 2.0 * lang - halb) / SPUR
+		p = C + A * (s0 - SPUR * sin(t)) - R * (SPUR * cos(t))
+		d = -A * cos(t) + R * sin(t)
+	var w := atan2(d.x, d.y) + AUTO_DREH
+	a.pos = Vector3(p.x, p.y, 1.0)
+	a.dreh = Vector2(cos(w), sin(w)) * MASS
 
 # ---------------------------------------------------------------- Ampeln + Schilder (Modelle)
 func _ampeln() -> void:
@@ -275,13 +303,13 @@ func _ampeln() -> void:
 	for i in range(-k0, k0):
 		for j in range(-k0, k0):
 			var k := Vector2(RASTER * (i + 0.5), RASTER * (j + 0.5))
-			if k.length() > BEREICH - 30.0:
+			if k.length() > BEREICH - 10.0:
 				continue
 			for achse in 2:
 				for richtung in [1, -1]:
 					var h := Vector2(0, richtung) if achse == 0 else Vector2(richtung, 0)
 					var rechts := Vector2(-h.y, h.x)
-					if not strasse_frei(k - h * HALTELINIE) or not strasse_frei(k):
+					if not welt.stueck_da(k - h * RASTER, k) or not welt.querverkehr(k, achse):
 						continue
 					var p := k - h * 12.0 + rechts * 7.4     # rechts vor der Kreuzung am Straßenrand
 					var t := Transform3D(Basis(Vector3.UP, atan2(h.x, h.y) + AMPEL_DREH).scaled(Vector3.ONE * AMPEL_MASS), Vector3(p.x, 0, p.y))
@@ -350,7 +378,8 @@ func _schilder() -> void:
 		var s: float = o[2]
 		var richtung: int = o[3]
 		var p := _punkt(achse, c, s)
-		if not strasse_frei(p):
+		var k_vor := floorf((s - RASTER * 0.5) / RASTER) * RASTER + RASTER * 0.5   # Schild nur über vorhandener Straße
+		if not welt.stueck_da(_punkt(achse, c, k_vor), _punkt(achse, c, k_vor + RASTER)):
 			continue
 		var h := Vector2(0, richtung) if achse == 0 else Vector2(richtung, 0)
 		var rechts := Vector2(-h.y, h.x)
@@ -375,7 +404,7 @@ func _schilder() -> void:
 
 const SCHILD_MASS := 14.0
 # Schilderbrücken: [Achse, Straße, Lage entlang der Straße, Fahrtrichtung] – dort lässt StadtDetails Platz (keine Palme)
-const SCHILDER := [[0, 187.5, 260.0, 1], [0, -187.5, -300.0, -1], [1, 112.5, -330.0, -1], [1, -262.5, 240.0, 1], [0, 337.5, -180.0, -1], [1, 187.5, 400.0, 1]]
+const SCHILDER := [[0, 187.5, 225.0, 1], [0, -187.5, -300.0, -1], [1, 112.5, -300.0, -1], [1, -262.5, 225.0, 1], [0, 337.5, -150.0, -1], [1, 187.5, 375.0, 1]]
 
 static func schild_punkte() -> Array:
 	var l := []

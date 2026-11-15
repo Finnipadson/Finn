@@ -15,7 +15,7 @@ Steuerung (Phase 1, Gondel):
 - A/D: an der Fassade entlang
 - W/S: hoch/runter (so weit das Seil reicht, mit `--frei` alle)
 - **Tab: Werkstatt** (Werkzeuge, Gondel-Upgrades, Seilwinde, Neues Spiel)
-- 1–5: Werkzeug wechseln
+- 1–9 und 0: Werkzeug wechseln (6–0 sind die Profi-Werkzeuge vom Werkzeug-Kiosk)
 - **B: Sammelalbum** (entdeckte Szenen hinter den Fenstern)
 - **E (ganz unten): Gondel verlassen**, zu Fuß: WASD, Shift rennen, Leertaste springen; an der Gondel E: einsteigen
 - In der Werkstatt unter „Einstellungen“: Tauben, Sandsturm und Windböen an/aus
@@ -85,6 +85,8 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=11`: alle 10 Szenen in den Fenstern vor der Gondel, Album-Test
 - `--ansicht=16 --geld=10000`: Casino-Test (hineinlaufen, alle vier Spiele über die echten Knöpfe, Geld nachrechnen, Rückzahlung messen)
 - `--ansicht=1 --kamera=x,y,z,zielx,ziely,zielz`: freie Kamera an eine feste Stelle (Testbilder), z. B. See von oben: `--kamera=-30,110,-18,-150,0,-95`
+- `--ansicht=18`: Start zu Fuß neben der Gondel, einsteigen, Express-Fahrt zurück auf die letzte Höhe
+- `--ansicht=19 --geld=1000`: Werkzeug-Kiosk (öffnen, Mikrofaser-Schwamm kaufen, Tasten 1 und 6)
 - `--ansicht=17`: Casino von außen, innen und vor jeder Station (Testbilder)
 - `--ansicht=15`: nacheinander vor jedem Kiosk, erst von weitem, dann von nah (Testbilder)
 - `--ansicht=14 --geld=10000`: Händler-Test (alle Stände, echte Knöpfe, Wirkung der Boosts und Farben)

@@ -57,7 +57,7 @@ func _ready() -> void:
 	vb4.add_child(balken)
 	unten.visible = false
 	balken.set_meta("karte", unten)
-	hinweis = _label(wurzel, "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · Tab: Werkstatt · 1–5: Werkzeug · Esc: Maus frei", 14, "ffffff")
+	hinweis = _label(wurzel, "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · Tab: Werkstatt · 1–0: Werkzeug · Esc: Maus frei", 14, "ffffff")
 	hinweis.label_settings.outline_size = 6
 	hinweis.label_settings.outline_color = Color("123a6b")
 	_platz(hinweis, 0.5, 1.0, 0, -14)
@@ -155,7 +155,7 @@ func steuerung(zu_fuss: bool) -> void:
 	if zu_fuss:
 		hinweis.text = "Zu Fuß: WASD laufen · Shift rennen · Leertaste springen · Maus umschauen · E an der Gondel: einsteigen\nTab: Werkstatt · B: Album · Esc: Maus frei"
 	else:
-		hinweis.text = "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · Tab: Werkstatt · B: Album · 1–5: Werkzeug · Esc: Maus frei"
+		hinweis.text = "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · Tab: Werkstatt · B: Album · 1–0: Werkzeug · Esc: Maus frei"
 
 func freigeschaltet(stockwerke: int) -> void:
 	bis.text = "Seil reicht bis Stockwerk %d" % stockwerke

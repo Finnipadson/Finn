@@ -24,6 +24,7 @@ var wz_id := "schwamm"
 var wz_rx := 0.17
 var wz_ry := 0.17
 var wz_art := "wisch"
+var wz: Dictionary = {}           # ganzes Werkzeug (für Neubau des Modells)
 var tempo_faktor := 1.0
 var reich_seite := 1.8
 var reich_oben := 2.9
@@ -132,26 +133,30 @@ func werkzeug_setzen(w: Dictionary) -> void:
 	werkzeug = Node3D.new()
 	add_child(werkzeug)
 	var haut := Bau.matt("f1c29b", 0.6)
-	match wz_id:
-		"schwamm", "grossschwamm":
-			var s := 1.0 if wz_id == "schwamm" else 1.45
-			_box(werkzeug, Vector3(0.24, 0.15, 0.07) * s, Vector3.ZERO, Bau.matt(schwamm_farbe, 0.95))
+	wz = w
+	match str(w.get("modell", "schwamm")):
+		"schwamm":
+			var s: float = w.get("groesse", 1.0)
+			var farbe: String = w.get("farbe", schwamm_farbe) if w.has("farbe") else schwamm_farbe
+			_box(werkzeug, Vector3(0.24, 0.15, 0.07) * s, Vector3.ZERO, Bau.matt(farbe, 0.95))
 			_box(werkzeug, Vector3(0.24 * s, 0.15 * s, 0.025), Vector3(0, 0, -0.045 * s), Bau.matt("3aa655", 0.9))
-		"abzieher", "doppel":
+		"abzieher":
 			var breit := wz_rx * 2.0
 			var gummi := Bau.matt("2b2b2b", 0.7)
 			var alu := Bau.metall("c9ced4", 0.3, 0.8)
 			_box(werkzeug, Vector3(breit, 0.05, 0.03), Vector3(0, 0, -0.03), gummi)
 			_box(werkzeug, Vector3(breit, 0.07, 0.03), Vector3(0, 0.02, 0.0), alu)
-			if wz_id == "doppel":
+			if w.get("doppel", false):
 				_box(werkzeug, Vector3(breit, 0.05, 0.03), Vector3(0, 0.16, -0.03), gummi)
 				_box(werkzeug, Vector3(breit, 0.07, 0.03), Vector3(0, 0.18, 0.0), alu)
 			var stiel := Bau.zylinder(0.022, 0.022, 0.3, Bau.matt("e2483e", 0.6), 10)
 			stiel.rotation.x = PI / 2.0
 			stiel.position = Vector3(0, 0.05, 0.17)
 			werkzeug.add_child(stiel)
-		"hochdruck":
-			_box(werkzeug, Vector3(0.06, 0.1, 0.2), Vector3(0, 0, 0.05), Bau.matt("ffc531", 0.5))
+		"spray":
+			var g: float = w.get("groesse", 1.0)
+			var koerper: String = {"hochdruck": "ffc531", "dampf": "e2483e", "lanze": "3a86d4"}.get(wz_id, "ffc531")
+			_box(werkzeug, Vector3(0.06, 0.1, 0.2) * g, Vector3(0, 0, 0.05), Bau.matt(koerper, 0.5))
 			var rohr := Bau.zylinder(0.018, 0.022, 0.45, Bau.metall("3b3f46", 0.4, 0.6), 10)
 			rohr.rotation.x = PI / 2.0
 			rohr.position = Vector3(0, 0.03, -0.3)
@@ -180,8 +185,7 @@ func aussehen(gondel_hex: String, kleidung_hex: String, schwamm_hex: String) -> 
 	arm_mat.albedo_color = Color(kleidung_hex)
 	if schwamm_hex != schwamm_farbe:
 		schwamm_farbe = schwamm_hex
-		var w := {"id": wz_id, "rx": wz_rx, "ry": wz_ry, "art": wz_art}
-		werkzeug_setzen(w)
+		werkzeug_setzen(wz)
 
 # ---------------------------------------------------------------- Eingaben
 func _input(e: InputEvent) -> void:

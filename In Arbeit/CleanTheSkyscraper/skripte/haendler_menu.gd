@@ -97,7 +97,27 @@ func aufbauen() -> void:
 	for c in liste.get_children():
 		c.queue_free()
 	geld_label.text = "%s €" % Hud.punkte(wirtschaft.geld)
-	if stand == "mode":
+	if stand == "werkzeug":
+		liste.add_child(_text("NEUE PROFI-WERKZEUGE – danach mit den Zahlentasten wählen", 15, "7a9cc0"))
+		for i in Wirtschaft.WERKZEUGE.size():
+			var w: Dictionary = Wirtschaft.WERKZEUGE[i]
+			if not w.get("haendler", false):
+				continue
+			var knopf: Button
+			if wirtschaft.aktiv == w.id:
+				knopf = _knopf("In der Hand", Color("2e8b3d"))
+				knopf.disabled = true
+			elif w.id in wirtschaft.besitz:
+				knopf = _knopf("Nehmen", Color("1f5fae"))
+				knopf.pressed.connect(_nehmen.bind(w.id))
+			else:
+				knopf = _knopf("Kaufen · %s €" % Hud.punkte(int(w.preis)), Color("e08a1e"))
+				knopf.disabled = wirtschaft.geld < int(w.preis)
+				knopf.pressed.connect(_kaufe_werkzeug.bind(w.id))
+			knopf.name = "w_" + w.id
+			var info: String = w.text + "  (Taste %d)" % ((i + 1) % 10)
+			liste.add_child(_zeile(w.name, info, knopf, Color(w.get("farbe", "00000000")) if w.has("farbe") else Color.TRANSPARENT))
+	elif stand == "mode":
 		for art in ["gondel", "kleidung", "schwamm"]:
 			liste.add_child(_text({"gondel": "GONDEL", "kleidung": "ARBEITSKLEIDUNG", "schwamm": "SCHWAMM"}[art], 15, "7a9cc0"))
 			for k in Wirtschaft.KOSMETIK:
@@ -152,6 +172,16 @@ func _zeile(t: String, text: String, knopf: Button, farbe: Color) -> Control:
 	hb.add_child(vb)
 	hb.add_child(knopf)
 	return hb
+
+func _kaufe_werkzeug(id: String) -> void:
+	if wirtschaft.kaufe_werkzeug(id):
+		geaendert.emit()
+	aufbauen()
+
+func _nehmen(id: String) -> void:
+	wirtschaft.ausruesten(id)
+	geaendert.emit()
+	aufbauen()
 
 func _kaufe_boost(id: String) -> void:
 	if wirtschaft.kaufe_boost(id):
