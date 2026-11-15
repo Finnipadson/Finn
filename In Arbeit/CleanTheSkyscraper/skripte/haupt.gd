@@ -19,7 +19,7 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--ansicht="):
 			ansicht = int(a.split("=")[1])
-		for k in ["taa", "ssr", "ssil", "msaa", "smaa"]:
+		for k in ["taa", "ssr", "ssil", "msaa", "smaa", "scale", "fsr", "fpstest"]:
 			if a.begins_with("--%s=" % k):
 				schalter[k] = int(a.split("=")[1])
 	welt = Welt.new()
@@ -83,9 +83,16 @@ func _startansicht() -> void:
 # Kantenglättung und Licht-Effekte (Standard + Test-Schalter)
 func _grafik() -> void:
 	var vp := get_viewport()
-	vp.use_taa = schalter.get("taa", 1) == 1
+	# Standard (gemessen gegen eine fein berechnete Referenz): 2-faches Supersampling + MSAA 4x, kein TAA
+	# (TAA wackelt das Bild minimal und wirkt dadurch unruhiger)
+	vp.use_taa = schalter.get("taa", 0) == 1
 	vp.msaa_3d = schalter.get("msaa", 2) as Viewport.MSAA
 	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_SMAA if schalter.get("smaa", 0) == 1 else Viewport.SCREEN_SPACE_AA_DISABLED
+	# Supersampling: intern höher rendern (scale in Zehnteln, 20 = 2-fach); FSR2 bringt eigene Glättung mit
+	vp.scaling_3d_scale = schalter.get("scale", 20) / 10.0
+	if schalter.get("fsr", 0) == 1:
+		vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR2
+		vp.use_taa = false
 	welt.env.ssr_enabled = schalter.get("ssr", 1) == 1
 	welt.env.ssil_enabled = schalter.get("ssil", 0) == 1
 
@@ -116,8 +123,15 @@ func _unhandled_input(e: InputEvent) -> void:
 	elif e is InputEventKey and e.pressed and e.keycode == KEY_ESCAPE:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
+var fps_zeit := 0.0
+
 func _process(dt: float) -> void:
 	cam.position += fahrt * dt
+	if schalter.has("fpstest"):
+		fps_zeit += dt
+		if fps_zeit > 6.0:
+			print("FPS: %d bei %s" % [Engine.get_frames_per_second(), get_viewport().get_visible_rect().size])
+			get_tree().quit()
 	var d := Vector3.ZERO
 	var b := cam.global_basis
 	if Input.is_key_pressed(KEY_W): d -= b.z

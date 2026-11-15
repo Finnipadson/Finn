@@ -45,7 +45,13 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=3`: Aussicht aus Stockwerk 150
 - `--ansicht=4`: Testfahrt an der Fassade (zum Messen von Flimmern)
 
-Grafik-Schalter zum Vergleichen: `--taa=0|1 --msaa=0..3 --smaa=0|1 --ssr=0|1 --ssil=0|1`. Standard ist TAA an, MSAA 4x, SSR an und SSIL aus, denn diese Kombination hat gemessen am wenigsten geflimmert. SSIL rauscht.
+Grafik-Schalter zum Vergleichen: `--taa=0|1 --msaa=0..3 --smaa=0|1 --scale=10..20 --fsr=0|1 --ssr=0|1 --ssil=0|1`, dazu `--fpstest=1` (gibt nach 6 s die FPS aus und beendet).
+
+**Standard:** 2-faches Supersampling (`scale` 2,0) + MSAA 4x, **ohne TAA**, SSR an, SSIL aus.
+- Gemessen gegen eine fein berechnete Referenz (3200×1800 mit 2-fachem Supersampling): Wie stark ändert sich der Fehler von Bild zu Bild?
+- Ergebnis: TAA 3,3, nichts 2,4, MSAA 2,1, Supersampling + MSAA **1,6**.
+- TAA wackelt das Bild absichtlich und wirkt dadurch unruhiger.
+- Kosten: rund 190 FPS in 1440p auf einer RTX 5070 Ti.
 
 **Gegen Flimmern gilt außerdem:**
 - Im Glas-Shader gibt es keine harten `step()`-Kanten, sondern `sst()` über `fwidth`.
