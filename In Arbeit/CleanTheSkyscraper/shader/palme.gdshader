@@ -35,9 +35,14 @@ void fragment() {
 		// Farbverlauf: innen dunkel, zur Spitze heller; feine Längsstreifen (Fiederblätter)
 		float weit = clamp(length(lokal.xz) / 1.6, 0.0, 1.0);
 		vec3 c = mix(blatt_innen, blatt_spitze, smoothstep(0.1, 1.0, weit));
-		float streifen = 0.5 + 0.5 * sin(atan(lokal.z, lokal.x) * 60.0 + weit * 20.0);
+		float arg = atan(lokal.z, lokal.x) * 60.0 + weit * 20.0;
+		// Gegen Flimmern: feine Streifen/Flecken ausblenden, sobald sie kleiner als ein Bildpunkt werden
+		// (Winkelsprung bei atan begrenzt, damit die Naht nicht alles ausblendet)
+		float fa = min(fwidth(arg), 10.0);
+		float streifen = mix(0.5 + 0.5 * sin(arg), 0.5, smoothstep(0.8, 2.5, fa));
 		c *= 0.86 + 0.18 * streifen;
-		c *= 0.92 + 0.12 * hs(floor(lokal.xz * 6.0));
+		float fz = max(fwidth(lokal.x), fwidth(lokal.z)) * 6.0;
+		c *= 0.92 + 0.12 * mix(hs(floor(lokal.xz * 6.0)), 0.5, smoothstep(0.15, 0.5, fz));
 		ALBEDO = c;
 		ROUGHNESS = 0.7;
 		SPECULAR = 0.3;
@@ -48,8 +53,13 @@ void fragment() {
 		float winkel = atan(lokal.z, lokal.x);
 		float ring = smoothstep(0.0, 0.18, fract(y)) * smoothstep(1.0, 0.75, fract(y));
 		float schuppe = 0.5 + 0.5 * sin(winkel * 6.0 + floor(y) * 1.7);
+		// Gegen Flimmern: Ringe (7 pro Meter) in der Ferne zum Mittelwert, bevor sie zu Pixel-Treppen werden
+		float fy = fwidth(y);
+		float ferne = smoothstep(0.12, 0.45, fy);
+		ring = mix(ring, 0.6, ferne);
+		schuppe = mix(schuppe, 0.5, ferne);
 		vec3 c = mix(rinde_dunkel, rinde_hell, ring * (0.65 + 0.35 * schuppe));
-		c *= 0.9 + 0.15 * hs(vec2(floor(y), floor(winkel * 3.0)));
+		c *= 0.9 + 0.15 * mix(hs(vec2(floor(y), floor(winkel * 3.0))), 0.5, ferne);
 		ALBEDO = c;
 		ROUGHNESS = 0.95;
 	}

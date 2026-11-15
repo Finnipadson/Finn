@@ -234,6 +234,20 @@ void fragment() {
 		szene = floor(zs.b * 255.0 + 0.5);
 	}
 	vec3 innen = raum(rp, rid, r, aw, szene, mod(id.x, raum_fenster));
+	// Gegen Flimmern: Sind die Räume nur noch wenige Bildpunkte groß, springen ihre Ecken (Parallaxe) und
+	// die Zufallsfarben beim Fahren von Pixel zu Pixel. Dann weich auf eine flache Raumfarbe, weiter weg
+	// auf einen Mittelwert über alle Räume.
+	float rh = hs(rid);
+	vec3 flach = mix(wand_a, wand_b, step(0.5, rh)) * 0.72;
+	flach = mix(flach, vec3(0.75, 0.74, 0.7) * 0.92, step(0.82, hs(rid + 5.0)));
+	flach *= mix(1.0, 0.25, step(0.9, hs(rid + 13.0)));
+	vec3 alle = mix(wand_a, wand_b, 0.5) * 0.72 * 0.93;
+	float klein = smoothstep(0.035, 0.12, aw);
+	float winzig = smoothstep(0.12, 0.4, aw);
+	if (szene < 0.5) {
+		innen = mix(innen, flach, klein);
+	}
+	innen = mix(innen, alle, winzig);
 	if (mit_zustand) {
 		dreck = zs.r;
 		float slot = floor(zs.g * 255.0 + 0.5) - 1.0;
@@ -245,6 +259,10 @@ void fragment() {
 	}
 	float schl = vn(vec2(f.x * 6.0 + id.x * 3.1, f.y * 1.5 + id.y * 2.7)) * 0.6 + vn(f * 14.0 + id * 5.0) * 0.4;
 	float rand = smoothstep(0.25, 0.0, min(min(f.x, 1.0 - f.x) * 2.0, (f.y - band_anteil) * 2.5));
+	// feine Schlieren (14 pro Fenster) und Schmutzrand ausblenden, bevor sie kleiner als ein Bildpunkt werden
+	float gw = max(fwidth(c.x), fwidth(c.y));
+	schl = mix(schl, 0.5, smoothstep(0.02, 0.07, gw));
+	rand = mix(rand, 0.25, smoothstep(0.06, 0.2, gw));
 	float d = dreck * clamp((schl * 0.9 + rand * 0.5) * (mit_zustand ? 1.25 : 1.0), 0.0, 1.0) * maske;
 	// In der Ferne Mittelwerte statt Details
 	float fern = smoothstep(0.2, 0.8, max(fwidth(c.x), fwidth(c.y) * 2.0)) * 0.85;

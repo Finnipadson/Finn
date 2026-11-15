@@ -23,6 +23,7 @@ ORTE = {
     "turmfuss":   (1, "30,1.7,170,0,40,0", "0.3,0,0", 0),              # Turmfuß + Platz
     "fassade":    (4, None, "tempo", 0),                                 # Gondel-Fahrt an der Turmfassade
     "turm_fern":  (1, "-650,150,300,0,300,0", "0,0,1.5", 0),             # Turm aus der Stadt
+    "still":      (1, "0,120,190,0,60,600", None, 0),                  # Kamera steht (zeigt TAA-Zittern)
     "drehen":     (1, "0,120,190,0,60,600", None, 0.3),                  # Gondel dreht sich (Boden + Häuser)
 }
 WARM = 24     # Bilder zum Einlaufen (Shader kompilieren, Schatten)
