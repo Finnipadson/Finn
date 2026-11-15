@@ -1,7 +1,9 @@
 extends Node3D
 # Startszene (Phase 0): Welt + Turm + freie Kamera zum Umschauen.
 # Testbilder: godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansicht=N
-#   1 = Turm von weitem, 2 = Fassade nah (mit Markierung eines Fensters), 3 = Aussicht von oben
+#   1 = Turm von weitem, 2 = Fassade nah (mit Markierung eines Fensters), 3 = Aussicht von oben,
+#   4 = Testfahrt an der Fassade (zum Messen von Flimmern). Grafik-Schalter zum Testen: --taa=0|1 --ssr=0|1 --ssil=0|1 --msaa=0..3 --smaa=0|1
+#   (Standard: TAA an, MSAA 4x, SSR an, SSIL aus – gemessen am wenigsten Flimmern)
 
 var welt: Welt
 var turm: Turm
@@ -10,11 +12,16 @@ var yaw := 0.0
 var pitch := 0.0
 var info: Label
 var ansicht := 0
+var fahrt := Vector3.ZERO
+var schalter := {}
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--ansicht="):
 			ansicht = int(a.split("=")[1])
+		for k in ["taa", "ssr", "ssil", "msaa", "smaa"]:
+			if a.begins_with("--%s=" % k):
+				schalter[k] = int(a.split("=")[1])
 	welt = Welt.new()
 	add_child(welt)
 	turm = Turm.new()
@@ -23,6 +30,7 @@ func _ready() -> void:
 	cam.far = 40000.0
 	cam.fov = 60.0
 	add_child(cam)
+	_grafik()
 	_hud()
 	_startansicht()
 
@@ -51,6 +59,12 @@ func _startansicht() -> void:
 			cam.position = p.pos + p.normal * 9.0 + p.tangente * 3.0 + Vector3.UP * -1.5
 			cam.look_at(p.pos + Vector3.UP * 1.0)
 			text = "Markiert: Fenster Nr. %s (Stockwerk %d, Spalte %d)" % [_punkte(turm.fenster_id(f, weg) + 1), f + 1, spalte + 1]
+		4:
+			var p := turm.fassaden_punkt(40, 120.0, 40 * Turm.STOCK_H)
+			cam.position = p.pos + p.normal * 7.0 + Vector3.UP * -1.0
+			cam.look_at(p.pos + Vector3.UP * 1.0)
+			fahrt = p.tangente * 1.5
+			text = "Testfahrt an der Fassade"
 		3:
 			var p := turm.fassaden_punkt(150, 10.0, 150 * Turm.STOCK_H)
 			cam.position = p.pos + p.normal * 6.0
@@ -65,6 +79,15 @@ func _startansicht() -> void:
 	yaw = r.y
 	pitch = r.x
 	info.text = "Clean the Skyscraper · Phase 0\n%d m hoch · %d Stockwerke · %s Fenster\n%s\nKlick: Maus fangen · WASD fliegen · Q/E runter/hoch · Shift schnell · Esc Maus frei" % [int(turm.spitze), Turm.STOCKWERKE, _punkte(turm.fenster_gesamt), text]
+
+# Kantenglättung und Licht-Effekte (Standard + Test-Schalter)
+func _grafik() -> void:
+	var vp := get_viewport()
+	vp.use_taa = schalter.get("taa", 1) == 1
+	vp.msaa_3d = schalter.get("msaa", 2) as Viewport.MSAA
+	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_SMAA if schalter.get("smaa", 0) == 1 else Viewport.SCREEN_SPACE_AA_DISABLED
+	welt.env.ssr_enabled = schalter.get("ssr", 1) == 1
+	welt.env.ssil_enabled = schalter.get("ssil", 0) == 1
 
 func _hud() -> void:
 	var cl := CanvasLayer.new()
@@ -94,6 +117,7 @@ func _unhandled_input(e: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _process(dt: float) -> void:
+	cam.position += fahrt * dt
 	var d := Vector3.ZERO
 	var b := cam.global_basis
 	if Input.is_key_pressed(KEY_W): d -= b.z

@@ -29,7 +29,8 @@ func _ready() -> void:
 	glas = Bau.shader_mat(Bau.TURM_SHADER, {"glas_tint": Color("4d7397"), "paneel": Color("9aa4ae"), "stock": STOCK_H, "fenster_breite": FENSTER_B, "band_anteil": BAND_ANTEIL})
 	add_child(Bau.baue(stockwerke, glas, Bau.matt("c9c4bb")))
 	var alu := Bau.metall("c9ced4")
-	add_child(Bau.rahmen(stockwerke, FENSTER_B, BAND_ANTEIL, alu))
+	var rahmen_mat := Bau.shader_mat(load("res://shader/rahmen.gdshader"), {"farbe": Color("c9ced4"), "fern_farbe": Color("7d8c9c")})
+	add_child(Bau.rahmen(stockwerke, FENSTER_B, BAND_ANTEIL, rahmen_mat))
 	_spitze(alu)
 
 # ---------------------------------------------------------------- Form

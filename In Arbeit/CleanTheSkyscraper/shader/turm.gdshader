@@ -32,7 +32,10 @@ void vertex() {
 	wn = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 }
 
-vec3 raum(vec2 rp, vec2 rid, vec3 r) {
+// weiche Stufe: statt harter Kante über die Breite eines Bildpunkts überblenden (gegen Flimmern)
+float sst(float e, float x, float w) { return smoothstep(e - w, e + w, x); }
+
+vec3 raum(vec2 rp, vec2 rid, vec3 r, float aw) {
 	float W = fenster_breite * raum_fenster;
 	float Hr = stock * (1.0 - band_anteil);
 	vec3 d = vec3(dot(r, wt), r.y, dot(r, wn));
@@ -49,21 +52,23 @@ vec3 raum(vec2 rp, vec2 rid, vec3 r) {
 	if (t == tz) {
 		c = wand;
 		// Möbel/Schrank unten an der Rückwand, Bild an der Wand
-		c *= 1.0 - 0.45 * step(hit.y, 0.32) * step(0.15, hit.x) * step(hit.x, 0.75);
-		c = mix(c, vec3(0.2, 0.35, 0.5), step(0.55, hit.y) * step(hit.y, 0.8) * step(0.6, hit.x) * step(hit.x, 0.85) * step(0.5, hs(rid + 2.0)));
+		c *= 1.0 - 0.45 * (1.0 - sst(0.32, hit.y, aw)) * sst(0.15, hit.x, aw) * (1.0 - sst(0.75, hit.x, aw));
+		c = mix(c, vec3(0.2, 0.35, 0.5), sst(0.55, hit.y, aw) * (1.0 - sst(0.8, hit.y, aw)) * sst(0.6, hit.x, aw) * (1.0 - sst(0.85, hit.x, aw)) * step(0.5, hs(rid + 2.0)));
 	} else if (t == tx) {
 		c = wand * 0.78;
 	} else if (dn.y < 0.0) {
 		c = mix(vec3(0.42, 0.36, 0.30), vec3(0.32, 0.34, 0.38), step(0.5, hs(rid + 9.0)));
 	} else {
 		c = vec3(0.9);
-		float lampe = step(abs(fract(hit.x * 1.5) - 0.5), 0.18) * step(abs(hit.z + 0.45), 0.2);
-		c += lampe * 2.0;
+		float lampe = (1.0 - sst(0.18, abs(fract(hit.x * 1.5) - 0.5), aw * 1.5)) * (1.0 - sst(0.2, abs(hit.z + 0.45), aw));
+		c += lampe * 1.4;
 	}
 	c *= mix(1.0, 0.5, clamp(-hit.z, 0.0, 1.0));
 	// manche Räume mit Jalousie oder dunkel
 	float jal = step(0.82, hs(rid + 5.0));
-	c = mix(c, vec3(0.75, 0.74, 0.7) * (0.85 + 0.15 * step(0.5, fract(rp.y * 18.0))), jal);
+	// Jalousie-Streifen: verschwinden, sobald sie kleiner als ein Bildpunkt werden
+	float streifen = mix(sst(0.5, fract(rp.y * 18.0), aw * 18.0), 0.5, clamp(aw * 18.0 * 2.0, 0.0, 1.0));
+	c = mix(c, vec3(0.75, 0.74, 0.7) * (0.85 + 0.15 * streifen), jal);
 	c *= mix(1.0, 0.25, step(0.9, hs(rid + 13.0)));
 	return c;
 }
@@ -72,19 +77,20 @@ void fragment() {
 	vec2 c = vec2(UV.x / fenster_breite, UV.y / stock);
 	vec2 id = floor(c);
 	vec2 f = fract(c);
-	float band = step(f.y, band_anteil);
+	float band = 1.0 - sst(band_anteil, f.y, fwidth(c.y));
 	float rx = UV.x / (fenster_breite * raum_fenster);
 	vec2 rid = vec2(floor(rx), id.y);
 	vec2 rp = vec2(fract(rx), clamp((f.y - band_anteil) / (1.0 - band_anteil), 0.0, 1.0));
 	vec3 r = normalize(wp - CAMERA_POSITION_WORLD);
-	vec3 innen = raum(rp, rid, r);
+	float aw = max(fwidth(rp.x), fwidth(rp.y)) * 0.75;
+	vec3 innen = raum(rp, rid, r, aw);
 	// Dreck
 	float dreck = step(1.0 - dreckig, hs(id + 17.3));
 	float schl = vn(vec2(f.x * 6.0 + id.x * 3.1, f.y * 1.5 + id.y * 2.7)) * 0.6 + vn(f * 14.0 + id * 5.0) * 0.4;
 	float rand = smoothstep(0.25, 0.0, min(min(f.x, 1.0 - f.x) * 2.0, (f.y - band_anteil) * 2.5));
 	float d = dreck * clamp(schl * 0.9 + rand * 0.5, 0.0, 1.0);
 	// In der Ferne Mittelwerte statt Details
-	float fern = smoothstep(0.5, 1.4, max(fwidth(c.x), fwidth(c.y) * 2.0)) * 0.85;
+	float fern = smoothstep(0.2, 0.8, max(fwidth(c.x), fwidth(c.y) * 2.0)) * 0.85;
 	vec3 glas = mix(glas_tint * 0.12, schmutz_farbe, clamp(d * 0.9, 0.0, 0.75));
 	ALBEDO = mix(mix(glas, paneel, band), mix(glas_tint * 0.3, paneel, band_anteil), fern);
 	METALLIC = band * 0.6;

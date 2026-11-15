@@ -147,7 +147,7 @@ static func rahmen(stw: Array, fb: float, band_anteil: float, m: Material) -> Mu
 			xf.append(Transform3D(Basis(dx * (lang + 0.12), Vector3.UP * bh, nz * 0.36), Vector3(mb.x, y0 + bh * 0.5, mb.y)))
 			for j in range(int(ceil(weg / fb)), int(floor((weg + lang) / fb)) + 1):
 				var q := a + d2 * (j * fb - weg) + n2 * 0.13
-				xf.append(Transform3D(Basis(dx * 0.13, Vector3.UP * (h - bh), nz * 0.26), Vector3(q.x, y0 + bh + (h - bh) * 0.5, q.y)))
+				xf.append(Transform3D(Basis(dx * 0.16, Vector3.UP * (h - bh), nz * 0.26), Vector3(q.x, y0 + bh + (h - bh) * 0.5, q.y)))
 			weg += lang
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D

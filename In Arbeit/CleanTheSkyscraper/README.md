@@ -43,5 +43,13 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=1`: Turm von weitem
 - `--ansicht=2`: Fassade nah, ein Fenster rot markiert. Damit lässt sich prüfen, ob die Nummerierung und die Fenster im Shader übereinstimmen.
 - `--ansicht=3`: Aussicht aus Stockwerk 150
+- `--ansicht=4`: Testfahrt an der Fassade (zum Messen von Flimmern)
+
+Grafik-Schalter zum Vergleichen: `--taa=0|1 --msaa=0..3 --smaa=0|1 --ssr=0|1 --ssil=0|1`. Standard ist TAA an, MSAA 4x, SSR an und SSIL aus, denn diese Kombination hat gemessen am wenigsten geflimmert. SSIL rauscht.
+
+**Gegen Flimmern gilt außerdem:**
+- Im Glas-Shader gibt es keine harten `step()`-Kanten, sondern `sst()` über `fwidth`.
+- Feine Muster wie die Jalousien blenden aus, sobald sie kleiner als ein Bildpunkt werden.
+- Die Rahmen (`shader/rahmen.gdshader`) blenden mit der Entfernung auf die Fassadenfarbe über.
 
 Mit `godot` ist die `…_console.exe` aus dem winget-Ordner gemeint (siehe `start.bat`). Neue Skripte mit `class_name` werden erst nach `--headless --import` erkannt.

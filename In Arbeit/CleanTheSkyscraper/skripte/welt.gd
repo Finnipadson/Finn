@@ -6,6 +6,7 @@ const SONNE_DIR := Vector3(0.55, 0.5, 0.4)
 const HORIZONT := Color("e9dcc4")
 
 var rng := RandomNumberGenerator.new()
+var env: Environment
 
 func _ready() -> void:
 	rng.seed = 11
@@ -14,7 +15,7 @@ func _ready() -> void:
 	_stadt()
 
 func _umgebung() -> void:
-	var env := Environment.new()
+	env = Environment.new()
 	env.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
 	var sm := ShaderMaterial.new()
