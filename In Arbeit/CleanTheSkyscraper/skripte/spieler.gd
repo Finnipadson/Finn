@@ -50,6 +50,7 @@ var werkzeug: Node3D          # Modell des Werkzeugs (Schwamm, Abzieher, …)
 var strahl: MeshInstance3D    # Wasserstrahl des Hochdruckreinigers
 var arm: MeshInstance3D
 var gesperrt := false         # true = keine Eingaben (Testbilder, Shop offen)
+var wind := 0.0               # 0..1, wird von Ereignisse gesetzt: Gondel schaukelt
 var _gesperrt_zeit := 0.0
 
 func setup(t: Turm, z: FensterZustand, start_stock: int, start_weg: float, oberste_hoehe: float) -> void:
@@ -273,6 +274,11 @@ func _platzieren(dt: float) -> void:
 	gondel.basis = Basis.looking_at(-normal, Vector3.UP)
 	rechts = gondel.basis.x
 	richtung = 1.0 if p.tangente.dot(rechts) >= 0.0 else -1.0
+	# Wind: Gondel schaukelt seitlich und ein wenig vor und zurück, Kamera kippt leicht
+	var zeit := Time.get_ticks_msec() / 1000.0
+	if wind > 0.001:
+		gondel.position += rechts * sin(zeit * 1.3) * 0.3 * wind + normal * sin(zeit * 0.8) * 0.12 * wind
+		gondel.rotate_object_local(Vector3.FORWARD, sin(zeit * 1.1) * 0.04 * wind)
 	cam.rotation = Vector3(pitch, yaw, 0)
 
 # Strich: von der letzten zur aktuellen Position lückenlos stempeln
@@ -292,6 +298,9 @@ func _wischen() -> void:
 	letzter_stempel = ziel
 
 func _stempel(o: Vector2) -> void:
+	if wind > 0.001:   # bei Wind wird das Putzen etwas ungenauer
+		var zeit := Time.get_ticks_msec() / 1000.0
+		o += Vector2(sin(zeit * 9.0), cos(zeit * 7.0)) * Vector2(0.05, 0.035) * wind
 	var w := weg + o.x * richtung
 	var yw := y + o.y
 	var glas_h := Turm.STOCK_H * (1.0 - Turm.BAND_ANTEIL)

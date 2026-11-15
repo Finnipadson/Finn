@@ -1,6 +1,6 @@
 # Clean the Skyscraper – Bauplan
 
-Status: **Phase 2 fertig**, als Nächstes Phase 3
+Status: **Phase 3 fertig**, als Nächstes Phase 4
 
 ## Idee
 
@@ -73,7 +73,20 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - Werkzeug-Modelle: Schwamm, Abzieher mit Gummilippe, Spritzpistole mit Wasserstrahl. Meldung, wenn das Seil zu kurz ist; Begrüßung beim ersten Start.
      - Tests: `--ansicht=9 --geld=10000` (Shop mit Tab öffnen, über die echten Knöpfe kaufen, Taste 3/5, Hochdruck), `--ansicht=10 --geld=500` und danach `--ansicht=10` (Speichern und Laden). Alles bestanden.
    - **Noch offen:** Balance nicht über Stunden getestet (Ziel 10–20 h) → nach Rückmeldung des Users in `wirtschaft.gd` nachjustieren.
-3. [ ] **Leben am Turm:** Szenen hinter den Fenstern und Sammelalbum, Tauben, Wind, Sandsturm, schönere Stadt
+3. [x] **Leben am Turm:** Szenen hinter den Fenstern und Sammelalbum, Tauben, Wind, Sandsturm, schönere Stadt
+   - **Vorab (Wunsch des Users):** Beim Putzen zusätzlich die rechte Maustaste halten → umschauen, das Werkzeug bleibt am Glas.
+   - **Ergebnis (15.11.2026):**
+     - **Szenen:** Etwa jedes 35. Fenster hat eine von 10 Szenen: Winkende Person, Katze, Party (mit Disco-Licht und Luftballons), Büro, Fitness, Geburtstag (Kerzen flackern), Liebesbrief (Herz auf dem Glas), Dschungel, Aquarium (Fische schwimmen), Hund (wedelt). Gezeichnet im Glas-Shader als 2D-Formen auf einer Ebene hinter dem Glas, also mit echter Tiefe/Parallaxe und animiert. Der Szenen-Typ steht im B-Kanal der Zustands-Textur (jetzt RGBA8), festgelegt von `FensterZustand`.
+     - **Sammelalbum** (`skripte/album.gd`, Taste B): 10 Plätze, Zähler pro Szene. Eine neue Szene bringt 10× Lohn als Bonus.
+     - **Störungen** (`skripte/ereignisse.gd`, alle Zahlen oben im Skript):
+       - Tauben alle 45–100 s: Eine fliegt zu einem sauberen Fenster nahe der Gondel, setzt sich aufs Sims und bekleckert es.
+       - Windböen alle 80–170 s für 12–20 s: Die Gondel schaukelt und kippt leicht, Putzen wird etwas ungenauer; stärker in der Höhe.
+       - Sandsturm nach 8 min, dann alle 12–20 min: 15 s Vorwarnung, 28 s orange Dunst mit Sandpartikeln, danach sind 25 % der sauberen Fenster ±4 Stockwerke um die Gondel eingestaubt.
+       - Nichts davon kostet Geld.
+     - **Stadt:** `shader/boden.gdshader` mit Straßenraster zwischen den Blöcken, gestrichelten Mittellinien, Platz aus Platten mit Grünring um den Turm und unregelmäßigem, weichem Übergang in die Wüste. Der Kreisrand ist weg.
+     - **Terrassen/Höhen:** Beim ersten Erreichen eines neuen Abschnitts (je 6 Stockwerke) gibt es einen Höhenbonus von 25× Lohn mit Meldung. Gespeichert werden `album` und `hoechster_abschnitt`.
+     - Tests: `--ansicht=11` (alle 10 Szenen vor der Gondel), `--ansicht=12` (Taube, Böe, Sandsturm sofort). Alle alten Tests (8, 9, 10) laufen weiter, rund 160 FPS in 1440p.
+   - **Noch offen:** Die Taube landet manchmal knapp außerhalb des Bildes (man sieht sie anfliegen). Die Terrassen selbst sind noch schlichte Dächer ohne Deko.
 4. [ ] **Automatik:** Helfer, Putzroboter, Drohnen, eventuell Fortschritt auch während man nicht spielt
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 

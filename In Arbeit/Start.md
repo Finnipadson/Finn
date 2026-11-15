@@ -17,7 +17,7 @@ Zentrale Übersicht über alle Projekte.
 | [[Café Reitschule]] | Restaurant-Website (Demo) | Entwurf v2 fertig |
 | [[Highlight Cutter]] | PC-App: Highlights aus NVIDIA-Aufnahmen schneiden | fertig v1 (Apex, alle 5 Phasen) |
 | [[Erklärvideo-Studio]] | PC-App: Thema eingeben → animiertes Erklärvideo | fertig (Phase 5: 4 Designs, 9 Bausteine, Musik-Stimmungen, Desktop-Icon) |
-| [[Clean the Skyscraper]] | 3D-Spiel (Godot): alle Fenster des höchsten Turms putzen | Phase 2 fertig (Werkstatt, Werkzeuge, Speichern), Phase 3 als Nächstes |
+| [[Clean the Skyscraper]] | 3D-Spiel (Godot): alle Fenster des höchsten Turms putzen | Phase 3 fertig (Szenen + Album, Tauben, Wind, Sandsturm), Phase 4 als Nächstes |
 
 Ältere/kleinere Projekte: [[Weitere Projekte]]
 

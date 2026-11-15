@@ -13,6 +13,8 @@ var zustand: FensterZustand
 var spieler: Spieler
 var hud: Hud
 var shop: Shop
+var album: Album
+var ereignisse: Ereignisse
 var wirtschaft := Wirtschaft.new()
 var ansicht := 0
 var frei := false
@@ -53,6 +55,12 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	shop.setup(wirtschaft)
 	shop.geaendert.connect(_ausruestung)
 	shop.neues_spiel.connect(_neues_spiel)
+	album = Album.new()
+	add_child(album)
+	album.setup(wirtschaft)
+	ereignisse = Ereignisse.new()
+	add_child(ereignisse)
+	ereignisse.setup(spieler, zustand, turm, welt, hud)
 	_ausruestung()
 	if ansicht >= 5 and ansicht <= 7:
 		spieler.gesperrt = true
@@ -76,6 +84,19 @@ func _fenster_sauber(f: int, spalte: int) -> void:
 	wirtschaft.geld += lohn
 	hud.pop("+%d €" % lohn)
 	_funkeln(spieler.fenster_mitte(f, spalte))
+	var szene := zustand.szene(f, spalte)
+	if szene > 0:
+		var k := str(szene)
+		var neu := not wirtschaft.album.has(k)
+		wirtschaft.album[k] = int(wirtschaft.album.get(k, 0)) + 1
+		var name: String = FensterZustand.SZENEN[szene]
+		if neu:
+			var bonus := 10 * lohn
+			wirtschaft.geld += bonus
+			hud.meldung("Neu im Sammelalbum: %s!  +%d €
+(B öffnet das Album)" % [name, bonus], 4.0)
+		else:
+			hud.meldung(name, 1.5)
 
 func _oben_gesperrt() -> void:
 	hud.meldung("Das Seil ist zu kurz! Mit Tab in der Werkstatt eine längere Seilwinde kaufen.", 3.0)
@@ -84,9 +105,14 @@ func _oben_gesperrt() -> void:
 func _input(e: InputEvent) -> void:
 	if not (e is InputEventKey) or not e.pressed or e.echo:
 		return
-	if e.keycode == KEY_TAB or (e.keycode == KEY_ESCAPE and shop.offen):
+	if (e.keycode == KEY_TAB and not album.offen) or (e.keycode == KEY_ESCAPE and shop.offen):
 		shop.umschalten()
 		spieler.gesperrt = shop.offen or (ansicht >= 5 and ansicht <= 7)
+		spieler.wischt = false
+		get_viewport().set_input_as_handled()
+	elif (e.keycode == KEY_B and not shop.offen) or (e.keycode == KEY_ESCAPE and album.offen):
+		album.umschalten()
+		spieler.gesperrt = album.offen or (ansicht >= 5 and ansicht <= 7)
 		spieler.wischt = false
 		get_viewport().set_input_as_handled()
 	elif e.keycode >= KEY_1 and e.keycode <= KEY_5 and not shop.offen:
@@ -139,6 +165,18 @@ func _process(dt: float) -> void:
 		8: _maus_test(dt)
 		9: _shop_test(dt)
 		10: _speicher_test(dt)
+		11: _szenen_test(dt)
+		12: _ereignis_test(dt)
+	if ansicht == 0 or ansicht == 12:
+		ereignisse.takt(dt)
+	# Neue Höhe erreicht (je 6 Stockwerke = ein Abschnitt): einmaliger Bonus + Aussicht feiern
+	var abschnitt := spieler.stock / Wirtschaft.ABSCHNITT
+	if abschnitt > wirtschaft.hoechster_abschnitt:
+		wirtschaft.hoechster_abschnitt = abschnitt
+		var bonus := 25 * wirtschaft.lohn(spieler.stock)
+		wirtschaft.geld += bonus
+		hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [int(spieler.y), bonus], 3.5)
+		_speichern()
 	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock)
 	hud.freigeschaltet(Turm.STOCKWERKE if frei else wirtschaft.oberstes_stockwerk())
 	if spieler.wischt and spieler.wz_art == "wisch":
@@ -287,6 +325,53 @@ func _shop_test(dt: float) -> void:
 				_klick(mitte, false)
 				print("TEST hochdruck: werkzeug=%s sauber=%d geld=%d" % [spieler.wz_id, zustand.sauber_zahl, wirtschaft.geld])
 				_st = 5
+
+# 11: alle 10 Szenen nebeneinander in die Fenster vor der Gondel setzen und sauber machen
+var _sz := 0
+func _szenen_test(_dt: float) -> void:
+	if _sz == 0:
+		_sz = 1
+		spieler.gesperrt = true
+		var mitte := int(spieler.weg / Turm.FENSTER_B)
+		for i in 10:
+			var f := spieler.stock + (0 if i < 5 else 1)
+			var sp := mitte - 2 + (i % 5)
+			zustand.szene_setzen(f, sp, i + 1)
+			while not zustand.wische(f, sp, 0.5, 0.5, 2.0, 2.0):
+				pass
+			_fenster_sauber(f, sp)
+		spieler.pitch = 0.18
+		print("TEST album: %s" % [wirtschaft.album])
+
+# 12: Taube, Windböe und Sandsturm sofort auslösen
+var _et := 0
+func _ereignis_test(dt: float) -> void:
+	demo_zeit += dt
+	if _et == 0:
+		_et = 1
+		spieler.gesperrt = true
+		spieler.pitch = -0.45
+		var mitte := int(spieler.weg / Turm.FENSTER_B)
+		for sp in range(mitte - 4, mitte + 5):
+			while not zustand.wische(spieler.stock, sp, 0.5, 0.5, 2.0, 2.0):
+				pass
+		var vorher := zustand.sauber_zahl
+		print("TEST taube losgeschickt=%s sauber vorher=%d" % [ereignisse.taube_jetzt(), vorher])
+		ereignisse.boe_jetzt(1.0)
+	elif _et == 1 and demo_zeit > 5.5:
+		_et = 2
+		print("TEST nach Taube: sauber=%d wind=%.2f tauben=%d" % [zustand.sauber_zahl, ereignisse.wind, ereignisse.tauben.size()])
+		ereignisse.sturm_jetzt()
+		ereignisse.sturm_zeit = 0.5
+		spieler.yaw = PI      # beim Sturm auf die Stadt schauen
+		spieler.pitch = -0.15
+	elif _et == 2 and ereignisse.sturm_phase == 2 and ereignisse.sturm_staerke > 0.9:
+		_et = 3
+		print("TEST sturm stark=%.2f nebel=%.4f" % [ereignisse.sturm_staerke, welt.env.fog_density])
+		ereignisse.sturm_zeit = 0.1
+	elif _et == 3 and ereignisse.sturm_phase == 0:
+		_et = 4
+		print("TEST sturm vorbei: sauber=%d" % zustand.sauber_zahl)
 
 # 10: Speichern + Laden (läuft zweimal: --geld setzt den Stand, ohne --geld wird geladen)
 var _sp := 0

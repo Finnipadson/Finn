@@ -7,6 +7,9 @@ const HORIZONT := Color("e9dcc4")
 
 var rng := RandomNumberGenerator.new()
 var env: Environment
+var himmel: ShaderMaterial
+var sonne: DirectionalLight3D
+const STURM_FARBE := Color("c9955a")
 
 func _ready() -> void:
 	rng.seed = 11
@@ -19,6 +22,7 @@ func _umgebung() -> void:
 	env.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
 	var sm := ShaderMaterial.new()
+	himmel = sm
 	sm.shader = load("res://shader/himmel.gdshader")
 	sm.set_shader_parameter("sonne", SONNE_DIR.normalized())
 	sm.set_shader_parameter("horizont", HORIZONT)
@@ -47,7 +51,7 @@ func _umgebung() -> void:
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
-	var sonne := DirectionalLight3D.new()
+	sonne = DirectionalLight3D.new()
 	sonne.light_color = Color("ffe6bf")
 	sonne.light_energy = 1.4
 	sonne.shadow_enabled = true
@@ -55,17 +59,25 @@ func _umgebung() -> void:
 	add_child(sonne)
 	sonne.basis = Basis.looking_at(-SONNE_DIR.normalized(), Vector3.UP)
 
+# Sandsturm: 0 = klar, 1 = voll. Nebel wird dicht und orange, Sonne und Himmel trüb.
+func sandsturm(k: float) -> void:
+	env.fog_density = lerpf(0.00011, 0.012, k * k)
+	env.fog_light_color = HORIZONT.lerp(STURM_FARBE, k)
+	env.fog_sky_affect = lerpf(0.0, 0.9, k)
+	sonne.light_energy = lerpf(1.4, 0.55, k)
+	himmel.set_shader_parameter("horizont", HORIZONT.lerp(STURM_FARBE, k))
+	himmel.set_shader_parameter("oben", Color(0.165, 0.47, 0.84).lerp(Color("b49b78"), k * 0.85))
+
 func _boden() -> void:
 	var sand := Bau.matt("d9b47a", 1.0)
 	var pm := PlaneMesh.new()
 	pm.size = Vector2(60000, 60000)
 	var b := MeshInstance3D.new()
 	b.mesh = pm
-	b.material_override = sand
+	var bm := ShaderMaterial.new()
+	bm.shader = load("res://shader/boden.gdshader")
+	b.material_override = bm   # Platz, Park, Straßenraster, weicher Übergang in die Wüste
 	add_child(b)
-	var platz := Bau.zylinder(1700.0, 1700.0, 0.2, Bau.matt("b9ad9c", 0.95), 64)
-	platz.position.y = 0.05
-	add_child(platz)
 	for i in 40: # Dünen am Horizont
 		var a := rng.randf() * TAU
 		var d := 4000.0 + rng.randf() * 9000.0

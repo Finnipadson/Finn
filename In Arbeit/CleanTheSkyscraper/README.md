@@ -16,6 +16,8 @@ Steuerung (Phase 1, Gondel):
 - W/S: hoch/runter (so weit das Seil reicht, mit `--frei` alle)
 - **Tab: Werkstatt** (Werkzeuge, Gondel-Upgrades, Seilwinde, Neues Spiel)
 - 1–5: Werkzeug wechseln
+- **B: Sammelalbum** (entdeckte Szenen hinter den Fenstern)
+- Beim Putzen zusätzlich **rechte Maustaste halten: umschauen**, das Werkzeug bleibt am Glas
 - Esc: Maus frei
 
 Freie Kamera zum Anschauen: `--ansicht=1` bis `4` (WASD fliegen, Q/E runter/hoch, Shift schnell).
@@ -34,6 +36,9 @@ skripte/fenster_zustand.gd  Dreck pro Fenster (Datentextur) + feine Wisch-Masken
 skripte/spiel.gd       Spiel-Logik: Geld, Funkeln, Werkstatt, Speichern/Laden (user://spielstand.json), Tests 5–10
 skripte/wirtschaft.gd  Zahlen zum Ausbalancieren: Lohn, Werkzeuge, Upgrades, Preise
 skripte/shop.gd        Werkstatt-Fenster
+skripte/album.gd       Sammelalbum (Taste B)
+skripte/ereignisse.gd  Tauben, Windböen, Sandsturm (Zeiten oben im Skript)
+shader/boden.gdshader  Boden: Platz, Park, Straßenraster, Übergang in die Wüste
 skripte/hud.gd         Anzeigen: saubere Fenster, Geld, Höhe, Fenster-Fortschritt, „+1 €“
 shader/turm.gdshader   Glas des Turms: Räume hinter den Fenstern (Interior Mapping), Dreck, Ferne
 shader/fassade.gdshader  einfache Fassade der Stadt
@@ -60,6 +65,8 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=7`: waagerechte Testfahrt um Flügelspitzen und Innenecken (Flimmern an Kanten)
 - `--ansicht=9 --geld=10000`: Shop-Test (Tab, echte Knöpfe, Werkzeugtasten, Hochdruck)
 - `--ansicht=10 --geld=500`, danach `--ansicht=10`: Speichern und Laden (nur `user://spielstand_test.json`)
+- `--ansicht=11`: alle 10 Szenen in den Fenstern vor der Gondel, Album-Test
+- `--ansicht=12`: Taube, Windböe und Sandsturm sofort auslösen
 - `--ansicht=8`: Maus-Test. Schickt echte Klicks und Mausbewegungen durch das Eingabesystem, putzt und schaut um, und gibt `TEST …` auf der Konsole aus.
 
 **Wichtig:** Im Spiel steht die gefangene Maus immer in der Bildmitte. Jedes Control dort, das Klicks abfängt (`mouse_filter` = STOP, der Standard bei ColorRect und PanelContainer), schluckt alle Eingaben. Deshalb setzt `Hud._maus_durchlassen()` alles auf IGNORE.

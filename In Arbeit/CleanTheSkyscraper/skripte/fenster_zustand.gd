@@ -1,7 +1,8 @@
 class_name FensterZustand
 extends RefCounted
 # Wie dreckig ist jedes Fenster? Zwei Texturen für den Glas-Shader:
-#  - zustand (RG8, eine Zeile pro Stockwerk, ein Pixel pro Fenster): R = Dreckmenge (0 = sauber), G = Wisch-Slot + 1 (0 = keiner)
+#  - zustand (RGBA8, eine Zeile pro Stockwerk, ein Pixel pro Fenster): R = Dreckmenge (0 = sauber), G = Wisch-Slot + 1 (0 = keiner),
+#    B = Szene hinter dem Fenster (0 = keine, 1..10 = Szenen-Typ, siehe SZENEN)
 #  - wisch (R8-Atlas): für Fenster, an denen gerade geputzt wird, eine feine Maske (1 = dreckig, 0 = schon gewischt)
 # So bleibt es auch bei 25.000 Fenstern schnell: feine Masken gibt es nur für die paar Fenster vor der Gondel.
 
@@ -10,6 +11,8 @@ const SLOT_H := 128
 const SLOTS_X := 16
 const SLOTS_Y := 4
 const SAUBER_AB := 0.95      # ab so viel gewischter Fläche zählt das Fenster als sauber
+const SZENEN_ANTEIL := 1.0 / 35.0   # etwa jedes 35. Fenster hat eine Szene
+const SZENEN := ["", "Winkende Person", "Katze", "Party", "Büro", "Fitness", "Geburtstag", "Liebesbrief", "Dschungel", "Aquarium", "Hund"]
 
 var turm: Turm
 var breite := 0
@@ -23,6 +26,7 @@ var slot_ort := []                     # Slot -> Vector2i(spalte, stockwerk)
 var slot_dreck := PackedInt32Array()   # dreckige Pixel im Slot
 var slot_zeit := PackedInt64Array()
 var sauber := PackedByteArray()        # 1 = sauber
+var szenen := PackedByteArray()        # Szenen-Typ je Fenster (0 = keine)
 var sauber_zahl := 0
 var atlas_neu := false
 var zustand_neu := false
@@ -31,13 +35,18 @@ func _init(t: Turm) -> void:
 	turm = t
 	for f in Turm.STOCKWERKE:
 		breite = maxi(breite, turm.fenster_pro_stock[f] + 1)
-	zustand = Image.create(breite, Turm.STOCKWERKE, false, Image.FORMAT_RG8)
+	zustand = Image.create(breite, Turm.STOCKWERKE, false, Image.FORMAT_RGBA8)
+	szenen.resize(turm.fenster_gesamt)
 	for f in Turm.STOCKWERKE:
 		for s in breite:
 			var d := 0.0
+			var sz := 0
 			if s < turm.fenster_pro_stock[f]:
 				d = 0.55 + 0.45 * _hash(f, s)
-			zustand.set_pixel(s, f, Color(d, 0, 0))
+				if _hash(f + 0.37, s * 1.71 + 3.3) < SZENEN_ANTEIL:
+					sz = 1 + int(_hash(f * 2.13 + 7.7, s + 0.91) * 10.0) % 10
+				szenen[turm.fenster_basis[f] + s] = sz
+			zustand.set_pixel(s, f, Color(d, 0, sz / 255.0, 1))
 	zustand_tex = ImageTexture.create_from_image(zustand)
 	atlas = Image.create(SLOT_W * SLOTS_X, SLOT_H * SLOTS_Y, false, Image.FORMAT_R8)
 	atlas.fill(Color(1, 1, 1))
@@ -50,7 +59,7 @@ func _init(t: Turm) -> void:
 	slot_ort.resize(n)
 	sauber.resize(turm.fenster_gesamt)
 
-func _hash(f: int, s: int) -> float:
+func _hash(f: float, s: float) -> float:
 	var x := sin(f * 127.1 + s * 311.7) * 43758.5453
 	return x - floor(x)
 
@@ -118,7 +127,7 @@ func _slot_fuer(id: int, f: int, spalte: int) -> int:
 		var alt: Vector2i = slot_ort[slot]
 		var rest := float(slot_dreck[slot]) / (SLOT_W * SLOT_H)
 		var c := zustand.get_pixel(alt.x, alt.y)
-		zustand.set_pixel(alt.x, alt.y, Color(c.r * rest, 0, 0))
+		zustand.set_pixel(alt.x, alt.y, Color(c.r * rest, 0, c.b, 1))
 		slots.erase(slot_fenster[slot])
 	slot_fenster[slot] = id
 	slot_ort[slot] = Vector2i(spalte, f)
@@ -126,14 +135,14 @@ func _slot_fuer(id: int, f: int, spalte: int) -> int:
 	slot_dreck[slot] = SLOT_W * SLOT_H
 	atlas.fill_rect(Rect2i((slot % SLOTS_X) * SLOT_W, (slot / SLOTS_X) * SLOT_H, SLOT_W, SLOT_H), Color(1, 1, 1))
 	var c2 := zustand.get_pixel(spalte, f)
-	zustand.set_pixel(spalte, f, Color(c2.r, (slot + 1) / 255.0, 0))
+	zustand.set_pixel(spalte, f, Color(c2.r, (slot + 1) / 255.0, c2.b, 1))
 	zustand_neu = true
 	return slot
 
 func _fertig(id: int, f: int, spalte: int, slot: int) -> void:
 	sauber[id] = 1
 	sauber_zahl += 1
-	zustand.set_pixel(spalte, f, Color(0, 0, 0))
+	zustand.set_pixel(spalte, f, Color(0, 0, szenen[id] / 255.0, 1))
 	zustand_neu = true
 	slots.erase(id)
 	slot_fenster[slot] = -1
@@ -151,9 +160,34 @@ func laden(b64: String) -> void:
 	for f in Turm.STOCKWERKE:
 		for s in turm.fenster_pro_stock[f]:
 			if sauber[turm.fenster_basis[f] + s] == 1:
-				zustand.set_pixel(s, f, Color(0, 0, 0))
+				zustand.set_pixel(s, f, Color(0, 0, szenen[turm.fenster_basis[f] + s] / 255.0, 1))
 				sauber_zahl += 1
 	zustand_neu = true
+
+# ---------------------------------------------------------------- Szenen + Verschmutzen
+func szene(f: int, spalte: int) -> int:
+	if f < 0 or f >= Turm.STOCKWERKE or spalte < 0 or spalte >= turm.fenster_pro_stock[f]:
+		return 0
+	return szenen[turm.fenster_basis[f] + spalte]
+
+func szene_setzen(f: int, spalte: int, typ: int) -> void:
+	szenen[turm.fenster_basis[f] + spalte] = typ
+	var c := zustand.get_pixel(spalte, f)
+	zustand.set_pixel(spalte, f, Color(c.r, c.g, typ / 255.0, 1))
+	zustand_neu = true
+
+# Ein sauberes Fenster wieder dreckig machen (Taube, Sandsturm). Gibt true zurück, wenn es vorher sauber war.
+func verschmutzen(f: int, spalte: int, menge: float) -> bool:
+	if f < 0 or f >= Turm.STOCKWERKE or spalte < 0 or spalte >= turm.fenster_pro_stock[f]:
+		return false
+	var id := turm.fenster_basis[f] + spalte
+	if sauber[id] != 1:
+		return false
+	sauber[id] = 0
+	sauber_zahl -= 1
+	zustand.set_pixel(spalte, f, Color(menge, 0, szenen[id] / 255.0, 1))
+	zustand_neu = true
+	return true
 
 # Einmal pro Bild: geänderte Texturen auf die Grafikkarte schicken
 func aktualisieren() -> void:
