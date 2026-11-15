@@ -72,7 +72,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		laeufer.hindernisse.append(sp.rect)
 	haendler = Haendler.new()
 	add_child(haendler)
-	haendler.setup(welt.stellplaetze[0].pos)
+	haendler.setup(welt.stand_orte)
 	laeufer.hindernisse.append_array(haendler.rechtecke)
 	hmenu = HaendlerMenu.new()
 	add_child(hmenu)
@@ -487,7 +487,7 @@ func _haendler_test(dt: float) -> void:
 				# Blick auf die Stände
 				var vm: Vector2 = haendler.vorne[1]
 				var r := vm.normalized()
-				laeufer.position = Vector3(vm.x - r.x * 6.0, 0, vm.y - r.y * 6.0)
+				laeufer.position = Vector3(vm.x - r.x * 9.0, 0, vm.y - r.y * 9.0)
 				laeufer.yaw = atan2(-r.x, -r.y)
 				laeufer.pitch = -0.05
 				print("TEST menü zu=%s" % (not hmenu.offen))

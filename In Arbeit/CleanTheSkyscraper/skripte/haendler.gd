@@ -14,12 +14,12 @@ var vorne: Array = []            # Vector2: Punkt vor jedem Stand (zum Anspreche
 var rechtecke: Array = []        # Rect2 für die Kollision zu Fuß
 var figuren: Array = []          # Verkäufer (winken ein bisschen)
 
-func setup(mitte: Vector3) -> void:
-	var r := Vector2(mitte.x, mitte.z).normalized()      # von der Turmmitte nach außen
-	var t := Vector2(-r.y, r.x)
+func setup(orte: Array) -> void:
 	for i in STAENDE.size():
 		var sp: Dictionary = STAENDE[i]
-		var p2 := Vector2(mitte.x, mitte.z) + t * ((i - 1) * 6.0)
+		var ort: Vector3 = orte[i % orte.size()]
+		var p2 := Vector2(ort.x, ort.z)
+		var r := p2.normalized()      # von der Turmmitte nach außen
 		var stand := _stand(sp)
 		stand.position = Vector3(p2.x, 0, p2.y)
 		stand.basis = Basis.looking_at(Vector3(-r.x, 0, -r.y), Vector3.UP)   # Front zum Turm

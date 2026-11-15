@@ -12,15 +12,21 @@ var stellplaetze: Array = []    # {name, pos, rect} – Plätze für spätere H�
 var himmel: ShaderMaterial
 var sonne: DirectionalLight3D
 const STURM_FARBE := Color("c9955a")
-const PLATZ_R := 125.0          # Radius des Platzes um den Turm (Boden-Shader: plaza_r)
-const STELLPLATZ_R := 104.0     # Abstand der Stellplätze zur Turmmitte
+const PLATZ_R := 100.0          # Radius des Platzes um den Turm (Boden-Shader: plaza_r)
+const STAND_R := 74.0           # Händler-Stände: Abstand zur Turmmitte
+const STAND_WINKEL := [-30.0, 90.0, 210.0]   # in den Lücken zwischen den drei Turmflügeln
+const CASINO_WINKEL := 30.0     # hinter der Spitze eines Flügels, schon in der Stadt
+const CASINO_R := 128.0
+const CASINO_GROESSE := 30.0
+var stand_orte: Array = []      # Vector3 je Händler-Stand
+var casino_rect := Rect2()
 
 func _ready() -> void:
 	rng.seed = 11
 	_umgebung()
 	_boden()
+	_stellplaetze()   # zuerst, damit die Stadt das Casino-Grundstück frei lässt
 	_stadt()
-	_stellplaetze()
 
 func _umgebung() -> void:
 	env = Environment.new()
@@ -97,48 +103,45 @@ func _boden() -> void:
 		duene.rotation.y = rng.randf() * TAU
 		add_child(duene)
 
-# Markierte Flächen auf dem Platz, auf denen später Händler oder ein Casino stehen sollen
+# Händler-Stände verteilt auf dem Platz (in den Lücken zwischen den Turmflügeln) + Grundstück für das Casino
 func _stellplaetze() -> void:
-	for sp in [["Händler", 35.0], ["Casino", 155.0]]:
-		var a := deg_to_rad(sp[1])
-		var mitte := Vector2(cos(a), sin(a)) * STELLPLATZ_R
-		var flaeche := MeshInstance3D.new()
-		var pm := PlaneMesh.new()
-		pm.size = Vector2(18, 18)
-		flaeche.mesh = pm
-		var m := StandardMaterial3D.new()
-		m.albedo_color = Color("d9cfbd")
-		m.roughness = 0.9
-		flaeche.material_override = m
-		flaeche.position = Vector3(mitte.x, 0.03, mitte.y)
-		add_child(flaeche)
-		for k in 4:   # gelbe Randmarkierung
-			var b := MeshInstance3D.new()
-			var bm := BoxMesh.new()
-			bm.size = Vector3(18.4, 0.04, 0.3) if k < 2 else Vector3(0.3, 0.04, 18.4)
-			b.mesh = bm
-			b.material_override = Bau.matt("f2c230", 0.6)
-			var o := Vector3(0, 0, 9.0 * (1 if k == 0 else -1)) if k < 2 else Vector3(9.0 * (1 if k == 2 else -1), 0, 0)
-			b.position = Vector3(mitte.x, 0.05, mitte.y) + o
-			add_child(b)
-		if sp[0] == "Händler":   # dort stehen jetzt die Marktstände (Haendler)
-			stellplaetze.append({"name": sp[0], "pos": Vector3(mitte.x, 0, mitte.y), "rect": Rect2(mitte, Vector2.ZERO)})
-			continue
-		var pfahl := Bau.zylinder(0.06, 0.06, 2.2, Bau.matt("5b5f66"), 8)
-		pfahl.position = Vector3(mitte.x, 1.1, mitte.y)
-		add_child(pfahl)
-		var schild := Label3D.new()
-		schild.text = "Demnächst:
-%s" % sp[0]
-		schild.font_size = 96
-		schild.pixel_size = 0.006
-		schild.outline_size = 18
-		schild.modulate = Color("1f5fae")
-		schild.outline_modulate = Color.WHITE
-		schild.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
-		schild.position = Vector3(mitte.x, 2.7, mitte.y)
-		add_child(schild)
-		stellplaetze.append({"name": sp[0], "pos": Vector3(mitte.x, 0, mitte.y), "rect": Rect2(mitte - Vector2(0.15, 0.15), Vector2(0.3, 0.3))})
+	for w in STAND_WINKEL:
+		var a := deg_to_rad(w)
+		stand_orte.append(Vector3(cos(a), 0, sin(a)) * STAND_R)
+	var ac := deg_to_rad(CASINO_WINKEL)
+	var mitte := Vector2(cos(ac), sin(ac)) * CASINO_R
+	casino_rect = Rect2(mitte - Vector2.ONE * CASINO_GROESSE * 0.5, Vector2.ONE * CASINO_GROESSE)
+	var flaeche := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2.ONE * CASINO_GROESSE
+	flaeche.mesh = pm
+	flaeche.material_override = Bau.matt("d9cfbd", 0.9)
+	flaeche.position = Vector3(mitte.x, 0.03, mitte.y)
+	add_child(flaeche)
+	var h := CASINO_GROESSE * 0.5
+	for k in 4:   # gelbe Randmarkierung
+		var rb := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3(CASINO_GROESSE + 0.4, 0.04, 0.3) if k < 2 else Vector3(0.3, 0.04, CASINO_GROESSE + 0.4)
+		rb.mesh = bm
+		rb.material_override = Bau.matt("f2c230", 0.6)
+		var o := Vector3(0, 0, h * (1 if k == 0 else -1)) if k < 2 else Vector3(h * (1 if k == 2 else -1), 0, 0)
+		rb.position = Vector3(mitte.x, 0.05, mitte.y) + o
+		add_child(rb)
+	var pfahl := Bau.zylinder(0.06, 0.06, 2.2, Bau.matt("5b5f66"), 8)
+	pfahl.position = Vector3(mitte.x, 1.1, mitte.y)
+	add_child(pfahl)
+	var schild := Label3D.new()
+	schild.text = "Demnächst:\nCasino"
+	schild.font_size = 96
+	schild.pixel_size = 0.006
+	schild.outline_size = 18
+	schild.modulate = Color("1f5fae")
+	schild.outline_modulate = Color.WHITE
+	schild.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	schild.position = Vector3(mitte.x, 2.7, mitte.y)
+	add_child(schild)
+	stellplaetze.append({"name": "Casino", "pos": Vector3(mitte.x, 0, mitte.y), "rect": Rect2(mitte - Vector2(0.15, 0.15), Vector2(0.3, 0.3))})
 
 func _stadt() -> void:
 	var mats := [
@@ -163,7 +166,7 @@ func _stadt() -> void:
 				var r := Rect2(poly[0], Vector2(bx, bz))
 				# nicht auf den Platz um den Turm bauen
 				var naechster := Vector2(clampf(0.0, r.position.x, r.end.x), clampf(0.0, r.position.y, r.end.y))
-				if naechster.length() < PLATZ_R + 6.0:
+				if naechster.length() < PLATZ_R + 6.0 or r.intersects(casino_rect.grow(6.0)):
 					z += 75.0
 					continue
 				haeuser.append(r)
