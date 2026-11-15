@@ -37,6 +37,9 @@ func _ready() -> void:
 	var details := StadtDetails.new()
 	add_child(details)
 	details.baue(self)
+	var verkehr := Verkehr.new()
+	add_child(verkehr)
+	verkehr.baue(self)
 
 func _umgebung() -> void:
 	env = Environment.new()

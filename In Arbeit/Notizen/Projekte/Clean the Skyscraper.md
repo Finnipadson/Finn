@@ -31,7 +31,7 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 - [x] Händler: drei Marktstände (Putzmittel-Boosts, Mode & Farben, Snacks mit Effekt), mit E ansprechen
 - [x] Casino (15.11.2026): begehbares Gebäude hinter einer Flügelspitze mit Blackjack, Glücksrad, einarmigem Banditen und Rubbellosen (mit E an der Station) – nur Spielgeld, Einsatz 10 € bis 10 % des Geldes, höchstens 5.000 €
 - [x] Stadt im Dubai-Stil, Teil 1 (15.11.2026): See mit Fontänen-Show am Turmfuß, ca. 860 Palmen, Laternen, Mittelstreifen und Zebrastreifen
-- [ ] Stadt Teil 2: fahrende Autos, Ampeln (Kenney Car Kit + City Kit Roads, Download durch den User)
+- [x] Stadt Teil 2 (15.11.2026): ca. 720 fahrende Autos mit Ampeln an allen Kreuzungen, grüne Schilderbrücken
 - [ ] Phase 4: Automatik (Helfer, Roboter, Drohnen)
 - [ ] Phase 5: Feinschliff (Sound, Effekte, Menü, .exe)
 - [x] Ansicht: Ich-Ansicht aus der Gondel (15.11.2026)

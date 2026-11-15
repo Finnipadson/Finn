@@ -219,6 +219,9 @@ func _frei_fuer_allee(p: Vector2) -> bool:
 		return false
 	if welt.see_abstand(p) < 18.0:
 		return false
+	for q in Verkehr.schild_punkte():   # unter den Schilderbrücken keine Palme
+		if p.distance_to(q) < 14.0:
+			return false
 	return not welt.casino_rect.grow(8.0).has_point(p)
 
 # MultiMesh(es) aus allen MeshInstance3D eines Modells

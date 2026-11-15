@@ -42,9 +42,12 @@ skripte/wirtschaft.gd  Zahlen zum Ausbalancieren: Lohn, Werkzeuge, Upgrades, Pre
 skripte/shop.gd        Werkstatt-Fenster
 skripte/laeufer.gd     Zu Fuß am Boden: Laufen, Springen, Kollision mit Turm/Häusern/Gondel
 skripte/haendler.gd    Drei moderne Glas-Kioske mit Verkäufern, verteilt zwischen den Turmflügeln
+skripte/verkehr.gd     Straßenverkehr: ca. 720 Autos (Rechtsverkehr, halten an roten Ampeln und hinter dem Vordermann), Ampeln an allen Kreuzungen, grüne Schilderbrücken
+shader/auto.gdshader   Kenney-Autos mit eigener Lackfarbe pro Auto (Lack-Feld der Farbpalette wird ersetzt)
+tools/verkehr_test.gd  Verkehr ohne Bild prüfen: godot --path . --headless --script tools/verkehr_test.gd
 skripte/stadtdetails.gd  Stadt im Dubai-Stil: See mit Fontänen-Show, Palmen (Platz, See, Mittelstreifen), Laternen – alles als MultiMesh
 shader/wasser.gdshader, fontaene.gdshader, palme.gdshader  Wasser, Fontänen (Choreografie im Shader, 48 s), Palmen-Farben
-modelle/               Kenney-Modelle (CC0): laden/ (Mini Market), leute/ (Mini Characters), essen/ (Food Kit), stadt/ (City Kit Commercial), natur/ (Palmen aus dem Pirate Kit) – je mit Textures/ und Lizenz
+modelle/               Kenney-Modelle (CC0): laden/ (Mini Market), leute/ (Mini Characters), essen/ (Food Kit), stadt/ (City Kit Commercial), natur/ (Palmen aus dem Pirate Kit), autos/ (Car Kit), strasse/ (City Kit Roads: Ampeln, Schilderbrücken) – je mit Textures/ und Lizenz
 tools/messen.gd        Größen aller Modelle ausgeben: godot --path . --headless --script tools/messen.gd
 skripte/haendler_menu.gd  Menü der Stände: Boosts kaufen, Aussehen kaufen/anziehen
 skripte/casino.gd       Begehbares Casino (Gebäude, Innenraum, vier Stationen, Kollisions-Rechtecke)

@@ -135,14 +135,21 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - Nebenbei behoben: Zu Fuß hat ein Klick in ein offenes Menü die Maus wieder gefangen (betraf auch die Händler-Menüs). `Laeufer.gesperrt` verhindert das jetzt.
      - Test `--ansicht=16 --geld=10000`: durch die Tür laufen, Wand prüfen, an jeder Station mit E öffnen, über die echten Knöpfe spielen (Rubbeln mit echten Mausbewegungen), Geld nachrechnen, Rückzahlung messen. Bestanden (0 Fehler). Testbilder: `--ansicht=17`.
    - Offen: Preise und Dauer der Boosts noch festlegen; im Casino gibt es noch keine Geräusche (kommt mit Phase 5).
-4c. [ ] **Stadt im Dubai-Stil** (Wunsch des Users, 15.11.2026) – **Teil 1 fertig**
+4c. [x] **Stadt im Dubai-Stil** (Wunsch des Users, 15.11.2026) – **fertig**
    - **See mit Fontänen** am Turmfuß hinter dem Kiosk bei 210° (`Welt.SEE_*`, `see_abstand()`, `see_umriss()`): spiegelndes Wasser (`shader/wasser.gdshader`), Steinkante, Promenade im Boden-Shader. 74 Fontänen (Bogen, niedrige Reihe, Ring, große Mittelfontäne bis 85 m) mit Strahl, Gischt und Schaum; die Show (4 Bilder, 48 s) rechnet `shader/fontaene.gdshader` selbst, kostet also kaum Leistung.
    - **Palmen** (Kenney Pirate Kit, CC0, Farben über `shader/palme.gdshader` entsättigt): Ring am Platzrand, Promenade um den See, Mittelstreifen aller Straßen bis 540 m (`StadtDetails.ALLEE_BIS`) – zusammen ca. 860 Palmen.
    - **Laternen** mit zwei Auslegern auf den Mittelstreifen und am See (ca. 390, aus Code).
    - **Straßen** im Boden-Shader: Mittelstreifen mit Rasen + Bordstein, Randlinien, Zebrastreifen vor den Kreuzungen.
    - Zu Fuß: Palmen und Laternen sind Hindernisse (`welt.hindernisse`), in den See kommt man nicht (`laeufer.polygone`).
    - Leistung: 133–160 FPS in 1440p (vorher ca. 150).
-   - **Teil 2 offen:** fahrende Autos (Kenney Car Kit) und Ampeln/Schilder (Kenney City Kit Roads) – die Pakete lädt der User herunter.
+   - **Teil 2 – Verkehr** (`skripte/verkehr.gd`, Kenney Car Kit + City Kit Roads, CC0, Vorschaubilder auf Stil geprüft: nur moderne Stadtautos, keine Traktoren/Karts):
+     - ca. 720 Autos (Limousine, SUV, Luxus-SUV, Sportwagen, Taxi, Lieferwagen, Polizei …) auf allen Straßen bis 620 m, Rechtsverkehr. Lackfarben wie in Dubai (viel Weiß, Silber, Schwarz) über `shader/auto.gdshader`.
+     - Ampeln an jeder Kreuzung (Takt: 11 s grün, 2,5 s gelb, 1,5 s alle rot); die Lampen leuchten wirklich. Autos halten vor dem Zebrastreifen und hinter dem Vordermann (`Verkehr.HALTELINIE`, `ABSTAND`).
+     - Sechs grüne Schilderbrücken mit Zielen („Wüstennadel ↑ Innenstadt“ …), `Verkehr.SCHILDER`; darunter stehen keine Palmen.
+     - Alle Autos eines Modells sind ein MultiMesh, die Lagen werden jedes Bild als Puffer geschrieben (ca. 1,3 ms pro Bild). Straßenstücke enden mitten im Block, dort tauchen die Autos weich auf und ab.
+     - Test `tools/verkehr_test.gd` (60 s ohne Bild): nie Autos beider Richtungen gleichzeitig auf einer Kreuzung, niemand fährt bei Rot – bestanden.
+     - Leistung danach: 120–170 FPS in 1440p.
+     - Autos fahren durch Fußgänger hindurch (keine Kollision mit dem Läufer).
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 
 ## Offene Fragen
