@@ -175,6 +175,13 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
    - **Start zu Fuß:** Man startet neben der Gondel unten. Die Gondel merkt sich die letzte Höhe und fährt beim Einsteigen mit 30 m/s dorthin zurück (`Spiel.letzte_hoehe`, `express`). Test `--ansicht=18`.
    - **Werkzeug-Kiosk** (grün, vierter Kiosk) mit fünf neuen Profi-Werkzeugen: Mikrofaser-Schwamm 350 €, Profi-Schwamm XXL 1.800 €, Teleskop-Abzieher 3.500 €, Dampfreiniger 9.000 €, Wasserlanze Turbo 25.000 € (`Wirtschaft.WERKZEUGE` mit `haendler: true`). Tasten 1–9 und 0. Die Werkstatt zeigt sie erst nach dem Kauf; ihre Liste scrollt jetzt. Test `--ansicht=19 --geld=1000`.
 4e. [x] **Neue Menü-Optik „Glas modern“** (Wahl des Users aus 4 Vorlagen, 15.11.2026): `skripte/ui_glas.gd` (gemeinsamer Stil: dunkles Glas, Reiter, Karten mit Symbol-Kachel, Cyan-Akzent). Werkstatt mit Reitern Gondeln · Helfer · Ausbau · Einstellungen, Höhe passt sich dem Inhalt an; alle Kiosk-Menüs im selben Stil (Mode mit Reitern). Testbilder `--ansicht=23`.
+4f. [x] Palmen-Shader (Rinde, Blätter, Wind) und gerenderte Bilder für Hotbar/Menüs (`symbole.gd`) – fertig (15.11.2026)
+4g. [ ] **Extras** (Entscheidungen des Users, 15.11.2026) – als Nächstes, **vor** Phase 5:
+   - **Sky-Lounge mit mehreren Etagen** im Turm: Lounge ab 200 m, Restaurant ab 500 m, Aussichtsplattform ab 800 m. Erreichbar per Express-Aufzug unten am Turm, sobald das Seil bis zur jeweiligen Höhe reicht. Inhalte (Vorschlag): Bar mit besonderen Boosts, Fernrohr, Glasboden.
+   - **Eigenes Penthouse** oben in einem Nachbar-Hochhaus am Platz (Aufzug). Möbel kaufen und frei platzieren; manche Möbel geben kleine Boni. Vitrine für die Pokale der Erfolge.
+   - **Arcade-Halle** (im Casino-Turm oder daneben): **Greifautomat** und weitere Automaten, aus denen man **Gegenstände fürs Penthouse** bekommt, die **Boni geben – je seltener, desto stärker** (Seltenheitsstufen, z. B. gewöhnlich/selten/episch/legendär). Gewinne landen im Penthouse.
+   - **Erfolge + Statistik:** Jeder Erfolg gibt **Geld + einen Pokal in der Vitrine** des Penthouses. Statistik-Seite mit Spielzeit, Fenstern, Rekorden.
+   - Weitere Ideen (noch nicht entschieden): besondere Fenster (gold, Graffiti, Glaser-Auftrag), Kundenaufträge mit Zeitlimit, Firma + Ruf, Stockwerk-Bonus, Radio, Fotomodus, zweiter Turm nach dem Durchspielen.
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 
 ## Offene Fragen
