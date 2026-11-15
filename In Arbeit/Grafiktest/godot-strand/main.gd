@@ -38,6 +38,7 @@ var ui := {}
 var rng := RandomNumberGenerator.new()
 var mat_cache := {}
 var banner_tween: Tween
+var schwimmer: Array = []
 
 # ---------------------------------------------------------------- Rauschen
 func h2(x: float, z: float) -> float:
@@ -131,10 +132,10 @@ func _umgebung() -> void:
 	sky.sky_material = sm
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.65
+	env.ambient_light_energy = 0.5
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 0.8
+	env.tonemap_exposure = 0.78
 	env.ssao_enabled = true
 	env.ssao_radius = 1.2
 	env.ssao_intensity = 1.5
@@ -147,8 +148,8 @@ func _umgebung() -> void:
 	env.fog_sky_affect = 0.0
 	env.fog_aerial_perspective = 0.3
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 1.12
-	env.adjustment_contrast = 1.04
+	env.adjustment_saturation = 1.25
+	env.adjustment_contrast = 1.08
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
@@ -399,58 +400,77 @@ func _objekte() -> void:
 	zyl(0.0, 1.5, 1.6, "e2483e", Vector3(0, 17.0, 0), lt, 12)
 	schatten(lt)
 
-	# --- Modelle aus den Kenney-Paketen (CC0) ---
+	# --- Modelle aus den Kenney-Paketen (CC0): Pirate Kit + Nature Kit (n_...) ---
 	rng.seed = 3
-	for i in 26:
+	var felsen := ["rocks-a", "rocks-b", "rocks-c", "n_rock_tallA", "n_rock_tallB", "n_rock_largeD"]
+	var fels_s := [1.6, 1.4, 1.6, 6.0, 6.5, 7.0]
+	for i in 30: # linke Landzunge
 		var x := -215.0 + rng.randf() * 90.0
 		var zz := 25.0 + rng.randf() * 85.0
 		if H(x, zz) > -3.0:
-			auf_boden(["rock-large", "rock-a", "rock-b", "rock-c"][i % 4], x, zz, rng.randf() * TAU, 2.0 + rng.randf() * 3.0, 0.3)
-	for i in 18:
+			var k := i % felsen.size()
+			auf_boden(felsen[k], x, zz, rng.randf() * TAU, fels_s[k] * (0.8 + rng.randf() * 0.8), 0.4)
+	for i in 20: # rechte Landzunge
 		var x := 140.0 + rng.randf() * 75.0
 		var zz := rng.randf() * 90.0
 		if H(x, zz) > -3.0:
-			auf_boden(["rock-large", "rock-a", "rock-b", "rock-c"][i % 4], x, zz, rng.randf() * TAU, 2.0 + rng.randf() * 2.5, 0.3)
-	for i in 14:
+			var k := i % felsen.size()
+			auf_boden(felsen[k], x, zz, rng.randf() * TAU, fels_s[k] * (0.8 + rng.randf() * 0.6), 0.4)
+	for i in 16: # Felsen auf dem Meeresboden
 		var x := (rng.randf() - 0.5) * 300.0
 		var zz := 60.0 - rng.randf() * 160.0
-		auf_boden(["rock-a", "rock-b", "rock-c"][i % 3], x, zz, rng.randf() * TAU, 1.5 + rng.randf() * 2.0, 0.2)
-	for p in [[-40, 162, 1.1], [-12, 175, 1.25], [18, 160, 1.0], [46, 150, 1.15], [72, 168, 1.05], [-70, 150, 1.0], [105, 150, 1.2], [-95, 165, 1.1], [30, 195, 1.2], [-55, 200, 1.0], [130, 135, 1.0], [60, 128, 0.9], [-30, 132, 0.95]]:
-		auf_boden(["palm-bend", "palm-straight"][int(p[0]) % 2 if int(p[0]) >= 0 else 1], float(p[0]), float(p[1]), rng.randf() * TAU, float(p[2]) * 3.2, 0.2)
-	for i in 50:
+		auf_boden(["rocks-sand-a", "rocks-sand-b", "rocks-sand-c"][i % 3], x, zz, rng.randf() * TAU, 0.8 + rng.randf() * 0.9, 0.3)
+	for p in [[34, 112, 0.7], [40, 116, 0.45], [-58, 120, 0.6], [70, 104, 0.9]]:
+		auf_boden("rocks-sand-c", float(p[0]), float(p[1]), rng.randf() * TAU, float(p[2]), 0.2)
+	var i_p := 0
+	for p in [[-40, 162, 1.1], [-12, 175, 1.25], [18, 160, 1.0], [46, 150, 1.15], [72, 168, 1.05], [-70, 150, 1.0], [105, 150, 1.2], [-95, 165, 1.1], [30, 195, 1.2], [-55, 200, 1.0], [130, 135, 1.0], [60, 128, 0.9], [-36, 136, 0.95], [88, 140, 1.0], [-120, 150, 1.1]]:
+		auf_boden(["palm-detailed-bend", "palm-detailed-straight", "palm-bend"][i_p % 3], float(p[0]), float(p[1]), rng.randf() * TAU, float(p[2]) * 2.4, 0.2)
+		i_p += 1
+	for i in 70: # Büsche, Blumen, Gras auf der Insel
 		var x := (rng.randf() - 0.5) * 320.0
-		var zz := 150.0 + rng.randf() * 120.0
-		if H(x, zz) > 3.2:
-			auf_boden(["plant-bush", "plant-bushLarge", "flower-redA", "grass-large", "plant-bushDetailed"][i % 5], x, zz, rng.randf() * TAU, 2.5 + rng.randf() * 1.5, 0.05)
-	auf_boden("barrel", -21, 146, 0.4, 2.0, 0.0)
-	auf_boden("barrel", -19.6, 147.5, 1.2, 2.0, 0.0)
-	auf_boden("crate", -27, 145.5, 0.3, 2.0, 0.0)
-	auf_boden("crate", 12, 128, 0.7, 2.0, 0.0)
-	auf_boden("barrel", -60, 30, 0.2, 2.0, 0.0)
-	auf_boden("crate", 10, 20, 0.9, 2.2, 0.0)
-	auf_boden("cannon", 80, -20, 1.4, 2.5, 0.2)
+		var zz := 140.0 + rng.randf() * 130.0
+		var h := H(x, zz)
+		if h > 3.4:
+			var art: String = ["n_plant_bushDetailed", "n_plant_bushLarge", "n_flower_redA", "n_grass_large", "n_plant_bush", "n_flower_yellowA", "grass-plant"][i % 7]
+			auf_boden(art, x, zz, rng.randf() * TAU, (1.4 if art == "grass-plant" else 6.0) * (0.8 + rng.randf() * 0.5), 0.05)
+		elif h > 1.0 and i % 3 == 0:
+			auf_boden("grass-patch", x, zz, rng.randf() * TAU, 1.6, 0.05)
+	# Strandlager bei der Bude
+	var bude := auf_boden("structure-roof", -24, 150, 0.35, 1.7, 0.0)
+	auf_boden("barrel", -19.5, 146, 0.4, 0.85, 0.0)
+	auf_boden("barrel", -18.4, 147.4, 1.2, 0.85, 0.0)
+	auf_boden("crate-bottles", -27.5, 145.5, 0.3, 0.95, 0.0)
+	auf_boden("crate", -28.2, 147.2, 1.1, 0.95, 0.0)
+	auf_boden("flag-pirate-high", -20, 154, 0.2, 1.5, 0.0)
+	auf_boden("cannon-mobile", 14, 132, 2.6, 1.0, 0.0)
+	auf_boden("barrel", 12, 128, 0.7, 0.85, 0.0)
+	auf_boden("flag-high-pennant", -30.5, 117, 0.0, 1.2, -1.6)
+	# Boot am Steg und Schiff draußen: schwimmen auf dem Wasser und sinken mit ab
+	schwimmer.append({"n": modell("boat-row-large", Vector3(-26.8, 0, 70), 0.2, 1.1), "x": -26.8, "z": 70.0, "tief": 0.25})
+	schwimmer.append({"n": modell("ship-pirate-medium", Vector3(-150, 0, -160), 2.2, 2.2), "x": -150.0, "z": -160.0, "tief": 1.6})
 
 	# Funde unter Wasser
-	var wrack := auf_boden("ship-wreck", 40, -38, 0.6, 3.0, 1.0)
-	if wrack == null:
-		wrack = auf_boden("ship-pirate-large", 40, -38, 0.6, 3.0, 1.0)
-		if wrack:
-			wrack.rotation.z = 0.28
-	funde.append({"name": "Schiffswrack", "text": "Hier ist wohl jemand zu tief gesegelt.", "oben": H(40, -38) + 4.0})
-	var truhe := auf_boden("chest", -72, 8, 0.8, 2.5, 0.1)
-	funde.append({"name": "Schatztruhe", "text": "Voll mit … nassem Sand. Und Gold!", "oben": H(-72, 8) + 1.2, "glanz": truhe})
-	auf_boden("bottle", -70, 11, 1.0, 2.0, 0.0)
-	auf_boden("chest", 128, -70, 2.0, 2.0, 0.1)
-	funde.append({"name": "Zweite Truhe", "text": "Da lag wohl ein ganzer Piratenschatz.", "oben": H(128, -70) + 1.0})
+	var wrack := auf_boden("ship-wreck", 40, -38, 0.6, 2.2, 1.2)
+	if wrack:
+		wrack.rotation.z = 0.22
+	funde.append({"name": "Schiffswrack", "text": "Hier ist wohl jemand zu tief gesegelt.", "oben": H(40, -38) + 7.0})
+	var truhe := auf_boden("chest", -72, 8, 0.8, 1.0, 0.1)
+	auf_boden("bottle", -70.5, 9.5, 1.0, 1.0, 0.0)
+	auf_boden("cannon-ball", -73.5, 9.2, 0.0, 1.0, -0.2)
+	funde.append({"name": "Schatztruhe", "text": "Voll mit … nassem Sand. Und Gold!", "oben": H(-72, 8) + 1.1, "glanz": truhe})
+	auf_boden("cannon", 126, -66, 2.0, 1.2, 0.2)
+	auf_boden("chest", 128, -70, 2.0, 1.0, 0.1)
+	funde.append({"name": "Kanone + Truhe", "text": "Da lag wohl ein ganzer Piratenschatz.", "oben": H(128, -70) + 1.0})
 	var oben := -99.0
 	rng.seed = 77
-	for i in 26:
+	for i in 40:
 		var x := 85.0 + rng.randf() * 55.0
 		var zz := 30.0 + rng.randf() * 34.0
 		var y := H(x, zz)
 		if y > -2.5:
 			continue
-		auf_boden(["plant-bushSmall", "plant-flatTall", "flower-purpleA", "flower-yellowA", "mushroom-red"][i % 5], x, zz, rng.randf() * TAU, 2.0 + rng.randf() * 1.5, 0.0)
+		var art: String = ["n_plant_bushSmall", "n_plant_flatTall", "n_flower_purpleA", "n_flower_yellowA", "n_mushroom_redGroup", "n_flower_redA"][i % 6]
+		auf_boden(art, x, zz, rng.randf() * TAU, 6.0 + rng.randf() * 3.0, 0.0)
 		oben = maxf(oben, y + 1.2)
 	funde.append({"name": "Korallengarten", "text": "Bunt. Und plötzlich ziemlich trocken.", "oben": oben})
 
@@ -965,6 +985,12 @@ func _process(dt: float) -> void:
 	for wm in wasser_mats:
 		wm.set_shader_parameter("wasser", level)
 	pegel_pfeil.position.y = maxf(-7.8, level)
+	for sw in schwimmer:
+		if sw.n:
+			var boden := H(sw.x, sw.z)
+			var schwimmt: bool = level - sw.tief > boden
+			sw.n.position.y = (level - sw.tief + sin(t * 1.3 + sw.x) * 0.08) if schwimmt else boden - 0.3
+			sw.n.rotation.z = sin(t * 0.9 + sw.z) * 0.03 if schwimmt else 0.12
 
 	for f in funde:
 		if not gefunden.has(f.name) and level < f.oben - 0.2:
@@ -1020,6 +1046,7 @@ func _demo() -> void:
 				4: [Vector3(10, 0, 128), PI + 0.5, 0.02, 0.0],
 				5: [Vector3(0, 0, 112), 0.1, -0.35, 0.0],
 				6: [Vector3(-60, 0, 30), -0.6, -0.15, -14.0],
+				7: [Vector3(-10, 0, 138), 2.28, -0.05, 0.0],
 			}
 			var v: Array = ansichten.get(n, ansichten[1])
 			spieler = v[0]

@@ -15,6 +15,7 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 		- Zufällige Funde zwischendurch (Schiffswrack, Schatz, seltenes Tier …)
 		- Speicherstand, damit man über Tage weiterspielt
 	- **Grafik-Test** (15.11.2026): `In Arbeit/Grafiktest/strand-test.html` (Three.js, nur Code, keine Downloads) – Strand mit Palmen, Steg mit Pegel, Leuchtturm, Wasser mit Schaumrand und Lichtnetz, Wasserstand sinkt beim Schöpfen; Eimer, Riesen-Eimer, Saugpumpe mit Strudel; Funde (Riff, Truhe, Anker, Wrack) tauchen auf. Für mehr Details evtl. CC0-Modelle (Kenney, Quaternius) oder Godot
+	- **Godot-Version** (15.11.2026): `In Arbeit/Grafiktest/godot-strand/` (Godot 4.7, Start: `start.bat`, Editor: `start.bat --editor`) – gleiche Szene, schöneres Licht/Wasser, dazu Kenney-Modelle (Pirate Kit + Nature Kit, CC0): Palmen, Felsen, Schiffswrack, Truhen, Kanonen, Bude, Piratenschiff und Ruderboot, die mit dem Wasser absinken. Deutlich näher am Vorbild als die Browser-Version → Favorit für das echte Spiel
 	- Eigene Themen-Ideen: Wüste Sandkorn für Sandkorn sieben (irgendwo liegt ein Ring), alle Blätter eines Waldes rechen (Wind weht neue nach), den Himmel von Wolken freiwischen, einen Berg löffelweise abtragen
 
 ## Tools & Apps
