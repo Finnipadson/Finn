@@ -28,6 +28,20 @@ float vn(vec2 p) {
 	return mix(mix(hs(i), hs(i + vec2(1, 0)), u.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), u.x), u.y);
 }
 float sst(float e, float x, float w) { return smoothstep(e - w, e + w, x); }
+// Gegen Flimmern: wie viel eines Bildpunkts (Breite aa) liegt im Band |x| < hb? Dünne Linien werden in der Ferne
+// automatisch blasser statt als harte, springende Pixel zu erscheinen.
+float band_k(float x, float hb, float aa) {
+	aa = max(aa, 1e-4);
+	return clamp((min(x + aa * 0.5, hb) - max(x - aa * 0.5, -hb)) / aa, 0.0, 1.0);
+}
+// periodische Streifen: Anteil des Bildpunkts (Breite w, in Perioden) in [0, b) jeder Periode
+float str_int(float x, float b) { return floor(x) * b + min(fract(x), b); }
+float streifen(float x, float b, float w) {
+	w = max(w, 1e-4);
+	return clamp((str_int(x + w * 0.5, b) - str_int(x - w * 0.5, b)) / w, 0.0, 1.0);
+}
+// Fugen eines Rasters (Abstand zur nächsten Fuge = Band um ganze Zahlen), x in Zellen
+float fuge(float x, float hb, float w) { return streifen(x + hb, hb * 2.0, w); }
 float see_sdf(vec2 p) {
 	vec2 rel = p - see_mitte;
 	vec2 l = vec2(dot(rel, see_dir), dot(rel, vec2(-see_dir.y, see_dir.x)));
@@ -48,8 +62,11 @@ void vertex() {
 void fragment() {
 	vec2 p = wp.xz;
 	float d = length(p);
-	float aa = max(fwidth(p.x), fwidth(p.y));
-	float fern = 1.0 - smoothstep(2.0, 6.0, aa * 30.0);
+	float aa = max(fwidth(p.x), fwidth(p.y)) * 1.25;
+	// Zufall pro Platte / feines Rauschen nur, solange es mehrere Bildpunkte groß ist – sonst Mittelwert
+	float nah_075 = 1.0 - smoothstep(0.08, 0.3, aa);     // 0,75-m-Platten
+	float nah_2 = 1.0 - smoothstep(0.2, 0.8, aa);        // ~2-m-Platten / Rauschen
+	float nah_04 = 1.0 - smoothstep(0.04, 0.15, aa);     // 0,4-m-Blumenzellen
 	// Wüste mit Rippeln und Flecken
 	vec3 w = sand * (0.9 + 0.12 * vn(p * 0.01) + 0.05 * vn(p * 0.2));
 	w *= 1.0 - 0.04 * sin(p.x * 0.35 + vn(p * 0.02) * 6.0) * (1.0 - smoothstep(50.0, 400.0, aa * 400.0));
@@ -57,9 +74,9 @@ void fragment() {
 	float stadt = 1.0 - smoothstep(1350.0, 1950.0, d + (vn(p * 0.004) - 0.5) * 600.0);
 	// Gehweg: 0,75-m-Platten mit Fugen
 	vec2 gp = p / 0.75;
-	vec2 gf = abs(fract(gp) - 0.5);
-	float gfuge = (1.0 - sst(0.45, max(gf.x, gf.y), aa / 0.75 * 0.7)) * fern;
-	vec3 gw = gehweg * (0.95 + 0.07 * hs(floor(gp)) + 0.04 * vn(p * 0.08));
+	float gw_aa = aa / 0.75;
+	float gfuge = max(fuge(gp.x, 0.05, gw_aa), fuge(gp.y, 0.05, gw_aa));
+	vec3 gw = gehweg * (0.95 + 0.07 * mix(0.5, hs(floor(gp)), nah_075) + 0.04 * vn(p * 0.08));
 	gw *= 1.0 - 0.12 * gfuge;
 	vec3 c = mix(w, gw, stadt);
 
@@ -86,19 +103,19 @@ void fragment() {
 	// Bordstein + Rinne neben der Fahrbahn
 	float bord_da = max((1.0 - sst(7.2, q.x, aa)) * da_z, (1.0 - sst(7.2, q.y, aa)) * da_x) * stadt;
 	c = mix(c, vec3(0.86, 0.85, 0.82), bord_da * (1.0 - str));
-	c = mix(c, asphalt * (0.94 + 0.08 * vn(p * 0.7)), str);
+	c = mix(c, asphalt * (0.94 + 0.08 * mix(0.5, vn(p * 0.7), nah_2)), str);
 	// Mittelstreifen mit Rasen + Bordstein in Turmnähe (dort stehen Palmen + Laternen), sonst gestrichelte Linie
 	float allee = 1.0 - smoothstep(allee_r - 5.0, allee_r + 5.0, d);
 	float mittel = (1.0 - sst(1.5, naechste, aa)) * sst(12.0, zur_kreuzung, aa) * str * allee;
-	vec3 rasen = gruen * (0.8 + 0.3 * vn(p * 0.4));
+	vec3 rasen = gruen * (0.8 + 0.3 * mix(0.5, vn(p * 0.4), nah_2));
 	c = mix(c, mix(vec3(0.78, 0.76, 0.72), rasen, 1.0 - sst(1.15, naechste, aa)), mittel);
-	float linie = (1.0 - sst(0.15, naechste, aa)) * step(0.5, fract(laengs / 6.0)) * str * (1.0 - allee) * sst(12.0, zur_kreuzung, aa);
-	c = mix(c, vec3(0.95), linie * fern);
+	float linie = band_k(naechste, 0.15, aa) * streifen(laengs / 6.0 + 0.5, 0.5, aa / 6.0) * str * (1.0 - allee) * sst(12.0, zur_kreuzung, aa);
+	c = mix(c, vec3(0.95), linie);
 	// Fahrbahnränder + Zebrastreifen vor den Kreuzungen
-	float randlinie = (1.0 - sst(0.12, abs(naechste - 5.8), aa)) * str * sst(7.0, zur_kreuzung, aa);
-	c = mix(c, vec3(0.92), randlinie * fern);
-	float zebra = sst(7.5, zur_kreuzung, aa) * (1.0 - sst(11.0, zur_kreuzung, aa)) * step(0.5, fract(quer / 1.2)) * str * (1.0 - sst(5.5, naechste, aa));
-	c = mix(c, vec3(0.93), zebra * fern * (1.0 - smoothstep(700.0, 900.0, d)));
+	float randlinie = band_k(naechste - 5.8, 0.12, aa) * str * sst(7.0, zur_kreuzung, aa);
+	c = mix(c, vec3(0.92), randlinie);
+	float zebra = sst(7.5, zur_kreuzung, aa) * (1.0 - sst(11.0, zur_kreuzung, aa)) * streifen(quer / 1.2 + 0.5, 0.5, aa / 1.2) * str * (1.0 - sst(5.5, naechste, aa));
+	c = mix(c, vec3(0.93), zebra * (1.0 - smoothstep(700.0, 900.0, d)));
 
 	// ---------------- Platz + See-Promenade: polierte Steinplatten in Ringen um den Turm
 	float see_k = 1.0 - sst(promenade, see_sdf(p), 0.5);
@@ -108,17 +125,17 @@ void fragment() {
 	float bogen = atan(p.y, p.x) * d + hs(vec2(ri, 3.1)) * 3.0;
 	float tl = 2.4;
 	float ti = floor(bogen / tl);
-	float jr = min(fract(d / ringw), 1.0 - fract(d / ringw)) * ringw;
-	float jt = min(fract(bogen / tl), 1.0 - fract(bogen / tl)) * tl;
-	float pfuge = (1.0 - sst(0.035, min(jr, jt), aa * 0.7)) * fern;
-	float band = step(mod(ri, 12.0), 0.5);                      // dunkles Granitband alle 12 Ringe
-	float platte = hs(vec2(ri, ti));
-	vec3 pl = stein_hell * (0.88 + 0.16 * platte + 0.06 * vn(p * 0.6));
-	pl = mix(pl, pl * vec3(1.03, 0.97, 0.9), step(0.7, platte));   // ein paar wärmere Platten
-	pl = mix(pl, stein_dunkel * (0.9 + 0.15 * vn(p * 0.9)), band);
+	// Fugen gefiltert; die Bogen-Richtung hat am Winkelsprung (−x-Achse) eine Naht → dort Breite begrenzen
+	float aa_b = min(fwidth(bogen) * 1.25, 4.0);
+	float pfuge = max(fuge(d / ringw, 0.035 / ringw, aa / ringw), fuge(bogen / tl, 0.035 / tl, aa_b / tl));
+	float band = streifen(d / (ringw * 12.0), 1.0 / 12.0, aa / (ringw * 12.0));   // dunkles Granitband alle 12 Ringe
+	float platte = mix(0.5, hs(vec2(ri, ti)), nah_2);
+	vec3 pl = stein_hell * (0.88 + 0.16 * platte + 0.06 * mix(0.5, vn(p * 0.6), nah_2));
+	pl = mix(pl, pl * vec3(1.03, 0.97, 0.9), mix(0.3, step(0.7, platte), nah_2));   // ein paar wärmere Platten
+	pl = mix(pl, stein_dunkel * (0.9 + 0.15 * mix(0.5, vn(p * 0.9), nah_2)), band);
 	pl *= 1.0 - 0.17 * pfuge;
 	// Grünring mit Blumenbeeten (dort stehen die Palmen)
-	float ring = sst(84.0, d, 0.6) * (1.0 - sst(96.0, d, 0.6));
+	float ring = sst(84.0, d, max(0.6, aa)) * (1.0 - sst(96.0, d, max(0.6, aa)));
 	// Blumenbeete: weiche, längliche Flecken im Rasen, Blüten als feines Rauschen
 	float beet = sst(0.55, sin(atan(p.y, p.x) * 30.0) * 0.5 + 0.5 + (vn(p * 0.25) - 0.5) * 0.4, 0.06) * (1.0 - sst(3.5, abs(d - 90.0), 0.8));
 	// einzelne runde Blüten in kleinen Zellen (0,4 m), Farbe je Zelle
@@ -128,9 +145,11 @@ void fragment() {
 	float punkt = (1.0 - sst(0.08, length(p - mitte_b), aa * 0.7)) * hat;
 	float wahl = hs(zelle + 1.9);
 	vec3 bluete = wahl < 0.33 ? vec3(0.86, 0.2, 0.32) : (wahl < 0.66 ? vec3(0.97, 0.82, 0.25) : vec3(0.95, 0.95, 0.97));
-	vec3 erde = vec3(0.32, 0.4, 0.2) * (0.8 + 0.3 * vn(p * 3.0));
-	vec3 blumen = mix(rasen, mix(erde, bluete, punkt * fern), beet);
-	float rand_ring = (1.0 - sst(0.25, abs(d - 84.0), aa)) + (1.0 - sst(0.25, abs(d - 96.0), aa));
+	vec3 erde = vec3(0.32, 0.4, 0.2) * (0.8 + 0.3 * mix(0.5, vn(p * 3.0), nah_04));
+	// in der Ferne: Blüten als gleichmäßige Mischfarbe (ca. 55 % Zellen mit Blüte, Punkt ≈ 13 % der Zelle)
+	vec3 bunt_mittel = mix(erde, vec3(0.93, 0.66, 0.51), 0.07);
+	vec3 blumen = mix(rasen, mix(mix(erde, bluete, punkt), bunt_mittel, 1.0 - nah_04), beet);
+	float rand_ring = band_k(d - 84.0, 0.25, aa) + band_k(d - 96.0, 0.25, aa);
 	pl = mix(pl, blumen, ring * (1.0 - see_k));
 	pl = mix(pl, vec3(0.86, 0.85, 0.82), clamp(rand_ring, 0.0, 1.0) * (1.0 - see_k));
 	c = mix(c, pl, plaza_k);

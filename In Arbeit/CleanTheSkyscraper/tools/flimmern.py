@@ -19,6 +19,7 @@ ORTE = {
     "boden_nah":  (1, "192,1.7,180,190,0,240", "0,0,0.3", 0),          # Straße mit Gehweg, Zebrastreifen
     "platz_nah":  (1, "-45,1.7,60,-80,0,100", "0.3,0,0", 0),           # Platz, Steinringe, Blumenbeete
     "boden_fern": (1, "0,150,190,0,0,650", "0.6,0,0", 0),             # aus Gondelhöhe auf die Stadt
+    "boden_flach":(1, "40,25,-300,0,0,-60", "0.2,0,0", 0),              # flach über Straßen + Platz (Gondel unten)
     "turmfuss":   (1, "30,1.7,170,0,40,0", "0.3,0,0", 0),              # Turmfuß + Platz
     "fassade":    (4, None, "tempo", 0),                                 # Gondel-Fahrt an der Turmfassade
     "turm_fern":  (1, "-650,150,300,0,300,0", "0,0,1.5", 0),             # Turm aus der Stadt
