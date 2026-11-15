@@ -13,6 +13,7 @@ var pitch := 0.0
 var info: Label
 var ansicht := 0
 var fahrt := Vector3.ZERO
+var dreh := 0.0
 var schalter := {}
 var frei := false
 var spiel := false
@@ -26,7 +27,7 @@ func _ready() -> void:
 			frei = true
 		if a.begins_with("--geld="):
 			test_geld = int(a.split("=")[1])
-		for k in ["taa", "ssr", "ssil", "msaa", "smaa", "scale", "fsr", "fpstest"]:
+		for k in ["taa", "ssr", "ssil", "msaa", "smaa", "scale", "fsr", "fpstest", "ssao", "schatten", "glow"]:
 			if a.begins_with("--%s=" % k):
 				schalter[k] = int(a.split("=")[1])
 	welt = Welt.new()
@@ -96,6 +97,17 @@ func _startansicht() -> void:
 			if w.size() == 6:
 				cam.position = Vector3(w[0], w[1], w[2])
 				cam.look_at(Vector3(w[3], w[4], w[5]))
+		# --fahrt=dx,dy,dz: Kamera gleichmäßig bewegen (m/s) – für Flimmer-Messungen (tools/flimmern.py)
+		if arg.begins_with("--fahrt="):
+			var v := arg.split("=")[1].split_floats(",")
+			if v.size() == 3:
+				fahrt = Vector3(v[0], v[1], v[2])
+		# --tempo=f: Testfahrt (z. B. Ansicht 4) langsamer/schneller
+		if arg.begins_with("--tempo="):
+			fahrt *= float(arg.split("=")[1])
+		# --dreh=grad_pro_s: Kamera langsam um die Hochachse drehen
+		if arg.begins_with("--dreh="):
+			dreh = deg_to_rad(float(arg.split("=")[1]))
 	var r := cam.rotation
 	yaw = r.y
 	pitch = r.x
@@ -116,6 +128,13 @@ func _grafik() -> void:
 		vp.use_taa = false
 	welt.env.ssr_enabled = schalter.get("ssr", 1) == 1
 	welt.env.ssil_enabled = schalter.get("ssil", 0) == 1
+	# Test-Schalter (Flimmer-Suche): Umgebungsverdeckung, Sonnenschatten, Glühen abschaltbar
+	if schalter.has("ssao"):
+		welt.env.ssao_enabled = schalter.ssao == 1
+	if schalter.has("schatten"):
+		welt.sonne.shadow_enabled = schalter.schatten == 1
+	if schalter.has("glow"):
+		welt.env.glow_enabled = schalter.glow == 1
 
 func _hud() -> void:
 	var cl := CanvasLayer.new()
@@ -157,6 +176,8 @@ func _process(dt: float) -> void:
 				get_tree().quit()
 		return
 	cam.position += fahrt * dt
+	if dreh != 0.0:
+		cam.rotate_y(dreh * dt)
 	if schalter.has("fpstest"):
 		fps_zeit += dt
 		if fps_zeit > 6.0:

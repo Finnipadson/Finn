@@ -27,30 +27,46 @@ void vertex() {
 	wy = (MODEL_MATRIX * vec4(VERTEX, 1.0)).y;
 }
 
+// Gefilterte Streifen (gegen Flimmern): Anteil eines Bildpunkts (Breite w, in Zellen), der in einem
+// periodischen Streifen [0, b) jeder Zelle liegt – statt harter step()-Kante, die beim Bewegen springt.
+float streifen_int(float x, float b) { return floor(x) * b + min(fract(x), b); }
+float streifen(float x, float b, float w) {
+	w = max(w, 1e-4);
+	return clamp((streifen_int(x + w * 0.5, b) - streifen_int(x - w * 0.5, b)) / w, 0.0, 1.0);
+}
+
 void fragment() {
 	if (wy > innen_band.x && wy < innen_band.y) discard;
 	vec2 c = vec2(UV.x / fenster_breite, UV.y / stock);
 	vec2 id = floor(c);
 	vec2 f = fract(c);
-	float band = step(f.y, band_anteil);
-	float rx = step(f.x, rahmen_x) + step(1.0 - rahmen_x, f.x);
-	float ry = step(f.y, band_anteil + 0.035) * (1.0 - band) + step(0.975, f.y);
-	float ist_glas = (1.0 - clamp(rx + ry, 0.0, 1.0)) * (1.0 - band);
-	float h = hs(id);
-	// Dreck: nur ein Teil der Fenster, mit Schlieren und Rand
-	float dreck = step(1.0 - dreckig, hs(id + 17.3));
+	// Breite eines Bildpunkts in Zellen (etwas mehr als 1 Pixel → weiche, ruhige Kanten)
+	vec2 w = fwidth(c) * 1.25;
+	float band = streifen(c.y, band_anteil, w.y);
+	float rx = streifen(c.x + rahmen_x, rahmen_x * 2.0, w.x);
+	float ry = streifen(c.y - band_anteil, 0.035, w.y) + streifen(c.y + 0.025, 0.025, w.y);
+	float ist_glas = (1.0 - rx) * clamp(1.0 - band - ry, 0.0, 1.0);
+	// Zufallswerte pro Fenster (Helligkeit, Dreck, Licht) nur, solange ein Fenster mehrere Bildpunkte groß ist –
+	// sonst springen sie beim Bewegen von Pixel zu Pixel. Danach weich auf Mittelwerte.
+	float gross = max(w.x, w.y * 2.0);
+	float fern = smoothstep(0.12, 0.45, gross);
+	float h = mix(hs(id), 0.5, fern);
+	float dreck = mix(step(1.0 - dreckig, hs(id + 17.3)), dreckig, fern);
 	float schlieren = vn(vec2(f.x * 6.0 + id.x * 3.1, f.y * 1.5 + id.y * 2.7)) * 0.6 + vn(f * 14.0 + id * 5.0) * 0.4;
+	schlieren = mix(schlieren, 0.5, smoothstep(0.03, 0.12, gross));
 	float rand = smoothstep(0.25, 0.0, min(min(f.x, 1.0 - f.x) * 2.0, (f.y - band_anteil) * 2.5));
+	rand = mix(rand, 0.3, smoothstep(0.05, 0.2, gross));
 	float d = dreck * clamp(schlieren * 0.9 + rand * 0.5, 0.0, 1.0);
 	vec3 g = glas * (0.88 + 0.24 * h);
 	g = mix(g, schmutz_farbe, clamp(d * 1.1, 0.0, 0.95));
-	vec3 r = mix(rahmen, bruestung, band);
-	// In der Ferne (Fenster kleiner als ein Pixel) auf Mittelwerte überblenden → kein Flimmern
-	float fern = smoothstep(0.5, 1.4, max(fwidth(c.x), fwidth(c.y) * 2.0)) * 0.85;
+	vec3 r = mix(rahmen, bruestung, band / max(band + ry + rx * (1.0 - band), 1e-4));
+	// Ganz weit weg (Fenster kleiner als ein Bildpunkt) auf die Fassaden-Mittelfarbe
+	float sehr_fern = smoothstep(0.6, 1.4, gross) * 0.85;
 	vec3 mittel = mix(mix(rahmen, bruestung, band_anteil), mix(glas, schmutz_farbe, dreckig * 0.4), 0.8);
-	ALBEDO = mix(mix(r, g, ist_glas), mittel, fern);
-	METALLIC = mix(mix(0.25, metall * (1.0 - d * 0.9), ist_glas), metall * 0.6, fern);
-	ROUGHNESS = mix(mix(0.45, mix(0.08, 0.9, d), ist_glas), 0.3, fern);
-	float an = step(1.0 - licht, hs(id + 41.7)) * ist_glas * (1.0 - d);
-	EMISSION = vec3(1.0, 0.82, 0.55) * an * 0.6 * (1.0 - fern);
+	ALBEDO = mix(mix(r, g, ist_glas), mittel, sehr_fern);
+	METALLIC = mix(mix(0.25, metall * (1.0 - d * 0.9), ist_glas), metall * 0.6, sehr_fern);
+	ROUGHNESS = mix(mix(0.45, mix(0.08, 0.9, d), ist_glas), 0.3, sehr_fern);
+	// Licht hinter dem Fenster: in der Ferne als gleichmäßiger, schwacher Schein statt einzelner Punkte
+	float an = mix(step(1.0 - licht, hs(id + 41.7)), licht, fern) * ist_glas * (1.0 - d);
+	EMISSION = vec3(1.0, 0.82, 0.55) * an * 0.6 * (1.0 - sehr_fern);
 }
