@@ -144,8 +144,8 @@ func _mode_reiter(i: int) -> void:
 
 func _boosts() -> void:
 	unter.text = "WIRKT EINE ZEIT LANG – NOCHMAL KAUFEN VERLÄNGERT"
-	var kurz := {"glanzspray": "GS", "goldpolitur": "GP", "kaffee": "KA", "eis": "EI", "limo": "LI"}
-	var farbe := {"glanzspray": "35c8ff", "goldpolitur": "ffc531", "kaffee": "c8925a", "eis": "ff9ad5", "limo": "e8e04a"}
+	var kurz := {"glanzspray": "GS", "goldpolitur": "GP", "kaffee": "KA", "eis": "EI", "limo": "LI", "cocktail": "SC", "mojito": "MO", "espresso": "ES", "mittag": "MM", "chefmenue": "KC", "champagner": "GC"}
+	var farbe := {"glanzspray": "35c8ff", "goldpolitur": "ffc531", "kaffee": "c8925a", "eis": "ff9ad5", "limo": "e8e04a", "cocktail": "ff4fb8", "mojito": "7fe08a", "espresso": "c8925a", "mittag": "ffb03a", "chefmenue": "ffc531", "champagner": "f2e3b0"}
 	for id in Wirtschaft.BOOSTS:
 		var b: Dictionary = Wirtschaft.BOOSTS[id]
 		if b.stand != stand:

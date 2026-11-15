@@ -160,9 +160,9 @@ func status(t: String) -> void:
 
 func steuerung(zu_fuss: bool) -> void:
 	if zu_fuss:
-		hinweis.text = "Zu Fuß: WASD laufen · Shift rennen · Leertaste springen (Jetpack: hoch, Strg: runter) · E an der Gondel: einsteigen\n1–4 / Mausrad: Fahrzeug · Tab: Werkstatt · B: Album · Esc: Maus frei"
+		hinweis.text = "Zu Fuß: WASD laufen · Shift rennen · Leertaste springen (Jetpack: hoch, Strg: runter) · E an der Gondel: einsteigen\n1–4 / Mausrad: Fahrzeug · Tab: Werkstatt · B: Album · P: Erfolge · Esc: Maus frei"
 	else:
-		hinweis.text = "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · E: runter + aussteigen · Tab: Werkstatt · B: Album · 1–0 / Mausrad: Werkzeug · Esc: Maus frei"
+		hinweis.text = "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · E: runter + aussteigen · Tab: Werkstatt · B: Album · P: Erfolge · 1–0 / Mausrad: Werkzeug · Esc: Maus frei"
 
 # Hotbar: Einträge {taste, name, farbe, kurz}; aktiv = Index des gewählten. Baut nur neu, wenn sich etwas geändert hat.
 func hotbar(eintraege: Array, aktiv: int) -> void:

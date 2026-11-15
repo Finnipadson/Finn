@@ -20,7 +20,15 @@ float vn(vec2 p) {
 	return mix(mix(hs(i), hs(i + vec2(1, 0)), u.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), u.x), u.y);
 }
 
+// Innenraum (Arcade, Penthouse): Fassade in diesem Höhenband weglassen, solange die Kamera drin ist
+uniform vec2 innen_band = vec2(-1.0, -1.0);
+varying float wy;
+void vertex() {
+	wy = (MODEL_MATRIX * vec4(VERTEX, 1.0)).y;
+}
+
 void fragment() {
+	if (wy > innen_band.x && wy < innen_band.y) discard;
 	vec2 c = vec2(UV.x / fenster_breite, UV.y / stock);
 	vec2 id = floor(c);
 	vec2 f = fract(c);

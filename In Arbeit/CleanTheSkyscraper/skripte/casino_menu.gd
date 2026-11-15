@@ -254,6 +254,7 @@ func _zahle() -> bool:
 func _abrechnen(faktor: float, text: String) -> void:
 	var aus := int(round(einsatz * faktor))
 	wirtschaft.geld += aus
+	wirtschaft.casino_runde(einsatz, aus)
 	letzter_gewinn = aus
 	letzter_faktor = faktor
 	laeuft = false

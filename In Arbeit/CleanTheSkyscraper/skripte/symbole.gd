@@ -19,6 +19,8 @@ func erzeugen() -> void:
 			if c.name.begins_with("flamme"):
 				c.visible = false
 		auftraege.append([f.id, m, 0.0])
+	for id in Wirtschaft.GEGENSTAENDE:   # Penthouse-Gegenstände (Möbel, Arcade-Gewinne): Bild-ID "g_" + id
+		auftraege.append(["g_" + id, Moebel.modell(id), 0.0])
 	var figur: Node3D = load("res://modelle/leute/character-worker.glb").instantiate()
 	auftraege.append(["", figur, 0.0])
 	var studios := []

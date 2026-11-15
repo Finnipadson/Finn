@@ -25,6 +25,8 @@ var rechtecke: Array = []        # Rect2 für die Kollision zu Fuß (Wände + St
 var eingang := Vector2.ZERO      # Punkt draußen vor der Tür (Welt)
 var rad: Node3D                  # dreht sich langsam
 var _leucht: Array = []          # blinkende Leuchtstreifen
+var turm_mat: ShaderMaterial     # Fassade des Hochhauses darüber (Penthouse: innen_band)
+var aufzug_pos := Vector2.ZERO   # vor der Aufzugstür (Welt) – Aufzug zur Arcade-Halle und ins Penthouse
 
 func setup(grundstueck: Rect2) -> void:
 	mitte = grundstueck.get_center()
@@ -37,6 +39,7 @@ func setup(grundstueck: Rect2) -> void:
 	_banditen()
 	_lose(Vector2(-7.5, 9.6))
 	_bar()
+	_aufzug()
 
 # Welche Station ist nah genug? (-1 = keine)
 func station_bei(p: Vector2) -> int:
@@ -270,7 +273,8 @@ func _turm_drauf() -> void:
 	var stw := []
 	for k in TURM_STOCKWERKE:
 		stw.append({"poly": poly, "y0": HOCH + 0.3 + k * 3.5, "h": 3.5})
-	add_child(Bau.baue(stw, _fassaden_mat(), Bau.matt("bdb3a3")))
+	turm_mat = _fassaden_mat()
+	add_child(Bau.baue(stw, turm_mat, Bau.matt("bdb3a3")))
 
 # ---------------------------------------------------------------- Innenraum
 func _teppich() -> ImageTexture:
@@ -511,3 +515,17 @@ func _bar() -> void:
 	_licht(Vector3(m.x, 3.2, m.y + 0.6), "bfe9ff", 1.2, 6.0)
 	_schrift("BAR", Vector3(m.x, 3.9, -HALB + WAND + 0.1), 0.0, 96, 0.008, Color(0.55, 0.9, 1.0))
 	_fest(m.x - 2.6, -HALB, m.x + 2.6, m.y + 1.3)
+
+# Aufzug an der Innenwand neben dem Eingang (−X): fährt in die Arcade-Halle (1. Stock) und ins Penthouse (oben)
+func _aufzug() -> void:
+	var x := -HALB + WAND + 0.03
+	var z := -6.0
+	var stahl := Bau.metall("c9ced4", 0.25, 0.85)
+	var gold := Bau.metall("d9a441", 0.25, 0.9)
+	for s in [-1.0, 1.0]:
+		_box(Vector3(0.06, 2.7, 0.95), Vector3(x, 1.62, z + s * 0.49), stahl)
+		_box(Vector3(0.1, 2.9, 0.12), Vector3(x, 1.72, z + s * 1.02), gold)
+	_box(Vector3(0.1, 0.12, 2.16), Vector3(x, 3.1, z), gold)
+	_box(Vector3(0.05, 0.1, 0.06), Vector3(x + 0.03, 1.6, z + 1.35), _leuchte("ffcf6a", 2.5))
+	_schrift("ARCADE  ·  PENTHOUSE", Vector3(x + 0.04, 3.55, z), PI * 0.5, 60, 0.006, Color(1.0, 0.82, 0.3))
+	aufzug_pos = mitte + Vector2(x + 2.0, z)

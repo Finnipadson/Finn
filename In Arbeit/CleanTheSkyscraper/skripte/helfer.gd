@@ -27,6 +27,7 @@ var _neu_suchen := 0.0
 var zeit := 0.0
 var verlauf: Array = []         # Zeitpunkte geputzter Fenster (für „Fenster/Minute“)
 var aktiv := true
+var tempo := 1.0                # Penthouse-Bonus + Boosts: schneller putzen
 
 func setup(t: Turm, z: FensterZustand, w: Wirtschaft, s: Spieler) -> void:
 	turm = t
@@ -51,7 +52,7 @@ func anzahl() -> int:
 func pro_minute() -> float:
 	var n := 0.0
 	for h in liste:
-		n += 60.0 / float(Wirtschaft.HELFER[h.art].sekunden)
+		n += 60.0 / float(Wirtschaft.HELFER[h.art].sekunden) * tempo
 	return n
 
 func zuletzt_pro_minute() -> int:
@@ -129,7 +130,7 @@ func _an_der_fassade(h: Dictionary, dt: float) -> void:
 
 func _putzen(h: Dictionary, dt: float) -> void:
 	var z: Vector2i = h.ziel
-	var dauer: float = Wirtschaft.HELFER[h.art].sekunden
+	var dauer: float = Wirtschaft.HELFER[h.art].sekunden / maxf(tempo, 0.1)
 	h.zeit = float(h.zeit) + dt
 	if zustand.ist_sauber(z.y, z.x):   # hat schon jemand anderes geputzt
 		_fertig(h)

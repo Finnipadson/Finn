@@ -55,7 +55,78 @@ const BOOSTS := {
 	"kaffee": {"name": "Kaffee", "text": "4 Minuten lang fährt die Gondel 60 % schneller.", "dauer": 240, "preis": 25, "stand": "snack"},
 	"eis": {"name": "Eis", "text": "4 Minuten lang größere Reichweite (+0,8 m).", "dauer": 240, "preis": 30, "stand": "snack"},
 	"limo": {"name": "Zitronenlimo", "text": "5 Minuten lang bleiben die Tauben weg – sie mögen den Geruch nicht.", "dauer": 300, "preis": 20, "stand": "snack"},
+	# Sky-Lounge: stärkere Spezial-Boosts. wirkung: lohn/flaeche/tempo/reich/helfer (Anteile, +0,5 = +50 %), tauben = Tauben bleiben weg
+	"cocktail": {"name": "Sky-Cocktail", "text": "10 Minuten lang +50 % Geld pro Fenster.", "dauer": 600, "preis": 220, "stand": "bar", "wirkung": {"lohn": 0.5}},
+	"mojito": {"name": "Minz-Mojito", "text": "10 Minuten lang +80 % Wischfläche.", "dauer": 600, "preis": 160, "stand": "bar", "wirkung": {"flaeche": 0.8}},
+	"espresso": {"name": "Espresso doppio", "text": "8 Minuten lang fährt die Gondel doppelt so schnell und die Helfer putzen 50 % schneller.", "dauer": 480, "preis": 140, "stand": "bar", "wirkung": {"tempo": 1.0, "helfer": 0.5}},
+	"mittag": {"name": "Mittagsmenü", "text": "15 Minuten: +50 % Wischfläche, +60 % Tempo, +0,8 m Reichweite und keine Tauben.", "dauer": 900, "preis": 380, "stand": "restaurant", "wirkung": {"flaeche": 0.5, "tempo": 0.6, "reich": 0.8, "tauben": 1.0}},
+	"chefmenue": {"name": "Menü des Küchenchefs", "text": "15 Minuten lang doppeltes Geld pro Fenster und +50 % Wischfläche.", "dauer": 900, "preis": 700, "stand": "restaurant", "wirkung": {"lohn": 1.0, "flaeche": 0.5}},
+	"champagner": {"name": "Gipfel-Champagner", "text": "20 Minuten lang dreifaches Geld pro Fenster, Helfer doppelt so schnell.", "dauer": 1200, "preis": 1500, "stand": "gipfel", "wirkung": {"lohn": 2.0, "helfer": 1.0}},
 }
+
+# ---------------------------------------------------------------- Penthouse: Möbel + Arcade-Gegenstände
+# Seltenheit 0–3: gewöhnlich, selten, episch, legendär. Bonus wirkt nur, wenn der Gegenstand im Penthouse steht.
+const SELTENHEIT := ["Gewöhnlich", "Selten", "Episch", "Legendär"]
+const SELTEN_FARBE := ["c9d3dd", "4aa8ff", "b36bff", "ffc531"]
+const SELTEN_BONUS := [0.02, 0.05, 0.10, 0.20]
+const BONUS_MAX := 1.0                     # alle Gegenstände zusammen höchstens +100 % je Art
+const BONUS_ARTEN := {"lohn": "Geld pro Fenster", "flaeche": "Wischfläche", "tempo": "Gondel-Tempo", "helfer": "Helfer-Tempo", "boost": "Boost-Dauer"}
+# quelle: katalog (Tablet im Penthouse), designer (Restaurant 500 m), exklusiv (Plattform 800 m), arcade (Automaten)
+# modell = Datei in modelle/moebel, s = Maßstab, farbe = Einfärbung (Arcade-Plüsch), bonus = Art, wert = Stärke (sonst aus der Seltenheit)
+const GEGENSTAENDE := {
+	"sofa": {"name": "Sofa", "modell": "loungeSofa", "quelle": "katalog", "preis": 400},
+	"sofa_ecke": {"name": "Ecksofa", "modell": "loungeSofaCorner", "quelle": "katalog", "preis": 650},
+	"sessel": {"name": "Sessel", "modell": "loungeChair", "quelle": "katalog", "preis": 220},
+	"couchtisch": {"name": "Couchtisch aus Glas", "modell": "tableCoffeeGlass", "quelle": "katalog", "preis": 180},
+	"esstisch": {"name": "Esstisch", "modell": "tableCloth", "quelle": "katalog", "preis": 300},
+	"stuhl": {"name": "Stuhl", "modell": "chairCushion", "quelle": "katalog", "preis": 80},
+	"bett": {"name": "Doppelbett", "modell": "bedDouble", "quelle": "katalog", "preis": 900, "bonus": "boost"},
+	"fernseher": {"name": "Fernseher", "modell": "televisionModern", "quelle": "katalog", "preis": 700, "bonus": "helfer"},
+	"tv_schrank": {"name": "TV-Schrank", "modell": "cabinetTelevision", "quelle": "katalog", "preis": 250},
+	"regal": {"name": "Bücherregal", "modell": "bookcaseOpen", "quelle": "katalog", "preis": 300, "bonus": "flaeche"},
+	"stehlampe": {"name": "Stehlampe", "modell": "lampRoundFloor", "quelle": "katalog", "preis": 120},
+	"pflanze": {"name": "Zimmerpflanze", "modell": "pottedPlant", "quelle": "katalog", "preis": 90},
+	"teppich": {"name": "Runder Teppich", "modell": "rugRound", "quelle": "katalog", "preis": 150},
+	"schreibtisch": {"name": "Schreibtisch", "modell": "desk", "quelle": "katalog", "preis": 350, "bonus": "lohn"},
+	"buerostuhl": {"name": "Bürostuhl", "modell": "chairDesk", "quelle": "katalog", "preis": 160},
+	"kueche": {"name": "Küchenzeile", "modell": "kitchenFridgeLarge", "quelle": "katalog", "preis": 800, "bonus": "tempo"},
+	"bar_hocker": {"name": "Barhocker", "modell": "stoolBar", "quelle": "katalog", "preis": 70},
+	"design_sofa": {"name": "Designer-Sofa", "modell": "loungeDesignSofa", "quelle": "designer", "preis": 6000, "seltenheit": 1, "bonus": "lohn"},
+	"design_sessel": {"name": "Designer-Sessel", "modell": "loungeDesignChair", "quelle": "designer", "preis": 3500, "seltenheit": 1, "bonus": "tempo"},
+	"design_tisch": {"name": "Glastisch quadratisch", "modell": "tableCoffeeGlassSquare", "quelle": "designer", "preis": 2500, "seltenheit": 1, "bonus": "flaeche"},
+	"design_lampe": {"name": "Designer-Leuchte", "modell": "lampSquareFloor", "quelle": "designer", "preis": 2000, "seltenheit": 1, "bonus": "boost"},
+	"design_bett": {"name": "Himmelbett", "modell": "bedDouble", "quelle": "exklusiv", "preis": 40000, "seltenheit": 2, "bonus": "helfer", "farbe": "e8e2d4"},
+	"gold_sofa": {"name": "Goldenes Ecksofa", "modell": "loungeDesignSofaCorner", "quelle": "exklusiv", "preis": 60000, "seltenheit": 2, "bonus": "lohn", "farbe": "e8b53a"},
+	"gold_fluegel": {"name": "Weißer Konzertflügel-Tisch", "modell": "tableRound", "quelle": "exklusiv", "preis": 30000, "seltenheit": 2, "bonus": "flaeche", "farbe": "f4f4f4"},
+	# Arcade (Greifautomat + Kapsel-Automat) – je Seltenheit jede Bonus-Art einmal
+	"teddy": {"name": "Teddy", "modell": "bear", "quelle": "arcade", "seltenheit": 0, "bonus": "lohn", "s": 1.6},
+	"kissen": {"name": "Kuschelkissen", "modell": "pillow", "quelle": "arcade", "seltenheit": 0, "bonus": "boost", "s": 1.6, "farbe": "ff9ad5"},
+	"radio": {"name": "Kofferradio", "modell": "radio", "quelle": "arcade", "seltenheit": 0, "bonus": "tempo", "s": 1.6},
+	"pflanze_klein": {"name": "Mini-Kaktus", "modell": "plantSmall1", "quelle": "arcade", "seltenheit": 0, "bonus": "flaeche", "s": 1.6},
+	"tischlampe": {"name": "Tischlampe", "modell": "lampRoundTable", "quelle": "arcade", "seltenheit": 0, "bonus": "helfer", "s": 1.6},
+	"teddy_blau": {"name": "Blauer Teddy", "modell": "bear", "quelle": "arcade", "seltenheit": 1, "bonus": "lohn", "s": 2.2, "farbe": "4aa8ff"},
+	"retro_tv": {"name": "Retro-Fernseher", "modell": "televisionVintage", "quelle": "arcade", "seltenheit": 1, "bonus": "helfer"},
+	"lautsprecher": {"name": "Lautsprecher", "modell": "speaker", "quelle": "arcade", "seltenheit": 1, "bonus": "tempo"},
+	"bonsai": {"name": "Bonsai", "modell": "plantSmall3", "quelle": "arcade", "seltenheit": 1, "bonus": "flaeche", "s": 2.0},
+	"kissen_blau": {"name": "Riesenkissen", "modell": "pillowBlueLong", "quelle": "arcade", "seltenheit": 1, "bonus": "boost", "s": 1.8},
+	"teddy_lila": {"name": "Riesen-Teddy Lila", "modell": "bear", "quelle": "arcade", "seltenheit": 2, "bonus": "lohn", "s": 3.4, "farbe": "b36bff"},
+	"neon_lampe": {"name": "Neon-Stehlampe", "modell": "lampSquareFloor", "quelle": "arcade", "seltenheit": 2, "bonus": "flaeche", "farbe": "ff4fb8"},
+	"relax_sessel": {"name": "Relax-Sessel", "modell": "loungeChairRelax", "quelle": "arcade", "seltenheit": 2, "bonus": "tempo", "farbe": "35c8ff"},
+	"hifi": {"name": "Hi-Fi-Turm", "modell": "speaker", "quelle": "arcade", "seltenheit": 2, "bonus": "helfer", "s": 1.5, "farbe": "2b2d33"},
+	"ottomane": {"name": "Samt-Ottomane", "modell": "loungeSofaOttoman", "quelle": "arcade", "seltenheit": 2, "bonus": "boost", "farbe": "7a1428"},
+	"teddy_gold": {"name": "Goldener Teddy", "modell": "bear", "quelle": "arcade", "seltenheit": 3, "bonus": "lohn", "s": 2.6, "farbe": "gold"},
+	"palme_gold": {"name": "Goldene Palme", "modell": "pottedPlant", "quelle": "arcade", "seltenheit": 3, "bonus": "flaeche", "s": 1.6, "farbe": "gold"},
+	"thron": {"name": "Goldener Thron", "modell": "chairRounded", "quelle": "arcade", "seltenheit": 3, "bonus": "tempo", "s": 1.4, "farbe": "gold"},
+	"gold_tv": {"name": "Goldener Fernseher", "modell": "televisionModern", "quelle": "arcade", "seltenheit": 3, "bonus": "helfer", "farbe": "gold"},
+	"gold_uhr": {"name": "Goldene Stehlampe", "modell": "lampRoundFloor", "quelle": "arcade", "seltenheit": 3, "bonus": "boost", "s": 1.3, "farbe": "gold"},
+}
+# Arcade: Preise steigen mit der erreichten Höhe (wie die Boosts). Kapsel-Chancen je Seltenheit.
+const ARCADE := {
+	"greif": {"name": "Greifautomat", "preis": 40},
+	"kapsel": {"name": "Kapsel-Automat", "preis": 100},
+}
+const KAPSEL_CHANCE := [0.70, 0.22, 0.07, 0.01]
+const VERKAUF_ANTEIL := 0.25               # doppelte Gegenstände: so viel vom Wert gibt es beim Verkaufen
 # Aussehen: nur Optik. art = gondel / kleidung / schwamm
 const KOSMETIK := [
 	{"id": "gondel_gelb", "art": "gondel", "name": "Gondel: Signalgelb", "farbe": "ffc531", "preis": 0},
@@ -90,6 +161,13 @@ var fahrzeug := ""                                      # "" = zu Fuß
 # Gondeln je Seite: gekauft, Weg (Parkplatz unten) und Höhe, auf der man zuletzt war (Express-Fahrt beim Einsteigen)
 var gondeln: Array = [{"gekauft": false, "weg": -1.0, "hoehe": 0.0}, {"gekauft": false, "weg": -1.0, "hoehe": 0.0}, {"gekauft": false, "weg": -1.0, "hoehe": 0.0}]
 var aktive_gondel := -1                                 # Seite der Gondel, in der man sitzt (-1 = noch keine)
+# Penthouse: jeder Gegenstand einzeln {id, steht, x, z, dreh} (x/z im Penthouse, dreh in Grad)
+var moebel: Array = []
+var erfolge := {}                                       # Erfolg-ID -> true
+var besucht: Array = []                                 # besuchte Orte (lounge, restaurant, plattform, arcade, penthouse)
+var statistik := {"spielzeit": 0.0, "fenster_selbst": 0, "fenster_helfer": 0, "verdient": 0, "hoechste": 0.0, "rekord_minute": 0,
+	"sitzung_rekord": 0.0, "gelaufen": 0.0, "casino_spiele": 0, "casino_bilanz": 0, "casino_rekord": 0, "arcade_spiele": 0,
+	"arcade_gewinne": 0, "boosts": 0, "erfolg_geld": 0}
 
 # ---------------------------------------------------------------- Händler
 func boost_preis(id: String) -> int:
@@ -100,11 +178,104 @@ func kaufe_boost(id: String) -> bool:
 	if geld < p:
 		return false
 	geld -= p
-	boosts[id] = float(boosts.get(id, 0.0)) + BOOSTS[id].dauer   # nochmal kaufen verlängert
+	boosts[id] = float(boosts.get(id, 0.0)) + BOOSTS[id].dauer * (1.0 + bonus("boost"))   # nochmal kaufen verlängert
+	statistik.boosts = int(statistik.boosts) + 1
 	return true
 
 func boost_aktiv(id: String) -> bool:
 	return float(boosts.get(id, 0.0)) > 0.0
+
+# Summe einer Wirkung (lohn, flaeche, tempo, reich, helfer, tauben) aller laufenden Spezial-Boosts
+func boost_wirkung(art: String) -> float:
+	var s := 0.0
+	for id in boosts:
+		s += float((BOOSTS[id].get("wirkung", {}) as Dictionary).get(art, 0.0))
+	return s
+
+# ---------------------------------------------------------------- Penthouse-Gegenstände
+func gegenstand(id: String) -> Dictionary:
+	return GEGENSTAENDE.get(id, {})
+
+func seltenheit(id: String) -> int:
+	return int(gegenstand(id).get("seltenheit", 0))
+
+# Bonus eines Gegenstands als Anteil (0,05 = +5 %), 0 = nur Deko
+func gegenstand_bonus(id: String) -> float:
+	var g := gegenstand(id)
+	if not g.has("bonus"):
+		return 0.0
+	return float(g.get("wert", SELTEN_BONUS[int(g.get("seltenheit", 0))]))
+
+# Summe der Boni aller aufgestellten Gegenstände einer Art (höchstens BONUS_MAX)
+func bonus(art: String) -> float:
+	var s := 0.0
+	for m in moebel:
+		if m.steht and str(gegenstand(m.id).get("bonus", "")) == art:
+			s += gegenstand_bonus(m.id)
+	return minf(s, BONUS_MAX)
+
+func gegenstand_preis(id: String) -> int:
+	return int(gegenstand(id).get("preis", 0))
+
+func kaufe_gegenstand(id: String) -> bool:
+	var p := gegenstand_preis(id)
+	if gegenstand(id).is_empty() or geld < p:
+		return false
+	geld -= p
+	moebel.append({"id": id, "steht": false, "x": 0.0, "z": 0.0, "dreh": 0.0})
+	return true
+
+func bekomme_gegenstand(id: String) -> void:
+	moebel.append({"id": id, "steht": false, "x": 0.0, "z": 0.0, "dreh": 0.0})
+
+func anzahl_gegenstand(id: String) -> int:
+	var n := 0
+	for m in moebel:
+		if m.id == id:
+			n += 1
+	return n
+
+# Wert beim Verkaufen eines Gegenstands (Arcade-Sachen nach Seltenheit)
+func verkaufswert(id: String) -> int:
+	var p := float(gegenstand_preis(id))
+	if p == 0.0:
+		p = [100.0, 400.0, 1500.0, 6000.0][seltenheit(id)] * (1.0 + 0.35 * hoechster_abschnitt)
+	return int(round(p * VERKAUF_ANTEIL))
+
+func arcade_preis(id: String) -> int:
+	return int(round(ARCADE[id].preis * (1.0 + 0.35 * hoechster_abschnitt)))
+
+# Zufälliger Arcade-Gegenstand einer Seltenheit
+func zufall_gegenstand(stufe: int) -> String:
+	var l := []
+	for id in GEGENSTAENDE:
+		if GEGENSTAENDE[id].quelle == "arcade" and int(GEGENSTAENDE[id].seltenheit) == stufe:
+			l.append(id)
+	return l[randi() % l.size()]
+
+func kapsel_stufe(r: float) -> int:
+	var summe := 0.0
+	for i in KAPSEL_CHANCE.size():
+		summe += KAPSEL_CHANCE[i]
+		if r < summe:
+			return i
+	return 0
+
+# ---------------------------------------------------------------- Statistik
+func verdienen(betrag: int) -> void:
+	geld += betrag
+	statistik.verdient = int(statistik.verdient) + betrag
+
+func casino_runde(einsatz: int, auszahlung: int) -> void:
+	statistik.casino_spiele = int(statistik.casino_spiele) + 1
+	statistik.casino_bilanz = int(statistik.casino_bilanz) + auszahlung - einsatz
+	statistik.casino_rekord = maxi(int(statistik.casino_rekord), auszahlung - einsatz)
+
+func besuchen(ort: String) -> bool:
+	if ort in besucht:
+		return false
+	besucht.append(ort)
+	return true
 
 func boosts_takt(dt: float) -> void:
 	for id in boosts.keys():
@@ -234,7 +405,7 @@ func oberstes_stockwerk() -> int:
 
 # ---------------------------------------------------------------- Speichern
 func speichern() -> Dictionary:
-	return {"geld": geld, "besitz": besitz, "aktiv": aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen, "boosts": boosts, "kosmetik_besitz": kosmetik_besitz, "kosmetik_aktiv": kosmetik_aktiv, "helfer": helfer, "fahrzeuge": fahrzeuge, "fahrzeug": fahrzeug, "gondeln": gondeln, "aktive_gondel": aktive_gondel}
+	return {"geld": geld, "besitz": besitz, "aktiv": aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen, "boosts": boosts, "kosmetik_besitz": kosmetik_besitz, "kosmetik_aktiv": kosmetik_aktiv, "helfer": helfer, "fahrzeuge": fahrzeuge, "fahrzeug": fahrzeug, "gondeln": gondeln, "aktive_gondel": aktive_gondel, "moebel": moebel, "erfolge": erfolge, "besucht": besucht, "statistik": statistik}
 
 func laden(d: Dictionary) -> void:
 	geld = int(d.get("geld", 0))
@@ -288,3 +459,17 @@ func laden(d: Dictionary) -> void:
 		var g: Dictionary = gl[i]
 		gondeln[i] = {"gekauft": bool(g.get("gekauft", false)), "weg": float(g.get("weg", -1.0)), "hoehe": float(g.get("hoehe", 0.0))}
 	aktive_gondel = int(d.get("aktive_gondel", -1))
+	moebel = []
+	for m in d.get("moebel", []):
+		if m is Dictionary and GEGENSTAENDE.has(str(m.get("id", ""))):
+			moebel.append({"id": str(m.id), "steht": bool(m.get("steht", false)), "x": float(m.get("x", 0.0)), "z": float(m.get("z", 0.0)), "dreh": float(m.get("dreh", 0.0))})
+	erfolge = {}
+	for k in d.get("erfolge", {}):
+		erfolge[str(k)] = true
+	besucht = []
+	for o in d.get("besucht", []):
+		besucht.append(str(o))
+	var st: Dictionary = d.get("statistik", {})
+	for k in statistik:
+		if st.has(k):
+			statistik[k] = float(st[k]) if statistik[k] is float else int(st[k])

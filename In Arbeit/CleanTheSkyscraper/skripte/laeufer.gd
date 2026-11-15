@@ -35,6 +35,10 @@ var fz_modell: Node3D
 const FLUG_HOCH := 120.0
 const FLUG_TEMPO_V := 8.0
 const KLEIN_BIS := 3.0                   # kleine Hindernisse (Bänke, Palmen, Stände) nur bis zu dieser Höhe
+# Innenraum (Sky-Lounge, Arcade, Penthouse): {poly = begehbare Fläche, rechtecke, kreise [Vector2, r], boden = Höhe (y)}.
+# Leer = draußen am Boden.
+var raum := {}
+var gelaufen := 0.0                      # Meter zu Fuß/mit Fahrzeug (Statistik)
 
 func setup(t: Turm, w: Welt) -> void:
 	cam = Camera3D.new()
@@ -50,6 +54,7 @@ func setup(t: Turm, w: Welt) -> void:
 
 func aktivieren(pos: Vector3, blick_yaw: float, gondel: Vector3 = Vector3.INF) -> void:
 	gondel_pos = Vector2(gondel.x, gondel.z) if gondel != Vector3.INF else Vector2(INF, INF)
+	raum = {}
 	position = Vector3(pos.x, 0.0, pos.z)
 	yaw = blick_yaw
 	pitch = 0.0
@@ -76,7 +81,29 @@ func _input(e: InputEvent) -> void:
 		elif e.keycode == KEY_ESCAPE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
+# In einen Innenraum wechseln (Aufzug) bzw. zurück nach draußen (r leer)
+func raum_setzen(r: Dictionary, pos: Vector2, blick_yaw: float) -> void:
+	raum = r
+	position = Vector3(pos.x, float(r.get("boden", 0.0)), pos.y)
+	yaw = blick_yaw
+	pitch = 0.0
+	hoch = 0.0
+	vy = 0.0
+
+func _raum_frei(p: Vector2) -> bool:
+	if not Geometry2D.is_point_in_polygon(p, raum.poly):
+		return false
+	for r in raum.get("rechtecke", []):
+		if (r as Rect2).grow(RADIUS).has_point(p):
+			return false
+	for k in raum.get("kreise", []):
+		if p.distance_to(k[0]) < float(k[1]) + RADIUS:
+			return false
+	return true
+
 func frei(p: Vector2) -> bool:
+	if not raum.is_empty():
+		return _raum_frei(p)
 	if p.length() > GRENZE:
 		return false
 	if Geometry2D.is_point_in_polygon(p, turm_rand):
@@ -137,12 +164,14 @@ func _process(dt: float) -> void:
 			tempo = fz_tempo * (1.25 if Input.is_key_pressed(KEY_SHIFT) else 1.0)
 		d = d.normalized() * tempo * dt
 		# an Hindernissen entlanggleiten: x und z getrennt prüfen
+		var vorher := position
 		if frei(Vector2(position.x + d.x, position.z)):
 			position.x += d.x
 		if frei(Vector2(position.x, position.z + d.z)):
 			position.z += d.z
+		gelaufen += position.distance_to(vorher)
 		bob += dt * (13.0 if Input.is_key_pressed(KEY_SHIFT) else 9.0)
-	if fz_fliegt and not gesperrt:
+	if fz_fliegt and not gesperrt and raum.is_empty():
 		# Jetpack: Leertaste hoch, Strg runter, sonst in der Luft stehen bleiben
 		var v := 0.0
 		if Input.is_key_pressed(KEY_SPACE): v += FLUG_TEMPO_V

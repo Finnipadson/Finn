@@ -23,6 +23,9 @@ uniform vec2 zustand_px = vec2(1.0, 1.0);
 uniform vec2 slots = vec2(16.0, 4.0);
 uniform vec2 slot_px = vec2(64.0, 128.0);
 
+// Innenraum (Sky-Lounge): steht die Kamera drin, wird die Fassade in diesem Höhenband (y von, y bis) weggelassen –
+// man sieht durch die eigenen Glaswände des Raums nach draußen
+uniform vec2 innen_band = vec2(-1.0, -1.0);
 varying vec3 wp;
 varying vec3 wt;
 varying vec3 wn;
@@ -211,6 +214,7 @@ vec3 raum(vec2 rp, vec2 rid, vec3 r, float aw, float szene, float wl) {
 }
 
 void fragment() {
+	if (wp.y > innen_band.x && wp.y < innen_band.y) discard;
 	vec2 c = vec2(UV.x / fenster_breite, UV.y / stock);
 	vec2 id = floor(c);
 	vec2 f = fract(c);

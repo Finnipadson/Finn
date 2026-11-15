@@ -20,6 +20,7 @@ var haendler: Haendler
 var hmenu: HaendlerMenu
 var casino: Casino
 var cmenu: CasinoMenu
+var extras: Extras
 var wirtschaft := Wirtschaft.new()
 var ansicht := 0
 var frei := false
@@ -110,6 +111,13 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	add_child(cmenu)
 	cmenu.setup(wirtschaft)
 	cmenu.gespielt.connect(_speichern)
+	extras = Extras.new()
+	add_child(extras)
+	extras.setup(self)
+	if ansicht >= 24 and ansicht <= 28:
+		var et := ExtrasTest.new()
+		add_child(et)
+		et.setup(self)
 	_ausruestung()
 	if ansicht >= 5 and ansicht <= 7:
 		spieler.gesperrt = true
@@ -145,13 +153,16 @@ func _ausruestung() -> void:
 
 # Upgrades + laufende Boosts auf die Gondel übertragen (jedes Bild, weil Boosts ablaufen)
 func _werte() -> void:
-	spieler.tempo_faktor = wirtschaft.tempo_faktor() * (1.6 if wirtschaft.boost_aktiv("kaffee") else 1.0)
-	var eis := 0.8 if wirtschaft.boost_aktiv("eis") else 0.0
+	# Penthouse-Boni (aufgestellte Gegenstände) + Spezial-Boosts der Sky-Lounge kommen dazu
+	spieler.tempo_faktor = wirtschaft.tempo_faktor() * (1.6 if wirtschaft.boost_aktiv("kaffee") else 1.0) * (1.0 + wirtschaft.bonus("tempo") + wirtschaft.boost_wirkung("tempo"))
+	var eis := (0.8 if wirtschaft.boost_aktiv("eis") else 0.0) + wirtschaft.boost_wirkung("reich")
 	spieler.reich_seite = wirtschaft.reichweite_seite() + eis
 	spieler.reich_oben = wirtschaft.reichweite_oben() + eis
-	spieler.wisch_faktor = 1.5 if wirtschaft.boost_aktiv("glanzspray") else 1.0
+	spieler.wisch_faktor = (1.5 if wirtschaft.boost_aktiv("glanzspray") else 1.0) * (1.0 + wirtschaft.bonus("flaeche") + wirtschaft.boost_wirkung("flaeche"))
+	if helfer:
+		helfer.tempo = 1.0 + wirtschaft.bonus("helfer") + wirtschaft.boost_wirkung("helfer")
 	if ereignisse:
-		ereignisse.limo = wirtschaft.boost_aktiv("limo")
+		ereignisse.limo = wirtschaft.boost_aktiv("limo") or wirtschaft.boost_wirkung("tauben") > 0.0
 	var t := ""
 	if helfer and helfer.anzahl() > 0:
 		t += "Helfer: %d · %d Fenster/min
@@ -161,9 +172,16 @@ func _werte() -> void:
 		t += "%s %d:%02d\n" % [Wirtschaft.BOOSTS[id].name, rest / 60, rest % 60]
 	hud.boosts(t.strip_edges())
 
+# Lohn eines Fensters mit Goldpolitur, Spezial-Boosts und Penthouse-Bonus
+func lohn_mit_boni(f: int) -> int:
+	var l := wirtschaft.lohn(f) * (2 if wirtschaft.boost_aktiv("goldpolitur") else 1)
+	return int(round(l * (1.0 + wirtschaft.bonus("lohn") + wirtschaft.boost_wirkung("lohn"))))
+
 func _fenster_sauber(f: int, spalte: int) -> void:
-	var lohn := wirtschaft.lohn(f) * (2 if wirtschaft.boost_aktiv("goldpolitur") else 1)
-	wirtschaft.geld += lohn
+	var lohn := lohn_mit_boni(f)
+	wirtschaft.verdienen(lohn)
+	wirtschaft.statistik.fenster_selbst = int(wirtschaft.statistik.fenster_selbst) + 1
+	extras.fenster_geputzt()
 	hud.pop("+%d €" % lohn)
 	_funkeln(spieler.fenster_mitte(f, spalte))
 	var szene := zustand.szene(f, spalte)
@@ -223,16 +241,20 @@ func _hotbar() -> void:
 # Ein Helfer hat ein Fenster fertig: Lohn abzüglich seines Anteils
 func _helfer_geputzt(f: int, _spalte: int, art: String) -> void:
 	var anteil: float = Wirtschaft.HELFER[art].anteil
-	wirtschaft.geld += maxi(1, int(round(wirtschaft.lohn(f) * (1.0 - anteil))))
+	wirtschaft.verdienen(maxi(1, int(round(lohn_mit_boni(f) * (1.0 - anteil)))))
+	wirtschaft.statistik.fenster_helfer = int(wirtschaft.statistik.fenster_helfer) + 1
 
 func _oben_gesperrt() -> void:
 	hud.meldung("Das Seil ist zu kurz! Mit Tab in der Werkstatt eine längere Seilwinde kaufen.", 3.0)
 
 # ---------------------------------------------------------------- Eingaben (Shop, Werkzeugwechsel)
 func _input(e: InputEvent) -> void:
+	if e is InputEventMouseButton and extras.maus(e):   # Penthouse: Möbel platzieren
+		get_viewport().set_input_as_handled()
+		return
 	# Mausrad: nächstes / voriges Werkzeug (Gondel) bzw. Fahrzeug (zu Fuß)
 	if e is InputEventMouseButton and e.pressed and (e.button_index == MOUSE_BUTTON_WHEEL_UP or e.button_index == MOUSE_BUTTON_WHEEL_DOWN):
-		if shop.offen or hmenu.offen or cmenu.offen or album.offen or express:
+		if shop.offen or hmenu.offen or cmenu.offen or album.offen or express or extras.menue_offen():
 			return
 		var schritt := -1 if e.button_index == MOUSE_BUTTON_WHEEL_UP else 1
 		if spieler.aktiv:
@@ -248,6 +270,9 @@ func _input(e: InputEvent) -> void:
 			_fahrzeug_waehlen(fz[posmod(fz.find(wirtschaft.fahrzeug) + schritt, fz.size())])
 		return
 	if not (e is InputEventKey) or not e.pressed or e.echo:
+		return
+	if not hmenu.offen and not cmenu.offen and extras.taste(e):
+		get_viewport().set_input_as_handled()
 		return
 	if cmenu.offen:
 		if e.keycode == KEY_E or e.keycode == KEY_ESCAPE:
@@ -316,6 +341,8 @@ func _ein_aus() -> void:
 		gondeln.aktualisieren(wirtschaft.aktive_gondel)
 		hud.steuerung(true)
 	else:
+		if extras.e_druecken():   # Aufzüge, Sky-Lounge, Arcade, Penthouse
+			return
 		var st := haendler.stand_bei(Vector2(laeufer.position.x, laeufer.position.z))
 		if st >= 0:
 			hmenu.oeffnen(Haendler.STAENDE[st].id, Haendler.STAENDE[st].name)
@@ -457,13 +484,15 @@ func _process(dt: float) -> void:
 		hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [int(spieler.y), bonus], 3.5)
 		_speichern()
 	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv)
-	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen
+	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen()
 	laeufer.set_process(not menue)
 	laeufer.gesperrt = menue
 	wirtschaft.boosts_takt(dt)
 	_werte()
 	if spieler.aktiv:
 		hud.status("" if express else ("E: Gondel verlassen" if spieler.y <= UNTEN else "E: nach unten fahren und aussteigen"))
+	elif extras.drinnen() or extras.status() != "":
+		hud.status(extras.status())
 	else:
 		var st2 := haendler.stand_bei(Vector2(laeufer.position.x, laeufer.position.z))
 		var cs2 := casino.station_bei(Vector2(laeufer.position.x, laeufer.position.z))
