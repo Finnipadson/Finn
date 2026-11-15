@@ -1,7 +1,7 @@
 class_name Spiel
 extends Node3D
 # Das eigentliche Spiel: Gondel + Putzen + Geld + Shop + Speichern.
-# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 15 Kiosk-Bilder, 16 Casino, 17 Casino-Bilder, 18 Start zu Fuß, 19 Werkzeug-Kiosk, 20 Gondeln, 21 Helfer, 22 Fahrzeuge + Hotbar + Werkzeug-Stand.
+# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 15 Kiosk-Bilder, 16 Casino, 17 Casino-Bilder, 18 Start zu Fuß, 19 Werkzeug-Kiosk, 20 Gondeln, 21 Helfer, 22 Fahrzeuge + Hotbar + Werkzeug-Stand, 23 Menü-Bilder.
 
 const SPIELSTAND := "user://spielstand.json"
 const TESTSTAND := "user://spielstand_test.json"
@@ -441,6 +441,7 @@ func _process(dt: float) -> void:
 		20: _gondel_test(dt)
 		21: _helfer_test(dt)
 		22: _fahrzeug_test(dt)
+		23: _menue_bilder(dt)
 		19: _werkzeug_test(dt)
 	if ansicht == 0 or ansicht == 12:
 		ereignisse.takt(dt)
@@ -1369,3 +1370,25 @@ func _fahrzeug_test(dt: float) -> void:
 			if demo_zeit > 8.9:
 				print("TEST mausrad: werkzeug_jetzt=%s" % wirtschaft.aktiv)
 				_ft = 14
+
+# 23: Testbilder aller Menüs – Werkstatt-Reiter nacheinander, dann jeder Kiosk (alle 1 s ein neues Bild)
+var _mb := -1
+func _menue_bilder(dt: float) -> void:
+	demo_zeit += dt
+	var i := int(demo_zeit)
+	if i == _mb:
+		return
+	_mb = i
+	if i == 1:
+		shop.umschalten()
+	elif i >= 2 and i <= 4:
+		shop._reiter_waehlen(i - 1)
+	elif i == 5:
+		shop.umschalten()
+		spieler.y = 0.3
+		_ein_aus()
+	elif i >= 6 and i < 6 + Haendler.STAENDE.size():
+		if hmenu.offen:
+			hmenu.schliessen()
+		var k := i - 6
+		hmenu.oeffnen(Haendler.STAENDE[k].id, Haendler.STAENDE[k].name)

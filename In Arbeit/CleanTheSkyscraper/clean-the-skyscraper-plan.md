@@ -174,6 +174,7 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
    - **Casino im Sockel eines Hochhauses:** Glasfassade außen wie die anderen Türme (`_verkleidung()`), 34 Stockwerke darüber (`_turm_drauf()`), Leuchtschrift an der Fassade über dem Eingang. Innen unverändert.
    - **Start zu Fuß:** Man startet neben der Gondel unten. Die Gondel merkt sich die letzte Höhe und fährt beim Einsteigen mit 30 m/s dorthin zurück (`Spiel.letzte_hoehe`, `express`). Test `--ansicht=18`.
    - **Werkzeug-Kiosk** (grün, vierter Kiosk) mit fünf neuen Profi-Werkzeugen: Mikrofaser-Schwamm 350 €, Profi-Schwamm XXL 1.800 €, Teleskop-Abzieher 3.500 €, Dampfreiniger 9.000 €, Wasserlanze Turbo 25.000 € (`Wirtschaft.WERKZEUGE` mit `haendler: true`). Tasten 1–9 und 0. Die Werkstatt zeigt sie erst nach dem Kauf; ihre Liste scrollt jetzt. Test `--ansicht=19 --geld=1000`.
+4e. [x] **Neue Menü-Optik „Glas modern“** (Wahl des Users aus 4 Vorlagen, 15.11.2026): `skripte/ui_glas.gd` (gemeinsamer Stil: dunkles Glas, Reiter, Karten mit Symbol-Kachel, Cyan-Akzent). Werkstatt mit Reitern Gondeln · Helfer · Ausbau · Einstellungen, Höhe passt sich dem Inhalt an; alle Kiosk-Menüs im selben Stil (Mode mit Reitern). Testbilder `--ansicht=23`.
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 
 ## Offene Fragen
