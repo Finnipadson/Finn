@@ -94,7 +94,7 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - Test `--ansicht=13`: aussteigen, weglaufen, Einsteigen zu weit weg wird abgelehnt, an der Gondel stoppen, einsteigen, Einstellungen über die echten Knöpfe ausschalten. Alles bestanden.
    - **Noch offen:** Die Taube landet manchmal knapp außerhalb des Bildes (man sieht sie anfliegen). Die Terrassen selbst sind noch schlichte Dächer ohne Deko.
 4. [ ] **Automatik:** Helfer, Putzroboter, Drohnen, eventuell Fortschritt auch während man nicht spielt
-4b. [ ] **Am Boden: Händler und Casino** (Entscheidungen des Users, 15.11.2026) – **Händler fertig**, Casino offen
+4b. [x] **Am Boden: Händler und Casino** (Entscheidungen des Users, 15.11.2026) – **Händler und Casino fertig**
    - **Händler** auf dem Stellplatz „Händler“: Stände mit Figur, hingehen und E drücken öffnet ein Menü.
      - *Putzmittel-Boosts:* zum Beispiel Glanzspray (eine Zeit lang schneller putzen) und Goldpolitur (eine Zeit lang doppeltes Geld pro Fenster).
      - *Aussehen:* Farben für Gondel und Werkzeug, Arbeitskleidung/Helm. Nur Optik.
@@ -121,7 +121,20 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - Kenney-Mini-Modelle werden ×2,25 skaliert, Figuren stehen auf einem Podest und sind um 180° gedreht (sie schauen von Haus aus nach +Z). Größen misst `tools/messen.gd`. Testbilder: `--ansicht=15`.
      - Test `--ansicht=14 --geld=10000`: an alle drei Stände gehen, mit E öffnen, über die echten Knöpfe kaufen, Wirkung prüfen. Bestanden.
    - Bezahlt wird nur mit Spielgeld, es gibt nie Käufe mit echtem Geld. Einsatzgrenzen, damit man sich nicht in einer Minute alles verspielt.
-   - Offen: Der Stellplatz für das Casino (18 × 18 m) wird für ein begehbares Gebäude wahrscheinlich größer; Preise und Dauer der Boosts noch festlegen.
+   - **Casino – Ergebnis (15.11.2026):**
+     - `skripte/casino.gd`: begehbares Gebäude (26 × 26 m, 6,5 m hoch) auf `Welt.casino_rect`, komplett aus Code: dunkle Fassade mit goldenen Lisenen, Glasband, Vordach, roter Teppich mit Absperrpfosten, Leuchtschrift „CASINO“ auf dem Dach (zur Turmseite) und an den Seiten, blinkende Leuchtstreifen. Tür-Öffnung (5 m) zur Turmseite (−X).
+     - Innen: Teppich mit Rautenmuster (Textur aus Code), weinrote Wände mit Holzsockel und Goldleiste, Decke mit Lichtfeldern, 5 OmniLights + je eins pro Station, vier Säulen, Bar (nur Deko), Gäste und Personal aus den Kenney-Paketen (`leute/`, `laden/`, `essen/`).
+     - Kollision zu Fuß: Wände (Tür frei), Säulen, Stationen, Bar als `Rect2` in `casino.rechtecke` → `laeufer.hindernisse`.
+     - Vier Stationen (`Casino.STATIONEN`), davor stehen und **E** drücken (`casino.station_bei()`), HUD zeigt „E: Blackjack spielen“ usw.
+     - `skripte/casino_menu.gd`: Spielfenster (Maus frei, E/Esc schließt). Einsatz mit −/+/Max wählbar. Der Einsatz wird beim Start der Runde abgezogen, der Gewinn am Ende gutgeschrieben, danach wird gespeichert. Wer mitten in einer Runde schließt, bekommt das Ergebnis sofort.
+       - **Blackjack:** Austeilen, Karte ziehen, Stehen bleiben. Geber zieht bis 17, Blackjack zahlt 3:2, Unentschieden = Einsatz zurück.
+       - **Glücksrad:** 32 gleich große Felder (16× 0, 5× ½, 6× 1, 2× 2, 1× 3, 1× 5, 1× 10), dreht sich etwa 4 Sekunden.
+       - **Einarmiger Bandit:** 3 Walzen mit gezeichneten Putz-Symbolen. 3× Gondel 45×, 3× Fenster 25×, 3× Eimer 15×, 3× Schwamm 10×, zwei gleiche = halber Einsatz zurück, Tauben bringen nichts.
+       - **Rubbellos:** Los kaufen (Preis = Einsatz), mit gedrückter Maustaste die Dreckschicht wegrubbeln (oder „Alles aufdecken“). 9 Felder, drei gleiche Beträge = dieser Betrag ist gewonnen (1×, 2×, 5×, 10×, 50×).
+     - `skripte/casino_regeln.gd`: alle Regeln und Zahlen ohne Oberfläche. **Einsatzgrenzen:** mindestens 10 €, höchstens 10 % des Geldes (auf 10 € abgerundet), nie mehr als 5.000 €. Rückzahlung gemessen (je 200.000 Runden): Blackjack 96 %, Glücksrad 95 %, Bandit 94 %, Rubbellos 96 % – also leicht zugunsten des Hauses.
+     - Nebenbei behoben: Zu Fuß hat ein Klick in ein offenes Menü die Maus wieder gefangen (betraf auch die Händler-Menüs). `Laeufer.gesperrt` verhindert das jetzt.
+     - Test `--ansicht=16 --geld=10000`: durch die Tür laufen, Wand prüfen, an jeder Station mit E öffnen, über die echten Knöpfe spielen (Rubbeln mit echten Mausbewegungen), Geld nachrechnen, Rückzahlung messen. Bestanden (0 Fehler). Testbilder: `--ansicht=17`.
+   - Offen: Preise und Dauer der Boosts noch festlegen; im Casino gibt es noch keine Geräusche (kommt mit Phase 5).
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 
 ## Offene Fragen

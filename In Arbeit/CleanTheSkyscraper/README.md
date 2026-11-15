@@ -20,6 +20,7 @@ Steuerung (Phase 1, Gondel):
 - **E (ganz unten): Gondel verlassen**, zu Fuß: WASD, Shift rennen, Leertaste springen; an der Gondel E: einsteigen
 - In der Werkstatt unter „Einstellungen“: Tauben, Sandsturm und Windböen an/aus
 - **Händler** auf dem Platz: zu Fuß vor einen Stand gehen und **E** drücken (Putzmittel-Boosts, Mode & Farben, Snacks)
+- **Casino** (dunkles Gebäude mit Leuchtschrift hinter einer Flügelspitze): hineingehen, vor Blackjack-Tisch, Glücksrad, Banditen oder Rubbellos-Theke **E** drücken. Nur Spielgeld, Einsatz 10 € bis 10 % des Geldes (höchstens 5.000 €)
 - Beim Putzen zusätzlich **rechte Maustaste halten: umschauen**, das Werkzeug bleibt am Glas
 - Esc: Maus frei
 
@@ -44,6 +45,9 @@ skripte/haendler.gd    Drei moderne Glas-Kioske mit Verkäufern, verteilt zwisch
 modelle/               Kenney-Modelle (CC0): laden/ (Mini Market), leute/ (Mini Characters), essen/ (Food Kit), stadt/ (City Kit Commercial) – je mit Textures/ und Lizenz
 tools/messen.gd        Größen aller Modelle ausgeben: godot --path . --headless --script tools/messen.gd
 skripte/haendler_menu.gd  Menü der Stände: Boosts kaufen, Aussehen kaufen/anziehen
+skripte/casino.gd       Begehbares Casino (Gebäude, Innenraum, vier Stationen, Kollisions-Rechtecke)
+skripte/casino_menu.gd  Spielfenster: Blackjack, Glücksrad, Einarmiger Bandit, Rubbellos
+skripte/casino_regeln.gd  Regeln, Auszahlungen und Einsatzgrenzen der Casino-Spiele (zum Ausbalancieren)
 skripte/album.gd       Sammelalbum (Taste B)
 skripte/ereignisse.gd  Tauben, Windböen, Sandsturm (Zeiten oben im Skript)
 shader/boden.gdshader  Boden: Platz, Park, Straßenraster, Übergang in die Wüste
@@ -74,6 +78,8 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=9 --geld=10000`: Shop-Test (Tab, echte Knöpfe, Werkzeugtasten, Hochdruck)
 - `--ansicht=10 --geld=500`, danach `--ansicht=10`: Speichern und Laden (nur `user://spielstand_test.json`)
 - `--ansicht=11`: alle 10 Szenen in den Fenstern vor der Gondel, Album-Test
+- `--ansicht=16 --geld=10000`: Casino-Test (hineinlaufen, alle vier Spiele über die echten Knöpfe, Geld nachrechnen, Rückzahlung messen)
+- `--ansicht=17`: Casino von außen, innen und vor jeder Station (Testbilder)
 - `--ansicht=15`: nacheinander vor jedem Kiosk, erst von weitem, dann von nah (Testbilder)
 - `--ansicht=14 --geld=10000`: Händler-Test (alle Stände, echte Knöpfe, Wirkung der Boosts und Farben)
 - `--ansicht=13`: Aussteigen, Laufen, Kollision, Einsteigen, Einstellungen-Knöpfe

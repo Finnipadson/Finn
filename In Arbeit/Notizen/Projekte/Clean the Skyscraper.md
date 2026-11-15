@@ -1,6 +1,6 @@
 ---
 typ: spiel
-status: in Arbeit (Phase 3 fertig: Szenen, Album, Tauben, Wind, Sandsturm)
+status: in Arbeit (Phase 3 fertig, dazu Händler und begehbares Casino am Boden)
 technik: Godot 4.7, GDScript, Turm komplett aus Code
 erstellt: 2026-11-15
 ---
@@ -29,7 +29,7 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 - [x] Tauben/Sandsturm/Wind an- und ausschaltbar (Werkstatt → Einstellungen)
 - [x] Gondel unten verlassen (E) und auf dem Platz herumlaufen, Stellplätze für Händler/Casino markiert
 - [x] Händler: drei Marktstände (Putzmittel-Boosts, Mode & Farben, Snacks mit Effekt), mit E ansprechen
-- [ ] Casino (entschieden 15.11.2026): Händler mit Putzmittel-Boosts, Aussehen und Snacks mit Effekt; begehbares Casino mit Blackjack, Glücksrad, einarmigem Banditen und Rubbellosen – nur Spielgeld
+- [x] Casino (15.11.2026): begehbares Gebäude hinter einer Flügelspitze mit Blackjack, Glücksrad, einarmigem Banditen und Rubbellosen (mit E an der Station) – nur Spielgeld, Einsatz 10 € bis 10 % des Geldes, höchstens 5.000 €
 - [ ] Phase 4: Automatik (Helfer, Roboter, Drohnen)
 - [ ] Phase 5: Feinschliff (Sound, Effekte, Menü, .exe)
 - [x] Ansicht: Ich-Ansicht aus der Gondel (15.11.2026)

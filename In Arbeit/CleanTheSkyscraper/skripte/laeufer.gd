@@ -12,6 +12,7 @@ const MAUS := 0.0022
 
 var cam: Camera3D
 var aktiv := false
+var gesperrt := false         # ein Menü ist offen: Maus nicht fangen, nicht umschauen
 var yaw := 0.0
 var pitch := 0.0
 var hoch := 0.0              # Sprunghöhe
@@ -49,7 +50,7 @@ func deaktivieren() -> void:
 	aktiv = false
 
 func _input(e: InputEvent) -> void:
-	if not aktiv:
+	if not aktiv or gesperrt:
 		return
 	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

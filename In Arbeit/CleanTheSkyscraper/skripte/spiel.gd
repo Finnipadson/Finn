@@ -1,7 +1,7 @@
 class_name Spiel
 extends Node3D
 # Das eigentliche Spiel: Gondel + Putzen + Geld + Shop + Speichern.
-# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test.
+# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 16 Casino, 17 Casino-Bilder.
 
 const SPIELSTAND := "user://spielstand.json"
 const TESTSTAND := "user://spielstand_test.json"
@@ -18,6 +18,8 @@ var ereignisse: Ereignisse
 var laeufer: Laeufer
 var haendler: Haendler
 var hmenu: HaendlerMenu
+var casino: Casino
+var cmenu: CasinoMenu
 var wirtschaft := Wirtschaft.new()
 var ansicht := 0
 var frei := false
@@ -78,6 +80,14 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	add_child(hmenu)
 	hmenu.setup(wirtschaft)
 	hmenu.geaendert.connect(_ausruestung)
+	casino = Casino.new()
+	add_child(casino)
+	casino.setup(welt.casino_rect)
+	laeufer.hindernisse.append_array(casino.rechtecke)
+	cmenu = CasinoMenu.new()
+	add_child(cmenu)
+	cmenu.setup(wirtschaft)
+	cmenu.gespielt.connect(_speichern)
 	_ausruestung()
 	if ansicht >= 5 and ansicht <= 7:
 		spieler.gesperrt = true
@@ -139,6 +149,11 @@ func _oben_gesperrt() -> void:
 func _input(e: InputEvent) -> void:
 	if not (e is InputEventKey) or not e.pressed or e.echo:
 		return
+	if cmenu.offen:
+		if e.keycode == KEY_E or e.keycode == KEY_ESCAPE:
+			cmenu.schliessen()
+			get_viewport().set_input_as_handled()
+		return
 	if hmenu.offen:
 		if e.keycode == KEY_E or e.keycode == KEY_ESCAPE:
 			hmenu.schliessen()
@@ -180,6 +195,12 @@ func _ein_aus() -> void:
 		var st := haendler.stand_bei(Vector2(laeufer.position.x, laeufer.position.z))
 		if st >= 0:
 			hmenu.oeffnen(Haendler.STAENDE[st].id, Haendler.STAENDE[st].name)
+			laeufer.gesperrt = true
+			return
+		var cs := casino.station_bei(Vector2(laeufer.position.x, laeufer.position.z))
+		if cs >= 0:
+			cmenu.oeffnen(Casino.STATIONEN[cs].id, Casino.STATIONEN[cs].name)
+			laeufer.gesperrt = true
 			return
 		if _abstand_gondel() > EINSTEIG_WEIT:
 			hud.meldung("Geh zurück zur Gondel, um einzusteigen.", 2.0)
@@ -242,6 +263,8 @@ func _process(dt: float) -> void:
 		13: _lauf_test(dt)
 		14: _haendler_test(dt)
 		15: _kiosk_bilder(dt)
+		16: _casino_test(dt)
+		17: _casino_bilder(dt)
 	if ansicht == 0 or ansicht == 12:
 		ereignisse.takt(dt)
 	# Neue Höhe erreicht (je 6 Stockwerke = ein Abschnitt): einmaliger Bonus + Aussicht feiern
@@ -253,15 +276,20 @@ func _process(dt: float) -> void:
 		hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [int(spieler.y), bonus], 3.5)
 		_speichern()
 	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv)
-	laeufer.set_process(not (shop.offen or album.offen or hmenu.offen))
+	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen
+	laeufer.set_process(not menue)
+	laeufer.gesperrt = menue
 	wirtschaft.boosts_takt(dt)
 	_werte()
 	if spieler.aktiv:
 		hud.status("E: Gondel verlassen" if spieler.y <= UNTEN else "")
 	else:
 		var st2 := haendler.stand_bei(Vector2(laeufer.position.x, laeufer.position.z))
+		var cs2 := casino.station_bei(Vector2(laeufer.position.x, laeufer.position.z))
 		if st2 >= 0:
 			hud.status("E: %s ansehen" % Haendler.STAENDE[st2].name)
+		elif cs2 >= 0:
+			hud.status("E: %s" % Casino.STATIONEN[cs2].hinweis)
 		else:
 			hud.status("E: in die Gondel einsteigen" if _abstand_gondel() <= EINSTEIG_WEIT else "")
 	hud.freigeschaltet(Turm.STOCKWERKE if frei else wirtschaft.oberstes_stockwerk())
@@ -560,6 +588,237 @@ func _lauf_test(dt: float) -> void:
 					await get_tree().process_frame
 				print("TEST einstellungen: %s erlaubt_ereignisse=%s" % [wirtschaft.einstellungen, ereignisse.erlaubt])
 				_taste(KEY_TAB)
+
+# 17: Casino von außen, innen und jede Station (für Testbilder)
+func _casino_bilder(dt: float) -> void:
+	demo_zeit += dt
+	if spieler.aktiv:
+		spieler.y = 0.3
+		_ein_aus()
+	var i := int(demo_zeit / 1.5)
+	var m := casino.mitte
+	var von := casino.eingang + Vector2(-16.0, -9.0)
+	var nach := m
+	laeufer.pitch = 0.12
+	match i:
+		0: pass
+		1:
+			von = casino.eingang + Vector2(-2.0, 0.0)
+			laeufer.pitch = 0.2
+		2:
+			von = m + Vector2(-11.5, 0.0)
+			nach = m + Vector2(5.0, 0.0)
+			laeufer.pitch = 0.05
+		3:
+			von = m + Vector2(10.5, -11.0)
+			nach = m + Vector2(-4.0, 6.0)
+			laeufer.pitch = -0.05
+		_:
+			var k := mini(i - 4, 3)
+			von = casino.vorne[k]
+			nach = casino.ziel[k]
+			laeufer.pitch = 0.0 if k != 1 else 0.3
+	var d := (nach - von).normalized()
+	laeufer.position = Vector3(von.x, 0, von.y)
+	laeufer.yaw = atan2(-d.x, -d.y)
+
+# 16: ins Casino laufen, jede Station mit E öffnen, über die echten Knöpfe spielen, Geld prüfen
+var _ct := 0
+func _casino_test(dt: float) -> void:
+	demo_zeit += dt
+	var mitte := get_viewport().get_visible_rect().size * 0.5
+	match _ct:
+		0:
+			spieler.y = 0.3
+			if demo_zeit > 0.4:
+				_klick(mitte, true)
+				_klick(mitte, false)
+				_taste(KEY_E)          # aussteigen
+				_ct = 1
+		1:
+			if demo_zeit > 0.7:
+				# draußen vor die Tür stellen, hineinschauen und mit W hineinlaufen
+				laeufer.position = Vector3(casino.eingang.x, 0, casino.eingang.y)
+				laeufer.yaw = atan2(-1.0, 0.0)
+				_halte(KEY_W, true)
+				_ct = 2
+		2:
+			if demo_zeit > 3.2:
+				_halte(KEY_W, false)
+				var p := Vector2(laeufer.position.x, laeufer.position.z)
+				print("TEST durch die Tür gelaufen: drinnen=%s" % casino.drinnen(p))
+				# gegen die Wand neben der Tür: darf nicht durch
+				laeufer.position = Vector3(casino.eingang.x, 0, casino.eingang.y + 7.0)
+				_halte(KEY_W, true)
+				_ct = 3
+		3:
+			if demo_zeit > 5.2:
+				_halte(KEY_W, false)
+				var p := Vector2(laeufer.position.x, laeufer.position.z)
+				var erreichbar := true
+				for v in casino.vorne:
+					erreichbar = erreichbar and laeufer.frei(v)
+				print("TEST Wand hält: draußen=%s  Stationen frei erreichbar=%s" % [not casino.drinnen(p), erreichbar])
+				_ct = -1
+				await _casino_spielen()
+				_ct = 4
+
+func _zu_station(i: int) -> void:
+	var v: Vector2 = casino.vorne[i]
+	var d: Vector2 = (casino.ziel[i] - v).normalized()
+	laeufer.position = Vector3(v.x, 0, v.y)
+	laeufer.yaw = atan2(-d.x, -d.y)
+	laeufer.pitch = 0.25 if i == 1 else 0.0
+	await get_tree().create_timer(0.8).timeout
+	print("TEST station %d: hinweis='%s'" % [i, hud.status_l.text])
+	_taste(KEY_E)
+	await get_tree().create_timer(0.4).timeout
+
+func _knopf_druecken(name: String) -> bool:
+	var b: Button = cmenu.find_child(name, true, false)
+	if b == null or b.disabled:
+		return false
+	b.pressed.emit()
+	return true
+
+func _casino_spielen() -> void:
+	cmenu.schnell = true
+	cmenu.rng.seed = 4711
+	var fehler := 0
+	# ---- Blackjack
+	await _zu_station(0)
+	print("TEST blackjack offen=%s spiel=%s maus_frei=%s einsatz=%d max=%d" % [cmenu.offen, cmenu.spiel, Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, cmenu.einsatz, CasinoRegeln.max_einsatz(wirtschaft.geld)])
+	_knopf_druecken("b_plus")
+	_knopf_druecken("b_plus")
+	var start := wirtschaft.geld
+	for r in 12:
+		var vorher := wirtschaft.geld
+		var e := cmenu.einsatz
+		_knopf_druecken("b_austeilen")
+		var abgezogen := wirtschaft.geld == vorher - e or not cmenu.laeuft
+		while cmenu.laeuft and CasinoRegeln.wert(cmenu.bj_spieler) < 16:
+			_knopf_druecken("b_ziehen")
+		if cmenu.laeuft:
+			_knopf_druecken("b_stehen")
+		var sw := CasinoRegeln.wert(cmenu.bj_spieler)
+		var gw := CasinoRegeln.wert(cmenu.bj_geber)
+		var soll := vorher - e + int(round(e * CasinoRegeln.bj_auszahlung(cmenu.bj_spieler, cmenu.bj_geber)))
+		var geber_ok := gw >= 17 or sw > 21 or CasinoRegeln.ist_blackjack(cmenu.bj_spieler) or CasinoRegeln.ist_blackjack(cmenu.bj_geber)
+		var ok := wirtschaft.geld == soll and geber_ok and not cmenu.laeuft
+		if not ok:
+			fehler += 1
+		if r < 5:
+			print("TEST blackjack runde %d: du=%d geber=%d faktor=%.1f geld %d → %d (soll %d) ok=%s abgezogen=%s | %s" % [r + 1, sw, gw, cmenu.letzter_faktor, vorher, wirtschaft.geld, soll, ok, abgezogen, cmenu.ergebnis.text])
+		await get_tree().process_frame
+	print("TEST blackjack 12 Runden: geld %d → %d, fehler=%d" % [start, wirtschaft.geld, fehler])
+	await get_tree().create_timer(0.8).timeout
+	_taste(KEY_E)
+	await get_tree().create_timer(0.3).timeout
+	print("TEST blackjack zu=%s maus_gefangen=%s" % [not cmenu.offen, Input.mouse_mode == Input.MOUSE_MODE_CAPTURED])
+	# ---- Glücksrad
+	await _zu_station(1)
+	_knopf_druecken("b_max")
+	for r in 5:
+		var vorher := wirtschaft.geld
+		var e := cmenu.einsatz
+		_knopf_druecken("b_drehen")
+		var gesperrt := not _knopf_druecken("b_drehen")      # während des Drehens kein zweiter Dreh
+		while cmenu.laeuft:
+			await get_tree().process_frame
+		var m := float(CasinoRegeln.RAD[cmenu.rad_feld])
+		var soll := vorher - e + int(round(e * m))
+		if wirtschaft.geld != soll or cmenu.rad.feld() != cmenu.rad_feld:
+			fehler += 1
+		print("TEST rad dreh %d: einsatz=%d feld=%d (%s) zeiger_auf=%d geld %d → %d (soll %d) knopf_gesperrt=%s" % [r + 1, e, cmenu.rad_feld, CasinoRegeln.mal(m), cmenu.rad.feld(), vorher, wirtschaft.geld, soll, gesperrt])
+	await get_tree().create_timer(0.6).timeout
+	# mitten im Drehen schließen: Ergebnis kommt sofort
+	var v2 := wirtschaft.geld
+	var e2 := cmenu.einsatz
+	_knopf_druecken("b_drehen")
+	await get_tree().process_frame
+	_taste(KEY_E)
+	await get_tree().create_timer(0.3).timeout
+	print("TEST rad beim Drehen geschlossen: zu=%s abgerechnet=%s" % [not cmenu.offen, wirtschaft.geld == v2 - e2 + cmenu.letzter_gewinn and not cmenu.laeuft])
+	# ---- Bandit
+	await _zu_station(2)
+	for r in 8:
+		var vorher := wirtschaft.geld
+		var e := cmenu.einsatz
+		_knopf_druecken("b_hebel")
+		while cmenu.laeuft:
+			await get_tree().process_frame
+		var z: Array = cmenu.walzen_ziel
+		var soll := vorher - e + int(round(e * CasinoRegeln.walzen_gewinn(z[0], z[1], z[2])))
+		var zeigt := [cmenu.walzen[0].symbol(), cmenu.walzen[1].symbol(), cmenu.walzen[2].symbol()]
+		if wirtschaft.geld != soll or zeigt != z:
+			fehler += 1
+		if r < 4:
+			print("TEST bandit %d: walzen=%s zeigt=%s faktor=%.1f geld %d → %d (soll %d) | %s" % [r + 1, z, zeigt, cmenu.letzter_faktor, vorher, wirtschaft.geld, soll, cmenu.ergebnis.text])
+	await get_tree().create_timer(0.8).timeout
+	_taste(KEY_ESCAPE)
+	await get_tree().create_timer(0.3).timeout
+	# ---- Rubbellos: mit echten Mausbewegungen rubbeln
+	await _zu_station(3)
+	for r in 3:
+		var vorher := wirtschaft.geld
+		var e := cmenu.einsatz
+		_knopf_druecken("b_kaufen")
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var los := cmenu.los
+		var ecke := los.get_global_rect().position
+		var zeilen := 9
+		for zl in zeilen:
+			var y: float = 30.0 + zl * 210.0 / (zeilen - 1)
+			_maus(ecke + Vector2(25.0, y), true, false)
+			for sx in 21:
+				var x: float = 25.0 + sx * 20.0
+				_maus(ecke + Vector2(x if zl % 2 == 0 else 450.0 - x, y), true, true)
+			_maus(ecke + Vector2(425.0, y), false, false)
+			await get_tree().process_frame
+			if zl == 4 and r == 0:
+				print("TEST los halb gerubbelt: feld0 frei=%.2f feld8 frei=%.2f läuft=%s" % [los.frei_anteil(0), los.frei_anteil(8), cmenu.laeuft])
+				await get_tree().create_timer(0.6).timeout      # halb freigerubbelt (Testbild)
+			if not cmenu.laeuft:
+				break
+		var soll := vorher - e + int(round(e * float(los.daten.gewinn)))
+		if wirtschaft.geld != soll or cmenu.laeuft:
+			fehler += 1
+		print("TEST los %d: felder=%s gewinn=%.0f× fertig=%s geld %d → %d (soll %d) | %s" % [r + 1, los.daten.felder, float(los.daten.gewinn), not cmenu.laeuft, vorher, wirtschaft.geld, soll, cmenu.ergebnis.text])
+		await get_tree().create_timer(0.5).timeout
+	_taste(KEY_E)
+	await get_tree().create_timer(0.3).timeout
+	# ---- zu wenig Geld: nichts geht
+	var merk := wirtschaft.geld
+	wirtschaft.geld = 7
+	await _zu_station(2)
+	var ging := _knopf_druecken("b_hebel")
+	print("TEST zu wenig geld: hebel gesperrt=%s geld bleibt=%s text='%s'" % [not ging, wirtschaft.geld == 7, cmenu.einsatz_label.text])
+	_taste(KEY_E)
+	wirtschaft.geld = merk
+	# ---- Rückzahlung der Spiele messen
+	var rg := RandomNumberGenerator.new()
+	rg.seed = 99
+	for s in ["blackjack", "rad", "bandit", "los"]:
+		print("TEST rückzahlung %s: %.1f %% (Ziel 90–99)" % [s, CasinoRegeln.messen(s, 200000, rg) * 100.0])
+	print("TEST casino fertig: fehler=%d geld=%d" % [fehler, wirtschaft.geld])
+
+# echte Mausbewegung/-klick an Bildschirmpunkt p (für Menüs, Maus ist dort frei)
+func _maus(p: Vector2, gedrueckt: bool, bewegung: bool) -> void:
+	if bewegung:
+		var b := InputEventMouseMotion.new()
+		b.position = p
+		b.global_position = p
+		b.button_mask = MOUSE_BUTTON_MASK_LEFT
+		Input.parse_input_event(b)
+	else:
+		var e := InputEventMouseButton.new()
+		e.button_index = MOUSE_BUTTON_LEFT
+		e.pressed = gedrueckt
+		e.position = p
+		e.global_position = p
+		e.button_mask = MOUSE_BUTTON_MASK_LEFT if gedrueckt else 0
+		Input.parse_input_event(e)
 
 func _halte(k: Key, gedrueckt: bool) -> void:
 	var e := InputEventKey.new()

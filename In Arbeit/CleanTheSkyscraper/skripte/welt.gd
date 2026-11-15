@@ -8,7 +8,7 @@ const HORIZONT := Color("e9dcc4")
 var rng := RandomNumberGenerator.new()
 var env: Environment
 var haeuser: Array = []        # Rect2 (x, z) aller Häuser – für die Kollision zu Fuß
-var stellplaetze: Array = []    # {name, pos, rect} – Plätze für spätere Händler/Casino
+var stellplaetze: Array = []    # {name, pos, rect} – freie Plätze für Späteres (zurzeit keiner)
 var himmel: ShaderMaterial
 var sonne: DirectionalLight3D
 const STURM_FARBE := Color("c9955a")
@@ -118,30 +118,7 @@ func _stellplaetze() -> void:
 	flaeche.material_override = Bau.matt("d9cfbd", 0.9)
 	flaeche.position = Vector3(mitte.x, 0.03, mitte.y)
 	add_child(flaeche)
-	var h := CASINO_GROESSE * 0.5
-	for k in 4:   # gelbe Randmarkierung
-		var rb := MeshInstance3D.new()
-		var bm := BoxMesh.new()
-		bm.size = Vector3(CASINO_GROESSE + 0.4, 0.04, 0.3) if k < 2 else Vector3(0.3, 0.04, CASINO_GROESSE + 0.4)
-		rb.mesh = bm
-		rb.material_override = Bau.matt("f2c230", 0.6)
-		var o := Vector3(0, 0, h * (1 if k == 0 else -1)) if k < 2 else Vector3(h * (1 if k == 2 else -1), 0, 0)
-		rb.position = Vector3(mitte.x, 0.05, mitte.y) + o
-		add_child(rb)
-	var pfahl := Bau.zylinder(0.06, 0.06, 2.2, Bau.matt("5b5f66"), 8)
-	pfahl.position = Vector3(mitte.x, 1.1, mitte.y)
-	add_child(pfahl)
-	var schild := Label3D.new()
-	schild.text = "Demnächst:\nCasino"
-	schild.font_size = 96
-	schild.pixel_size = 0.006
-	schild.outline_size = 18
-	schild.modulate = Color("1f5fae")
-	schild.outline_modulate = Color.WHITE
-	schild.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
-	schild.position = Vector3(mitte.x, 2.7, mitte.y)
-	add_child(schild)
-	stellplaetze.append({"name": "Casino", "pos": Vector3(mitte.x, 0, mitte.y), "rect": Rect2(mitte - Vector2(0.15, 0.15), Vector2(0.3, 0.3))})
+	# Das Gebäude selbst baut casino.gd (im Spiel), hier liegt nur der helle Vorplatz.
 
 func _stadt() -> void:
 	var mats := [
