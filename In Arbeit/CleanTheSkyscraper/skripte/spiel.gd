@@ -138,7 +138,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 # Werkzeug + Upgrades auf die Gondel übertragen
 func _ausruestung() -> void:
 	if get_parent().has_method("_grafik"):
-		get_parent()._grafik()   # Einstellung „Ruhiges Bild“
+		get_parent()._grafik()   # Einstellung „taa“
 	spieler.werkzeug_setzen(wirtschaft.werkzeug())
 	var ka := wirtschaft.kosmetik_aktiv
 	spieler.aussehen(wirtschaft.kosmetik(ka.gondel).farbe, wirtschaft.kosmetik(ka.kleidung).farbe, wirtschaft.kosmetik(ka.schwamm).farbe)
@@ -805,7 +805,7 @@ func _lauf_test(dt: float) -> void:
 		7:
 			if demo_zeit > 7.2:
 				_lt = -1
-				for n in ["ein_tauben", "ein_sandsturm", "ein_ruhiges_bild"]:
+				for n in ["ein_tauben", "ein_sandsturm", "ein_taa"]:
 					var b: Button = shop.find_child(n, true, false)
 					if b:
 						b.pressed.emit()

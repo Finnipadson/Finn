@@ -151,7 +151,7 @@ var aktiv := "schwamm"
 var stufen := {"motor": 0, "arm": 0, "winde": 0}
 var album := {}                 # Szenen-Typ (als Text) -> wie oft entdeckt
 var hoechster_abschnitt := 0     # für den Bonus beim ersten Erreichen einer neuen Höhe
-var einstellungen := {"tauben": true, "sandsturm": true, "wind": true, "ruhiges_bild": true}
+var einstellungen := {"tauben": true, "sandsturm": true, "wind": true, "taa": false}
 var boosts := {}                                        # Boost-ID -> verbleibende Sekunden
 var kosmetik_besitz := ["gondel_gelb", "kleid_blau", "schwamm_gelb"]
 var kosmetik_aktiv := {"gondel": "gondel_gelb", "kleidung": "kleid_blau", "schwamm": "schwamm_gelb"}
@@ -424,7 +424,7 @@ func laden(d: Dictionary) -> void:
 	hoechster_abschnitt = int(d.get("hoechster_abschnitt", 0))
 	var e: Dictionary = d.get("einstellungen", {})
 	for k in einstellungen:
-		einstellungen[k] = bool(e.get(k, true))
+		einstellungen[k] = bool(e.get(k, einstellungen[k]))
 	boosts = {}
 	var bo: Dictionary = d.get("boosts", {})
 	for k in bo:

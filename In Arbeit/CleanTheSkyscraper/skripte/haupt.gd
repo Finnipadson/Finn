@@ -78,7 +78,11 @@ func _startansicht() -> void:
 			text = "Markiert: Fenster Nr. %s (Stockwerk %d, Spalte %d)" % [_punkte(turm.fenster_id(f, weg) + 1), f + 1, spalte + 1]
 		4:
 			var p := turm.fassaden_punkt(40, 120.0, 40 * Turm.STOCK_H)
-			cam.position = p.pos + p.normal * 7.0 + Vector3.UP * -1.0
+			var abstand := 7.0   # --abstand=m: Entfernung zur Fassade (Flimmer-Tests)
+			for arg in OS.get_cmdline_user_args():
+				if arg.begins_with("--abstand="):
+					abstand = float(arg.split("=")[1])
+			cam.position = p.pos + p.normal * abstand + Vector3.UP * -1.0
 			cam.look_at(p.pos + Vector3.UP * 1.0)
 			fahrt = p.tangente * 1.5
 			text = "Testfahrt an der Fassade"
@@ -118,13 +122,12 @@ func _startansicht() -> void:
 # Kantenglättung und Licht-Effekte (Standard + Test-Schalter)
 func _grafik() -> void:
 	var vp := get_viewport()
-	# Standard „Ruhiges Bild“ (Einstellung, an): TAA + 1,7-faches Supersampling + MSAA 4x. Gemessen mit
-	# tools/flimmern.py: deutlich weniger Flimmern beim Bewegen, kein sichtbares Nachziehen, Zittern im Stand
-	# unter einer Helligkeitsstufe, schneller als vorher (ca. 131 statt 118 FPS).
-	# Aus: wie früher 2-faches Supersampling + MSAA 4x ohne TAA.
-	var ruhig := true
+	# Standard: 2-faches Supersampling + MSAA 4x, kein TAA. Das Flimmern beheben die Shader selbst (gefilterte
+	# Muster). TAA (Einstellung „taa“, Standard aus) glättet beim Fahren noch etwas mehr, lässt aber das Bild
+	# im Stand an Pfosten und Schmutz sichtbar wackeln (gemessen mit tools/flimmern.py, Orte schmutz_25/60).
+	var ruhig := false
 	if spiel_knoten:
-		ruhig = spiel_knoten.wirtschaft.einstellungen.get("ruhiges_bild", true)
+		ruhig = spiel_knoten.wirtschaft.einstellungen.get("taa", false)
 	if schalter.has("taa"):
 		ruhig = schalter.taa == 1
 	vp.use_taa = ruhig
@@ -135,7 +138,8 @@ func _grafik() -> void:
 	if schalter.get("fsr", 0) == 1:
 		vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR2
 		vp.use_taa = false
-	welt.env.ssr_enabled = schalter.get("ssr", 1) == 1
+	# SSR aus (15.11.2026): spiegelt den Boden verschmiert in die Brüstungen am Turmfuß, sonst kaum sichtbar
+	welt.env.ssr_enabled = schalter.get("ssr", 0) == 1
 	welt.env.ssil_enabled = schalter.get("ssil", 0) == 1
 	# Test-Schalter (Flimmer-Suche): Umgebungsverdeckung, Sonnenschatten, Glühen abschaltbar
 	if schalter.has("ssao"):

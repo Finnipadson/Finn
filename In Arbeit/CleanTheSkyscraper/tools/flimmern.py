@@ -23,6 +23,8 @@ ORTE = {
     "turmfuss":   (1, "30,1.7,170,0,40,0", "0.3,0,0", 0),              # Turmfuß + Platz
     "fassade":    (4, None, "tempo", 0),                                 # Gondel-Fahrt an der Turmfassade
     "turm_fern":  (1, "-650,150,300,0,300,0", "0,0,1.5", 0),             # Turm aus der Stadt
+    "schmutz_25": (4, None, "tempo0 --abstand=25", 0),                    # Turmglas mit Schmutz, Kamera steht, 25 m
+    "schmutz_60": (4, None, "tempo0 --abstand=60", 0),                    # dito 60 m
     "still":      (1, "0,120,190,0,60,600", None, 0),                  # Kamera steht (zeigt TAA-Zittern)
     "drehen":     (1, "0,120,190,0,60,600", None, 0.3),                  # Gondel dreht sich (Boden + Häuser)
 }
@@ -38,6 +40,7 @@ def aufnehmen(ort, ziel, extra, projekt=PROJEKT):
             "--quit-after", str(WARM + ZAHL), "--", "--ansicht=%d" % ansicht]
     if kam: args.append("--kamera=" + kam)
     if fahrt == "tempo": args.append("--tempo=0.05")
+    elif fahrt and fahrt.startswith("tempo0"): args += ["--tempo=0"] + fahrt.split()[1:]
     elif fahrt: args.append("--fahrt=" + fahrt)
     if dreh: args.append("--dreh=%g" % dreh)
     args += extra
