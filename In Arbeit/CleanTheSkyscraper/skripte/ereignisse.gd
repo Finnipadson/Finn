@@ -29,6 +29,7 @@ var sturm_phase := 0            # 0 ruhig, 1 Warnung, 2 Sturm
 var sturm_staerke := 0.0
 var sand: CPUParticles3D
 var erlaubt := {"tauben": true, "sandsturm": true, "wind": true}   # aus den Einstellungen
+var limo := false            # Zitronenlimo vom Snackstand: keine Tauben
 
 func setup(s: Spieler, z: FensterZustand, t: Turm, w: Welt, h: Hud) -> void:
 	spieler = s
@@ -76,7 +77,7 @@ func _tauben(dt: float) -> void:
 	taube_zeit -= dt
 	if taube_zeit <= 0.0:
 		taube_zeit = rng.randf_range(TAUBE_ABSTAND.x, TAUBE_ABSTAND.y)
-		if erlaubt.tauben:
+		if erlaubt.tauben and not limo:
 			taube_jetzt()
 	for tb in tauben.duplicate():
 		var n: Node3D = tb.knoten

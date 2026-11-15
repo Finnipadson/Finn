@@ -121,6 +121,9 @@ func _stellplaetze() -> void:
 			var o := Vector3(0, 0, 9.0 * (1 if k == 0 else -1)) if k < 2 else Vector3(9.0 * (1 if k == 2 else -1), 0, 0)
 			b.position = Vector3(mitte.x, 0.05, mitte.y) + o
 			add_child(b)
+		if sp[0] == "Händler":   # dort stehen jetzt die Marktstände (Haendler)
+			stellplaetze.append({"name": sp[0], "pos": Vector3(mitte.x, 0, mitte.y), "rect": Rect2(mitte, Vector2.ZERO)})
+			continue
 		var pfahl := Bau.zylinder(0.06, 0.06, 2.2, Bau.matt("5b5f66"), 8)
 		pfahl.position = Vector3(mitte.x, 1.1, mitte.y)
 		add_child(pfahl)

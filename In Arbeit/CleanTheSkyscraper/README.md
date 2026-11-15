@@ -19,6 +19,7 @@ Steuerung (Phase 1, Gondel):
 - **B: Sammelalbum** (entdeckte Szenen hinter den Fenstern)
 - **E (ganz unten): Gondel verlassen**, zu Fuß: WASD, Shift rennen, Leertaste springen; an der Gondel E: einsteigen
 - In der Werkstatt unter „Einstellungen“: Tauben, Sandsturm und Windböen an/aus
+- **Händler** auf dem Platz: zu Fuß vor einen Stand gehen und **E** drücken (Putzmittel-Boosts, Mode & Farben, Snacks)
 - Beim Putzen zusätzlich **rechte Maustaste halten: umschauen**, das Werkzeug bleibt am Glas
 - Esc: Maus frei
 
@@ -39,6 +40,8 @@ skripte/spiel.gd       Spiel-Logik: Geld, Funkeln, Werkstatt, Speichern/Laden (u
 skripte/wirtschaft.gd  Zahlen zum Ausbalancieren: Lohn, Werkzeuge, Upgrades, Preise
 skripte/shop.gd        Werkstatt-Fenster
 skripte/laeufer.gd     Zu Fuß am Boden: Laufen, Springen, Kollision mit Turm/Häusern/Gondel
+skripte/haendler.gd    Drei Marktstände mit Verkäufern (Händler-Stellplatz)
+skripte/haendler_menu.gd  Menü der Stände: Boosts kaufen, Aussehen kaufen/anziehen
 skripte/album.gd       Sammelalbum (Taste B)
 skripte/ereignisse.gd  Tauben, Windböen, Sandsturm (Zeiten oben im Skript)
 shader/boden.gdshader  Boden: Platz, Park, Straßenraster, Übergang in die Wüste
@@ -69,6 +72,7 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=9 --geld=10000`: Shop-Test (Tab, echte Knöpfe, Werkzeugtasten, Hochdruck)
 - `--ansicht=10 --geld=500`, danach `--ansicht=10`: Speichern und Laden (nur `user://spielstand_test.json`)
 - `--ansicht=11`: alle 10 Szenen in den Fenstern vor der Gondel, Album-Test
+- `--ansicht=14 --geld=10000`: Händler-Test (alle Stände, echte Knöpfe, Wirkung der Boosts und Farben)
 - `--ansicht=13`: Aussteigen, Laufen, Kollision, Einsteigen, Einstellungen-Knöpfe
 - `--ansicht=12`: Taube, Windböe und Sandsturm sofort auslösen
 - `--ansicht=8`: Maus-Test. Schickt echte Klicks und Mausbewegungen durch das Eingabesystem, putzt und schaut um, und gibt `TEST …` auf der Konsole aus.

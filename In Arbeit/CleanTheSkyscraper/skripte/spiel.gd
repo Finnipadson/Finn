@@ -16,6 +16,8 @@ var shop: Shop
 var album: Album
 var ereignisse: Ereignisse
 var laeufer: Laeufer
+var haendler: Haendler
+var hmenu: HaendlerMenu
 var wirtschaft := Wirtschaft.new()
 var ansicht := 0
 var frei := false
@@ -68,6 +70,14 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	laeufer.setup(turm, welt)
 	for sp in welt.stellplaetze:
 		laeufer.hindernisse.append(sp.rect)
+	haendler = Haendler.new()
+	add_child(haendler)
+	haendler.setup(welt.stellplaetze[0].pos)
+	laeufer.hindernisse.append_array(haendler.rechtecke)
+	hmenu = HaendlerMenu.new()
+	add_child(hmenu)
+	hmenu.setup(wirtschaft)
+	hmenu.geaendert.connect(_ausruestung)
 	_ausruestung()
 	if ansicht >= 5 and ansicht <= 7:
 		spieler.gesperrt = true
@@ -79,17 +89,32 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 # Werkzeug + Upgrades auf die Gondel übertragen
 func _ausruestung() -> void:
 	spieler.werkzeug_setzen(wirtschaft.werkzeug())
-	spieler.tempo_faktor = wirtschaft.tempo_faktor()
-	spieler.reich_seite = wirtschaft.reichweite_seite()
-	spieler.reich_oben = wirtschaft.reichweite_oben()
+	var ka := wirtschaft.kosmetik_aktiv
+	spieler.aussehen(wirtschaft.kosmetik(ka.gondel).farbe, wirtschaft.kosmetik(ka.kleidung).farbe, wirtschaft.kosmetik(ka.schwamm).farbe)
+	_werte()
 	if ereignisse:
 		ereignisse.erlaubt = wirtschaft.einstellungen
 	var oberste := Turm.STOCKWERKE if frei else wirtschaft.oberstes_stockwerk()
 	spieler.max_y = oberste * Turm.STOCK_H - 2.6
 	_speichern()
 
+# Upgrades + laufende Boosts auf die Gondel übertragen (jedes Bild, weil Boosts ablaufen)
+func _werte() -> void:
+	spieler.tempo_faktor = wirtschaft.tempo_faktor() * (1.6 if wirtschaft.boost_aktiv("kaffee") else 1.0)
+	var eis := 0.8 if wirtschaft.boost_aktiv("eis") else 0.0
+	spieler.reich_seite = wirtschaft.reichweite_seite() + eis
+	spieler.reich_oben = wirtschaft.reichweite_oben() + eis
+	spieler.wisch_faktor = 1.5 if wirtschaft.boost_aktiv("glanzspray") else 1.0
+	if ereignisse:
+		ereignisse.limo = wirtschaft.boost_aktiv("limo")
+	var t := ""
+	for id in wirtschaft.boosts:
+		var rest := int(wirtschaft.boosts[id])
+		t += "%s %d:%02d\n" % [Wirtschaft.BOOSTS[id].name, rest / 60, rest % 60]
+	hud.boosts(t.strip_edges())
+
 func _fenster_sauber(f: int, spalte: int) -> void:
-	var lohn := wirtschaft.lohn(f)
+	var lohn := wirtschaft.lohn(f) * (2 if wirtschaft.boost_aktiv("goldpolitur") else 1)
 	wirtschaft.geld += lohn
 	hud.pop("+%d €" % lohn)
 	_funkeln(spieler.fenster_mitte(f, spalte))
@@ -113,6 +138,11 @@ func _oben_gesperrt() -> void:
 # ---------------------------------------------------------------- Eingaben (Shop, Werkzeugwechsel)
 func _input(e: InputEvent) -> void:
 	if not (e is InputEventKey) or not e.pressed or e.echo:
+		return
+	if hmenu.offen:
+		if e.keycode == KEY_E or e.keycode == KEY_ESCAPE:
+			hmenu.schliessen()
+			get_viewport().set_input_as_handled()
 		return
 	if (e.keycode == KEY_TAB and not album.offen) or (e.keycode == KEY_ESCAPE and shop.offen):
 		shop.umschalten()
@@ -147,6 +177,10 @@ func _ein_aus() -> void:
 		laeufer.aktivieren(pos, atan2(n.x, n.z), spieler.gondel.global_position)
 		hud.steuerung(true)
 	else:
+		var st := haendler.stand_bei(Vector2(laeufer.position.x, laeufer.position.z))
+		if st >= 0:
+			hmenu.oeffnen(Haendler.STAENDE[st].id, Haendler.STAENDE[st].name)
+			return
 		if _abstand_gondel() > EINSTEIG_WEIT:
 			hud.meldung("Geh zurück zur Gondel, um einzusteigen.", 2.0)
 			return
@@ -206,6 +240,7 @@ func _process(dt: float) -> void:
 		11: _szenen_test(dt)
 		12: _ereignis_test(dt)
 		13: _lauf_test(dt)
+		14: _haendler_test(dt)
 	if ansicht == 0 or ansicht == 12:
 		ereignisse.takt(dt)
 	# Neue Höhe erreicht (je 6 Stockwerke = ein Abschnitt): einmaliger Bonus + Aussicht feiern
@@ -217,11 +252,17 @@ func _process(dt: float) -> void:
 		hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [int(spieler.y), bonus], 3.5)
 		_speichern()
 	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv)
-	laeufer.set_process(not (shop.offen or album.offen))
+	laeufer.set_process(not (shop.offen or album.offen or hmenu.offen))
+	wirtschaft.boosts_takt(dt)
+	_werte()
 	if spieler.aktiv:
 		hud.status("E: Gondel verlassen" if spieler.y <= UNTEN else "")
 	else:
-		hud.status("E: in die Gondel einsteigen" if _abstand_gondel() <= EINSTEIG_WEIT else "")
+		var st2 := haendler.stand_bei(Vector2(laeufer.position.x, laeufer.position.z))
+		if st2 >= 0:
+			hud.status("E: %s ansehen" % Haendler.STAENDE[st2].name)
+		else:
+			hud.status("E: in die Gondel einsteigen" if _abstand_gondel() <= EINSTEIG_WEIT else "")
 	hud.freigeschaltet(Turm.STOCKWERKE if frei else wirtschaft.oberstes_stockwerk())
 	if spieler.wischt and spieler.wz_art == "wisch":
 		var u := fposmod(spieler.weg + spieler.schwamm_off.x * spieler.richtung, turm.umfaenge[spieler.stock]) / Turm.FENSTER_B
@@ -386,6 +427,70 @@ func _szenen_test(_dt: float) -> void:
 			_fenster_sauber(f, sp)
 		spieler.pitch = 0.18
 		print("TEST album: %s" % [wirtschaft.album])
+
+# 14: zu den Ständen gehen, mit E öffnen, über die echten Knöpfe kaufen, Wirkung prüfen
+var _ht := 0
+func _haendler_test(dt: float) -> void:
+	demo_zeit += dt
+	var mitte := get_viewport().get_visible_rect().size * 0.5
+	match _ht:
+		0:
+			spieler.y = 0.3
+			if demo_zeit > 0.4:
+				_klick(mitte, true)
+				_klick(mitte, false)
+				_taste(KEY_E)          # aussteigen
+				_ht = 1
+		1:
+			if demo_zeit > 0.7:
+				# vor den Snackstand stellen (Stand 2) und ansprechen
+				var v: Vector2 = haendler.vorne[2]
+				laeufer.position = Vector3(v.x, 0, v.y)
+				_taste(KEY_E)
+				_ht = 2
+		2:
+			if demo_zeit > 1.0:
+				_ht = -1
+				print("TEST snackstand offen=%s stand=%s" % [hmenu.offen, hmenu.stand])
+				for n in ["b_kaffee", "b_eis", "b_limo"]:
+					var b: Button = hmenu.find_child(n, true, false)
+					if b and not b.disabled:
+						b.pressed.emit()
+					await get_tree().process_frame
+				print("TEST boosts=%s tempo=%.2f reich=%.1f limo=%s" % [wirtschaft.boosts.keys(), spieler.tempo_faktor, spieler.reich_seite, ereignisse.limo])
+				_taste(KEY_E)
+				await get_tree().create_timer(0.2).timeout
+				var v2: Vector2 = haendler.vorne[1]
+				laeufer.position = Vector3(v2.x, 0, v2.y)
+				_taste(KEY_E)
+				await get_tree().create_timer(0.2).timeout
+				for n in ["k_gondel_rot", "k_kleid_orange", "k_schwamm_pink"]:
+					var b: Button = hmenu.find_child(n, true, false)
+					if b and not b.disabled:
+						b.pressed.emit()
+					await get_tree().process_frame
+				print("TEST mode: aktiv=%s gondelfarbe=%s jacke=%s" % [wirtschaft.kosmetik_aktiv, spieler.gondel_mat.albedo_color.to_html(false), spieler.arm_mat.albedo_color.to_html(false)])
+				_taste(KEY_E)
+				await get_tree().create_timer(0.2).timeout
+				var v3: Vector2 = haendler.vorne[0]
+				laeufer.position = Vector3(v3.x, 0, v3.y)
+				_taste(KEY_E)
+				await get_tree().create_timer(0.2).timeout
+				for n in ["b_glanzspray", "b_goldpolitur"]:
+					var b: Button = hmenu.find_child(n, true, false)
+					if b and not b.disabled:
+						b.pressed.emit()
+					await get_tree().process_frame
+				print("TEST putzmittel: wisch_faktor=%.1f gold=%s geld=%d" % [spieler.wisch_faktor, wirtschaft.boost_aktiv("goldpolitur"), wirtschaft.geld])
+				_taste(KEY_E)
+				await get_tree().create_timer(0.2).timeout
+				# Blick auf die Stände
+				var vm: Vector2 = haendler.vorne[1]
+				var r := vm.normalized()
+				laeufer.position = Vector3(vm.x - r.x * 6.0, 0, vm.y - r.y * 6.0)
+				laeufer.yaw = atan2(-r.x, -r.y)
+				laeufer.pitch = -0.05
+				print("TEST menü zu=%s" % (not hmenu.offen))
 
 # 13: unten aussteigen, zum Turm laufen (muss vorher stoppen), zurück und einsteigen
 var _lt := 0

@@ -14,6 +14,7 @@ var bis: Label
 var meld: Label
 var meld_tween: Tween
 var status_l: Label
+var boost_l: Label
 
 func _ready() -> void:
 	wurzel = Control.new()
@@ -36,6 +37,7 @@ func _ready() -> void:
 	rechts.add_child(vb3)
 	_label(vb3, "Geld", 15, "123a6b")
 	geld = _label(vb3, "0 €", 26, "2e8b3d")
+	boost_l = _label(vb3, "", 13, "c86a10")
 	# Fortschritt am Fenster unter dem Schwamm
 	var unten := _karte(0.5, 1.0, 0, -70)
 	var vb4 := VBoxContainer.new()
@@ -140,6 +142,10 @@ func zeige(sauber: int, gesamt: int, euro: int, meter: float, stockwerk: int, zu
 	zahl.text = "%s / %s" % [punkte(sauber), punkte(gesamt)]
 	geld.text = "%s €" % punkte(euro)
 	hoehe.text = "Am Boden · zu Fuß" if zu_fuss else "%d m · Stockwerk %d" % [int(meter), stockwerk + 1]
+
+func boosts(t: String) -> void:
+	boost_l.text = t
+	boost_l.visible = t != ""
 
 # kurzer Hinweis über der Steuerung (z. B. „E: Gondel verlassen“)
 func status(t: String) -> void:

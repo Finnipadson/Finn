@@ -94,7 +94,7 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - Test `--ansicht=13`: aussteigen, weglaufen, Einsteigen zu weit weg wird abgelehnt, an der Gondel stoppen, einsteigen, Einstellungen über die echten Knöpfe ausschalten. Alles bestanden.
    - **Noch offen:** Die Taube landet manchmal knapp außerhalb des Bildes (man sieht sie anfliegen). Die Terrassen selbst sind noch schlichte Dächer ohne Deko.
 4. [ ] **Automatik:** Helfer, Putzroboter, Drohnen, eventuell Fortschritt auch während man nicht spielt
-4b. [ ] **Am Boden: Händler und Casino** (Entscheidungen des Users, 15.11.2026)
+4b. [ ] **Am Boden: Händler und Casino** (Entscheidungen des Users, 15.11.2026) – **Händler fertig**, Casino offen
    - **Händler** auf dem Stellplatz „Händler“: Stände mit Figur, hingehen und E drücken öffnet ein Menü.
      - *Putzmittel-Boosts:* zum Beispiel Glanzspray (eine Zeit lang schneller putzen) und Goldpolitur (eine Zeit lang doppeltes Geld pro Fenster).
      - *Aussehen:* Farben für Gondel und Werkzeug, Arbeitskleidung/Helm. Nur Optik.
@@ -104,6 +104,15 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - Glücksrad
      - Einarmiger Bandit (Putz-Symbole: Schwamm, Eimer, Fenster, Taube …)
      - Rubbellose (passt zum Reiben)
+   - **Händler – Ergebnis (15.11.2026):**
+     - `skripte/haendler.gd`: drei Marktstände nebeneinander auf dem Händler-Stellplatz mit Front zum Turm, jeweils mit gestreiftem Dach, Schild, Waren und einer winkenden Verkäufer-Figur.
+     - `skripte/haendler_menu.gd`: Menü, das man mit E vor dem Stand öffnet.
+     - **Putzmittel:** Glanzspray (5 min, Wisch-Fläche +50 %), Goldpolitur (5 min, doppeltes Geld pro Fenster).
+     - **Snacks:** Kaffee (4 min, Gondel +60 % schneller), Eis (4 min, Reichweite +0,8 m), Zitronenlimo (5 min, keine Tauben).
+     - Boosts: Nochmal kaufen verlängert sie. Der Preis steigt mit der erreichten Höhe (+35 % je Abschnitt). Die Restzeit steht unter dem Geld und wird gespeichert.
+     - **Mode & Farben:** 6 Gondelfarben (Gold glänzt metallisch), 4 Jacken/Overalls (Farbe des Arms), 4 Schwammfarben. Kaufen, danach jederzeit „Anziehen“. Nur Optik, wird gespeichert.
+     - Alle Zahlen stehen in `wirtschaft.gd` (`BOOSTS`, `KOSMETIK`).
+     - Test `--ansicht=14 --geld=10000`: an alle drei Stände gehen, mit E öffnen, über die echten Knöpfe kaufen, Wirkung prüfen. Bestanden.
    - Bezahlt wird nur mit Spielgeld, es gibt nie Käufe mit echtem Geld. Einsatzgrenzen, damit man sich nicht in einer Minute alles verspielt.
    - Offen: Der Stellplatz für das Casino (18 × 18 m) wird für ein begehbares Gebäude wahrscheinlich größer; Preise und Dauer der Boosts noch festlegen.
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe

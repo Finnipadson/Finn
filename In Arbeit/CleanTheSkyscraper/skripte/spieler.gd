@@ -52,6 +52,10 @@ var arm: MeshInstance3D
 var gesperrt := false         # true = keine Eingaben (Testbilder, Shop offen)
 var wind := 0.0               # 0..1, wird von Ereignisse gesetzt: Gondel schaukelt
 var aktiv := true             # false = ausgestiegen, man läuft zu Fuß (Gondel bleibt unten stehen)
+var wisch_faktor := 1.0       # Glanzspray: größere Wisch-Fläche
+var gondel_mat: StandardMaterial3D
+var arm_mat: StandardMaterial3D
+var schwamm_farbe := "ffd84a"
 var _gesperrt_zeit := 0.0
 
 func setup(t: Turm, z: FensterZustand, start_stock: int, start_weg: float, oberste_hoehe: float) -> void:
@@ -69,7 +73,8 @@ func setup(t: Turm, z: FensterZustand, start_stock: int, start_weg: float, obers
 func _bauen() -> void:
 	gondel = Node3D.new()
 	add_child(gondel)
-	var gelb := Bau.matt("ffc531", 0.5)
+	gondel_mat = Bau.matt("ffc531", 0.5)
+	var gelb := gondel_mat
 	var grau := Bau.metall("6b7078", 0.4, 0.6)
 	_box(gondel, Vector3(3.8, 0.12, 1.15), Vector3(0, -0.06, 0), gelb)          # Boden
 	_box(gondel, Vector3(3.8, 0.06, 0.06), Vector3(0, 1.05, -0.55), gelb)       # Geländer vorne (zur Wand)
@@ -92,7 +97,8 @@ func _bauen() -> void:
 	cam.far = 40000.0
 	cam.position = Vector3(0, AUGE, 0.3)
 	gondel.add_child(cam)
-	arm = Bau.zylinder(0.05, 0.06, 1.0, Bau.matt("3a86d4", 0.85), 12)
+	arm_mat = Bau.matt("3a86d4", 0.85)
+	arm = Bau.zylinder(0.05, 0.06, 1.0, arm_mat, 12)
 	add_child(arm)
 	var sm := StandardMaterial3D.new()
 	sm.albedo_color = Color(0.85, 0.95, 1.0, 0.55)
@@ -129,7 +135,7 @@ func werkzeug_setzen(w: Dictionary) -> void:
 	match wz_id:
 		"schwamm", "grossschwamm":
 			var s := 1.0 if wz_id == "schwamm" else 1.45
-			_box(werkzeug, Vector3(0.24, 0.15, 0.07) * s, Vector3.ZERO, Bau.matt("ffd84a", 0.95))
+			_box(werkzeug, Vector3(0.24, 0.15, 0.07) * s, Vector3.ZERO, Bau.matt(schwamm_farbe, 0.95))
 			_box(werkzeug, Vector3(0.24 * s, 0.15 * s, 0.025), Vector3(0, 0, -0.045 * s), Bau.matt("3aa655", 0.9))
 		"abzieher", "doppel":
 			var breit := wz_rx * 2.0
@@ -165,6 +171,17 @@ func werkzeug_setzen(w: Dictionary) -> void:
 	k.scale = Vector3(1.4, 1.0, 1.0)
 	k.name = "hand"
 	werkzeug.add_child(k)
+
+# Aussehen vom Händler „Mode & Farben“ (nur Optik)
+func aussehen(gondel_hex: String, kleidung_hex: String, schwamm_hex: String) -> void:
+	gondel_mat.albedo_color = Color(gondel_hex)
+	gondel_mat.metallic = 0.8 if gondel_hex == "e8b53a" else 0.0
+	gondel_mat.roughness = 0.3 if gondel_hex == "e8b53a" else 0.5
+	arm_mat.albedo_color = Color(kleidung_hex)
+	if schwamm_hex != schwamm_farbe:
+		schwamm_farbe = schwamm_hex
+		var w := {"id": wz_id, "rx": wz_rx, "ry": wz_ry, "art": wz_art}
+		werkzeug_setzen(w)
 
 # ---------------------------------------------------------------- Eingaben
 func _input(e: InputEvent) -> void:
@@ -311,8 +328,8 @@ func _stempel(o: Vector2) -> void:
 	var w := weg + o.x * richtung
 	var yw := y + o.y
 	var glas_h := Turm.STOCK_H * (1.0 - Turm.BAND_ANTEIL)
-	var rx := wz_rx / Turm.FENSTER_B
-	var ry := wz_ry / glas_h
+	var rx := wz_rx * wisch_faktor / Turm.FENSTER_B
+	var ry := wz_ry * wisch_faktor / glas_h
 	var fm := turm.stockwerk_bei(yw)
 	for f in [fm - 1, fm, fm + 1]:
 		if not turm.gleicher_grundriss(f, stock):
