@@ -12,6 +12,8 @@ var stellplaetze: Array = []    # {name, pos, rect} – Plätze für spätere H�
 var himmel: ShaderMaterial
 var sonne: DirectionalLight3D
 const STURM_FARBE := Color("c9955a")
+const PLATZ_R := 125.0          # Radius des Platzes um den Turm (Boden-Shader: plaza_r)
+const STELLPLATZ_R := 104.0     # Abstand der Stellplätze zur Turmmitte
 
 func _ready() -> void:
 	rng.seed = 11
@@ -99,7 +101,7 @@ func _boden() -> void:
 func _stellplaetze() -> void:
 	for sp in [["Händler", 35.0], ["Casino", 155.0]]:
 		var a := deg_to_rad(sp[1])
-		var mitte := Vector2(cos(a), sin(a)) * 150.0
+		var mitte := Vector2(cos(a), sin(a)) * STELLPLATZ_R
 		var flaeche := MeshInstance3D.new()
 		var pm := PlaneMesh.new()
 		pm.size = Vector2(18, 18)
@@ -147,14 +149,21 @@ func _stadt() -> void:
 		var z := -1500.0
 		while z <= 1500.0:
 			var d := Vector2(x, z).length()
-			if d > 230.0 and d < 1600.0 and rng.randf() < 0.55:
+			var dichte := 0.85 if d < 600.0 else 0.55      # nah am Turm dichter bebaut
+			if d > 100.0 and d < 1600.0 and rng.randf() < dichte:
 				var bx := 25.0 + rng.randf() * 30.0
 				var bz := 25.0 + rng.randf() * 30.0
-				var hoch := int((4.0 + rng.randf() * 22.0) * (1.4 - d / 1600.0))
-				if rng.randf() < 0.08:
+				var hoch := int((4.0 + rng.randf() * 22.0) * (1.75 - d / 1600.0))
+				if rng.randf() < (0.2 if d < 600.0 else 0.08):
 					hoch += 25
 				var poly := Bau.rechteck(bx, bz, x + (rng.randf() - 0.5) * 10.0, z + (rng.randf() - 0.5) * 10.0)
-				haeuser.append(Rect2(poly[0], Vector2(bx, bz)))
+				var r := Rect2(poly[0], Vector2(bx, bz))
+				# nicht auf den Platz um den Turm bauen
+				var naechster := Vector2(clampf(0.0, r.position.x, r.end.x), clampf(0.0, r.position.y, r.end.y))
+				if naechster.length() < PLATZ_R + 6.0:
+					z += 75.0
+					continue
+				haeuser.append(r)
 				var stw := []
 				for k in maxi(hoch, 2):
 					stw.append({"poly": poly, "y0": k * 3.5, "h": 3.5})

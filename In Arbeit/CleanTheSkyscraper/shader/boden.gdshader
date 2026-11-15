@@ -7,6 +7,7 @@ uniform vec3 asphalt : source_color = vec3(0.4, 0.41, 0.43);
 uniform vec3 plaza : source_color = vec3(0.88, 0.85, 0.79);
 uniform vec3 gruen : source_color = vec3(0.36, 0.6, 0.3);
 uniform float raster = 75.0;
+uniform float plaza_r = 125.0;   // muss zu Welt.PLATZ_R passen
 
 varying vec3 wp;
 
@@ -34,7 +35,7 @@ void fragment() {
 	// Straßenraster zwischen den Häuserblöcken (Blöcke liegen auf Vielfachen von 75 m)
 	vec2 q = abs(fract(p / raster) - 0.5) * raster;
 	float naechste = min(q.x, q.y);
-	float plaza_k = 1.0 - smoothstep(205.0, 215.0, d);
+	float plaza_k = 1.0 - smoothstep(plaza_r - 5.0, plaza_r + 5.0, d);
 	float str = (1.0 - sst(6.5, naechste, aa)) * stadt * (1.0 - plaza_k);
 	c = mix(c, asphalt, str);
 	// gestrichelte Mittellinie
@@ -44,7 +45,7 @@ void fragment() {
 	// Platz um den Turm: helle Platten, Grünring
 	vec2 platte = abs(fract(p / 3.0) - 0.5);
 	vec3 pl = plaza * (0.97 + 0.04 * hs(floor(p / 3.0))) * (1.0 - 0.08 * (1.0 - sst(0.47, max(platte.x, platte.y), aa / 3.0)));
-	float ring = sst(120.0, d, 2.0) * (1.0 - sst(185.0, d, 2.0));
+	float ring = sst(70.0, d, 2.0) * (1.0 - sst(88.0, d, 2.0));
 	pl = mix(pl, gruen * (0.85 + 0.25 * vn(p * 0.3)), ring * step(0.3, vn(p * 0.05 + 3.0)));
 	c = mix(c, pl, plaza_k);
 	ALBEDO = c;
