@@ -423,6 +423,8 @@ func _bilder() -> void:
 	x.menu.reiter = 1
 	x.menu.aufbauen()
 	await _foto(13)
+	x.menu.oeffnen("kapsel", "Kapsel-Automat")
+	await _foto(98)
 	x.menu.oeffnen("aufzug_turm", "Express-Aufzug")
 	x.menu.oberstes = 120
 	x.menu.aufbauen()

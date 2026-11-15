@@ -205,7 +205,7 @@ func _boni() -> void:
 # ---------------------------------------------------------------- Kapsel-Automat
 func _kapsel() -> void:
 	unter.text = "MÜNZE REIN, KAPSEL RAUS – IMMER EIN GEWINN FÜRS PENTHOUSE"
-	scroll.custom_minimum_size.y = 360
+	scroll.custom_minimum_size.y = 560
 	var chancen := HBoxContainer.new()
 	chancen.add_theme_constant_override("separation", 10)
 	for i in 4:
@@ -213,7 +213,7 @@ func _kapsel() -> void:
 		chancen.add_child(l)
 	liste.add_child(chancen)
 	var buehne := CenterContainer.new()
-	buehne.custom_minimum_size = Vector2(0, 220)
+	buehne.custom_minimum_size = Vector2(0, 200 if letzte_kapsel != "" else 140)
 	buehne.name = "buehne"
 	liste.add_child(buehne)
 	if letzte_kapsel != "":
@@ -227,6 +227,52 @@ func _kapsel() -> void:
 	var c := CenterContainer.new()
 	c.add_child(k)
 	liste.add_child(c)
+	_vorschau()
+
+# Alle möglichen Gewinne mit Bild, Name und Bonus, je Seltenheit eine Reihe
+func _vorschau() -> void:
+	liste.add_child(UiGlas.ueberschrift("MÖGLICHE GEWINNE"))
+	var gitter := GridContainer.new()
+	gitter.columns = 5
+	gitter.add_theme_constant_override("h_separation", 6)
+	gitter.add_theme_constant_override("v_separation", 6)
+	liste.add_child(gitter)
+	for stufe in 4:
+		var farbe := Color(Wirtschaft.SELTEN_FARBE[stufe])
+		for id in Wirtschaft.GEGENSTAENDE:
+			var g: Dictionary = Wirtschaft.GEGENSTAENDE[id]
+			if g.quelle != "arcade" or int(g.seltenheit) != stufe:
+				continue
+			var p := PanelContainer.new()
+			p.add_theme_stylebox_override("panel", UiGlas.box(Color(farbe, 0.1), Color(farbe, 0.5), 8, 6))
+			p.custom_minimum_size = Vector2(138, 0)
+			p.name = "vorschau_" + id
+			var hb := HBoxContainer.new()
+			hb.add_theme_constant_override("separation", 6)
+			p.add_child(hb)
+			var tr := TextureRect.new()
+			tr.texture = Symbole.bilder.get("g_" + id)
+			tr.custom_minimum_size = Vector2(44, 44)
+			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tr.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			hb.add_child(tr)
+			var vb := VBoxContainer.new()
+			vb.add_theme_constant_override("separation", 0)
+			vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var n := UiGlas.text(g.name, 12, UiGlas.TEXT, true)
+			n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			n.custom_minimum_size = Vector2(76, 0)
+			vb.add_child(n)
+			vb.add_child(UiGlas.text("+%d %% %s" % [int(round(wirtschaft.gegenstand_bonus(id) * 100.0)), _bonus_kurz(g.bonus)], 11, farbe))
+			var hat := wirtschaft.anzahl_gegenstand(id)
+			if hat > 0:
+				vb.add_child(UiGlas.text("hast du %d×" % hat, 10, UiGlas.TEXT_LEISE))
+			hb.add_child(vb)
+			gitter.add_child(p)
+
+static func _bonus_kurz(art_id: String) -> String:
+	return {"lohn": "Geld", "flaeche": "Fläche", "tempo": "Tempo", "helfer": "Helfer", "boost": "Boosts"}.get(art_id, art_id)
 
 func _kapsel_ziehen() -> void:
 	var p := wirtschaft.arcade_preis("kapsel")
