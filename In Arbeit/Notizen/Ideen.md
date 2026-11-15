@@ -5,7 +5,7 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 
 ## Spiele
 
-- [ ] **Absurd riesige Fleißaufgabe** (15.11.2026)
+- [x] **Absurd riesige Fleißaufgabe** (15.11.2026) ✅ Variante „Fenster putzen“ ist jetzt eigenes Projekt: [[Clean the Skyscraper]]
 	- Idee: Spiel, in dem man eine fast unmögliche Riesenaufgabe Stück für Stück erledigt; trotz der Größe befriedigend, weil man ständig kleine Fortschritte sieht
 	- Vorbilder (nur als Genre, nicht nachbauen): „Drink The Ocean“ (TikTok @malakyemong), Mond vom Staub freifegen, alle Münzen aus einem Riesenpool sammeln, Nadel im Heuhaufen
 	- Machbar als Single-File-Browserspiel (wie die anderen Spiele)
