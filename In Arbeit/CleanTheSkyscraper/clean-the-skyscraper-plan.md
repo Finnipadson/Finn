@@ -1,6 +1,6 @@
 # Clean the Skyscraper – Bauplan
 
-Status: **Phase 1 fertig**, als Nächstes Phase 2
+Status: **Phase 2 fertig**, als Nächstes Phase 3
 
 ## Idee
 
@@ -64,7 +64,15 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - *Frei umschauen:* Man kann rundum schauen (360°) und fast senkrecht nach oben oder unten.
      - *Flimmern an den Turmkanten:* Die Gondel richtet sich am Mittel der Fassaden-Normalen ±2 m aus und dreht weich (`lerp_angle` statt `slerp`; `slerp` hatte Fehlermeldungen wegen nicht normierter Achse geworfen). Die Rahmen glänzen weniger. Gemessen an der Ecke 3,4 → 1,9.
      - Dazu doppelt so feine Wisch-Masken (64×128 px), die Kanten des Wisch-Strichs sind jetzt glatt.
-2. [ ] **Fortschritt und Wirtschaft:** Terrassen als Shop und Etappenziel, Werkzeuge, Gondel-Upgrades, Abschnitte freischalten, Speichern und Laden
+2. [x] **Fortschritt und Wirtschaft:** Terrassen als Shop und Etappenziel, Werkzeuge, Gondel-Upgrades, Abschnitte freischalten, Speichern und Laden
+   - **Ergebnis (15.11.2026):**
+     - **Bewusste Abweichungen vom Plan (mit dem User besprochen):** Höher fahren kauft man als **Seilwinde** (+6 Stockwerke je Stufe, Start bis Stockwerk 6) statt über eine 90-%-Regel, weil ein Abschnitt unten über 1.000 Fenster hat. Die **Werkstatt** öffnet man überall mit **Tab** statt auf den Terrassen; die Terrassen bekommen in Phase 3 eine Rolle.
+     - `skripte/wirtschaft.gd`: alle Zahlen zum Ausbalancieren an einer Stelle. Lohn 1 € + 1 € je 6 Stockwerke. Werkzeuge: Schwamm, Großer Schwamm (20 €), Abzieher (120 €, breit und flach), Doppel-Abzieher (700 €), Hochdruckreiniger (4.000 €, draufhalten statt reiben, Reichweite 9 m). Upgrades: Gondel-Motor (5 Stufen, +50 % Tempo), Teleskoparm (3 Stufen, mehr Reichweite), Seilwinde (27 Stufen).
+     - `skripte/shop.gd`: Werkstatt-Fenster mit Kaufen, Nehmen und „Neues Spiel“ (mit Nachfrage). Werkzeugwechsel auch mit den Tasten 1–5.
+     - `skripte/spiel.gd`: Spiel-Logik aus `haupt.gd` herausgezogen. Speichern als JSON in `user://spielstand.json` (Geld, Werkzeuge, Stufen, saubere Fenster als Base64, Position): alle 20 s, nach jedem Kauf und beim Beenden. Halb gewischte Fenster werden nicht gespeichert. Tests schreiben nur in `spielstand_test.json`.
+     - Werkzeug-Modelle: Schwamm, Abzieher mit Gummilippe, Spritzpistole mit Wasserstrahl. Meldung, wenn das Seil zu kurz ist; Begrüßung beim ersten Start.
+     - Tests: `--ansicht=9 --geld=10000` (Shop mit Tab öffnen, über die echten Knöpfe kaufen, Taste 3/5, Hochdruck), `--ansicht=10 --geld=500` und danach `--ansicht=10` (Speichern und Laden). Alles bestanden.
+   - **Noch offen:** Balance nicht über Stunden getestet (Ziel 10–20 h) → nach Rückmeldung des Users in `wirtschaft.gd` nachjustieren.
 3. [ ] **Leben am Turm:** Szenen hinter den Fenstern und Sammelalbum, Tauben, Wind, Sandsturm, schönere Stadt
 4. [ ] **Automatik:** Helfer, Putzroboter, Drohnen, eventuell Fortschritt auch während man nicht spielt
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe

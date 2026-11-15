@@ -1,6 +1,6 @@
 ---
 typ: spiel
-status: in Arbeit (Phase 1 fertig, spielbar)
+status: in Arbeit (Phase 2 fertig: Werkstatt, Werkzeuge, Speichern)
 technik: Godot 4.7, GDScript, Turm komplett aus Code
 erstellt: 2026-11-15
 ---
@@ -23,7 +23,8 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 
 - [x] Phase 0: Projekt aufsetzen (Godot-Projekt, Turm mit Fenster-Nummerierung, Welt, freie Kamera; Start `start.bat`)
 - [x] Phase 1: Spielbarer Kern (Gondel fahren, Fenster mit der Maus sauber reiben, Zähler, Geld, Funkeln; bis Stockwerk 18)
-- [ ] Phase 2: Fortschritt und Wirtschaft (Shop auf Terrassen, Upgrades, Speichern)
+- [x] Phase 2: Fortschritt und Wirtschaft (Werkstatt mit Tab, 5 Werkzeuge, Motor/Teleskoparm/Seilwinde, Speichern + Laden)
+- [ ] Balance testen (Ziel 10–20 h), Zahlen in `wirtschaft.gd`
 - [ ] Phase 3: Leben am Turm (Szenen, Tauben, Wind, Sandsturm, schönere Stadt)
 - [ ] Phase 4: Automatik (Helfer, Roboter, Drohnen)
 - [ ] Phase 5: Feinschliff (Sound, Effekte, Menü, .exe)

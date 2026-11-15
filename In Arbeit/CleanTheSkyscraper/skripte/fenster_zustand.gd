@@ -138,6 +138,23 @@ func _fertig(id: int, f: int, spalte: int, slot: int) -> void:
 	slots.erase(id)
 	slot_fenster[slot] = -1
 
+# ---------------------------------------------------------------- Speichern (nur ganz saubere Fenster; halb gewischte fangen neu an)
+func speichern() -> String:
+	return Marshalls.raw_to_base64(sauber)
+
+func laden(b64: String) -> void:
+	var daten := Marshalls.base64_to_raw(b64)
+	if daten.size() != sauber.size():
+		return
+	sauber = daten
+	sauber_zahl = 0
+	for f in Turm.STOCKWERKE:
+		for s in turm.fenster_pro_stock[f]:
+			if sauber[turm.fenster_basis[f] + s] == 1:
+				zustand.set_pixel(s, f, Color(0, 0, 0))
+				sauber_zahl += 1
+	zustand_neu = true
+
 # Einmal pro Bild: geänderte Texturen auf die Grafikkarte schicken
 func aktualisieren() -> void:
 	if atlas_neu:

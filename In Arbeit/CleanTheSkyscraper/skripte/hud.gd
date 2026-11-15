@@ -10,6 +10,9 @@ var balken: ProgressBar
 var balken_text: Label
 var wurzel: Control
 var kreuz: ColorRect
+var bis: Label
+var meld: Label
+var meld_tween: Tween
 
 func _ready() -> void:
 	wurzel = Control.new()
@@ -26,6 +29,7 @@ func _ready() -> void:
 	links.add_child(vb2)
 	_label(vb2, "Höhe", 15, "123a6b")
 	hoehe = _label(vb2, "", 22, "1f5fae")
+	bis = _label(vb2, "", 13, "2b5b8f")
 	var rechts := _karte(1.0, 0.0, -16, 16)
 	var vb3 := VBoxContainer.new()
 	rechts.add_child(vb3)
@@ -50,10 +54,17 @@ func _ready() -> void:
 	vb4.add_child(balken)
 	unten.visible = false
 	balken.set_meta("karte", unten)
-	hinweis = _label(wurzel, "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen\nA/D: an der Fassade entlang · W/S: hoch/runter · Esc: Maus frei", 14, "ffffff")
+	hinweis = _label(wurzel, "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen\nA/D: an der Fassade entlang · W/S: hoch/runter · Tab: Werkstatt · 1–5: Werkzeug · Esc: Maus frei", 14, "ffffff")
 	hinweis.label_settings.outline_size = 6
 	hinweis.label_settings.outline_color = Color("123a6b")
 	_platz(hinweis, 0.5, 1.0, 0, -14)
+	meld = _label(wurzel, "", 20, "ffffff")
+	meld.label_settings.outline_size = 8
+	meld.label_settings.outline_color = Color("123a6b")
+	meld.custom_minimum_size = Vector2(900, 0)
+	meld.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_platz(meld, 0.5, 0.5, 0, 90)
+	meld.modulate.a = 0.0
 	kreuz = ColorRect.new()
 	kreuz.color = Color(1, 1, 1, 0.9)
 	kreuz.custom_minimum_size = Vector2(6, 6)
@@ -124,6 +135,19 @@ func zeige(sauber: int, gesamt: int, euro: int, meter: float, stockwerk: int) ->
 	zahl.text = "%s / %s" % [punkte(sauber), punkte(gesamt)]
 	geld.text = "%s €" % punkte(euro)
 	hoehe.text = "%d m · Stockwerk %d" % [int(meter), stockwerk + 1]
+
+func freigeschaltet(stockwerke: int) -> void:
+	bis.text = "Seil reicht bis Stockwerk %d" % stockwerke
+
+# Text in der Bildmitte, blendet nach ein paar Sekunden aus
+func meldung(t: String, dauer := 2.5) -> void:
+	meld.text = t
+	if meld_tween:
+		meld_tween.kill()
+	meld.modulate.a = 1.0
+	meld_tween = create_tween()
+	meld_tween.tween_interval(dauer)
+	meld_tween.tween_property(meld, "modulate:a", 0.0, 0.5)
 
 func fortschritt(wert: float, sichtbar: bool) -> void:
 	balken.get_meta("karte").visible = sichtbar
