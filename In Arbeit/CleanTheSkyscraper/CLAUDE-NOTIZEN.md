@@ -29,3 +29,5 @@ Wird vor der Arbeit an diesem Projekt gelesen (Verweis in der Haupt-`CLAUDE.md`)
 - Godot-Pfad: `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe`
 - Weitere Grafik-Tests in `Grafiktest/` (`strand-test.html`, `godot-strand` mit Kenney-CC0-Modellen)
 - Menü-Stil „Glas modern“ in `skripte/ui_glas.gd` (UiGlas.fenster/knopf/reiter/karte) – neue Menüs damit bauen; Werkstatt baut alle Reiter (versteckt), damit Tests Knöpfe per Name finden; alte Knöpfe mit `remove_child` sofort entfernen (sonst bekommen neue Knöpfe andere Namen). Menü-Testbilder `--ansicht=23`
+- Palmen-Shader `shader/palme.gdshader`: Stamm (Ringe/Schuppen) vs. Blatt an der Palettenfarbe erkannt, Wind im Vertex-Shader. Büsche in Kübeln mit grünem Material statt Kenney-Türkis
+- Bilder für Hotbar/Menüs: `skripte/symbole.gd` rendert beim Start jedes Werkzeug (`Spieler.werkzeug_modell`, statisch) und Fahrzeug in einem SubViewport → `Symbole.bilder[id]`; `UiGlas.karte(..., bild)` und `Hud.hotbar` (Eintrag `bild`) zeigen sie

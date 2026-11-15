@@ -1,12 +1,56 @@
 shader_type spatial;
+render_mode cull_disabled;
 
-// Kenney-Palmen etwas natürlicher: Farben aus der Kenney-Palette entsättigt (Stamm braun statt orange, Blätter olivgrün)
+// Kenney-Palmen natürlicher: Stamm mit Ringen und Schuppen (Dattelpalme), Blätter mit Farbverlauf zur Spitze,
+// feinen Streifen und Gegenlicht, dazu leichtes Wiegen im Wind. Stamm/Blatt wird an der Palettenfarbe erkannt.
 uniform sampler2D farben : source_color, filter_linear_mipmap;
+uniform vec3 rinde_hell : source_color = vec3(0.62, 0.5, 0.36);
+uniform vec3 rinde_dunkel : source_color = vec3(0.33, 0.25, 0.17);
+uniform vec3 blatt_innen : source_color = vec3(0.13, 0.27, 0.12);
+uniform vec3 blatt_spitze : source_color = vec3(0.4, 0.52, 0.22);
+uniform float wind = 1.0;
+
+varying vec3 lokal;
+varying float ist_blatt;
+
+void vertex() {
+	lokal = VERTEX;
+	vec3 c = texture(farben, UV).rgb;
+	ist_blatt = step(c.r, c.g * 1.05);   // grün → Blatt
+	// Wind: oben mehr als unten, Blätter flattern zusätzlich; Phase je Palme aus ihrer Weltposition
+	vec3 ort = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+	float phase = ort.x * 0.37 + ort.z * 0.23;
+	float h = clamp(VERTEX.y / 4.2, 0.0, 1.0);
+	float wiegen = sin(TIME * 0.9 + phase) * 0.05 * h * h;
+	float flattern = sin(TIME * 3.1 + phase * 3.0 + VERTEX.x * 2.0) * 0.025 * ist_blatt * length(VERTEX.xz);
+	VERTEX.x += (wiegen + flattern) * wind;
+	VERTEX.z += (wiegen * 0.6 + flattern * 0.5) * wind;
+	VERTEX.y += flattern * 0.6 * wind;
+}
+
+float hs(vec2 p) { vec3 q = fract(vec3(p.xyx) * 0.1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
 
 void fragment() {
-	vec3 c = texture(farben, UV).rgb;
-	float l = dot(c, vec3(0.299, 0.587, 0.114));
-	c = mix(vec3(l), c, 0.42) * vec3(0.95, 0.88, 0.76);
-	ALBEDO = c;
-	ROUGHNESS = 0.85;
+	if (ist_blatt > 0.5) {
+		// Farbverlauf: innen dunkel, zur Spitze heller; feine Längsstreifen (Fiederblätter)
+		float weit = clamp(length(lokal.xz) / 1.6, 0.0, 1.0);
+		vec3 c = mix(blatt_innen, blatt_spitze, smoothstep(0.1, 1.0, weit));
+		float streifen = 0.5 + 0.5 * sin(atan(lokal.z, lokal.x) * 60.0 + weit * 20.0);
+		c *= 0.86 + 0.18 * streifen;
+		c *= 0.92 + 0.12 * hs(floor(lokal.xz * 6.0));
+		ALBEDO = c;
+		ROUGHNESS = 0.7;
+		SPECULAR = 0.3;
+		BACKLIGHT = c * 0.35;   // Sonne scheint durch die Blätter
+	} else {
+		// Dattelpalmen-Stamm: waagerechte Ringe + schräge Schuppen
+		float y = lokal.y * 7.0;
+		float winkel = atan(lokal.z, lokal.x);
+		float ring = smoothstep(0.0, 0.18, fract(y)) * smoothstep(1.0, 0.75, fract(y));
+		float schuppe = 0.5 + 0.5 * sin(winkel * 6.0 + floor(y) * 1.7);
+		vec3 c = mix(rinde_dunkel, rinde_hell, ring * (0.65 + 0.35 * schuppe));
+		c *= 0.9 + 0.15 * hs(vec2(floor(y), floor(winkel * 3.0)));
+		ALBEDO = c;
+		ROUGHNESS = 0.95;
+	}
 }

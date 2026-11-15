@@ -120,7 +120,7 @@ static func reiter(t: String, aktiv: bool) -> Button:
 	return b
 
 # Karte: Symbol-Kachel, Titel + Text (+ Stufen-Punkte), rechts ein Knopf
-static func karte(titel: String, info: String, knopf_n: Control, kurz := "", farbe: Color = AKZENT, stufe := -1, max_stufe := 0) -> PanelContainer:
+static func karte(titel: String, info: String, knopf_n: Control, kurz := "", farbe: Color = AKZENT, stufe := -1, max_stufe := 0, bild: Texture2D = null) -> PanelContainer:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", box(KARTE, KARTE_RAND, 10, 12))
 	var hb := HBoxContainer.new()
@@ -132,10 +132,18 @@ static func karte(titel: String, info: String, knopf_n: Control, kurz := "", far
 		kachel.add_theme_stylebox_override("panel", ks)
 		kachel.custom_minimum_size = Vector2(44, 44)
 		kachel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var kl := text(kurz, 15, farbe, true)
-		kl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		kl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		kachel.add_child(kl)
+		if bild:
+			kachel.custom_minimum_size = Vector2(56, 56)
+			var tr := TextureRect.new()
+			tr.texture = bild
+			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			kachel.add_child(tr)
+		else:
+			var kl := text(kurz, 15, farbe, true)
+			kl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			kl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			kachel.add_child(kl)
 		hb.add_child(kachel)
 	var vb := VBoxContainer.new()
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL

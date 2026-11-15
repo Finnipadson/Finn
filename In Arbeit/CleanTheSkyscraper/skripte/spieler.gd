@@ -131,42 +131,10 @@ func werkzeug_setzen(w: Dictionary) -> void:
 	wischt = false
 	if werkzeug:
 		werkzeug.queue_free()
-	werkzeug = Node3D.new()
+	wz = w
+	werkzeug = werkzeug_modell(w, schwamm_farbe)
 	add_child(werkzeug)
 	var haut := Bau.matt("f1c29b", 0.6)
-	wz = w
-	match str(w.get("modell", "schwamm")):
-		"schwamm":
-			var s: float = w.get("groesse", 1.0)
-			var farbe: String = w.get("farbe", schwamm_farbe) if w.has("farbe") else schwamm_farbe
-			_box(werkzeug, Vector3(0.24, 0.15, 0.07) * s, Vector3.ZERO, Bau.matt(farbe, 0.95))
-			_box(werkzeug, Vector3(0.24 * s, 0.15 * s, 0.025), Vector3(0, 0, -0.045 * s), Bau.matt("3aa655", 0.9))
-		"abzieher":
-			var breit := wz_rx * 2.0
-			var gummi := Bau.matt("2b2b2b", 0.7)
-			var alu := Bau.metall("c9ced4", 0.3, 0.8)
-			_box(werkzeug, Vector3(breit, 0.05, 0.03), Vector3(0, 0, -0.03), gummi)
-			_box(werkzeug, Vector3(breit, 0.07, 0.03), Vector3(0, 0.02, 0.0), alu)
-			if w.get("doppel", false):
-				_box(werkzeug, Vector3(breit, 0.05, 0.03), Vector3(0, 0.16, -0.03), gummi)
-				_box(werkzeug, Vector3(breit, 0.07, 0.03), Vector3(0, 0.18, 0.0), alu)
-			var stiel := Bau.zylinder(0.022, 0.022, 0.3, Bau.matt("e2483e", 0.6), 10)
-			stiel.rotation.x = PI / 2.0
-			stiel.position = Vector3(0, 0.05, 0.17)
-			werkzeug.add_child(stiel)
-		"spray":
-			var g: float = w.get("groesse", 1.0)
-			var koerper: String = {"hochdruck": "ffc531", "dampf": "e2483e", "lanze": "3a86d4"}.get(wz_id, "ffc531")
-			_box(werkzeug, Vector3(0.06, 0.1, 0.2) * g, Vector3(0, 0, 0.05), Bau.matt(koerper, 0.5))
-			var rohr := Bau.zylinder(0.018, 0.022, 0.45, Bau.metall("3b3f46", 0.4, 0.6), 10)
-			rohr.rotation.x = PI / 2.0
-			rohr.position = Vector3(0, 0.03, -0.3)
-			werkzeug.add_child(rohr)
-			var duese := Node3D.new()
-			duese.name = "duese"
-			duese.position = Vector3(0, 0.03, -0.53)
-			werkzeug.add_child(duese)
-			_box(werkzeug, Vector3(0.04, 0.1, 0.05), Vector3(0, -0.09, 0.1), Bau.matt("33363d", 0.6))
 	var k := MeshInstance3D.new()
 	var km := SphereMesh.new()
 	km.radius = 0.06
@@ -177,6 +145,52 @@ func werkzeug_setzen(w: Dictionary) -> void:
 	k.scale = Vector3(1.4, 1.0, 1.0)
 	k.name = "hand"
 	werkzeug.add_child(k)
+
+# Modell eines Werkzeugs (ohne Hand) – auch für die Bilder in Hotbar und Menüs (Symbole)
+static func werkzeug_modell(w: Dictionary, schwamm_farbe := "ffd84a") -> Node3D:
+	var n := Node3D.new()
+	match str(w.get("modell", "schwamm")):
+		"schwamm":
+			var s: float = w.get("groesse", 1.0)
+			var farbe: String = w.get("farbe", schwamm_farbe) if w.has("farbe") else schwamm_farbe
+			_sbox(n, Vector3(0.24, 0.15, 0.07) * s, Vector3.ZERO, Bau.matt(farbe, 0.95))
+			_sbox(n, Vector3(0.24 * s, 0.15 * s, 0.025), Vector3(0, 0, -0.045 * s), Bau.matt("3aa655", 0.9))
+		"abzieher":
+			var breit: float = float(w.rx) * 2.0
+			var gummi := Bau.matt("2b2b2b", 0.7)
+			var alu := Bau.metall("c9ced4", 0.3, 0.8)
+			_sbox(n, Vector3(breit, 0.05, 0.03), Vector3(0, 0, -0.03), gummi)
+			_sbox(n, Vector3(breit, 0.07, 0.03), Vector3(0, 0.02, 0.0), alu)
+			if w.get("doppel", false):
+				_sbox(n, Vector3(breit, 0.05, 0.03), Vector3(0, 0.16, -0.03), gummi)
+				_sbox(n, Vector3(breit, 0.07, 0.03), Vector3(0, 0.18, 0.0), alu)
+			var stiel := Bau.zylinder(0.022, 0.022, 0.3, Bau.matt("e2483e", 0.6), 10)
+			stiel.rotation.x = PI / 2.0
+			stiel.position = Vector3(0, 0.05, 0.17)
+			n.add_child(stiel)
+		"spray":
+			var g: float = w.get("groesse", 1.0)
+			var koerper: String = {"hochdruck": "ffc531", "dampf": "e2483e", "lanze": "3a86d4"}.get(w.id, "ffc531")
+			_sbox(n, Vector3(0.06, 0.1, 0.2) * g, Vector3(0, 0, 0.05), Bau.matt(koerper, 0.5))
+			var rohr := Bau.zylinder(0.018, 0.022, 0.45, Bau.metall("3b3f46", 0.4, 0.6), 10)
+			rohr.rotation.x = PI / 2.0
+			rohr.position = Vector3(0, 0.03, -0.3)
+			n.add_child(rohr)
+			var duese := Node3D.new()
+			duese.name = "duese"
+			duese.position = Vector3(0, 0.03, -0.53)
+			n.add_child(duese)
+			_sbox(n, Vector3(0.04, 0.1, 0.05), Vector3(0, -0.09, 0.1), Bau.matt("33363d", 0.6))
+	return n
+
+static func _sbox(eltern: Node3D, groesse: Vector3, p: Vector3, m: Material) -> void:
+	var mi := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = groesse
+	mi.mesh = bm
+	mi.material_override = m
+	mi.position = p
+	eltern.add_child(mi)
 
 # Aussehen vom Händler „Mode & Farben“ (nur Optik)
 func aussehen(gondel_hex: String, kleidung_hex: String, schwamm_hex: String) -> void:

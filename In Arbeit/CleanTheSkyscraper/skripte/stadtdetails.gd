@@ -40,7 +40,7 @@ func baue(w: Welt) -> void:
 	palmen_mat.set_shader_parameter("farben", load("res://modelle/natur/Textures/colormap.png"))
 	for i in PALMEN.size():
 		_mm_aus_modell("res://modelle/%s.glb" % PALMEN[i], palmen_xf[i], palmen_mat)
-	_mm_aus_modell("res://modelle/natur/plant_bushDetailed.glb", busch_xf)
+	_mm_aus_modell("res://modelle/natur/plant_bushDetailed.glb", busch_xf, Bau.matt("3f6a2e", 0.85))   # natürliches Grün statt Kenney-Türkis
 	_lampen_mm()
 	_moebel_mm()
 	print("Stadtdetails: %d Bänke, %d Pflanzkübel, %d Mülleimer, %d Leute" % [bank_xf.size(), kuebel_xf.size(), eimer_xf.size(), leute_zahl])

@@ -185,7 +185,7 @@ func hotbar(eintraege: Array, aktiv: int) -> void:
 		sb.content_margin_top = 2
 		sb.content_margin_bottom = 3
 		feld.add_theme_stylebox_override("panel", sb)
-		feld.custom_minimum_size = Vector2(70, 62)
+		feld.custom_minimum_size = Vector2(72, 78)
 		feld.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var vb := VBoxContainer.new()
 		vb.add_theme_constant_override("separation", 1)
@@ -195,12 +195,21 @@ func hotbar(eintraege: Array, aktiv: int) -> void:
 		kopf.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vb.add_child(kopf)
 		_label(kopf, str(e.taste), 12, "123a6b" if i == aktiv else "cfe0f0")
-		var bild := ColorRect.new()   # kleines Farbbild des Werkzeugs/Fahrzeugs
-		bild.color = Color(e.farbe)
-		bild.custom_minimum_size = Vector2(30, 16)
-		bild.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		bild.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		vb.add_child(bild)
+		if e.get("bild") != null:   # gerendertes Bild des Werkzeugs/Fahrzeugs (Symbole)
+			var tr := TextureRect.new()
+			tr.texture = e.bild
+			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tr.custom_minimum_size = Vector2(48, 40)
+			tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			vb.add_child(tr)
+		else:
+			var bild := ColorRect.new()   # Ersatz, solange das Bild noch nicht gerendert ist
+			bild.color = Color(e.farbe)
+			bild.custom_minimum_size = Vector2(30, 16)
+			bild.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			bild.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			vb.add_child(bild)
 		var n := _label(vb, str(e.kurz), 12, "123a6b" if i == aktiv else "ffffff")
 		n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		hotbar_box.add_child(feld)

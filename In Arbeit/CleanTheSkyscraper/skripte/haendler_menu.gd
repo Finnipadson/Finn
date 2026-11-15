@@ -89,7 +89,7 @@ func _werkzeuge(profi: bool) -> void:
 			knopf.pressed.connect(_kaufe_werkzeug.bind(w.id))
 		knopf.name = "w_" + w.id
 		var farbe := Color(w.get("farbe", farben.get(w.id, "35c8ff")))
-		liste.add_child(UiGlas.karte(w.name, w.text, knopf, str((i + 1) % 10), farbe))
+		liste.add_child(UiGlas.karte(w.name, w.text + "  (Taste %d)" % ((i + 1) % 10), knopf, str((i + 1) % 10), farbe, -1, 0, Symbole.bilder.get(w.id)))
 
 func _fahrzeuge() -> void:
 	unter.text = "ZU FUSS MIT 1–4 ODER DEM MAUSRAD WÄHLEN"
@@ -107,7 +107,7 @@ func _fahrzeuge() -> void:
 			knopf.disabled = wirtschaft.geld < int(f.preis)
 			knopf.pressed.connect(_kaufe_fahrzeug.bind(f.id))
 		knopf.name = "f_" + f.id
-		liste.add_child(UiGlas.karte(f.name, f.text, knopf, kurz.get(f.id, ""), Color(f.farbe)))
+		liste.add_child(UiGlas.karte(f.name, f.text, knopf, kurz.get(f.id, ""), Color(f.farbe), -1, 0, Symbole.bilder.get(f.id)))
 
 func _mode() -> void:
 	unter.text = "NUR OPTIK – EINMAL KAUFEN, DANN JEDERZEIT ANZIEHEN"

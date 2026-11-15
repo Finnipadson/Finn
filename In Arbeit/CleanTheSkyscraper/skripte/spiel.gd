@@ -64,6 +64,9 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	gondeln.setup(turm, wirtschaft)
 	gondeln.aktualisieren(wirtschaft.aktive_gondel)
 	spieler.fenster_sauber.connect(_fenster_sauber)
+	var symbole := Symbole.new()   # Bilder für Hotbar + Menüs (einmal rendern)
+	add_child(symbole)
+	symbole.erzeugen()
 	helfer = Helfer.new()
 	add_child(helfer)
 	helfer.setup(turm, zustand, wirtschaft, spieler)
@@ -207,14 +210,14 @@ func _hotbar() -> void:
 			if w.id == wirtschaft.aktiv:
 				aktiv = l.size()
 			var farbe: String = w.get("farbe", {"schwamm": "ffd84a", "grossschwamm": "ffd84a", "abzieher": "c9ced4", "doppel": "c9ced4", "hochdruck": "ffc531", "teleskop": "c9ced4", "dampf": "e2483e", "lanze": "3a86d4"}.get(w.id, "ffffff"))
-			l.append({"taste": (i + 1) % 10, "kurz": KURZ.get(w.id, w.name), "farbe": farbe})
+			l.append({"taste": (i + 1) % 10, "kurz": KURZ.get(w.id, w.name), "farbe": farbe, "bild": Symbole.bilder.get(w.id)})
 	else:
 		var fz := _fahrzeug_liste()
 		for i in fz.size():
 			var id: String = fz[i]
 			if id == wirtschaft.fahrzeug:
 				aktiv = i
-			l.append({"taste": i + 1, "kurz": KURZ.get(id, id), "farbe": "9fd3a8" if id == "" else wirtschaft.fahrzeug_daten(id).farbe})
+			l.append({"taste": i + 1, "kurz": KURZ.get(id, id), "farbe": "9fd3a8" if id == "" else wirtschaft.fahrzeug_daten(id).farbe, "bild": Symbole.bilder.get(id)})
 	hud.hotbar(l, aktiv)
 
 # Ein Helfer hat ein Fenster fertig: Lohn abzüglich seines Anteils
