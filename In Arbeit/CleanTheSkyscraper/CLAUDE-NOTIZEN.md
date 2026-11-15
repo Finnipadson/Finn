@@ -22,7 +22,9 @@ Wird vor der Arbeit an diesem Projekt gelesen (Verweis in der Haupt-`CLAUDE.md`)
 - Tests `--ansicht=8` Maus, `9 --geld=10000` Shop, `10` Speichern)
 - Start `start.bat`, Aufbau in `README.md` (`skripte/bau.gd` Bauteile als statische Funktionen, `turm.gd` mit `fenster_id()`/`fassaden_punkt()`/`naechster_weg()`, `fenster_zustand.gd` Dreck-Datentextur + Wisch-Atlas, `spieler.gd` Gondel + Putzen, `hud.gd`, `welt.gd`, `haupt.gd`
 - Testbilder `--write-movie … -- --ansicht=1..6` (5 = Putz-Demo, 6 = Fahrtest mit `--frei`)
-- Standard-AA 2× Supersampling + MSAA, kein TAA
+- Standard-AA (seit Flimmer-Runde 15.11.2026): Einstellung „Ruhiges Bild“ (`wirtschaft.einstellungen.ruhiges_bild`, Standard an) = TAA + 1,7× Supersampling + MSAA 4x (131 FPS bei 1440p); aus = 2× Supersampling + MSAA 4x ohne TAA (119 FPS). `haupt._grafik()` liest die Einstellung, `--taa=0|1` überschreibt sie
+- Flimmern messen: `python tools/flimmern.py AUSGABE [--orte=a,b] [--name=x] [--projekt=alter_stand] [-- godot-schalter]` – nimmt je Ort 16 Bilder bei langsam bewegter Kamera auf (`--fahrt=dx,dy,dz` m/s, `--dreh=grad/s`, `--tempo=f` für Ansicht 4) und misst die zweite zeitliche Ableitung (gleichmäßige Bewegung ≈ 0, Flimmern groß). Kamera muss langsam sein (nächstes Objekt < 0,5 px/Bild), sonst misst man nur Bewegungskanten; Autos/Wind zählen mit. Weitere Test-Schalter `--ssao=0 --schatten=0 --glow=0`
+- Gegen Flimmern in Shadern: keine harten `step`/`fract`-Kanten – gefilterte Streifen (`streifen()`/`band_k()` in `boden.gdshader`/`fassade.gdshader`, Breite = `fwidth`×1,25) und Zufall pro Zelle/feines Rauschen per `fwidth` auf Mittelwert ausblenden, bevor die Zelle < ~4 Bildpunkte ist. MSAA/Supersampling glätten Shader-Muster kaum. Geprüft ohne Wirkung: SSR/SSAO/Schatten aus, Rahmen-Normalen biegen (schlechter); FSR2 nativ deutlich schlechter. Z-Fighting gab es nicht (Godot 4.7 Reverse-Z)
 - nach neuen `class_name`-Skripten erst `--headless --import`)
 - Grafik-Grundlage `Games/In Arbeit/Grafiktest/godot-turm` (Turm aus Code: Grundriss pro Stockwerk, `shader/turm.gdshader` mit Interior Mapping, Rahmen als MultiMesh
 - Testbilder per `--write-movie … -- --turm=1 --ansicht=N`)

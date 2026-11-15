@@ -29,12 +29,12 @@ ORTE = {
 WARM = 24     # Bilder zum Einlaufen (Shader kompilieren, Schatten)
 ZAHL = 16     # ausgewertete Bilder
 
-def aufnehmen(ort, ziel, extra):
+def aufnehmen(ort, ziel, extra, projekt=PROJEKT):
     ansicht, kam, fahrt, dreh = ORTE[ort]
     if os.path.isdir(ziel):
         shutil.rmtree(ziel)
     os.makedirs(ziel)
-    args = [GODOT, "--path", PROJEKT, "--write-movie", os.path.join(ziel, "b.png"), "--fixed-fps", "30",
+    args = [GODOT, "--path", projekt, "--write-movie", os.path.join(ziel, "b.png"), "--fixed-fps", "30",
             "--quit-after", str(WARM + ZAHL), "--", "--ansicht=%d" % ansicht]
     if kam: args.append("--kamera=" + kam)
     if fahrt == "tempo": args.append("--tempo=0.05")
@@ -56,6 +56,7 @@ def main():
     os.makedirs(aus, exist_ok=True)
     orte = list(ORTE)
     name = "messung"
+    projekt = PROJEKT
     extra = []
     rest = sys.argv[2:]
     if "--" in rest:
@@ -64,10 +65,11 @@ def main():
     for a in rest:
         if a.startswith("--orte="): orte = a.split("=", 1)[1].split(",")
         if a.startswith("--name="): name = a.split("=", 1)[1]
+        if a.startswith("--projekt="): projekt = a.split("=", 1)[1]   # z. B. alter Stand zum Vergleich
     kacheln = []
     zeilen = []
     for ort in orte:
-        bilder = aufnehmen(ort, os.path.join(aus, "roh_" + ort), extra)
+        bilder = aufnehmen(ort, os.path.join(aus, "roh_" + ort), extra, projekt)
         if len(bilder) < 3:
             print("%-11s keine Bilder" % ort)
             continue

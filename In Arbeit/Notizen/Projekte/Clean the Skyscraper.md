@@ -35,6 +35,7 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 - [x] Rückmeldung zur Stadt (15.11.2026): Straßen enden an Kreuzungen, Autos wenden, neuer Steinboden, Bänke/Kübel/Leute, saubere Hochhaus-Fenster, Casino im Hochhaus-Sockel, Start zu Fuß mit Express-Gondel, Werkzeug-Kiosk mit 5 Profi-Werkzeugen
 - [x] Phase 4 (15.11.2026): Helfer (Putzkraft, Roboter, Drohne – Kauf + Lohn-Anteil, nur beim Spielen), drei Gondeln (eine je Turmseite), Werkzeug- und Fahrzeug-Kioske, Hotbar, E-Scooter/Hoverboard/Jetpack
 - [x] Extras (15.11.2026): Sky-Lounge mit Express-Aufzug (Lounge 200 m mit Sky-Bar, Restaurant 500 m mit Designer-Möbeln, Aussichtsplattform 800 m um die Spitze), Penthouse oben im Casino-Hochhaus (Möbel frei aufstellen, Boni, Pokal-Vitrine), Arcade-Halle im 1. Stock (Greifautomat, Kapsel-Automat; Seltenheit +2/5/10/20 %), 29 Erfolge (Geld + Pokal) + Statistik mit Rekorden (Taste P)
+- [x] Flimmern verringert (15.11.2026): Fenster-Raster der Stadthäuser, Boden (Fugen, Linien, Zebrastreifen, Platten, Blumen), Turm-Räume/Schlieren und Palmen weich gefiltert; dazu „Ruhiges Bild“ (TAA) als Standard, abschaltbar unter Werkstatt → Einstellungen. Gemessen: beim Drehen über der Stadt ca. 75 % weniger Flimmern, Turm aus der Ferne ca. 75 % weniger, Boden 30–45 % weniger; FPS sogar höher (131 statt 119 bei 1440p)
 - [ ] Phase 5: Feinschliff (Sound, Effekte, Menü, .exe)
 - [x] Ansicht: Ich-Ansicht aus der Gondel (15.11.2026)
 - [x] Spielgefühl: komplett entspannt, kein Scheitern (15.11.2026)
