@@ -14,6 +14,7 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 		- Upgrades in Wellen (z. B. Strohhalm → Schlauch → Pumpe → Riesenmaschine)
 		- Zufällige Funde zwischendurch (Schiffswrack, Schatz, seltenes Tier …)
 		- Speicherstand, damit man über Tage weiterspielt
+	- **Grafik-Test** (15.11.2026): `In Arbeit/Grafiktest/strand-test.html` (Three.js, nur Code, keine Downloads) – Strand mit Palmen, Steg mit Pegel, Leuchtturm, Wasser mit Schaumrand und Lichtnetz, Wasserstand sinkt beim Schöpfen; Eimer, Riesen-Eimer, Saugpumpe mit Strudel; Funde (Riff, Truhe, Anker, Wrack) tauchen auf. Für mehr Details evtl. CC0-Modelle (Kenney, Quaternius) oder Godot
 	- Eigene Themen-Ideen: Wüste Sandkorn für Sandkorn sieben (irgendwo liegt ein Ring), alle Blätter eines Waldes rechen (Wind weht neue nach), den Himmel von Wolken freiwischen, einen Berg löffelweise abtragen
 
 ## Tools & Apps
