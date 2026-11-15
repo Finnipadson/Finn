@@ -50,6 +50,10 @@ func setup(s: Spiel) -> void:
 	blende.set_anchors_preset(Control.PRESET_FULL_RECT)
 	blende.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cl.add_child(blende)
+	# Älterer Spielstand ohne Statistik: schon geputzte Fenster und erreichte Höhe übernehmen (zählen für Erfolge)
+	if int(w.statistik.fenster_selbst) + int(w.statistik.fenster_helfer) == 0 and s.zustand.sauber_zahl > 0:
+		w.statistik.fenster_selbst = s.zustand.sauber_zahl
+	w.statistik.hoechste = maxf(float(w.statistik.hoechste), w.hoechster_abschnitt * Wirtschaft.ABSCHNITT * Turm.STOCK_H)
 
 # ---------------------------------------------------------------- Zustand
 func menue_offen() -> bool:
