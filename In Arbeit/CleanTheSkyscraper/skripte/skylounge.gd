@@ -104,9 +104,15 @@ func _aufzug_unten() -> void:
 	for seite in [-1.0, 1.0]:
 		var d := Vector2(seite * cos(PI / 6.0), sin(PI / 6.0))          # entlang der Wand von der Ecke weg
 		var nrm: Vector2 = Vector2(-d.y, d.x) * seite                        # zeigt in die Lobby
-		# Steinverkleidung über die ganze Wand (verdeckt die Turmfenster hinter der Lobby) und ein Fenster
-		# (1,5 m) daneben nach außen; feine Fugen
-		var lang := l + Turm.FENSTER_B
+		# Steinverkleidung über die ganze Wand (verdeckt die Turmfenster hinter der Lobby) und außen bis zur
+		# nächsten Fensterkante des Turms (Fenster liegen alle 1,5 m entlang des Umfangs); feine Fugen
+		var ende: Vector2 = ecke + d * l
+		var w0 := turm.naechster_weg(0, ende)
+		var w1 := turm.naechster_weg(0, ende + d * 0.4)
+		var bis_kante := Turm.FENSTER_B - fposmod(w0, Turm.FENSTER_B) if w1 > w0 else fposmod(w0, Turm.FENSTER_B)
+		if bis_kante < 0.2:
+			bis_kante += Turm.FENSTER_B
+		var lang := l + bis_kante
 		var wm: Vector2 = ecke + d * (lang * 0.5) + nrm * 0.15
 		var wn := Node3D.new()
 		wn.position = Vector3(wm.x, 0, wm.y)
