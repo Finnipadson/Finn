@@ -7,7 +7,7 @@ if not exist "%GODOT%" (
   exit /b 1
 )
 if "%1"=="--editor" (
-  start "" "%GODOT%" --path "%~dp0" --editor
+  start "" "%GODOT%" --path "%~dp0." --editor
 ) else (
-  start "" "%GODOT%" --path "%~dp0"
+  start "" "%GODOT%" --path "%~dp0."
 )
