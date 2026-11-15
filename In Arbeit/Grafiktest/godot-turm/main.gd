@@ -48,6 +48,10 @@ func _umgebung() -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.tonemap_exposure = 0.68
 	env.ssao_enabled = true
+	env.ssao_radius = 2.0
+	env.ssr_enabled = true
+	env.ssr_max_steps = 96
+	env.ssil_enabled = true
 	env.glow_enabled = true
 	env.glow_intensity = 0.3
 	env.fog_enabled = true
@@ -140,9 +144,11 @@ func baue(stw: Array, wand: Material, dach: Material) -> Node3D:
 			if n2.dot((a + b) * 0.5 - mitte) < 0.0:
 				n2 = -n2
 			var n := Vector3(n2.x, 0, n2.y)
+			var tg := Vector3(b.x - a.x, 0, b.y - a.y).normalized()
 			var ecken := [[a, weg, y0], [b, weg + lang, y0], [b, weg + lang, y1], [a, weg, y0], [b, weg + lang, y1], [a, weg, y1]]
 			for e in ecken:
 				w.set_normal(n)
+				w.set_tangent(Plane(tg, 1.0))
 				w.set_uv(Vector2(e[1], e[2]))
 				w.add_vertex(Vector3(e[0].x, e[2], e[0].y))
 			weg += lang
@@ -164,6 +170,66 @@ func baue(stw: Array, wand: Material, dach: Material) -> Node3D:
 	knoten.add_child(md)
 	add_child(knoten)
 	return knoten
+
+func turmglas(params: Dictionary) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = load("res://shader/turm.gdshader")
+	for k in params:
+		m.set_shader_parameter(k, params[k])
+	return m
+
+func metall(farbe: String, rau := 0.3, met := 0.85) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(farbe)
+	m.metallic = met
+	m.roughness = rau
+	return m
+
+# Echte Rahmen: senkrechte Pfosten an jeder Fenstergrenze + vorstehendes Band je Stockwerk (MultiMesh = schnell)
+func rahmen(stw: Array, fb: float, band_anteil: float, m: Material) -> void:
+	var xf: Array[Transform3D] = []
+	for s in stw:
+		var p: PackedVector2Array = s.poly
+		var y0: float = s.y0
+		var h: float = s.h
+		var bh := h * band_anteil
+		var mitte := Vector2.ZERO
+		for v in p:
+			mitte += v
+		mitte /= p.size()
+		var weg := 0.0
+		for k in p.size():
+			var a := p[k]
+			var b := p[(k + 1) % p.size()]
+			var lang := a.distance_to(b)
+			if lang < 0.01:
+				continue
+			var d2 := (b - a) / lang
+			var n2 := Vector2(d2.y, -d2.x)
+			if n2.dot((a + b) * 0.5 - mitte) < 0.0:
+				n2 = -n2
+			var dx := Vector3(d2.x, 0, d2.y)
+			var nz := Vector3(n2.x, 0, n2.y)
+			var mb := a + (b - a) * 0.5 + n2 * 0.17
+			xf.append(Transform3D(Basis(dx * (lang + 0.12), Vector3.UP * bh, nz * 0.36), Vector3(mb.x, y0 + bh * 0.5, mb.y)))
+			var k0 := int(ceil(weg / fb))
+			var k1 := int(floor((weg + lang) / fb))
+			for j in range(k0, k1 + 1):
+				var q := a + d2 * (j * fb - weg) + n2 * 0.13
+				xf.append(Transform3D(Basis(dx * 0.13, Vector3.UP * (h - bh), nz * 0.26), Vector3(q.x, y0 + bh + (h - bh) * 0.5, q.y)))
+			weg += lang
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	var bm := BoxMesh.new()
+	bm.size = Vector3.ONE
+	mm.mesh = bm
+	mm.instance_count = xf.size()
+	for i in xf.size():
+		mm.set_instance_transform(i, xf[i])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.material_override = m
+	add_child(mmi)
 
 func zaehle_fenster(stw: Array, breite: float) -> int:
 	var n := 0
@@ -238,7 +304,7 @@ func _wuestennadel() -> void:
 		if f >= 18 and (f - 18) % 6 == 0:
 			var w := ((f - 18) / 6) % 3
 			laengen[w] = maxf(kern, laengen[w] - 5.5)
-		var b := breite * (1.0 - f / 420.0)
+		var b := breite * (1.0 - (f - f % 6) / 420.0)
 		var poly: PackedVector2Array
 		if laengen.max() <= kern + 0.5:
 			poly = kreis(kern * (1.0 - (f - 140) / 120.0), 24)
@@ -246,19 +312,59 @@ func _wuestennadel() -> void:
 			poly = y_grundriss(laengen, b, kern)
 		stockwerke.append({"poly": poly, "y0": f * h, "h": h})
 	oben = n * h
-	var glas := fassade({"glas": Color("35587a"), "rahmen": Color("b4bac2"), "bruestung": Color("8c96a1"), "stock": h, "fenster_breite": 1.5, "metall": 0.5})
+	var glas := turmglas({"glas_tint": Color("4d7397"), "paneel": Color("9aa4ae"), "stock": h, "fenster_breite": 1.5})
 	baue(stockwerke, glas, betonmat())
+	var alu := metall("c9ced4")
+	rahmen(stockwerke, 1.5, 0.22, alu)
 	fenster_zahl = zaehle_fenster(stockwerke, 1.5)
+	# Spitze: verjüngte Segmente mit Ringen und Lamellen
+	var y := oben
+	var r := kern * (1.0 - (167 - 140) / 120.0)
+	for i in 14:
+		var seg := 14.0 - i * 0.4
+		var r2 := r * 0.8
+		var cm := CylinderMesh.new()
+		cm.top_radius = r2
+		cm.bottom_radius = r
+		cm.height = seg
+		cm.radial_segments = 24
+		var mi := MeshInstance3D.new()
+		mi.mesh = cm
+		mi.material_override = metall("8fa3b8", 0.15, 0.6)
+		mi.position.y = y + seg * 0.5
+		add_child(mi)
+		var ring := CylinderMesh.new()
+		ring.top_radius = r2 + 0.35
+		ring.bottom_radius = r2 + 0.35
+		ring.height = 0.6
+		ring.radial_segments = 24
+		var ri := MeshInstance3D.new()
+		ri.mesh = ring
+		ri.material_override = alu
+		ri.position.y = y + seg
+		add_child(ri)
+		for k in 6:
+			var fin := MeshInstance3D.new()
+			var bm := BoxMesh.new()
+			bm.size = Vector3(1.2, seg, 0.25)
+			fin.mesh = bm
+			fin.material_override = alu
+			var a := TAU * k / 6.0 + i * 0.2
+			fin.position = Vector3(cos(a) * (r * 0.85 + 0.4), y + seg * 0.5, sin(a) * (r * 0.85 + 0.4))
+			fin.rotation.y = -a
+			add_child(fin)
+		y += seg
+		r = r2
 	var nadel := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.4
-	cm.bottom_radius = 9.0
-	cm.height = 190.0
-	nadel.mesh = cm
-	nadel.material_override = fassade({"glas": Color("9fb4c8"), "rahmen": Color("e2e4e8"), "bruestung": Color("c9ced4"), "stock": 6.0, "fenster_breite": 3.0, "dreckig": 0.0})
-	nadel.position.y = oben + 95.0
+	var nm := CylinderMesh.new()
+	nm.top_radius = 0.15
+	nm.bottom_radius = r
+	nm.height = 70.0
+	nadel.mesh = nm
+	nadel.material_override = alu
+	nadel.position.y = y + 35.0
 	add_child(nadel)
-	spitze = oben + 190.0
+	spitze = y + 70.0
 
 # ---------------------------------------------------------------- Variante 2: Drehturm (gedreht + verjüngt, goldenes Glas)
 func _drehturm() -> void:
@@ -269,8 +375,9 @@ func _drehturm() -> void:
 		var seite := lerpf(78.0, 38.0, t)
 		stockwerke.append({"poly": runde_ecken_quadrat(seite, deg_to_rad(f * 1.1), 40, 14.0), "y0": f * h, "h": h})
 	oben = n * h
-	var glas := fassade({"glas": Color("b8924e"), "rahmen": Color("2e2d2d"), "bruestung": Color("5a5148"), "schmutz_farbe": Color("6b5a44"), "stock": h, "fenster_breite": 1.8, "metall": 0.8, "band_anteil": 0.15})
+	var glas := turmglas({"glas_tint": Color("c79a52"), "paneel": Color("4a4038"), "schmutz_farbe": Color("6b5a44"), "stock": h, "fenster_breite": 1.8, "band_anteil": 0.15, "wand_a": Color("e8dcc6"), "wand_b": Color("d9cbb4")})
 	baue(stockwerke, glas, betonmat("4a4744"))
+	rahmen(stockwerke, 1.8, 0.15, metall("3a332d", 0.35))
 	fenster_zahl = zaehle_fenster(stockwerke, 1.8)
 	var krone := MeshInstance3D.new()
 	var cm := CylinderMesh.new()
@@ -279,7 +386,7 @@ func _drehturm() -> void:
 	cm.height = 70.0
 	cm.radial_segments = 4
 	krone.mesh = cm
-	krone.material_override = fassade({"glas": Color("e0c27a"), "rahmen": Color("3b3a3a"), "stock": 5.0, "fenster_breite": 2.5, "dreckig": 0.0, "metall": 0.9})
+	krone.material_override = metall("d9b46a", 0.2)
 	krone.position.y = oben + 35.0
 	krone.rotation.y = -deg_to_rad((n - 1) * 1.1) + PI / 4.0
 	add_child(krone)
@@ -303,8 +410,9 @@ func _stapelriese() -> void:
 			stockwerke.append({"poly": poly, "y0": f * h, "h": h})
 			f += 1
 	oben = f * h
-	var glas := fassade({"glas": Color("2f7476"), "rahmen": Color("c2603e"), "bruestung": Color("a84f33"), "stock": h, "fenster_breite": 1.3, "metall": 0.4, "band_anteil": 0.28})
+	var glas := turmglas({"glas_tint": Color("3f9a9c"), "paneel": Color("b8583a"), "stock": h, "fenster_breite": 1.3, "band_anteil": 0.28})
 	baue(stockwerke, glas, betonmat("8a4a33"))
+	rahmen(stockwerke, 1.3, 0.28, metall("d0663f", 0.5, 0.2))
 	fenster_zahl = zaehle_fenster(stockwerke, 1.3)
 	var antenne := MeshInstance3D.new()
 	var cm := CylinderMesh.new()
