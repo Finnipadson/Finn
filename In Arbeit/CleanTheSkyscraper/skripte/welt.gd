@@ -8,13 +8,14 @@ const HORIZONT := Color("e9dcc4")
 var rng := RandomNumberGenerator.new()
 var env: Environment
 var haeuser: Array = []        # Rect2 (x, z) aller Häuser – für die Kollision zu Fuß
+var haeuser_hoehe: Array = []  # Höhe je Haus (Jetpack fliegt drüber)
 var stellplaetze: Array = []    # {name, pos, rect} – freie Plätze für Späteres (zurzeit keiner)
 var himmel: ShaderMaterial
 var sonne: DirectionalLight3D
 const STURM_FARBE := Color("c9955a")
 const PLATZ_R := 100.0          # Radius des Platzes um den Turm (Boden-Shader: plaza_r)
 const STAND_R := 74.0           # Händler-Stände: Abstand zur Turmmitte
-const STAND_WINKEL := [-45.0, 90.0, 210.0, -15.0]   # in den Lücken zwischen den drei Turmflügeln (Putzmittel, Mode, Snacks, Werkzeuge)
+const STAND_WINKEL := [-50.0, 75.0, 210.0, -10.0, -30.0, 105.0]   # in den Lücken zwischen den Turmflügeln (Reihenfolge wie Haendler.STAENDE)
 const CASINO_WINKEL := 30.0     # hinter der Spitze eines Flügels, schon in der Stadt
 const CASINO_R := 128.0
 const CASINO_GROESSE := 30.0
@@ -178,6 +179,7 @@ func _stadt() -> void:
 					z += 75.0
 					continue
 				haeuser.append(r)
+				haeuser_hoehe.append(maxi(hoch, 2) * 3.5)
 				var stw := []
 				for k in maxi(hoch, 2):
 					stw.append({"poly": poly, "y0": k * 3.5, "h": 3.5})

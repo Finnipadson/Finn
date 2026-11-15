@@ -9,7 +9,9 @@ const STAENDE := [
 	{"id": "putz", "name": "Putzmittel", "farbe": "2f86c8", "dunkel": "1d5a8a", "figur": "leute/character-worker"},
 	{"id": "mode", "name": "Mode & Farben", "farbe": "d84f9a", "dunkel": "8f2f63", "figur": "leute/character-female-c"},
 	{"id": "snack", "name": "Snacks", "farbe": "e08a1e", "dunkel": "9a5a10", "figur": "laden/character-employee"},
-	{"id": "werkzeug", "name": "Werkzeuge", "farbe": "3f9d5a", "dunkel": "246b3a", "figur": "leute/character-male-b"},
+	{"id": "werkzeug", "name": "Profi-Werkzeuge", "farbe": "3f9d5a", "dunkel": "246b3a", "figur": "leute/character-male-b"},
+	{"id": "grund", "name": "Werkzeuge", "farbe": "d4502f", "dunkel": "8f3520", "figur": "leute/character-male-e"},
+	{"id": "fahrzeug", "name": "Fahrzeuge", "farbe": "7a5ad6", "dunkel": "4f3a94", "figur": "leute/character-female-a"},
 ]
 const NAH := 2.8                 # so nah muss man vor dem Kiosk stehen
 const MINI := 2.25               # Kenney-Mini-Modelle auf Menschengröße bringen
@@ -137,6 +139,15 @@ func _kiosk(sp: Dictionary) -> Node3D:
 			_modell("laden/mannequin", Vector3(-BREIT * 0.5 - 0.9, 0.0, -TIEF * 0.5 - 0.3), n, 2.4, PI)
 			_modell("laden/mannequin", Vector3(BREIT * 0.5 + 0.9, 0.0, -TIEF * 0.5 - 0.3), n, 2.4, PI)
 		"werkzeug":
+			_modell("laden/shelf-bags", Vector3(-1.3, 0.14, 1.05), n, MINI)
+			_modell("laden/cash-register", Vector3(1.4, 1.14, -1.25), n, 0.9, PI)
+			# Profi-Geräte auf der Theke: Dampfreiniger (rot), Wasserlanze (blau), große Schwämme
+			for k in 2:
+				var x2 := -1.4 + k * 0.9
+				_box(n, Vector3(0.14, 0.22, 0.46), Vector3(x2, 1.25, -1.3), Bau.matt(["e2483e", "3a86d4"][k], 0.5))
+				_box(n, Vector3(0.06, 0.06, 0.6), Vector3(x2, 1.32, -1.75), Bau.metall("3b3f46", 0.4, 0.6))
+			_box(n, Vector3(0.5, 0.2, 0.3), Vector3(0.45, 1.2, -1.3), Bau.matt("6ac7e8", 0.95))
+		"grund":
 			_modell("laden/shelf-boxes", Vector3(-1.3, 0.14, 1.05), n, MINI)
 			_modell("laden/display-small", Vector3(1.2, 0.14, 1.0), n, MINI)
 			_modell("laden/cash-register", Vector3(1.4, 1.14, -1.25), n, 0.9, PI)
@@ -149,6 +160,23 @@ func _kiosk(sp: Dictionary) -> Node3D:
 			_box(n, Vector3(0.7, 0.07, 0.06), Vector3(-0.3, 1.21, -1.25), Bau.metall("c9ced4", 0.3, 0.8))
 			_box(n, Vector3(0.1, 0.16, 0.34), Vector3(0.3, 1.22, -1.3), Bau.matt("e2483e", 0.5))
 			_box(n, Vector3(0.05, 0.05, 0.5), Vector3(0.3, 1.27, -1.6), Bau.metall("3b3f46", 0.4, 0.6))
+		"fahrzeug":
+			_modell("laden/cash-register", Vector3(1.4, 1.14, -1.25), n, 0.9, PI)
+			# Fahrzeuge ausgestellt: vor dem Kiosk Scooter + Hoverboard, auf der Theke das Jetpack
+			var sc := Fahrzeuge.modell("scooter")
+			sc.position = Vector3(-BREIT * 0.5 - 0.8, 0.0, -TIEF * 0.5 - 0.6)
+			sc.rotation.y = 0.5
+			n.add_child(sc)
+			var hb := Fahrzeuge.modell("hoverboard")
+			hb.position = Vector3(BREIT * 0.5 + 0.8, 0.25, -TIEF * 0.5 - 0.6)
+			hb.rotation = Vector3(0.0, -0.4, 0.0)
+			n.add_child(hb)
+			var jp := Fahrzeuge.modell("jetpack")
+			jp.position = Vector3(-0.9, 1.14 - 1.0, -1.3)
+			for c in jp.get_children():
+				if c.name.begins_with("flamme"):
+					c.visible = false
+			n.add_child(jp)
 		"snack":
 			_modell("laden/freezers-standing", Vector3(-1.1, 0.14, 1.05), n, MINI)
 			_modell("laden/display-bread", Vector3(1.2, 0.14, 1.0), n, MINI)

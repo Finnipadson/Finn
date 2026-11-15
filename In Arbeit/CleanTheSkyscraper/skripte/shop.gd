@@ -1,6 +1,7 @@
 class_name Shop
 extends CanvasLayer
-# Werkstatt: Werkzeuge kaufen/ausrüsten, Gondel-Upgrades, Seilwinde. Öffnen/Schließen mit Tab.
+# Werkstatt: Gondeln (je Turmseite), Helfer, Gondel-Upgrades, Seilwinde, Einstellungen. Öffnen/Schließen mit Tab.
+# Werkzeuge gibt es an den Kiosken auf dem Platz.
 
 signal geaendert
 signal neues_spiel
@@ -119,29 +120,41 @@ func aufbauen() -> void:
 	for c in liste.get_children():
 		c.queue_free()
 	geld_label.text = "%s €" % Hud.punkte(wirtschaft.geld)
-	liste.add_child(_ueberschrift("Werkzeuge"))
-	for i in Wirtschaft.WERKZEUGE.size():
-		var w: Dictionary = Wirtschaft.WERKZEUGE[i]
-		var hat: bool = w.id in wirtschaft.besitz
-		var knopf: Button
-		if wirtschaft.aktiv == w.id:
-			knopf = _knopf("In der Hand", Color("2e8b3d"))
-			knopf.disabled = true
-		elif hat:
-			knopf = _knopf("Nehmen", Color("1f5fae"))
-			knopf.pressed.connect(_nehmen.bind(w.id))
-		elif w.get("haendler", false):
-			continue   # Profi-Werkzeuge gibt es nur am Werkzeug-Kiosk
-		else:
-			knopf = _knopf("Kaufen · %s €" % Hud.punkte(int(w.preis)), Color("e08a1e"))
-			knopf.disabled = wirtschaft.geld < int(w.preis)
-			knopf.pressed.connect(_kaufe_werkzeug.bind(w.id))
-		knopf.name = "wz_" + w.id
-		liste.add_child(_zeile("%d  %s" % [(i + 1) % 10, w.name], w.text, knopf))
-	var hinweis_kiosk := _text("Profi-Werkzeuge (größere Schwämme, Dampfreiniger …) gibt es am grünen Werkzeug-Kiosk auf dem Platz.", 13, "2b5b8f")
+	var hinweis_kiosk := _text("Werkzeuge kaufst du an den Kiosken auf dem Platz (rot: Werkzeuge, grün: Profi-Werkzeuge) und wählst sie mit 1–0 oder dem Mausrad.", 13, "2b5b8f")
 	hinweis_kiosk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	liste.add_child(hinweis_kiosk)
-	liste.add_child(_ueberschrift("Gondel"))
+	# Gondeln: eine je Turmseite
+	liste.add_child(_ueberschrift("Gondeln (eine je Turmseite)"))
+	for k in 3:
+		var g: Dictionary = wirtschaft.gondeln[k]
+		var kg: Button
+		if g.gekauft:
+			kg = _knopf("Gehört dir", Color("2e8b3d"))
+			kg.disabled = true
+		else:
+			kg = _knopf("Kaufen · %s €" % Hud.punkte(wirtschaft.gondel_preis()), Color("e08a1e"))
+			kg.disabled = wirtschaft.geld < wirtschaft.gondel_preis()
+			kg.pressed.connect(_kaufe_gondel.bind(k))
+		kg.name = "go_%d" % k
+		var txt := "Putzt die Seite %s. Steht unten am Turm – zum Wechseln mit E aussteigen und hinlaufen." % Turm.SEITEN_NAMEN[k]
+		if k == wirtschaft.aktive_gondel:
+			txt += "  (Du sitzt gerade in dieser.)"
+		liste.add_child(_zeile("Gondel " + Turm.SEITEN_NAMEN[k], txt, kg))
+	# Helfer
+	liste.add_child(_ueberschrift("Helfer (putzen, solange du spielst – bis zur Seil-Grenze)"))
+	for id in Wirtschaft.HELFER:
+		var h: Dictionary = Wirtschaft.HELFER[id]
+		var kh: Button
+		if wirtschaft.helfer_voll(id):
+			kh = _knopf("Alle %d da" % h.max, Color("2e8b3d"))
+			kh.disabled = true
+		else:
+			kh = _knopf("Kaufen · %s €" % Hud.punkte(wirtschaft.helfer_preis(id)), Color("e08a1e"))
+			kh.disabled = wirtschaft.geld < wirtschaft.helfer_preis(id)
+			kh.pressed.connect(_kaufe_helfer.bind(id))
+		kh.name = "he_" + id
+		liste.add_child(_zeile("%s  (%d/%d)" % [h.name, wirtschaft.helfer[id], h.max], h.text, kh))
+	liste.add_child(_ueberschrift("Gondel-Ausbau (gilt für alle Gondeln)"))
 	for id in Wirtschaft.UPGRADES:
 		var u: Dictionary = Wirtschaft.UPGRADES[id]
 		var stufe: int = wirtschaft.stufen[id]
@@ -194,6 +207,16 @@ func _kaufe_werkzeug(id: String) -> void:
 func _nehmen(id: String) -> void:
 	wirtschaft.ausruesten(id)
 	geaendert.emit()
+	aufbauen()
+
+func _kaufe_gondel(k: int) -> void:
+	if wirtschaft.kaufe_gondel(k):
+		geaendert.emit()
+	aufbauen()
+
+func _kaufe_helfer(id: String) -> void:
+	if wirtschaft.kaufe_helfer(id):
+		geaendert.emit()
 	aufbauen()
 
 func _kaufe_upgrade(id: String) -> void:

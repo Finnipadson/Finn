@@ -1,6 +1,6 @@
 # Clean the Skyscraper – Bauplan
 
-Status: **Phase 3 fertig**, als Nächstes Phase 4
+Status: **Phase 4 fertig**, als Nächstes Phase 5 (Feinschliff)
 
 ## Idee
 
@@ -93,8 +93,21 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - **Stadt näher am Turm** (Wunsch des Users): Platz nur noch 125 m Radius (`Welt.PLATZ_R`, Boden-Shader `plaza_r`), Häuser ab dort, nah am Turm dichter (85 %) und höher, Stellplätze auf 104 m.
      - Test `--ansicht=13`: aussteigen, weglaufen, Einsteigen zu weit weg wird abgelehnt, an der Gondel stoppen, einsteigen, Einstellungen über die echten Knöpfe ausschalten. Alles bestanden.
    - **Noch offen:** Die Taube landet manchmal knapp außerhalb des Bildes (man sieht sie anfliegen). Die Terrassen selbst sind noch schlichte Dächer ohne Deko.
-4. [ ] **Automatik:** Helfer, Putzroboter, Drohnen – **nur während man spielt, kein Idle-Fortschritt** (Entscheidung des Users, 15.11.2026)
-   - Vorschlag: Putzkräfte (früh, günstig) → Putzroboter (fährt eine Spalte ab) → Drohnenschwarm (spät, auch über den Wolken). Helfer putzen nur in schon erreichten Stockwerken, damit Selberputzen der Hauptteil bleibt. HUD-Anzeige „Helfer: +N Fenster/Minute“.
+4. [x] **Automatik + Wünsche des Users** (15.11.2026) – **fertig**
+   - Entscheidungen des Users: Helfer **kaufen + Lohn-Anteil**, **kein Idle-Fortschritt**; **eine Gondel je Turmseite**, Wechsel unten zu Fuß, Gondel 2 + 3 kosten; **alle Werkzeuge an Kiosken**; **mehrere Fahrzeuge** + Hotbar.
+   - **Drei Seiten** (`Turm.seiten`, `seiten_spalten`, `seite_bei`, `weg_auf_seite`): jedes Fenster gehört genau einer Seite (Mittelpunkt-Winkel zum nächsten Flügel), Test `tools/seiten_test.gd` (alle Fenster zugeordnet).
+   - **Drei Gondeln** (`skripte/gondeln.gd`, Daten in `Wirtschaft.gondeln`): jede bleibt auf ihrer Seite, die anderen parken unten (grau mit Schild „Zu verkaufen“, bis gekauft). Gondel 2: 300 €, Gondel 3: 1.200 €. **E in der Gondel** fährt per Express (30 m/s) nach unten und merkt sich die Höhe; beim Einsteigen geht es wieder hinauf. Alte Spielstände bekommen alle drei Gondeln geschenkt (vorher kam man überall hin).
+   - **Helfer** (`skripte/helfer.gd`, Zahlen in `Wirtschaft.HELFER`), putzen nur bis zur Seil-Grenze, lassen die Fenster um die Spieler-Gondel aus, der Dreck verblasst sichtbar:
+     | Helfer | Preis (steigt je Stück) | max | Fenster/min | Anteil am Lohn | Rechnung |
+     |---|---|---|---|---|---|
+     | Putzkraft (Gondel mit Figur, je Seite) | 120 € ×1,6 | 6 | ~4 | 30 % | unten (Lohn 1–3 €) nach ~20 min bezahlt |
+     | Putzroboter (klettert Spalten hoch) | 1.000 € ×1,9 | 3 | ~10 | 25 % | bei Lohn ~5 € nach ~25 min |
+     | Putzdrohne (fliegt um den Turm) | 6.000 € ×1,7 | 6 | ~20 | 20 % | bei Lohn ~10 € nach ~40 min |
+     Gemessen (Test `--ansicht=21`): 5 Helfer, 25 Fenster in 45 s, Geld genau nachgerechnet, keins über der Seil-Grenze.
+   - **Kioske** (jetzt 6): Werkzeuge (rot, Grundwerkzeuge 1–5), Profi-Werkzeuge (grün, 6–0), Fahrzeuge (lila), dazu Putzmittel, Mode, Snacks. Die Werkstatt (Tab) hat keine Werkzeuge mehr, dafür Gondeln + Helfer.
+   - **Fahrzeuge** (`skripte/fahrzeuge.gd` Modelle, `Wirtschaft.FAHRZEUGE`, Läufer): E-Scooter 250 € (13 m/s), Hoverboard 1.200 € (20 m/s), Jetpack 8.000 € (Leertaste hoch, Strg runter, bis 120 m, Kollision mit Haushöhen `welt.haeuser_hoehe` und dem Casino-Hochhaus).
+   - **Hotbar** unten (`Hud.hotbar`): in der Gondel die gekauften Werkzeuge (1–0), zu Fuß „Zu Fuß“ + Fahrzeuge (1–4); Mausrad blättert.
+   - Tests: `--ansicht=20 --geld=5000` Gondeln, `21 --geld=100000` Helfer, `22 --geld=20000` Fahrzeuge + Hotbar + roter Kiosk. Leistung mit Helfern: ~130 FPS in 1440p.
 4b. [x] **Am Boden: Händler und Casino** (Entscheidungen des Users, 15.11.2026) – **Händler und Casino fertig**
    - **Händler** auf dem Stellplatz „Händler“: Stände mit Figur, hingehen und E drücken öffnet ein Menü.
      - *Putzmittel-Boosts:* zum Beispiel Glanzspray (eine Zeit lang schneller putzen) und Goldpolitur (eine Zeit lang doppeltes Geld pro Fenster).

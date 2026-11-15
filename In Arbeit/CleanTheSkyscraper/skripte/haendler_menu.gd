@@ -97,11 +97,12 @@ func aufbauen() -> void:
 	for c in liste.get_children():
 		c.queue_free()
 	geld_label.text = "%s €" % Hud.punkte(wirtschaft.geld)
-	if stand == "werkzeug":
-		liste.add_child(_text("NEUE PROFI-WERKZEUGE – danach mit den Zahlentasten wählen", 15, "7a9cc0"))
+	if stand == "werkzeug" or stand == "grund":
+		var profi := stand == "werkzeug"
+		liste.add_child(_text("PROFI-WERKZEUGE – mit 6–0 oder dem Mausrad wählen" if profi else "WERKZEUGE – mit 1–5 oder dem Mausrad wählen", 15, "7a9cc0"))
 		for i in Wirtschaft.WERKZEUGE.size():
 			var w: Dictionary = Wirtschaft.WERKZEUGE[i]
-			if not w.get("haendler", false):
+			if bool(w.get("profi", false)) != profi:
 				continue
 			var knopf: Button
 			if wirtschaft.aktiv == w.id:
@@ -117,6 +118,22 @@ func aufbauen() -> void:
 			knopf.name = "w_" + w.id
 			var info: String = w.text + "  (Taste %d)" % ((i + 1) % 10)
 			liste.add_child(_zeile(w.name, info, knopf, Color(w.get("farbe", "00000000")) if w.has("farbe") else Color.TRANSPARENT))
+	elif stand == "fahrzeug":
+		liste.add_child(_text("FAHRZEUGE – zu Fuß mit 1–4 oder dem Mausrad wählen", 15, "7a9cc0"))
+		for f in Wirtschaft.FAHRZEUGE:
+			var knopf: Button
+			if wirtschaft.fahrzeug == f.id:
+				knopf = _knopf("Absteigen", Color("2e8b3d"))
+				knopf.pressed.connect(_fahrzeug_nehmen.bind(""))
+			elif f.id in wirtschaft.fahrzeuge:
+				knopf = _knopf("Aufsteigen", Color("1f5fae"))
+				knopf.pressed.connect(_fahrzeug_nehmen.bind(f.id))
+			else:
+				knopf = _knopf("Kaufen · %s €" % Hud.punkte(int(f.preis)), Color("e08a1e"))
+				knopf.disabled = wirtschaft.geld < int(f.preis)
+				knopf.pressed.connect(_kaufe_fahrzeug.bind(f.id))
+			knopf.name = "f_" + f.id
+			liste.add_child(_zeile(f.name, f.text, knopf, Color(f.farbe)))
 	elif stand == "mode":
 		for art in ["gondel", "kleidung", "schwamm"]:
 			liste.add_child(_text({"gondel": "GONDEL", "kleidung": "ARBEITSKLEIDUNG", "schwamm": "SCHWAMM"}[art], 15, "7a9cc0"))
@@ -172,6 +189,16 @@ func _zeile(t: String, text: String, knopf: Button, farbe: Color) -> Control:
 	hb.add_child(vb)
 	hb.add_child(knopf)
 	return hb
+
+func _kaufe_fahrzeug(id: String) -> void:
+	if wirtschaft.kaufe_fahrzeug(id):
+		geaendert.emit()
+	aufbauen()
+
+func _fahrzeug_nehmen(id: String) -> void:
+	wirtschaft.fahrzeug = id
+	geaendert.emit()
+	aufbauen()
 
 func _kaufe_werkzeug(id: String) -> void:
 	if wirtschaft.kaufe_werkzeug(id):

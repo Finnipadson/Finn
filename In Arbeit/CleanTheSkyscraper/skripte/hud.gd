@@ -15,6 +15,8 @@ var meld: Label
 var meld_tween: Tween
 var status_l: Label
 var boost_l: Label
+var hotbar_box: HBoxContainer
+var hotbar_zeichen := ""
 
 func _ready() -> void:
 	wurzel = Control.new()
@@ -39,7 +41,7 @@ func _ready() -> void:
 	geld = _label(vb3, "0 €", 26, "2e8b3d")
 	boost_l = _label(vb3, "", 13, "c86a10")
 	# Fortschritt am Fenster unter dem Schwamm
-	var unten := _karte(0.5, 1.0, 0, -70)
+	var unten := _karte(0.5, 1.0, 0, -150)
 	var vb4 := VBoxContainer.new()
 	unten.add_child(vb4)
 	balken_text = _label(vb4, "", 14, "123a6b")
@@ -57,14 +59,19 @@ func _ready() -> void:
 	vb4.add_child(balken)
 	unten.visible = false
 	balken.set_meta("karte", unten)
-	hinweis = _label(wurzel, "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · Tab: Werkstatt · 1–0: Werkzeug · Esc: Maus frei", 14, "ffffff")
+	hinweis = _label(wurzel, "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · E: runter + aussteigen · Tab: Werkstatt · 1–0 / Mausrad: Werkzeug · Esc: Maus frei", 14, "ffffff")
 	hinweis.label_settings.outline_size = 6
 	hinweis.label_settings.outline_color = Color("123a6b")
 	_platz(hinweis, 0.5, 1.0, 0, -14)
 	status_l = _label(wurzel, "", 18, "ffffff")
 	status_l.label_settings.outline_size = 7
 	status_l.label_settings.outline_color = Color("2e6b3d")
-	_platz(status_l, 0.5, 1.0, 0, -62)
+	_platz(status_l, 0.5, 1.0, 0, -132)
+	# Hotbar unten in der Mitte: Werkzeuge (in der Gondel) bzw. Fahrzeuge (zu Fuß)
+	hotbar_box = HBoxContainer.new()
+	hotbar_box.add_theme_constant_override("separation", 6)
+	wurzel.add_child(hotbar_box)
+	_platz(hotbar_box, 0.5, 1.0, 0, -56)
 	meld = _label(wurzel, "", 20, "ffffff")
 	meld.label_settings.outline_size = 8
 	meld.label_settings.outline_color = Color("123a6b")
@@ -153,9 +160,51 @@ func status(t: String) -> void:
 
 func steuerung(zu_fuss: bool) -> void:
 	if zu_fuss:
-		hinweis.text = "Zu Fuß: WASD laufen · Shift rennen · Leertaste springen · Maus umschauen · E an der Gondel: einsteigen\nTab: Werkstatt · B: Album · Esc: Maus frei"
+		hinweis.text = "Zu Fuß: WASD laufen · Shift rennen · Leertaste springen (Jetpack: hoch, Strg: runter) · E an der Gondel: einsteigen\n1–4 / Mausrad: Fahrzeug · Tab: Werkstatt · B: Album · Esc: Maus frei"
 	else:
-		hinweis.text = "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · Tab: Werkstatt · B: Album · 1–0: Werkzeug · Esc: Maus frei"
+		hinweis.text = "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · E: runter + aussteigen · Tab: Werkstatt · B: Album · 1–0 / Mausrad: Werkzeug · Esc: Maus frei"
+
+# Hotbar: Einträge {taste, name, farbe, kurz}; aktiv = Index des gewählten. Baut nur neu, wenn sich etwas geändert hat.
+func hotbar(eintraege: Array, aktiv: int) -> void:
+	var zeichen := str(eintraege) + str(aktiv)
+	if zeichen == hotbar_zeichen:
+		return
+	hotbar_zeichen = zeichen
+	for c in hotbar_box.get_children():
+		c.queue_free()
+	for i in eintraege.size():
+		var e: Dictionary = eintraege[i]
+		var feld := PanelContainer.new()
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(1, 1, 1, 0.92) if i == aktiv else Color(0.07, 0.16, 0.29, 0.62)
+		sb.border_color = Color("ffc531") if i == aktiv else Color(1, 1, 1, 0.35)
+		sb.set_border_width_all(3 if i == aktiv else 1)
+		sb.set_corner_radius_all(9)
+		sb.content_margin_left = 4
+		sb.content_margin_right = 4
+		sb.content_margin_top = 2
+		sb.content_margin_bottom = 3
+		feld.add_theme_stylebox_override("panel", sb)
+		feld.custom_minimum_size = Vector2(70, 62)
+		feld.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var vb := VBoxContainer.new()
+		vb.add_theme_constant_override("separation", 1)
+		vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		feld.add_child(vb)
+		var kopf := HBoxContainer.new()
+		kopf.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vb.add_child(kopf)
+		_label(kopf, str(e.taste), 12, "123a6b" if i == aktiv else "cfe0f0")
+		var bild := ColorRect.new()   # kleines Farbbild des Werkzeugs/Fahrzeugs
+		bild.color = Color(e.farbe)
+		bild.custom_minimum_size = Vector2(30, 16)
+		bild.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		bild.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vb.add_child(bild)
+		var n := _label(vb, str(e.kurz), 12, "123a6b" if i == aktiv else "ffffff")
+		n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hotbar_box.add_child(feld)
+	_maus_durchlassen(hotbar_box)
 
 func freigeschaltet(stockwerke: int) -> void:
 	bis.text = "Seil reicht bis Stockwerk %d" % stockwerke

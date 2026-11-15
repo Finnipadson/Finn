@@ -1,7 +1,7 @@
 class_name Spiel
 extends Node3D
 # Das eigentliche Spiel: Gondel + Putzen + Geld + Shop + Speichern.
-# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 15 Kiosk-Bilder, 16 Casino, 17 Casino-Bilder, 18 Start zu Fuß, 19 Werkzeug-Kiosk.
+# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 15 Kiosk-Bilder, 16 Casino, 17 Casino-Bilder, 18 Start zu Fuß, 19 Werkzeug-Kiosk, 20 Gondeln, 21 Helfer, 22 Fahrzeuge + Hotbar + Werkzeug-Stand.
 
 const SPIELSTAND := "user://spielstand.json"
 const TESTSTAND := "user://spielstand_test.json"
@@ -51,7 +51,23 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	spieler.setup(turm, zustand, int(stand.get("stock", 2)), float(stand.get("weg", 236.0)), 0.0)
 	if stand.has("y"):
 		spieler.y = float(stand.y)
+	if wirtschaft.aktive_gondel < 0:
+		var k := turm.seite_bei(spieler.stock, spieler.weg)
+		wirtschaft.aktive_gondel = k
+		wirtschaft.gondeln[k].gekauft = true
+		if not stand.is_empty() and not (stand.get("wirtschaft", {}) as Dictionary).has("gondeln"):
+			for g in wirtschaft.gondeln:
+				g.gekauft = true
+	spieler.seite = wirtschaft.aktive_gondel
+	gondeln = Gondeln.new()
+	add_child(gondeln)
+	gondeln.setup(turm, wirtschaft)
+	gondeln.aktualisieren(wirtschaft.aktive_gondel)
 	spieler.fenster_sauber.connect(_fenster_sauber)
+	helfer = Helfer.new()
+	add_child(helfer)
+	helfer.setup(turm, zustand, wirtschaft, spieler)
+	helfer.geputzt.connect(_helfer_geputzt)
 	spieler.oben_gesperrt.connect(_oben_gesperrt)
 	hud = Hud.new()
 	add_child(hud)
@@ -86,6 +102,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	add_child(casino)
 	casino.setup(welt.casino_rect)
 	laeufer.hindernisse.append_array(casino.rechtecke)
+	laeufer.bloecke.append([welt.casino_rect, Casino.HOCH + 0.3 + Casino.TURM_STOCKWERKE * 3.5])
 	cmenu = CasinoMenu.new()
 	add_child(cmenu)
 	cmenu.setup(wirtschaft)
@@ -113,6 +130,10 @@ func _ausruestung() -> void:
 	var ka := wirtschaft.kosmetik_aktiv
 	spieler.aussehen(wirtschaft.kosmetik(ka.gondel).farbe, wirtschaft.kosmetik(ka.kleidung).farbe, wirtschaft.kosmetik(ka.schwamm).farbe)
 	_werte()
+	if helfer:
+		helfer.abgleichen()
+	if gondeln:
+		gondeln.aktualisieren(wirtschaft.aktive_gondel)
 	if ereignisse:
 		ereignisse.erlaubt = wirtschaft.einstellungen
 	var oberste := Turm.STOCKWERKE if frei else wirtschaft.oberstes_stockwerk()
@@ -129,6 +150,9 @@ func _werte() -> void:
 	if ereignisse:
 		ereignisse.limo = wirtschaft.boost_aktiv("limo")
 	var t := ""
+	if helfer and helfer.anzahl() > 0:
+		t += "Helfer: %d · %d Fenster/min
+" % [helfer.anzahl(), helfer.zuletzt_pro_minute()]
 	for id in wirtschaft.boosts:
 		var rest := int(wirtschaft.boosts[id])
 		t += "%s %d:%02d\n" % [Wirtschaft.BOOSTS[id].name, rest / 60, rest % 60]
@@ -153,11 +177,73 @@ func _fenster_sauber(f: int, spalte: int) -> void:
 		else:
 			hud.meldung(name, 1.5)
 
+# ---------------------------------------------------------------- Fahrzeuge + Hotbar
+func _fahrzeug_liste() -> Array:
+	var l := [""]
+	for f in Wirtschaft.FAHRZEUGE:
+		if f.id in wirtschaft.fahrzeuge:
+			l.append(f.id)
+	return l
+
+func _fahrzeug_waehlen(id: String) -> void:
+	if laeufer.hoch > 1.5 and laeufer.fz_fliegt and id != "jetpack":
+		hud.meldung("Erst landen (Strg), dann absteigen.", 2.0)
+		return
+	wirtschaft.fahrzeug = id
+	laeufer.fahrzeug_setzen(id)
+	hud.meldung("Zu Fuß" if id == "" else wirtschaft.fahrzeug_daten(id).name, 1.0)
+
+const KURZ := {"schwamm": "Schwamm", "grossschwamm": "Gr. Schw.", "abzieher": "Abzieher", "doppel": "Doppel", "hochdruck": "Hochdr.",
+	"mikro": "Mikrof.", "profi": "XXL", "teleskop": "Teleskop", "dampf": "Dampf", "lanze": "Lanze", "": "Zu Fuß", "scooter": "Scooter", "hoverboard": "Hover", "jetpack": "Jetpack"}
+
+func _hotbar() -> void:
+	var l := []
+	var aktiv := 0
+	if spieler.aktiv:
+		for i in Wirtschaft.WERKZEUGE.size():
+			var w: Dictionary = Wirtschaft.WERKZEUGE[i]
+			if not w.id in wirtschaft.besitz:
+				continue
+			if w.id == wirtschaft.aktiv:
+				aktiv = l.size()
+			var farbe: String = w.get("farbe", {"schwamm": "ffd84a", "grossschwamm": "ffd84a", "abzieher": "c9ced4", "doppel": "c9ced4", "hochdruck": "ffc531", "teleskop": "c9ced4", "dampf": "e2483e", "lanze": "3a86d4"}.get(w.id, "ffffff"))
+			l.append({"taste": (i + 1) % 10, "kurz": KURZ.get(w.id, w.name), "farbe": farbe})
+	else:
+		var fz := _fahrzeug_liste()
+		for i in fz.size():
+			var id: String = fz[i]
+			if id == wirtschaft.fahrzeug:
+				aktiv = i
+			l.append({"taste": i + 1, "kurz": KURZ.get(id, id), "farbe": "9fd3a8" if id == "" else wirtschaft.fahrzeug_daten(id).farbe})
+	hud.hotbar(l, aktiv)
+
+# Ein Helfer hat ein Fenster fertig: Lohn abzüglich seines Anteils
+func _helfer_geputzt(f: int, _spalte: int, art: String) -> void:
+	var anteil: float = Wirtschaft.HELFER[art].anteil
+	wirtschaft.geld += maxi(1, int(round(wirtschaft.lohn(f) * (1.0 - anteil))))
+
 func _oben_gesperrt() -> void:
 	hud.meldung("Das Seil ist zu kurz! Mit Tab in der Werkstatt eine längere Seilwinde kaufen.", 3.0)
 
 # ---------------------------------------------------------------- Eingaben (Shop, Werkzeugwechsel)
 func _input(e: InputEvent) -> void:
+	# Mausrad: nächstes / voriges Werkzeug (Gondel) bzw. Fahrzeug (zu Fuß)
+	if e is InputEventMouseButton and e.pressed and (e.button_index == MOUSE_BUTTON_WHEEL_UP or e.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+		if shop.offen or hmenu.offen or cmenu.offen or album.offen or express:
+			return
+		var schritt := -1 if e.button_index == MOUSE_BUTTON_WHEEL_UP else 1
+		if spieler.aktiv:
+			var l := []
+			for w in Wirtschaft.WERKZEUGE:
+				if w.id in wirtschaft.besitz:
+					l.append(w.id)
+			var i := l.find(wirtschaft.aktiv)
+			wirtschaft.ausruesten(l[posmod(i + schritt, l.size())])
+			_ausruestung()
+		else:
+			var fz := _fahrzeug_liste()
+			_fahrzeug_waehlen(fz[posmod(fz.find(wirtschaft.fahrzeug) + schritt, fz.size())])
+		return
 	if not (e is InputEventKey) or not e.pressed or e.echo:
 		return
 	if cmenu.offen:
@@ -182,7 +268,12 @@ func _input(e: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif e.keycode == KEY_E and not shop.offen and not album.offen:
 		_ein_aus()
-	elif e.keycode >= KEY_0 and e.keycode <= KEY_9 and not shop.offen and not hmenu.offen and not cmenu.offen:
+	elif e.keycode >= KEY_1 and e.keycode <= KEY_4 and not spieler.aktiv and not shop.offen and not hmenu.offen and not cmenu.offen:
+		var fz := _fahrzeug_liste()
+		var i2: int = e.keycode - KEY_1
+		if i2 < fz.size():
+			_fahrzeug_waehlen(fz[i2])
+	elif e.keycode >= KEY_0 and e.keycode <= KEY_9 and spieler.aktiv and not shop.offen and not hmenu.offen and not cmenu.offen:
 		var i: int = 9 if e.keycode == KEY_0 else e.keycode - KEY_1
 		if i < Wirtschaft.WERKZEUGE.size() and wirtschaft.ausruesten(Wirtschaft.WERKZEUGE[i].id):
 			_ausruestung()
@@ -195,16 +286,31 @@ const EXPRESS := 30.0     # m/s: Gondel fährt nach dem Einsteigen zur letzten H
 var letzte_hoehe := 0.0   # beim Start zu Fuß: dort war die Gondel zuletzt
 var express := false
 var start_zu_fuss := 0    # zählt Bilder bis zum Aussteigen am Anfang
+var gondeln: Gondeln
+var helfer: Helfer
+var express_ziel := 0.0   # Express-Fahrt: dorthin (y)
+var express_aussteigen := false   # nach der Fahrt nach unten aussteigen
 
 func _ein_aus() -> void:
 	if spieler.aktiv:
+		if express:
+			return
 		if spieler.y > UNTEN:
-			hud.meldung("Fahr mit S ganz nach unten, um auszusteigen.", 2.0)
+			# Express nach unten, Höhe merken (beim nächsten Einsteigen geht es wieder hinauf)
+			letzte_hoehe = spieler.y
+			express_ziel = 0.3
+			express = true
+			express_aussteigen = true
+			spieler.gesperrt = true
+			hud.meldung("Die Gondel fährt nach unten – du steigst dann aus. Deine Höhe (%d m) merkt sie sich." % int(letzte_hoehe), 3.0)
 			return
 		var n := spieler.normal
 		var pos := spieler.gondel.global_position + n * 2.2
 		spieler.aktiv = false
 		laeufer.aktivieren(pos, atan2(n.x, n.z), spieler.gondel.global_position)
+		laeufer.weitere_gondeln = gondeln.positionen()
+		wirtschaft.gondeln[wirtschaft.aktive_gondel].hoehe = letzte_hoehe
+		gondeln.aktualisieren(wirtschaft.aktive_gondel)
 		hud.steuerung(true)
 	else:
 		var st := haendler.stand_bei(Vector2(laeufer.position.x, laeufer.position.z))
@@ -217,17 +323,47 @@ func _ein_aus() -> void:
 			cmenu.oeffnen(Casino.STATIONEN[cs].id, Casino.STATIONEN[cs].name)
 			laeufer.gesperrt = true
 			return
-		if _abstand_gondel() > EINSTEIG_WEIT:
-			hud.meldung("Geh zurück zur Gondel, um einzusteigen.", 2.0)
+		if laeufer.hoch > 1.5:
+			hud.meldung("Erst landen – dann einsteigen.", 2.0)
+			return
+		var andere := gondeln.bei(Vector2(laeufer.position.x, laeufer.position.z), EINSTEIG_WEIT)
+		if andere >= 0 and (_abstand_gondel() > EINSTEIG_WEIT or not wirtschaft.gondeln[andere].gekauft):
+			if not wirtschaft.gondeln[andere].gekauft:
+				var preis := wirtschaft.gondel_preis()
+				if wirtschaft.kaufe_gondel(andere):
+					hud.meldung("Gondel %s gekauft! Drück E zum Einsteigen." % Turm.SEITEN_NAMEN[andere], 3.0)
+					gondeln.aktualisieren(wirtschaft.aktive_gondel)
+					_speichern()
+				else:
+					hud.meldung("Die Gondel %s kostet %s € – dir fehlen noch %s €." % [Turm.SEITEN_NAMEN[andere], Hud.punkte(preis), Hud.punkte(preis - wirtschaft.geld)], 3.0)
+				return
+			_gondel_wechseln(andere)
+		elif _abstand_gondel() > EINSTEIG_WEIT:
+			hud.meldung("Geh zu einer Gondel am Turm, um einzusteigen.", 2.0)
 			return
 		laeufer.deaktivieren()
 		spieler.aktiv = true
 		spieler.cam.current = true
 		hud.steuerung(false)
 		if letzte_hoehe > UNTEN + 1.0:
+			express_ziel = letzte_hoehe
 			express = true
 			spieler.gesperrt = true
 			hud.meldung("Die Gondel fährt zurück auf %d m …" % int(letzte_hoehe), 3.0)
+
+# In eine andere (geparkte) Gondel umsteigen: die bisherige parkt an ihrer Stelle
+func _gondel_wechseln(k: int) -> void:
+	var alt := wirtschaft.aktive_gondel
+	wirtschaft.gondeln[alt].weg = spieler.weg
+	wirtschaft.gondeln[alt].hoehe = letzte_hoehe
+	wirtschaft.aktive_gondel = k
+	spieler.seite = k
+	spieler.weg = gondeln.park_weg(k)
+	spieler.y = 0.3
+	spieler.stock = 0
+	letzte_hoehe = float(wirtschaft.gondeln[k].hoehe)
+	spieler._platzieren(0.0)
+	gondeln.aktualisieren(k)
 
 func _abstand_gondel() -> float:
 	var g := spieler.gondel.global_position
@@ -243,6 +379,8 @@ func _lesen() -> Dictionary:
 func _speichern() -> void:
 	if ansicht != 0 and ansicht != 10:
 		return
+	wirtschaft.gondeln[wirtschaft.aktive_gondel].weg = spieler.weg
+	wirtschaft.gondeln[wirtschaft.aktive_gondel].hoehe = maxf(spieler.y, letzte_hoehe)
 	var d := {
 		"version": 1,
 		"wirtschaft": wirtschaft.speichern(),
@@ -273,12 +411,16 @@ func _process(dt: float) -> void:
 		if start_zu_fuss == 0 and spieler.aktiv:
 			_ein_aus()
 	if express:
-		var ziel_y := minf(letzte_hoehe, spieler.max_y)
+		var ziel_y := minf(express_ziel, spieler.max_y)
 		spieler.y = move_toward(spieler.y, ziel_y, EXPRESS * dt)
 		if absf(spieler.y - ziel_y) < 0.01:
 			express = false
-			letzte_hoehe = 0.0
 			spieler.gesperrt = shop.offen or album.offen
+			if express_aussteigen:
+				express_aussteigen = false
+				_ein_aus()
+			else:
+				letzte_hoehe = 0.0
 	match ansicht:
 		5: _demo(dt)
 		6:
@@ -296,6 +438,9 @@ func _process(dt: float) -> void:
 		16: _casino_test(dt)
 		17: _casino_bilder(dt)
 		18: _start_test(dt)
+		20: _gondel_test(dt)
+		21: _helfer_test(dt)
+		22: _fahrzeug_test(dt)
 		19: _werkzeug_test(dt)
 	if ansicht == 0 or ansicht == 12:
 		ereignisse.takt(dt)
@@ -314,7 +459,7 @@ func _process(dt: float) -> void:
 	wirtschaft.boosts_takt(dt)
 	_werte()
 	if spieler.aktiv:
-		hud.status("E: Gondel verlassen" if spieler.y <= UNTEN else "")
+		hud.status("" if express else ("E: Gondel verlassen" if spieler.y <= UNTEN else "E: nach unten fahren und aussteigen"))
 	else:
 		var st2 := haendler.stand_bei(Vector2(laeufer.position.x, laeufer.position.z))
 		var cs2 := casino.station_bei(Vector2(laeufer.position.x, laeufer.position.z))
@@ -323,8 +468,17 @@ func _process(dt: float) -> void:
 		elif cs2 >= 0:
 			hud.status("E: %s" % Casino.STATIONEN[cs2].hinweis)
 		else:
-			hud.status("E: in die Gondel einsteigen" if _abstand_gondel() <= EINSTEIG_WEIT else "")
+			var ag := gondeln.bei(Vector2(laeufer.position.x, laeufer.position.z), EINSTEIG_WEIT)
+			if ag >= 0 and not wirtschaft.gondeln[ag].gekauft:
+				hud.status("E: Gondel %s kaufen (%s €)" % [Turm.SEITEN_NAMEN[ag], Hud.punkte(wirtschaft.gondel_preis())])
+			elif ag >= 0 and _abstand_gondel() > EINSTEIG_WEIT:
+				hud.status("E: in die Gondel %s einsteigen" % Turm.SEITEN_NAMEN[ag])
+			else:
+				hud.status("E: in die Gondel einsteigen" if _abstand_gondel() <= EINSTEIG_WEIT else "")
 	hud.freigeschaltet(Turm.STOCKWERKE if frei else wirtschaft.oberstes_stockwerk())
+	_hotbar()
+	if not spieler.aktiv and laeufer.fahrzeug != wirtschaft.fahrzeug:   # am Fahrzeug-Kiosk gekauft/gewählt
+		laeufer.fahrzeug_setzen(wirtschaft.fahrzeug)
 	if spieler.wischt and spieler.wz_art == "wisch":
 		var u := fposmod(spieler.weg + spieler.schwamm_off.x * spieler.richtung, turm.umfaenge[spieler.stock]) / Turm.FENSTER_B
 		var f := turm.stockwerk_bei(spieler.y + spieler.schwamm_off.y)
@@ -446,7 +600,9 @@ func _shop_test(dt: float) -> void:
 			if demo_zeit > 0.6:
 				_st = -1
 				print("TEST shop offen=%s maus=%s" % [shop.offen, Input.mouse_mode])
-				for n in ["wz_grossschwamm", "wz_abzieher", "up_motor", "up_arm", "up_winde", "up_winde", "wz_hochdruck"]:
+				for id in ["grossschwamm", "abzieher", "hochdruck"]:   # Werkzeuge gibt es jetzt an den Kiosken
+					wirtschaft.kaufe_werkzeug(id)
+				for n in ["up_motor", "up_arm", "up_winde", "up_winde"]:
 					var b: Button = shop.find_child(n, true, false)
 					if b and not b.disabled:
 						b.pressed.emit()
@@ -900,7 +1056,7 @@ func _speicher_test(dt: float) -> void:
 			wirtschaft.kaufe_upgrade("winde")
 			for s in 5:
 				zustand.wische(spieler.stock, 10 + s, 0.5, 0.5, 2.0, 2.0)
-			spieler.weg = 111.0
+			spieler.weg = turm.weg_auf_seite(spieler.stock, 230.0, spieler.seite)   # Stelle auf der eigenen Turmseite
 			_speichern()
 			print("TEST gespeichert: geld=%d sauber=%d aktiv=%s winde=%d weg=%.1f" % [wirtschaft.geld, zustand.sauber_zahl, wirtschaft.aktiv, wirtschaft.stufen.winde, spieler.weg])
 		else:
@@ -977,16 +1133,239 @@ func _werkzeug_test(dt: float) -> void:
 				_taste(KEY_E)
 				_wt = 3
 		3:
-			if demo_zeit > 1.5:
+			if demo_zeit > 1.5:   # Werkzeug-Tasten gelten in der Gondel: zurück zur Gondel und einsteigen
+				var g := spieler.gondel.global_position
+				laeufer.position = Vector3(g.x, 0, g.z) + spieler.normal * 2.4
+				_taste(KEY_E)
+				_wt = 31
+		31:
+			if demo_zeit > 1.8:
 				_taste(KEY_1)
 				_wt = 4
 		4:
-			if demo_zeit > 1.7:
+			if demo_zeit > 2.0:
 				var nach1 := spieler.wz_id
 				_taste(KEY_6)
 				print("TEST tasten: menü_zu=%s taste1=%s" % [not hmenu.offen, nach1])
 				_wt = 5
 		5:
-			if demo_zeit > 1.9:
-				print("TEST taste6=%s" % spieler.wz_id)
+			if demo_zeit > 2.2:
+				print("TEST taste6=%s in_gondel=%s" % [spieler.wz_id, spieler.aktiv])
 				_wt = 6
+
+func _halte_taste(k: Key, an: bool) -> void:
+	var e := InputEventKey.new()
+	e.keycode = k
+	e.physical_keycode = k
+	e.pressed = an
+	Input.parse_input_event(e)
+
+func _rad(runter: bool) -> void:
+	var e := InputEventMouseButton.new()
+	e.button_index = MOUSE_BUTTON_WHEEL_DOWN if runter else MOUSE_BUTTON_WHEEL_UP
+	e.pressed = true
+	Input.parse_input_event(e)
+
+# 20: Gondeln – mit E aus 12 m nach unten (Höhe merken), andere Gondel kaufen, umsteigen, auf der eigenen Seite bleiben
+var _gt := 0
+var _gt_k := 0
+var _gt_geld := 0
+func _gondel_test(dt: float) -> void:
+	demo_zeit += dt
+	match _gt:
+		0:
+			if demo_zeit > 0.3:
+				spieler.y = 12.0
+				_taste(KEY_E)
+				_gt = 1
+		1:
+			if demo_zeit > 2.0:
+				var a := wirtschaft.aktive_gondel
+				print("TEST express runter: zu_fuss=%s gemerkte_hoehe=%.1f (soll 12) seite=%s" % [not spieler.aktiv, float(wirtschaft.gondeln[a].hoehe), Turm.SEITEN_NAMEN[a]])
+				_gt_k = (a + 1) % 3
+				var p: Dictionary = gondeln.park_punkt(_gt_k)
+				var q: Vector3 = p.pos + p.normal * 2.4
+				laeufer.position = Vector3(q.x, 0, q.z)
+				_gt_geld = wirtschaft.geld
+				_gt = 2
+		2:
+			if demo_zeit > 2.3:
+				_taste(KEY_E)   # kaufen
+				_gt = 3
+		3:
+			if demo_zeit > 2.6:
+				print("TEST gondel gekauft: %s geld %d → %d (soll -%d) status='%s'" % [wirtschaft.gondeln[_gt_k].gekauft, _gt_geld, wirtschaft.geld, Wirtschaft.GONDEL_PREISE[1], hud.status_l.text])
+				_taste(KEY_E)   # umsteigen
+				_gt = 4
+		4:
+			if demo_zeit > 3.0:
+				print("TEST umgestiegen: in_gondel=%s aktive=%d (soll %d) spieler_seite=%d express=%s" % [spieler.aktiv, wirtschaft.aktive_gondel, _gt_k, spieler.seite, express])
+				spieler.weg += 400.0   # weit weg schieben – muss auf der Seite bleiben
+				_gt = 5
+		5:
+			if demo_zeit > 3.3:
+				print("TEST seite gehalten: seite_jetzt=%d (soll %d)" % [turm.seite_bei(spieler.stock, spieler.weg), _gt_k])
+				_halte_taste(KEY_D, true)
+				_gt = 6
+		6:
+			if demo_zeit > 9.0:
+				_halte_taste(KEY_D, false)
+				print("TEST am Rand gestoppt: seite_jetzt=%d (soll %d) weg=%.1f" % [turm.seite_bei(spieler.stock, spieler.weg), _gt_k, spieler.weg])
+				_gt = 7
+
+# 21: Helfer – in der Werkstatt kaufen, 40 s arbeiten lassen, Fenster + Geld nachrechnen, nichts über der Seil-Grenze
+var _ht2 := 0
+var _ht2_geld := 0
+var _ht2_sauber := 0
+var _ht2_erwartet := 0
+var _ht2_zahl := {}
+var _ht2_kam: Camera3D
+func _helfer_test(dt: float) -> void:
+	demo_zeit += dt
+	match _ht2:
+		0:
+			if demo_zeit > 0.3:
+				_taste(KEY_TAB)
+				_ht2 = 1
+		1:
+			if demo_zeit > 0.6:
+				var vorher := wirtschaft.geld
+				var soll := 0
+				for n in ["he_putzkraft", "he_putzkraft", "he_putzkraft", "he_roboter", "he_drohne", "up_winde"]:
+					var b: Button = shop.find_child(n, true, false)
+					if n.begins_with("he_"):
+						soll += wirtschaft.helfer_preis(n.substr(3))
+					else:
+						soll += wirtschaft.upgrade_preis("winde")
+					if b and not b.disabled:
+						b.pressed.emit()
+				print("TEST helfer gekauft: %s geld %d → %d (soll -%d) helfer_da=%d" % [wirtschaft.helfer, vorher, wirtschaft.geld, soll, helfer.anzahl()])
+				_taste(KEY_TAB)
+				spieler.y = 40.0   # Spieler weiter oben, damit die Helfer unten freie Bahn haben
+				var kam := Camera3D.new()   # Blick von außen auf die Seite, damit man die Helfer sieht
+				add_child(kam)
+				var fp := turm.fassaden_punkt(0, turm.seiten_mitte(0, spieler.seite) + 25.0, 6.0)
+				kam.position = fp.pos + fp.normal * 26.0 + Vector3.UP * 4.0
+				kam.look_at(fp.pos + Vector3.UP * 7.0)
+				kam.current = true
+				_ht2_kam = kam
+				_ht2_geld = wirtschaft.geld
+				_ht2_sauber = zustand.sauber_zahl
+				helfer.geputzt.connect(func(f: int, _s: int, art: String) -> void:
+					_ht2_erwartet += maxi(1, int(round(wirtschaft.lohn(f) * (1.0 - float(Wirtschaft.HELFER[art].anteil)))))
+					_ht2_zahl[art] = int(_ht2_zahl.get(art, 0)) + 1)
+				_ht2 = 2
+		2:
+			if _ht2_kam and helfer.anzahl() > 0:   # Kamera schaut abwechselnd auf jeden Helfer (Testbilder)
+				var hn: Node3D = helfer.liste[int(demo_zeit / 6.0) % helfer.anzahl()].node
+				var zp := hn.global_position
+				var raus := Vector3(zp.x, 0, zp.z).normalized()
+				_ht2_kam.position = zp + raus * 9.0 + raus.cross(Vector3.UP) * 4.0 + Vector3.UP * 2.5
+				_ht2_kam.look_at(zp + Vector3.UP * 0.8)
+			if demo_zeit > 45.0:
+				var grenze := wirtschaft.oberstes_stockwerk()
+				var zu_hoch := 0
+				for f in range(grenze, Turm.STOCKWERKE):
+					for c in turm.fenster_pro_stock[f]:
+						if zustand.ist_sauber(f, c):
+							zu_hoch += 1
+				print("TEST helfer nach 45 s: fenster=%d je_art=%s geld +%d (soll +%d) über_grenze=%d pro_min=%d" % [zustand.sauber_zahl - _ht2_sauber, _ht2_zahl, wirtschaft.geld - _ht2_geld, _ht2_erwartet, zu_hoch, helfer.zuletzt_pro_minute()])
+				_ht2 = 3
+
+# 22: Fahrzeuge (Kiosk, Hotbar, Tempo, Jetpack), roter Werkzeug-Kiosk, Mausrad in der Gondel
+var _ft := 0
+var _ft_p := Vector3.ZERO
+func _fahrzeug_test(dt: float) -> void:
+	demo_zeit += dt
+	match _ft:
+		0:
+			if demo_zeit > 0.3:
+				spieler.y = 0.3
+				_taste(KEY_E)   # aussteigen
+				_ft = 1
+		1:
+			if demo_zeit > 0.6:
+				var v: Vector2 = haendler.vorne[4]   # roter Kiosk „Werkzeuge“
+				laeufer.position = Vector3(v.x, 0, v.y)
+				_taste(KEY_E)
+				_ft = 2
+		2:
+			if demo_zeit > 0.9:
+				var b: Button = hmenu.find_child("w_grossschwamm", true, false)
+				if b:
+					b.pressed.emit()
+				print("TEST roter kiosk: stand=%s gekauft=%s profi_hier=%s" % [hmenu.stand, "grossschwamm" in wirtschaft.besitz, hmenu.find_child("w_mikro", true, false) != null])
+				_taste(KEY_E)
+				_ft = 3
+		3:
+			if demo_zeit > 1.2:
+				var v: Vector2 = haendler.vorne[5]   # Fahrzeug-Kiosk
+				laeufer.position = Vector3(v.x, 0, v.y)
+				_taste(KEY_E)
+				_ft = 4
+		4:
+			if demo_zeit > 1.5:
+				for n in ["f_scooter", "f_jetpack"]:
+					var b: Button = hmenu.find_child(n, true, false)
+					if b and not b.disabled:
+						b.pressed.emit()
+				print("TEST fahrzeuge gekauft: %s aktiv=%s" % [wirtschaft.fahrzeuge, wirtschaft.fahrzeug])
+				_taste(KEY_E)
+				_ft = 5
+		5:
+			if demo_zeit > 1.8:
+				_taste(KEY_2)   # Scooter
+				laeufer.position = Vector3(0, 0, 42)   # freie Fläche auf dem Platz (Lücke zwischen zwei Flügeln)
+				laeufer.yaw = PI                        # Blick nach außen (+z)
+				_ft = 6
+		6:
+			if demo_zeit > 2.0:
+				_ft_p = laeufer.position
+				_halte_taste(KEY_W, true)
+				_ft = 7
+		7:
+			if demo_zeit > 3.0:
+				_halte_taste(KEY_W, false)
+				print("TEST scooter: fahrzeug=%s tempo=%.1f m/s (soll ~13) hotbar_felder=%d" % [laeufer.fahrzeug, laeufer.position.distance_to(_ft_p) / 1.0, hud.hotbar_box.get_child_count()])
+				_rad(true)      # Mausrad → Jetpack
+				_ft = 8
+		8:
+			if demo_zeit > 3.2:
+				_halte_taste(KEY_SPACE, true)
+				_ft = 9
+		9:
+			if demo_zeit > 5.2:
+				_halte_taste(KEY_SPACE, false)
+				var haus: Rect2 = welt.haeuser[0]
+				var hh: float = welt.haeuser_hoehe[0]
+				var mitte := haus.get_center()
+				var alt := laeufer.hoch
+				laeufer.hoch = hh + 2.0
+				var drueber := laeufer.frei(mitte)
+				laeufer.hoch = hh * 0.5
+				var drin := laeufer.frei(mitte)
+				laeufer.hoch = alt
+				print("TEST jetpack: fahrzeug=%s hoch=%.1f (soll ~16) über_haus_frei=%s in_haus_frei=%s (soll true/false)" % [laeufer.fahrzeug, laeufer.hoch, drueber, drin])
+				_halte_taste(KEY_CTRL, true)
+				_ft = 10
+		10:
+			if demo_zeit > 8.0:
+				_halte_taste(KEY_CTRL, false)
+				print("TEST gelandet: hoch=%.1f" % laeufer.hoch)
+				_ft = 11
+		11:
+			# zurück in die Gondel, Mausrad wechselt das Werkzeug
+			var g := spieler.gondel.global_position
+			laeufer.position = Vector3(g.x, 0, g.z) + spieler.normal * 2.4
+			_taste(KEY_E)
+			_ft = 12
+		12:
+			if demo_zeit > 8.6:
+				var vorher := wirtschaft.aktiv
+				_rad(false)
+				_ft = 13
+				print("TEST in_gondel=%s hotbar_felder=%d werkzeug_vorher=%s" % [spieler.aktiv, hud.hotbar_box.get_child_count(), vorher])
+		13:
+			if demo_zeit > 8.9:
+				print("TEST mausrad: werkzeug_jetzt=%s" % wirtschaft.aktiv)
+				_ft = 14

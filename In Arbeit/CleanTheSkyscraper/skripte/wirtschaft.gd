@@ -8,7 +8,7 @@ const START_STOCKWERKE := 6       # so hoch geht es ohne Seilwinde
 
 # rx/ry = Größe der Wisch-Fläche (Halbachsen in m). art: "wisch" = Maus reibt, "spray" = draufhalten
 # modell: wie das Werkzeug aussieht (schwamm / abzieher / spray), groesse: Maßstab des Modells
-# haendler = true: gibt es nur beim Werkzeug-Kiosk auf dem Platz (nicht in der Werkstatt)
+# Alle Werkzeuge gibt es an den Kiosken: Grundwerkzeuge am roten Kiosk „Werkzeuge“, profi = true am grünen „Profi-Werkzeuge“
 # Tasten: 1–9 und 0 wählen das Werkzeug in dieser Reihenfolge
 const WERKZEUGE := [
 	{"id": "schwamm", "name": "Schwamm", "text": "Klein, aber gründlich.", "rx": 0.17, "ry": 0.17, "preis": 0, "art": "wisch", "modell": "schwamm", "groesse": 1.0},
@@ -16,11 +16,30 @@ const WERKZEUGE := [
 	{"id": "abzieher", "name": "Abzieher", "text": "Breite Gummilippe – am besten waagerecht ziehen.", "rx": 0.42, "ry": 0.11, "preis": 120, "art": "wisch", "modell": "abzieher"},
 	{"id": "doppel", "name": "Doppel-Abzieher", "text": "Zwei Lippen, fast doppelt so breit.", "rx": 0.62, "ry": 0.15, "preis": 700, "art": "wisch", "modell": "abzieher", "doppel": true},
 	{"id": "hochdruck", "name": "Hochdruckreiniger", "text": "Einfach draufhalten – putzt auch aus der Entfernung.", "rx": 0.32, "ry": 0.32, "preis": 4000, "art": "spray", "modell": "spray", "groesse": 1.0},
-	{"id": "mikro", "name": "Mikrofaser-Schwamm", "text": "Weich und riesig – schafft fast doppelt so viel wie der große Schwamm.", "rx": 0.34, "ry": 0.3, "preis": 350, "art": "wisch", "modell": "schwamm", "groesse": 1.9, "haendler": true, "farbe": "6ac7e8"},
-	{"id": "profi", "name": "Profi-Schwamm XXL", "text": "So groß wie ein Kissen. Ein Wisch, halbes Fenster.", "rx": 0.48, "ry": 0.4, "preis": 1800, "art": "wisch", "modell": "schwamm", "groesse": 2.7, "haendler": true, "farbe": "ffb03a"},
-	{"id": "teleskop", "name": "Teleskop-Abzieher", "text": "1,80 m breite Lippe – zieht ein ganzes Fenster auf einmal ab.", "rx": 0.9, "ry": 0.16, "preis": 3500, "art": "wisch", "modell": "abzieher", "doppel": true, "haendler": true},
-	{"id": "dampf", "name": "Dampfreiniger", "text": "Heißer Dampf löst jeden Dreck – breiter als der Hochdruckreiniger.", "rx": 0.5, "ry": 0.5, "preis": 9000, "art": "spray", "modell": "spray", "groesse": 1.3, "haendler": true},
-	{"id": "lanze", "name": "Wasserlanze Turbo", "text": "Das Beste vom Besten: riesiger Strahl, putzt im Vorbeifahren.", "rx": 0.75, "ry": 0.7, "preis": 25000, "art": "spray", "modell": "spray", "groesse": 1.6, "haendler": true},
+	{"id": "mikro", "name": "Mikrofaser-Schwamm", "text": "Weich und riesig – schafft fast doppelt so viel wie der große Schwamm.", "rx": 0.34, "ry": 0.3, "preis": 350, "art": "wisch", "modell": "schwamm", "groesse": 1.9, "profi": true, "farbe": "6ac7e8"},
+	{"id": "profi", "name": "Profi-Schwamm XXL", "text": "So groß wie ein Kissen. Ein Wisch, halbes Fenster.", "rx": 0.48, "ry": 0.4, "preis": 1800, "art": "wisch", "modell": "schwamm", "groesse": 2.7, "profi": true, "farbe": "ffb03a"},
+	{"id": "teleskop", "name": "Teleskop-Abzieher", "text": "1,80 m breite Lippe – zieht ein ganzes Fenster auf einmal ab.", "rx": 0.9, "ry": 0.16, "preis": 3500, "art": "wisch", "modell": "abzieher", "doppel": true, "profi": true},
+	{"id": "dampf", "name": "Dampfreiniger", "text": "Heißer Dampf löst jeden Dreck – breiter als der Hochdruckreiniger.", "rx": 0.5, "ry": 0.5, "preis": 9000, "art": "spray", "modell": "spray", "groesse": 1.3, "profi": true},
+	{"id": "lanze", "name": "Wasserlanze Turbo", "text": "Das Beste vom Besten: riesiger Strahl, putzt im Vorbeifahren.", "rx": 0.75, "ry": 0.7, "preis": 25000, "art": "spray", "modell": "spray", "groesse": 1.6, "profi": true},
+]
+
+# Gondeln: eine je Turmseite. Die erste ist gratis, die zweite und dritte kosten (Preis nach Anzahl schon gekaufter).
+const GONDEL_PREISE := [0, 300, 1200]
+
+# Helfer putzen nur, solange man spielt, und nur bis zur Seil-Grenze. Kaufpreis steigt je Stück (basis · faktor^Anzahl),
+# dazu bekommen sie einen Anteil vom Fensterlohn (anteil). sekunden = Zeit pro Fenster.
+# Rechnung (grob, siehe Bauplan): Putzkraft unten ~4 Fenster/min → nach ~20 min bezahlt, Roboter ~10/min, Drohne ~20/min.
+const HELFER := {
+	"putzkraft": {"name": "Putzkraft", "text": "Fährt mit einer kleinen Gondel an einer Turmseite und putzt Fenster für Fenster (~4 pro Minute). Bekommt 30 % vom Fensterlohn.", "max": 6, "basis": 120, "faktor": 1.6, "anteil": 0.3, "sekunden": 15.0},
+	"roboter": {"name": "Putzroboter", "text": "Klettert eine Fensterspalte nach oben und schrubbt sie ab (~10 pro Minute). Bekommt 25 % vom Fensterlohn (Strom).", "max": 3, "basis": 1000, "faktor": 1.9, "anteil": 0.25, "sekunden": 6.0},
+	"drohne": {"name": "Putzdrohne", "text": "Fliegt um den ganzen Turm und sprüht Fenster sauber (~20 pro Minute). Bekommt 20 % vom Fensterlohn.", "max": 6, "basis": 6000, "faktor": 1.7, "anteil": 0.2, "sekunden": 3.0},
+}
+
+# Fahrzeuge am Boden (Kiosk „Fahrzeuge“), in der Hotbar wählen. tempo in m/s (zu Fuß 4,5, rennen 9)
+const FAHRZEUGE := [
+	{"id": "scooter", "name": "E-Scooter", "text": "Fährt 13 m/s – fast anderthalbmal so schnell wie Rennen.", "preis": 250, "tempo": 13.0, "farbe": "e2483e"},
+	{"id": "hoverboard", "name": "Hoverboard", "text": "Schwebt lautlos über den Platz, 20 m/s.", "preis": 1200, "tempo": 20.0, "farbe": "35c8ff"},
+	{"id": "jetpack", "name": "Jetpack", "text": "Fliegen! Leertaste hoch, Strg runter, bis 120 m – über die Häuser hinweg.", "preis": 8000, "tempo": 16.0, "farbe": "ffb03a", "fliegt": true},
 ]
 
 const UPGRADES := {
@@ -65,6 +84,12 @@ var einstellungen := {"tauben": true, "sandsturm": true, "wind": true}
 var boosts := {}                                        # Boost-ID -> verbleibende Sekunden
 var kosmetik_besitz := ["gondel_gelb", "kleid_blau", "schwamm_gelb"]
 var kosmetik_aktiv := {"gondel": "gondel_gelb", "kleidung": "kleid_blau", "schwamm": "schwamm_gelb"}
+var helfer := {"putzkraft": 0, "roboter": 0, "drohne": 0}
+var fahrzeuge: Array = []                               # gekaufte Fahrzeug-IDs
+var fahrzeug := ""                                      # "" = zu Fuß
+# Gondeln je Seite: gekauft, Weg (Parkplatz unten) und Höhe, auf der man zuletzt war (Express-Fahrt beim Einsteigen)
+var gondeln: Array = [{"gekauft": false, "weg": -1.0, "hoehe": 0.0}, {"gekauft": false, "weg": -1.0, "hoehe": 0.0}, {"gekauft": false, "weg": -1.0, "hoehe": 0.0}]
+var aktive_gondel := -1                                 # Seite der Gondel, in der man sitzt (-1 = noch keine)
 
 # ---------------------------------------------------------------- Händler
 func boost_preis(id: String) -> int:
@@ -106,6 +131,53 @@ func nutze_kosmetik(id: String) -> bool:
 	if not id in kosmetik_besitz:
 		return false
 	kosmetik_aktiv[kosmetik(id).art] = id
+	return true
+
+# ---------------------------------------------------------------- Gondeln, Helfer, Fahrzeuge
+func gondeln_gekauft() -> int:
+	var n := 0
+	for g in gondeln:
+		if g.gekauft:
+			n += 1
+	return n
+
+func gondel_preis() -> int:
+	return GONDEL_PREISE[mini(gondeln_gekauft(), GONDEL_PREISE.size() - 1)]
+
+func kaufe_gondel(seite: int) -> bool:
+	if gondeln[seite].gekauft or geld < gondel_preis():
+		return false
+	geld -= gondel_preis()
+	gondeln[seite].gekauft = true
+	return true
+
+func helfer_preis(id: String) -> int:
+	var h: Dictionary = HELFER[id]
+	return int(round(h.basis * pow(h.faktor, helfer[id])))
+
+func helfer_voll(id: String) -> bool:
+	return helfer[id] >= HELFER[id].max
+
+func kaufe_helfer(id: String) -> bool:
+	if helfer_voll(id) or geld < helfer_preis(id):
+		return false
+	geld -= helfer_preis(id)
+	helfer[id] += 1
+	return true
+
+func fahrzeug_daten(id: String) -> Dictionary:
+	for f in FAHRZEUGE:
+		if f.id == id:
+			return f
+	return {}
+
+func kaufe_fahrzeug(id: String) -> bool:
+	var f := fahrzeug_daten(id)
+	if f.is_empty() or id in fahrzeuge or geld < int(f.preis):
+		return false
+	geld -= int(f.preis)
+	fahrzeuge.append(id)
+	fahrzeug = id
 	return true
 
 func lohn(stockwerk: int) -> int:
@@ -162,7 +234,7 @@ func oberstes_stockwerk() -> int:
 
 # ---------------------------------------------------------------- Speichern
 func speichern() -> Dictionary:
-	return {"geld": geld, "besitz": besitz, "aktiv": aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen, "boosts": boosts, "kosmetik_besitz": kosmetik_besitz, "kosmetik_aktiv": kosmetik_aktiv}
+	return {"geld": geld, "besitz": besitz, "aktiv": aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen, "boosts": boosts, "kosmetik_besitz": kosmetik_besitz, "kosmetik_aktiv": kosmetik_aktiv, "helfer": helfer, "fahrzeuge": fahrzeuge, "fahrzeug": fahrzeug, "gondeln": gondeln, "aktive_gondel": aktive_gondel}
 
 func laden(d: Dictionary) -> void:
 	geld = int(d.get("geld", 0))
@@ -201,3 +273,18 @@ func laden(d: Dictionary) -> void:
 	var s: Dictionary = d.get("stufen", {})
 	for k in stufen:
 		stufen[k] = clampi(int(s.get(k, 0)), 0, UPGRADES[k].max)
+	var he: Dictionary = d.get("helfer", {})
+	for k in helfer:
+		helfer[k] = clampi(int(he.get(k, 0)), 0, HELFER[k].max)
+	fahrzeuge = []
+	for f in d.get("fahrzeuge", []):
+		if not fahrzeug_daten(str(f)).is_empty():
+			fahrzeuge.append(str(f))
+	fahrzeug = str(d.get("fahrzeug", ""))
+	if not fahrzeug in fahrzeuge:
+		fahrzeug = ""
+	var gl: Array = d.get("gondeln", [])
+	for i in mini(gl.size(), 3):
+		var g: Dictionary = gl[i]
+		gondeln[i] = {"gekauft": bool(g.get("gekauft", false)), "weg": float(g.get("weg", -1.0)), "hoehe": float(g.get("hoehe", 0.0))}
+	aktive_gondel = int(d.get("aktive_gondel", -1))

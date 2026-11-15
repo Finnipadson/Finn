@@ -58,6 +58,7 @@ var gondel_mat: StandardMaterial3D
 var arm_mat: StandardMaterial3D
 var schwamm_farbe := "ffd84a"
 var _gesperrt_zeit := 0.0
+var seite := -1                # Turmseite dieser Gondel (-1 = überall)
 
 func setup(t: Turm, z: FensterZustand, start_stock: int, start_weg: float, oberste_hoehe: float) -> void:
 	turm = t
@@ -287,6 +288,8 @@ func _platzieren(dt: float) -> void:
 			sprung = true
 		stock = f
 	weg = fposmod(weg, turm.umfaenge[stock])
+	if seite >= 0:   # jede Gondel bleibt auf ihrer Turmseite
+		weg = turm.weg_auf_seite(stock, weg, seite)
 	var p := turm.fassaden_punkt(stock, weg, y)
 	glas_punkt = p.pos
 	# Ausrichtung: Mittel der Fassaden-Normalen ±2 m um die Gondel, dann weich hindrehen.

@@ -2,6 +2,7 @@ class_name Laeufer
 extends Node3D
 # Zu Fuß am Boden: Ich-Ansicht, WASD laufen, Shift rennen, Leertaste springen, Maus umschauen.
 # Turm und Häuser sind fest (einfache Kollision: Turm-Grundriss + Rechtecke der Häuser).
+# Fahrzeuge (Hotbar): E-Scooter, Hoverboard (schneller), Jetpack (fliegen: Leertaste hoch, Strg runter, über die Häuser).
 
 const AUGE := 1.7
 const TEMPO := 4.5
@@ -24,6 +25,16 @@ var hindernisse: Array = []             # weitere Rect2 (z. B. Stände)
 var polygone: Array = []                # PackedVector2Array, in die man nicht darf (z. B. der See)
 var gondel_pos := Vector2(INF, INF)     # die geparkte Gondel ist auch fest
 const GONDEL_R := 1.9
+var weitere_gondeln: Array = []          # Vector2 der geparkten Gondeln
+var haeuser_hoehe: Array = []            # Höhe je Haus (für das Jetpack)
+var bloecke: Array = []                  # [Rect2, Höhe]: hohe Klötze, die nur in der Luft zählen (Casino-Hochhaus)
+var fahrzeug := ""                       # "" = zu Fuß, sonst Wirtschaft.FAHRZEUGE-id
+var fz_tempo := 0.0
+var fz_fliegt := false
+var fz_modell: Node3D
+const FLUG_HOCH := 120.0
+const FLUG_TEMPO_V := 8.0
+const KLEIN_BIS := 3.0                   # kleine Hindernisse (Bänke, Palmen, Stände) nur bis zu dieser Höhe
 
 func setup(t: Turm, w: Welt) -> void:
 	cam = Camera3D.new()
@@ -35,6 +46,7 @@ func setup(t: Turm, w: Welt) -> void:
 	var gross := Geometry2D.offset_polygon(unten, RADIUS + 0.3)
 	turm_rand = gross[0] if gross.size() > 0 else unten
 	haeuser = w.haeuser
+	haeuser_hoehe = w.haeuser_hoehe
 
 func aktivieren(pos: Vector3, blick_yaw: float, gondel: Vector3 = Vector3.INF) -> void:
 	gondel_pos = Vector2(gondel.x, gondel.z) if gondel != Vector3.INF else Vector2(INF, INF)
@@ -59,7 +71,7 @@ func _input(e: InputEvent) -> void:
 		yaw = wrapf(yaw - e.relative.x * MAUS, -PI, PI)
 		pitch = clampf(pitch - e.relative.y * MAUS, -1.5, 1.5)
 	elif e is InputEventKey and e.pressed and not e.echo:
-		if e.keycode == KEY_SPACE and hoch <= 0.001:
+		if e.keycode == KEY_SPACE and hoch <= 0.001 and not fz_fliegt:
 			vy = 4.5
 		elif e.keycode == KEY_ESCAPE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -69,15 +81,44 @@ func frei(p: Vector2) -> bool:
 		return false
 	if Geometry2D.is_point_in_polygon(p, turm_rand):
 		return false
-	if gondel_pos.x != INF and p.distance_to(gondel_pos) < GONDEL_R:
-		return false
-	for r in haeuser + hindernisse:
-		if r.grow(RADIUS).has_point(p):
+	for i in haeuser.size():   # Häuser: nur so hoch, wie sie sind (Jetpack fliegt drüber)
+		if hoch < (float(haeuser_hoehe[i]) + 0.5 if i < haeuser_hoehe.size() else 1e9) and (haeuser[i] as Rect2).grow(RADIUS).has_point(p):
 			return false
-	for pg in polygone:
-		if Geometry2D.is_point_in_polygon(p, pg):
+	if hoch < KLEIN_BIS:
+		if gondel_pos.x != INF and p.distance_to(gondel_pos) < GONDEL_R:
 			return false
+		for g in weitere_gondeln:
+			if p.distance_to(g) < GONDEL_R:
+				return false
+		for r in hindernisse:
+			if r.grow(RADIUS).has_point(p):
+				return false
+		for pg in polygone:
+			if Geometry2D.is_point_in_polygon(p, pg):
+				return false
+	else:
+		for b in bloecke:
+			if hoch < float(b[1]) and (b[0] as Rect2).grow(RADIUS).has_point(p):
+				return false
 	return true
+
+# Fahrzeug wechseln ("" = zu Fuß). Modell unter den Füßen, Tempo, Fliegen.
+func fahrzeug_setzen(id: String) -> void:
+	fahrzeug = id
+	if fz_modell:
+		fz_modell.queue_free()
+		fz_modell = null
+	var daten := {}
+	for f in Wirtschaft.FAHRZEUGE:
+		if f.id == id:
+			daten = f
+	fz_tempo = float(daten.get("tempo", 0.0))
+	fz_fliegt = bool(daten.get("fliegt", false))
+	if id != "":
+		fz_modell = Fahrzeuge.modell(id)
+		add_child(fz_modell)
+	if not fz_fliegt and hoch > 0.0:
+		vy = 0.0   # Jetpack ab: runterfallen
 
 func _process(dt: float) -> void:
 	if not aktiv:
@@ -92,6 +133,8 @@ func _process(dt: float) -> void:
 	var laeuft := d.length_squared() > 0.0
 	if laeuft:
 		var tempo := RENNEN if Input.is_key_pressed(KEY_SHIFT) else TEMPO
+		if fahrzeug != "":
+			tempo = fz_tempo * (1.25 if Input.is_key_pressed(KEY_SHIFT) else 1.0)
 		d = d.normalized() * tempo * dt
 		# an Hindernissen entlanggleiten: x und z getrennt prüfen
 		if frei(Vector2(position.x + d.x, position.z)):
@@ -99,9 +142,34 @@ func _process(dt: float) -> void:
 		if frei(Vector2(position.x, position.z + d.z)):
 			position.z += d.z
 		bob += dt * (13.0 if Input.is_key_pressed(KEY_SHIFT) else 9.0)
-	vy -= 13.0 * dt
-	hoch = maxf(0.0, hoch + vy * dt)
-	if hoch == 0.0:
+	if fz_fliegt and not gesperrt:
+		# Jetpack: Leertaste hoch, Strg runter, sonst in der Luft stehen bleiben
+		var v := 0.0
+		if Input.is_key_pressed(KEY_SPACE): v += FLUG_TEMPO_V
+		if Input.is_key_pressed(KEY_CTRL): v -= FLUG_TEMPO_V
+		var neu := clampf(hoch + v * dt, 0.0, FLUG_HOCH)
+		var alt := hoch
+		hoch = neu
+		if not frei(Vector2(position.x, position.z)):   # nicht in ein Hausdach hineinsinken
+			hoch = alt
 		vy = 0.0
-	cam.position = Vector3(0, AUGE + hoch + (sin(bob) * 0.04 if laeuft else 0.0), 0)
+	else:
+		vy -= 13.0 * dt
+		var alt2 := hoch
+		hoch = maxf(0.0, hoch + vy * dt)
+		if hoch < alt2 and not frei(Vector2(position.x, position.z)):   # auf einem Dach landen
+			hoch = alt2
+			vy = 0.0
+		if hoch == 0.0:
+			vy = 0.0
+	var schweben := 0.22 + sin(bob * 0.5 + Time.get_ticks_msec() * 0.003) * 0.03 if fahrzeug == "hoverboard" else (0.12 if fahrzeug == "scooter" else 0.0)
+	if fz_modell:
+		fz_modell.position = Vector3(0, hoch + (schweben - 0.12 if fahrzeug == "hoverboard" else 0.0), 0)
+		fz_modell.rotation.y = yaw
+		for n in ["flamme0", "flamme1"]:
+			var fl := fz_modell.get_node_or_null(n) as Node3D
+			if fl:
+				fl.visible = hoch > 0.05
+				fl.scale = Vector3.ONE * (0.8 + randf() * 0.4)
+	cam.position = Vector3(0, AUGE + hoch + schweben + (sin(bob) * 0.04 if laeuft and fahrzeug == "" else 0.0), 0)
 	cam.rotation = Vector3(pitch, yaw, 0)

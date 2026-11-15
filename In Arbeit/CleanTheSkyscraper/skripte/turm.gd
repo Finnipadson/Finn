@@ -22,10 +22,16 @@ var fenster_gesamt := 0
 var oben := 0.0                            # Dachhöhe ohne Spitze
 var spitze := 0.0                          # Höhe inkl. Spitze
 var glas: ShaderMaterial
+# Drei Seiten (je ein Flügel, Grenzen in den Lücken bei −30°, 90°, 210°): je Stockwerk [Vector2(Start-Weg, Länge)] für Seite 0..2
+const SEITEN_WINKEL := [-90.0, 30.0, 150.0]
+const SEITEN_NAMEN := ["Nord", "Ost", "West"]
+var seiten: Array = []
+var seiten_spalten: Array = []   # je Stockwerk: [PackedInt32Array] Fensterspalten je Seite
 
 func _ready() -> void:
 	_grundrisse()
 	_fenster_zaehlen()
+	_seiten_berechnen()
 	glas = Bau.shader_mat(Bau.TURM_SHADER, {"glas_tint": Color("4d7397"), "paneel": Color("9aa4ae"), "stock": STOCK_H, "fenster_breite": FENSTER_B, "band_anteil": BAND_ANTEIL})
 	add_child(Bau.baue(stockwerke, glas, Bau.matt("c9c4bb")))
 	var alu := Bau.metall("c9ced4")
@@ -143,3 +149,73 @@ func fassaden_punkt(f: int, weg: float, y: float) -> Dictionary:
 			return {"pos": Vector3(q.x, y, q.y), "normal": Vector3(n2.x, 0, n2.y), "tangente": Vector3(t2.x, 0, t2.y)}
 		rest -= lang
 	return {}
+
+# ---------------------------------------------------------------- Seiten (eine Gondel je Seite)
+static func seite_von(q: Vector2) -> int:
+	var w := rad_to_deg(atan2(q.y, q.x))
+	var beste := 0
+	for k in 3:
+		if absf(wrapf(w - SEITEN_WINKEL[k], -180.0, 180.0)) < absf(wrapf(w - SEITEN_WINKEL[beste], -180.0, 180.0)):
+			beste = k
+	return beste
+
+func _seiten_berechnen() -> void:
+	# Jedes Fenster bekommt die Seite seines Mittelpunkts; der Bereich einer Seite reicht vom ersten bis zum letzten ihrer Fenster
+	for f in STOCKWERKE:
+		if f > 0 and gleicher_grundriss(f, f - 1):
+			seiten.append(seiten[f - 1])
+			seiten_spalten.append(seiten_spalten[f - 1])
+			continue
+		var n := fenster_pro_stock[f]
+		var marke := PackedInt32Array()
+		marke.resize(n)
+		for c in n:
+			var p := fassaden_punkt(f, (c + 0.5) * FENSTER_B, 0.0)
+			marke[c] = seite_von(Vector2(p.pos.x, p.pos.z))
+		var bereich := [Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]
+		var spalten := [PackedInt32Array(), PackedInt32Array(), PackedInt32Array()]
+		for k in 3:
+			var erste := -1
+			for c in n:
+				if marke[c] == k and marke[(c - 1 + n) % n] != k:
+					erste = c
+					break
+			if erste < 0:
+				continue
+			var c2 := erste
+			while marke[c2 % n] == k and spalten[k].size() < n:
+				spalten[k].append(c2 % n)
+				c2 += 1
+			var ende_weg := float(((c2 - 1) % n) + 1) * FENSTER_B
+			bereich[k] = Vector2(erste * FENSTER_B, fposmod(ende_weg - erste * FENSTER_B - 0.001, umfaenge[f]) + 0.001)
+		seiten.append(bereich)
+		seiten_spalten.append(spalten)
+
+# Seite eines Punktes auf der Fassade
+func seite_bei(f: int, weg: float) -> int:
+	var b: Array = seiten[f]
+	var u := umfaenge[f]
+	for k in 3:
+		var v: Vector2 = b[k]
+		if fposmod(weg - v.x, u) <= v.y:
+			return k
+	return 0
+
+# Weg so begrenzen, dass er auf Seite k bleibt (rand = Abstand zu den Grenzen)
+func weg_auf_seite(f: int, weg: float, k: int, rand := 2.0) -> float:
+	var v: Vector2 = seiten[f][k]
+	var u := umfaenge[f]
+	var rel := fposmod(weg - v.x, u)
+	if rel > v.y:   # außerhalb: zum näheren Ende
+		rel = v.y - rand if rel - v.y < u - rel else rand
+	rel = clampf(rel, minf(rand, v.y * 0.5), maxf(v.y - rand, v.y * 0.5))
+	return fposmod(v.x + rel, u)
+
+# Mitte der Seite k (Weg) – dort parkt eine Gondel
+func seiten_mitte(f: int, k: int) -> float:
+	var v: Vector2 = seiten[f][k]
+	return fposmod(v.x + v.y * 0.5, umfaenge[f])
+
+# Fensterspalten auf Seite k
+func spalten_der_seite(f: int, k: int) -> PackedInt32Array:
+	return seiten_spalten[f][k]

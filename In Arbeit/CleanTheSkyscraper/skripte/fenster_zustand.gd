@@ -189,6 +189,35 @@ func verschmutzen(f: int, spalte: int, menge: float) -> bool:
 	zustand_neu = true
 	return true
 
+# ---------------------------------------------------------------- Helfer (putzen ein ganzes Fenster auf einmal)
+func dreck(f: int, spalte: int) -> float:
+	return zustand.get_pixel(spalte, f).r
+
+# Dreck langsam weniger werden lassen (nur sichtbar, solange niemand mit dem Schwamm an diesem Fenster wischt)
+func dreck_setzen(f: int, spalte: int, wert: float) -> void:
+	var id := turm.fenster_basis[f] + spalte
+	if sauber[id] == 1 or slots.has(id):
+		return
+	zustand.set_pixel(spalte, f, Color(wert, 0, szenen[id] / 255.0, 1))
+	zustand_neu = true
+
+# Fenster ganz sauber machen. true, wenn es vorher dreckig war.
+func sauber_machen(f: int, spalte: int) -> bool:
+	if f < 0 or f >= Turm.STOCKWERKE or spalte < 0 or spalte >= turm.fenster_pro_stock[f]:
+		return false
+	var id := turm.fenster_basis[f] + spalte
+	if sauber[id] == 1:
+		return false
+	if slots.has(id):
+		var slot: int = slots[id]
+		_fertig(id, f, spalte, slot)
+		return true
+	sauber[id] = 1
+	sauber_zahl += 1
+	zustand.set_pixel(spalte, f, Color(0, 0, szenen[id] / 255.0, 1))
+	zustand_neu = true
+	return true
+
 # Einmal pro Bild: geänderte Texturen auf die Grafikkarte schicken
 func aktualisieren() -> void:
 	if atlas_neu:

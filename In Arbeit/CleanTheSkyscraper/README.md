@@ -42,6 +42,9 @@ skripte/wirtschaft.gd  Zahlen zum Ausbalancieren: Lohn, Werkzeuge, Upgrades, Pre
 skripte/shop.gd        Werkstatt-Fenster
 skripte/laeufer.gd     Zu Fuß am Boden: Laufen, Springen, Kollision mit Turm/Häusern/Gondel
 skripte/haendler.gd    Drei moderne Glas-Kioske mit Verkäufern, verteilt zwischen den Turmflügeln
+skripte/gondeln.gd     Drei Gondeln (eine je Turmseite): geparkte Modelle, Kaufen, Umsteigen
+skripte/helfer.gd      Automatik: Putzkräfte, Putzroboter, Putzdrohnen
+skripte/fahrzeuge.gd   Modelle für E-Scooter, Hoverboard, Jetpack
 skripte/verkehr.gd     Straßenverkehr: ca. 720 Autos (Rechtsverkehr, halten an roten Ampeln und hinter dem Vordermann), Ampeln an allen Kreuzungen, grüne Schilderbrücken
 shader/auto.gdshader   Kenney-Autos mit eigener Lackfarbe pro Auto (Lack-Feld der Farbpalette wird ersetzt)
 tools/verkehr_test.gd  Verkehr ohne Bild prüfen: godot --path . --headless --script tools/verkehr_test.gd
@@ -87,6 +90,10 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=1 --kamera=x,y,z,zielx,ziely,zielz`: freie Kamera an eine feste Stelle (Testbilder), z. B. See von oben: `--kamera=-30,110,-18,-150,0,-95`
 - `--ansicht=18`: Start zu Fuß neben der Gondel, einsteigen, Express-Fahrt zurück auf die letzte Höhe
 - `--ansicht=19 --geld=1000`: Werkzeug-Kiosk (öffnen, Mikrofaser-Schwamm kaufen, Tasten 1 und 6)
+- `--ansicht=20 --geld=5000`: Gondeln (Express nach unten, Gondel kaufen, umsteigen, auf der Seite bleiben)
+- `--ansicht=21 --geld=100000`: Helfer kaufen und 45 s arbeiten lassen (Fenster + Geld nachrechnen)
+- `--ansicht=22 --geld=20000`: Fahrzeuge, Hotbar, Mausrad, roter Werkzeug-Kiosk
+- `godot --path . --headless --script tools/seiten_test.gd`: jedes Fenster gehört genau einer Turmseite
 - `--ansicht=17`: Casino von außen, innen und vor jeder Station (Testbilder)
 - `--ansicht=15`: nacheinander vor jedem Kiosk, erst von weitem, dann von nah (Testbilder)
 - `--ansicht=14 --geld=10000`: Händler-Test (alle Stände, echte Knöpfe, Wirkung der Boosts und Farben)
