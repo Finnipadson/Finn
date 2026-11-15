@@ -54,7 +54,7 @@ func _ready() -> void:
 	vb4.add_child(balken)
 	unten.visible = false
 	balken.set_meta("karte", unten)
-	hinweis = _label(wurzel, "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen\nA/D: an der Fassade entlang · W/S: hoch/runter · Tab: Werkstatt · 1–5: Werkzeug · Esc: Maus frei", 14, "ffffff")
+	hinweis = _label(wurzel, "Klick: Maus fangen · Maus: umschauen · Linke Maustaste halten + Maus bewegen: putzen (+ Rechtsklick halten: umschauen)\nA/D: an der Fassade entlang · W/S: hoch/runter · Tab: Werkstatt · 1–5: Werkzeug · Esc: Maus frei", 14, "ffffff")
 	hinweis.label_settings.outline_size = 6
 	hinweis.label_settings.outline_color = Color("123a6b")
 	_platz(hinweis, 0.5, 1.0, 0, -14)

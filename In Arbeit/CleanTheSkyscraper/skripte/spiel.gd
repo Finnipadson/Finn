@@ -210,6 +210,9 @@ func _demo(dt: float) -> void:
 
 # 8: echte Maus-Ereignisse durch das ganze Eingabesystem
 var _mt := 0
+var _mt_rechts := 0
+var _mt_off := Vector2.ZERO
+var _mt_yaw := 0.0
 func _maus_test(dt: float) -> void:
 	demo_zeit += dt
 	var mitte := get_viewport().get_visible_rect().size * 0.5
@@ -222,14 +225,25 @@ func _maus_test(dt: float) -> void:
 		_mt = 2
 	elif _mt == 2:
 		_bewege(Vector2(cos(demo_zeit * 7.0) * 60.0, sin(demo_zeit * 2.3) * 25.0))
+		if demo_zeit > 2.4 and _mt_rechts == 0:
+			# Rechtsklick dazu: jetzt muss sich der Blick drehen, der Schwamm bleibt stehen
+			_mt_rechts = 1
+			_klick(mitte, true, MOUSE_BUTTON_RIGHT)
+		elif _mt_rechts == 1:
+			_mt_rechts = 2
+			_mt_off = spieler.schwamm_off
+			_mt_yaw = spieler.yaw
 		if demo_zeit > 3.0:
+			print("TEST rechtsklick: yaw geändert=%s schwamm gleich=%s" % [absf(spieler.yaw - _mt_yaw) > 0.05, spieler.schwamm_off.distance_to(_mt_off) < 0.001])
+			_klick(mitte, false, MOUSE_BUTTON_RIGHT)
 			_klick(mitte, false)
 			print("TEST putzen: Fortschritt=%.2f" % zustand.fortschritt(spieler.stock, int(fposmod(spieler.weg, turm.umfaenge[spieler.stock]) / Turm.FENSTER_B)))
+			_mt_yaw = spieler.yaw
 			_mt = 3
 	elif _mt == 3 and demo_zeit < 4.0:
 		_bewege(Vector2(-25.0, 0.0))
 	elif _mt == 3:
-		print("TEST umschauen: yaw=%.2f rad (Ziel > 1.0)" % spieler.yaw)
+		print("TEST umschauen: Drehung=%.2f rad (Ziel > 0.5)" % absf(spieler.yaw - _mt_yaw))
 		_mt = 4
 
 # 9: Shop mit Tab öffnen, über die echten Knöpfe kaufen, Werkzeug wechseln, Hochdruck testen
@@ -291,9 +305,9 @@ func _speicher_test(dt: float) -> void:
 			print("TEST geladen: geld=%d sauber=%d aktiv=%s winde=%d weg=%.1f" % [wirtschaft.geld, zustand.sauber_zahl, wirtschaft.aktiv, wirtschaft.stufen.winde, spieler.weg])
 		_sp = 1
 
-func _klick(p: Vector2, gedrueckt: bool) -> void:
+func _klick(p: Vector2, gedrueckt: bool, knopf := MOUSE_BUTTON_LEFT) -> void:
 	var e := InputEventMouseButton.new()
-	e.button_index = MOUSE_BUTTON_LEFT
+	e.button_index = knopf
 	e.pressed = gedrueckt
 	e.position = p
 	Input.parse_input_event(e)

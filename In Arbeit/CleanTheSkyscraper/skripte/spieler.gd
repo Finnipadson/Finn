@@ -2,6 +2,7 @@ class_name Spieler
 extends Node3D
 # Die Gondel mit Ich-Ansicht: an der Fassade entlang fahren (A/D), hoch/runter (W/S), umschauen (Maus),
 # putzen: linke Maustaste halten + Maus bewegen → das Werkzeug reibt über das Glas.
+# Beim Putzen zusätzlich rechte Maustaste halten → umschauen, das Werkzeug bleibt am Glas.
 # Hochdruckreiniger: linke Maustaste halten → putzt dort, wo das Fadenkreuz hinzeigt (Maus schaut weiter um).
 
 signal fenster_sauber(f: int, spalte: int)
@@ -41,6 +42,7 @@ var rechts := Vector3.RIGHT   # Bildschirm-rechts entlang der Fassade
 var richtung := 1.0           # +1 wenn „rechts“ den Weg vergrößert
 var glas_punkt := Vector3.ZERO
 var wischt := false
+var rechts_gedrueckt := false  # rechte Maustaste: beim Putzen umschauen statt wischen
 var schwamm_off := Vector2(0.2, 1.5)   # (seitlich, Höhe über Gondelboden) auf der Glasebene
 var spray_trifft := false
 var letzter_stempel := Vector2(INF, INF)
@@ -166,7 +168,11 @@ func werkzeug_setzen(w: Dictionary) -> void:
 func _input(e: InputEvent) -> void:
 	if gesperrt:
 		return
-	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
+	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_RIGHT:
+		rechts_gedrueckt = e.pressed
+		if not e.pressed:
+			letzter_stempel = Vector2(INF, INF)   # nach dem Umschauen neu ansetzen, keine Linie quer übers Glas
+	elif e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
 		if e.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		elif e.pressed:
@@ -174,7 +180,7 @@ func _input(e: InputEvent) -> void:
 		else:
 			wischt = false
 	elif e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		if wischt and wz_art == "wisch":
+		if wischt and wz_art == "wisch" and not rechts_gedrueckt:
 			schwamm_off += Vector2(e.relative.x, -e.relative.y) * MAUS_WISCH
 			_begrenzen()
 		else:
