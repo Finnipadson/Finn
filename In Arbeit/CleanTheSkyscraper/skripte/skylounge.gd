@@ -104,15 +104,18 @@ func _aufzug_unten() -> void:
 	for seite in [-1.0, 1.0]:
 		var d := Vector2(seite * cos(PI / 6.0), sin(PI / 6.0))          # entlang der Wand von der Ecke weg
 		var nrm: Vector2 = Vector2(-d.y, d.x) * seite                        # zeigt in die Lobby
-		# Steinverkleidung über die ganze Wand (verdeckt die Turmfenster hinter der Lobby), mit feinen Fugen
-		var wm: Vector2 = ecke + d * 2.93 + nrm * 0.15
+		# Steinverkleidung über die ganze Wand (verdeckt die Turmfenster hinter der Lobby) und 4,5 m daneben
+		# nach außen, damit der Eingang einen ruhigen Rahmen hat; feine Fugen
+		var lang := l + 4.5
+		var wm: Vector2 = ecke + d * (lang * 0.5) + nrm * 0.15
 		var wn := Node3D.new()
 		wn.position = Vector3(wm.x, 0, wm.y)
 		wn.rotation.y = atan2(nrm.x, nrm.y)
 		k.add_child(wn)
-		RaumBau.box(wn, Vector3(5.85, hoch - 0.08, 0.06), Vector3(0, (hoch - 0.08) * 0.5, 0), Bau.matt("e2dccf", 0.5))
+		RaumBau.box(wn, Vector3(lang, hoch, 0.06), Vector3(0, hoch * 0.5, 0), Bau.matt("e2dccf", 0.5))
 		for fy in [1.4, 2.8, Turm.STOCK_H, 5.6, 7.0]:
-			RaumBau.box(wn, Vector3(5.85, 0.02, 0.064), Vector3(0, fy, 0), Bau.matt("c9c1b2", 0.6))
+			RaumBau.box(wn, Vector3(lang, 0.02, 0.064), Vector3(0, fy, 0), Bau.matt("c9c1b2", 0.6))
+		RaumBau.box(wn, Vector3(lang, 0.12, 0.14), Vector3(0, hoch + 0.06, 0.02), Bau.metall("c9ced4", 0.35, 0.6))
 		var m: Vector2 = ecke + d * 3.3 + nrm * 0.21
 		var tn := Node3D.new()
 		tn.position = Vector3(m.x, 0, m.y)

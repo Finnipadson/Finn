@@ -361,7 +361,7 @@ func _bilder() -> void:
 	s._ausruestung()
 	var l := s.laeufer
 	# 0: Express-Aufzug unten, danach der Aufzug im Casino
-	_blick(Vector3(8, 1.8, 33), Vector3(0, 4.5, 17))
+	_blick(Vector3(3, 1.8, 36), Vector3(0, 4.5, 17))
 	await _foto(0)
 	var cm := s.casino.mitte
 	_blick(Vector3(cm.x - 4.0, 1.75, cm.y - 3.0), Vector3(s.casino.aufzug_ziel.x, 2.2, s.casino.aufzug_ziel.y))
