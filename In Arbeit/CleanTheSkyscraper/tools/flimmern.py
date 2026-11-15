@@ -26,6 +26,7 @@ ORTE = {
     "turm_fern":  (1, "-650,150,300,0,300,0", "0,0,1.5", 0),             # Turm aus der Stadt
     "schmutz_25": (4, None, "tempo0 --abstand=25", 0),                    # Turmglas mit Schmutz, Kamera steht, 25 m
     "schmutz_60": (4, None, "tempo0 --abstand=60", 0),                    # dito 60 m
+    "hochschauen":(1, "22,1.9,-40,13.5,40,-36", "0,0.09,0", 0),          # zu Fuß am Turmfuß steil nach oben, Kamera schwebt wie auf dem Hoverboard
     "still":      (1, "0,120,190,0,60,600", None, 0),                  # Kamera steht (zeigt TAA-Zittern)
     "drehen":     (1, "0,120,190,0,60,600", None, 0.3),                  # Gondel dreht sich (Boden + Häuser)
 }

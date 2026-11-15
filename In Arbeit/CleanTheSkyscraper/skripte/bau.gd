@@ -181,8 +181,10 @@ static func rahmen(stw: Array, fb: float, band_anteil: float, m: Material) -> No
 			var lang := a.distance_to(b)
 			var d2 := (b - a) / lang
 			var n2: Vector2 = normalen[k]
-			var dx := Vector3(d2.x, 0, d2.y)
 			var nz := Vector3(n2.x, 0, n2.y)
+			# x-Achse so wählen, dass die Basis nicht gespiegelt ist (sonst zeichnet Godot die Innenseiten des
+			# Kastens, und die Rückwand flackert mit dem Glas – deutlich beim Hochschauen vom Boden)
+			var dx := Vector3.UP.cross(nz)
 			for j in range(int(ceil(weg / fb - 1e-4)), int(ceil((weg + lang) / fb - 1e-4))):
 				var q := a + d2 * (j * fb - weg) + n2 * 0.13
 				xf.append(Transform3D(Basis(dx * 0.16, Vector3.UP * (h - bh), nz * 0.26), Vector3(q.x, y0 + bh + (h - bh) * 0.5, q.y)))
