@@ -18,6 +18,7 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
 - **Technik:** Godot 4.7, GDScript. Der Turm wird komplett aus Code erzeugt: Grundriss pro Stockwerk, Glas mit Räumen dahinter (Interior Mapping), echte Rahmen als MultiMesh. Grundlage ist der Grafik-Test `Grafiktest/godot-turm` (Variante 1).
 - **Turm:** Variante 1 „Wüstennadel“, Y-Grundriss mit spiralförmigen Stufen, 168 Stockwerke, ca. 935 m inklusive Spitze.
 - **Plattform:** PC (Windows), Maus und Tastatur, Export als .exe.
+- **Ansicht:** Ich-Ansicht aus der Gondel (entschieden 15.11.2026): eigene Hände mit Werkzeug im Bild wie im Strand-Test, Blick frei nach links/rechts/unten (Tiefe sehen!), Fenster direkt vor einem.
 - **Look:** leicht stilisiert, nicht fotorealistisch (bewusst so entschieden, 15.11.2026).
 - **Speichern:** JSON in `user://` (Godot-Benutzerordner).
 - **Prüfen:** Testbilder per `--write-movie` mit festen Ansichten (`--ansicht=N`), wie im Grafik-Test.
@@ -51,7 +52,6 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
 
 ## Offene Fragen
 
-- Ich-Ansicht aus der Gondel (wie im Strand-Test) oder Kamera schräg hinter der Gondel?
 - Soll man auch fallen oder scheitern können (Wind, Zeitdruck), oder bleibt das Spiel komplett entspannt?
 - Gibt es Fortschritt, während man nicht spielt (Idle), oder nur durch eigenes Putzen?
 

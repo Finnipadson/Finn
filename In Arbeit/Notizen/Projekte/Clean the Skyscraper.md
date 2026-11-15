@@ -27,7 +27,8 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 - [ ] Phase 3: Leben am Turm (Szenen, Tauben, Wind, Sandsturm, schönere Stadt)
 - [ ] Phase 4: Automatik (Helfer, Roboter, Drohnen)
 - [ ] Phase 5: Feinschliff (Sound, Effekte, Menü, .exe)
-- [ ] Offene Fragen klären: Ich-Ansicht oder Kamera hinter der Gondel? Entspannt oder mit Scheitern? Idle-Fortschritt?
+- [x] Ansicht: Ich-Ansicht aus der Gondel (15.11.2026)
+- [ ] Offene Fragen klären: Entspannt oder mit Scheitern? Idle-Fortschritt?
 
 ## Notizen
 
