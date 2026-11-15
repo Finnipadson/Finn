@@ -42,6 +42,14 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 - [x] Putzen durch Reiben mit der Maus, Gondel frei fahren, Texte auf Deutsch, Spieldauer 10–20 Stunden (15.11.2026)
 - [x] Entschieden (15.11.2026): kein Idle-Fortschritt – Helfer putzen nur, solange man spielt
 
+## Ideen (noch nicht entschieden)
+
+Ausgewählte Ladenideen (15.11.2026):
+- [ ] **Möbelhaus**: begehbarer Laden mit Ausstellungsräumen, Möbel fürs Penthouse ansehen und kaufen (statt nur Menü)
+- [ ] **Gondel-Werkstatt**: Lackierungen, Aufkleber, Blumenkästen, Sonnenschirm, Radio für die Gondel
+- [ ] **Souvenirshop**: Andenken für erreichte Meilensteine (Mini-Wüstennadel, Schneekugel …), im Penthouse aufstellen
+- [ ] **Goldschmuck-Laden**: glitzerndes Schaufenster neben dem Casino, Luxus-Statussymbole (z. B. goldene Gondel)
+
 ## Notizen
 
 - Turm ist erfunden (kein Burj-Khalifa-Nachbau: Name und Form sind geschützt)
