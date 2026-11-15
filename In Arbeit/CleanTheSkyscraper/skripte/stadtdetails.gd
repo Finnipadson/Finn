@@ -8,8 +8,6 @@ extends Node3D
 
 const PALMEN := ["natur/palm-detailed-straight", "natur/palm-detailed-bend"]
 const ALLEE_BIS := 540.0       # so weit vom Turm haben die Straßen Mittelstreifen mit Palmen (Boden-Shader: allee_r)
-const PALM_ABSTAND := 15.0
-const LAMPE_ALLE := 3          # jede 3. Lücke zwischen zwei Palmen bekommt eine Laterne
 const RASTER := 75.0
 
 var welt: Welt
@@ -202,7 +200,10 @@ func _see_palmen() -> void:
 			weg = 0.0
 			_lampe(a, (b - a).normalized().orthogonal())
 
-# Mittelstreifen aller Straßen in Turmnähe: Palmen im Wechsel mit Laternen
+# Mittelstreifen aller Straßen in Turmnähe: je Straßenstück (zwischen zwei Kreuzungen) Palme – Laterne – Palme,
+# nur auf dem Rasen-Mittelstreifen (der beginnt 12 m vor der Kreuzung, davor liegen Zebrastreifen und Kreuzung)
+const ALLEE_ORTE := [22.5, 37.5, 52.5]   # Abstand vom Anfang des Straßenstücks (Kreuzung zu Kreuzung = RASTER)
+
 func _alleen() -> void:
 	var k0 := -int(ALLEE_BIS / RASTER) - 1
 	for richtung in 2:
@@ -210,23 +211,21 @@ func _alleen() -> void:
 			var c := RASTER * (k + 0.5)       # Straßenmitte (Häuser stehen auf Vielfachen von 75 m)
 			if absf(c) > ALLEE_BIS:
 				continue
-			var lang := sqrt(ALLEE_BIS * ALLEE_BIS - c * c)
-			var s := -lang
-			var nr := 0
-			while s <= lang:
-				# nicht auf Kreuzungen (Abstand zur nächsten Querstraße)
-				var zur_kreuzung := absf(fposmod(s - RASTER * 0.5, RASTER) - RASTER * 0.5)
-				var p := Vector2(c, s) if richtung == 0 else Vector2(s, c)
+			for j in range(k0, -k0 + 1):
+				var k_lo := RASTER * (j + 0.5)   # Kreuzung am Anfang des Straßenstücks
+				var a := Vector2(c, k_lo) if richtung == 0 else Vector2(k_lo, c)
+				var b := Vector2(c, k_lo + RASTER) if richtung == 0 else Vector2(k_lo + RASTER, c)
+				if not welt.stueck_da(a, b):
+					continue
 				var quer := Vector2(1, 0) if richtung == 0 else Vector2(0, 1)
-				var k_lo := floorf((s - RASTER * 0.5) / RASTER) * RASTER + RASTER * 0.5
-				var da := welt.stueck_da(Vector2(c, k_lo) if richtung == 0 else Vector2(k_lo, c), Vector2(c, k_lo + RASTER) if richtung == 0 else Vector2(k_lo + RASTER, c))
-				if da and zur_kreuzung > 20.0 and _frei_fuer_allee(p):
-					if nr % LAMPE_ALLE == LAMPE_ALLE - 1:
+				for i in ALLEE_ORTE.size():
+					var p := a.lerp(b, ALLEE_ORTE[i] / RASTER)
+					if p.length() > ALLEE_BIS - 6.0 or not _frei_fuer_allee(p):   # Mittelstreifen endet bei ALLEE_BIS
+						continue
+					if i == 1:
 						_lampe(p, quer)
 					else:
 						_palme(p)
-					nr += 1
-				s += PALM_ABSTAND
 	print("Stadtdetails: %d Palmen, %d Laternen" % [palmen_xf[0].size() + palmen_xf[1].size(), lampen_xf.size()])
 
 func _frei_fuer_allee(p: Vector2) -> bool:
