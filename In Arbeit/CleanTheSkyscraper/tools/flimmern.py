@@ -21,6 +21,7 @@ ORTE = {
     "boden_fern": (1, "0,150,190,0,0,650", "0.6,0,0", 0),             # aus Gondelhöhe auf die Stadt
     "boden_flach":(1, "40,25,-300,0,0,-60", "0.2,0,0", 0),              # flach über Straßen + Platz (Gondel unten)
     "turmfuss":   (1, "30,1.7,170,0,40,0", "0.3,0,0", 0),              # Turmfuß + Platz
+    "turm_ecke":  (1, "40,3,-20,0,2,-30", "0,0,-0.2", 0),               # Brüstungen am Turmfuß um eine Flügel-Rundung
     "fassade":    (4, None, "tempo", 0),                                 # Gondel-Fahrt an der Turmfassade
     "turm_fern":  (1, "-650,150,300,0,300,0", "0,0,1.5", 0),             # Turm aus der Stadt
     "schmutz_25": (4, None, "tempo0 --abstand=25", 0),                    # Turmglas mit Schmutz, Kamera steht, 25 m

@@ -124,31 +124,73 @@ static func baue(stw: Array, wand: Material, dach: Material) -> Node3D:
 	return knoten
 
 # Echte Rahmen: Pfosten an jeder Fenstergrenze + vorstehendes Band je Stockwerk (MultiMesh)
-static func rahmen(stw: Array, fb: float, band_anteil: float, m: Material) -> MultiMeshInstance3D:
+# Fensterrahmen des Turms: Brüstungsband pro Stockwerk als durchgehendes Band mit Gehrungs-Ecken (früher einzelne
+# Kästen, die sich an den Ecken überlappt und dort geflackert haben) + Pfosten als MultiMesh.
+const BAND_AUSSEN := 0.35   # so weit steht die Brüstung vor dem Glas
+const BAND_INNEN := 0.01    # … und so weit reicht sie hinter das Glas (keine Lücke)
+
+static func rahmen(stw: Array, fb: float, band_anteil: float, m: Material) -> Node3D:
+	var knoten := Node3D.new()
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var xf: Array[Transform3D] = []
 	for s in stw:
-		var p: PackedVector2Array = s.poly
+		var p := _ohne_doppelte(s.poly)
+		if p.size() < 3:
+			continue
 		var y0: float = s.y0
 		var h: float = s.h
 		var bh := h * band_anteil
-		var mi := mitte(p)
+		var n := p.size()
+		# Außen-Normale je Kante aus dem Umlaufsinn (auch bei nicht-konvexem Grundriss richtig)
+		var flaeche := 0.0
+		for k in n:
+			flaeche += p[k].cross(p[(k + 1) % n])
+		var normalen: Array[Vector2] = []
+		for k in n:
+			var d := (p[(k + 1) % n] - p[k]).normalized()
+			normalen.append(Vector2(d.y, -d.x) if flaeche > 0.0 else Vector2(-d.y, d.x))
+		# Gehrung an jeder Ecke: Versatz entlang der Winkelhalbierenden, Länge so, dass beide Kanten parallel bleiben
+		var aussen_p: Array[Vector2] = []
+		var innen_p: Array[Vector2] = []
+		for k in n:
+			var na: Vector2 = normalen[(k - 1 + n) % n]
+			var nb: Vector2 = normalen[k]
+			var mi := (na + nb)
+			mi = nb if mi.length() < 1e-4 else mi.normalized()
+			var lang := 1.0 / maxf(mi.dot(nb), 0.35)
+			aussen_p.append(p[k] + mi * BAND_AUSSEN * lang)
+			innen_p.append(p[k] - mi * BAND_INNEN * lang)
+		var y1 := y0 + bh
+		for k in n:
+			var k2 := (k + 1) % n
+			var nk := Vector3(normalen[k].x, 0, normalen[k].y)
+			var ao := aussen_p[k]
+			var bo := aussen_p[k2]
+			var ai := innen_p[k]
+			var bi := innen_p[k2]
+			_viereck(st, Vector3(ao.x, y0, ao.y), Vector3(bo.x, y0, bo.y), Vector3(bo.x, y1, bo.y), Vector3(ao.x, y1, ao.y), nk)   # Vorderseite
+			_viereck(st, Vector3(ai.x, y1, ai.y), Vector3(ao.x, y1, ao.y), Vector3(bo.x, y1, bo.y), Vector3(bi.x, y1, bi.y), Vector3.UP)   # oben
+			if y0 > 0.05:   # unten (am Boden nicht nötig)
+				_viereck(st, Vector3(ai.x, y0, ai.y), Vector3(bi.x, y0, bi.y), Vector3(bo.x, y0, bo.y), Vector3(ao.x, y0, ao.y), Vector3.DOWN)
+		# Pfosten: je Fensterkante einer; ein Pfosten genau auf einer Ecke gehört nur zur nächsten Kante (sonst doppelt)
 		var weg := 0.0
-		for k in p.size():
+		for k in n:
 			var a := p[k]
-			var b := p[(k + 1) % p.size()]
+			var b := p[(k + 1) % n]
 			var lang := a.distance_to(b)
-			if lang < 0.01:
-				continue
 			var d2 := (b - a) / lang
-			var n2 := aussen(a, b, mi)
+			var n2: Vector2 = normalen[k]
 			var dx := Vector3(d2.x, 0, d2.y)
 			var nz := Vector3(n2.x, 0, n2.y)
-			var mb := a + (b - a) * 0.5 + n2 * 0.17
-			xf.append(Transform3D(Basis(dx * (lang + 0.12), Vector3.UP * bh, nz * 0.36), Vector3(mb.x, y0 + bh * 0.5, mb.y)))
-			for j in range(int(ceil(weg / fb)), int(floor((weg + lang) / fb)) + 1):
+			for j in range(int(ceil(weg / fb - 1e-4)), int(ceil((weg + lang) / fb - 1e-4))):
 				var q := a + d2 * (j * fb - weg) + n2 * 0.13
 				xf.append(Transform3D(Basis(dx * 0.16, Vector3.UP * (h - bh), nz * 0.26), Vector3(q.x, y0 + bh + (h - bh) * 0.5, q.y)))
 			weg += lang
+	var band := MeshInstance3D.new()
+	band.mesh = st.commit()
+	band.material_override = m
+	knoten.add_child(band)
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	var bm := BoxMesh.new()
@@ -160,7 +202,28 @@ static func rahmen(stw: Array, fb: float, band_anteil: float, m: Material) -> Mu
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
 	mmi.material_override = m
-	return mmi
+	knoten.add_child(mmi)
+	return knoten
+
+static func _ohne_doppelte(p: PackedVector2Array) -> PackedVector2Array:
+	var aus := PackedVector2Array()
+	for v in p:
+		if aus.is_empty() or aus[aus.size() - 1].distance_to(v) > 0.01:
+			aus.append(v)
+	if aus.size() > 1 and aus[0].distance_to(aus[aus.size() - 1]) <= 0.01:
+		aus.remove_at(aus.size() - 1)
+	return aus
+
+# Viereck a-b-c-d (gegen den Uhrzeigersinn von außen gesehen) mit fester Normale
+static func _viereck(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, nrm: Vector3) -> void:
+	# Reihenfolge so drehen, dass die Dreiecke zur Normale passen (Godot: Vorderseite im Uhrzeigersinn)
+	if (b - a).cross(c - a).dot(nrm) > 0.0:
+		var t := b
+		b = d
+		d = t
+	for v in [a, b, c, a, c, d]:
+		st.set_normal(nrm)
+		st.add_vertex(v)
 
 static func zylinder(r_oben: float, r_unten: float, hoehe: float, m: Material, seg := 24) -> MeshInstance3D:
 	var cm := CylinderMesh.new()
