@@ -27,6 +27,7 @@ var rad: Node3D                  # dreht sich langsam
 var _leucht: Array = []          # blinkende Leuchtstreifen
 var turm_mat: ShaderMaterial     # Fassade des Hochhauses darüber (Penthouse: innen_band)
 var aufzug_pos := Vector2.ZERO   # vor der Aufzugstür (Welt) – Aufzug zur Arcade-Halle und ins Penthouse
+var aufzug_ziel := Vector2.ZERO  # Mitte der Aufzugstür (Welt)
 
 func setup(grundstueck: Rect2) -> void:
 	mitte = grundstueck.get_center()
@@ -516,16 +517,43 @@ func _bar() -> void:
 	_schrift("BAR", Vector3(m.x, 3.9, -HALB + WAND + 0.1), 0.0, 96, 0.008, Color(0.55, 0.9, 1.0))
 	_fest(m.x - 2.6, -HALB, m.x + 2.6, m.y + 1.3)
 
-# Aufzug an der Innenwand neben dem Eingang (−X): fährt in die Arcade-Halle (1. Stock) und ins Penthouse (oben)
+# Aufzugskern in der hinteren Ecke (+X, −Z): fährt in die Arcade-Halle (1. Stock) und ins Penthouse (oben).
+# Dunkler Kern bis unter die Decke mit Goldkanten, Türen zur Eingangsseite (−X), Stockwerksanzeige und Schild.
 func _aufzug() -> void:
-	var x := -HALB + WAND + 0.03
-	var z := -6.0
-	var stahl := Bau.metall("c9ced4", 0.25, 0.85)
+	var h := HALB - WAND
+	var x0 := h - 3.1                 # Vorderseite des Kerns (Türen)
+	var z0 := -h
+	var z1 := -h + 3.1
+	var zm := (z0 + z1) * 0.5
+	var dunkel := Bau.matt("1b1e2a", 0.45)
 	var gold := Bau.metall("d9a441", 0.25, 0.9)
-	for s in [-1.0, 1.0]:
-		_box(Vector3(0.06, 2.7, 0.95), Vector3(x, 1.62, z + s * 0.49), stahl)
-		_box(Vector3(0.1, 2.9, 0.12), Vector3(x, 1.72, z + s * 1.02), gold)
-	_box(Vector3(0.1, 0.12, 2.16), Vector3(x, 3.1, z), gold)
-	_box(Vector3(0.05, 0.1, 0.06), Vector3(x + 0.03, 1.6, z + 1.35), _leuchte("ffcf6a", 2.5))
-	_schrift("ARCADE  ·  PENTHOUSE", Vector3(x + 0.04, 3.55, z), PI * 0.5, 60, 0.006, Color(1.0, 0.82, 0.3))
-	aufzug_pos = mitte + Vector2(x + 2.0, z)
+	var stahl := Bau.metall("b9bec6", 0.22, 0.9)
+	var hoch := HOCH - 0.25
+	_box(Vector3(h - x0, hoch, z1 - z0), Vector3((x0 + h) * 0.5, hoch * 0.5 + 0.25, zm), dunkel)
+	# Goldkanten an den Ecken des Kerns + Leiste oben
+	for p in [Vector2(x0, z1), Vector2(x0, z0 + 0.05)]:
+		_box(Vector3(0.1, hoch, 0.1), Vector3(p.x, hoch * 0.5 + 0.25, p.y), gold)
+	_box(Vector3(0.1, 0.1, z1 - z0), Vector3(x0 - 0.02, HOCH - 0.6, zm), gold)
+	_box(Vector3(h - x0, 0.1, 0.1), Vector3((x0 + h) * 0.5, HOCH - 0.6, z1 + 0.02), gold)
+	# Tür: Nische mit Goldrahmen, zwei Stahlflügel mit Fuge
+	var tb := 1.9
+	var th := 2.8
+	_box(Vector3(0.04, th, tb), Vector3(x0 - 0.03, 0.27 + th * 0.5, zm), Bau.matt("0e0f15", 0.6))
+	for sz in [-1.0, 1.0]:
+		_box(Vector3(0.05, th - 0.04, tb * 0.5 - 0.02), Vector3(x0 - 0.06, 0.27 + th * 0.5, zm + sz * tb * 0.25), stahl)
+		_box(Vector3(0.12, th + 0.16, 0.14), Vector3(x0 - 0.08, 0.27 + (th + 0.16) * 0.5, zm + sz * (tb * 0.5 + 0.07)), gold)
+	_box(Vector3(0.12, 0.14, tb + 0.28), Vector3(x0 - 0.08, 0.27 + th + 0.09, zm), gold)
+	# Stockwerksanzeige über der Tür + Ruftaster daneben
+	_box(Vector3(0.05, 0.32, 0.9), Vector3(x0 - 0.04, 0.27 + th + 0.5, zm), Bau.matt("0e0f15", 0.4))
+	var anz := _schrift("▲  EG", Vector3(x0 - 0.075, 0.27 + th + 0.5, zm), -PI * 0.5, 64, 0.0035, Color(1.0, 0.75, 0.3))
+	anz.modulate = Color(1.6, 1.2, 0.5)
+	_box(Vector3(0.05, 0.34, 0.2), Vector3(x0 - 0.04, 1.4, zm - tb * 0.5 - 0.45), gold)
+	_box(Vector3(0.04, 0.08, 0.08), Vector3(x0 - 0.07, 1.47, zm - tb * 0.5 - 0.45), _leuchte("ffcf6a", 2.5))
+	_box(Vector3(0.04, 0.08, 0.08), Vector3(x0 - 0.07, 1.33, zm - tb * 0.5 - 0.45), _leuchte("ffcf6a", 2.5))
+	# Schild auf der Kern-Front
+	_schrift("AUFZUG", Vector3(x0 - 0.06, 4.55, zm), -PI * 0.5, 90, 0.005, Color(1.0, 0.82, 0.3))
+	_schrift("Arcade-Halle · Penthouse", Vector3(x0 - 0.06, 4.05, zm), -PI * 0.5, 56, 0.0045, Color(0.95, 0.88, 0.7))
+	_licht(Vector3(x0 - 1.4, 3.4, zm), "ffe6bd", 1.0, 5.0)
+	_fest(x0 - 0.15, z0, h, z1)
+	aufzug_pos = mitte + Vector2(x0 - 1.7, zm)
+	aufzug_ziel = mitte + Vector2(x0, zm)

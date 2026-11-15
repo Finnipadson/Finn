@@ -27,7 +27,7 @@ func setup(s: Spiel) -> void:
 	sky = SkyLounge.new()
 	s.add_child(sky)
 	sky.setup(s.turm)
-	s.laeufer.hindernisse.append(sky.unten_rect)
+	s.laeufer.polygone.append(RaumBau.verschieben(sky.unten_poly, Laeufer.RADIUS))
 	arcade = Arcade.new()
 	s.add_child(arcade)
 	arcade.setup(s.welt.casino_rect)
@@ -275,7 +275,7 @@ func _teleport(ziel: String) -> void:
 			l.raum_setzen({}, sky.unten_pos, PI)
 			name = "Erdgeschoss"
 		"casino":
-			l.raum_setzen({}, spiel.casino.aufzug_pos, -PI * 0.5)
+			l.raum_setzen({}, spiel.casino.aufzug_pos, PI * 0.5)
 			name = "Casino"
 		"arcade":
 			l.raum_setzen(arcade.raum, arcade.ankunft(), PI * 0.5)

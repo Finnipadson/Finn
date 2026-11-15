@@ -21,8 +21,8 @@ Steuerung (Phase 1, Gondel):
 - In der Werkstatt unter „Einstellungen“: Tauben, Sandsturm und Windböen an/aus
 - **Händler** auf dem Platz: zu Fuß vor einen Stand gehen und **E** drücken (Putzmittel-Boosts, Mode & Farben, Snacks)
 - **Casino** (dunkles Gebäude mit Leuchtschrift hinter einer Flügelspitze): hineingehen, vor Blackjack-Tisch, Glücksrad, Banditen oder Rubbellos-Theke **E** drücken. Nur Spielgeld, Einsatz 10 € bis 10 % des Geldes (höchstens 5.000 €)
-- **Sky-Lounge**: Express-Aufzug unten am Turm (Glashäuschen zwischen zwei Flügeln), E drücken. Lounge (200 m), Restaurant (500 m) und Aussichtsplattform (800 m) sind frei, sobald das Seil so hoch reicht. Bars mit Spezial-Boosts, Designer- und Exklusiv-Möbel
-- **Aufzug im Casino** (links neben dem Eingang): Arcade-Halle (1. Stock) und dein **Penthouse** (Dach)
+- **Sky-Lounge**: verglaster Eingang mit Vordach unten in der Turmecke zwischen zwei Flügeln, E drücken. Lounge (200 m), Restaurant (500 m) und Aussichtsplattform (800 m) sind frei, sobald das Seil so hoch reicht. Bars mit Spezial-Boosts, Designer- und Exklusiv-Möbel
+- **Aufzug im Casino** (Aufzugskern hinten rechts, gegenüber dem Eingang): Arcade-Halle (1. Stock) und dein **Penthouse** (Dach)
 - **Arcade**: Greifautomat (WASD/Pfeile Kralle bewegen, Leertaste greifen), Kapsel-Automat. Gewinne landen im Penthouse-Lager
 - **Penthouse**: am Tablet Möbel kaufen und unter „Meine Sachen“ aufstellen; Vorschau mit der Blickrichtung zielen, R/Mausrad drehen, Klick abstellen, X ins Lager, Esc abbrechen; vor einem Möbel E = umstellen. Aufgestellte Gegenstände geben Boni (je seltener, desto stärker)
 - **P: Erfolge und Statistik** (auch an der Vitrine im Penthouse). Jeder Erfolg gibt Geld und einen Pokal für die Vitrine

@@ -20,7 +20,8 @@ var turm: Turm
 var etagen := {}               # id -> {id, name, boden, raum, ankunft, yaw, band, knoten, stationen, meter}
 var unten_pos := Vector2.ZERO  # vor der Aufzugstür unten (Welt x, z)
 var unten_ziel := Vector2.ZERO
-var unten_rect := Rect2()      # Kollision des Aufzug-Häuschens
+var unten_rect := Rect2()      # Umriss der Lobby (nur für Tests/Bilder)
+var unten_poly := PackedVector2Array()   # Kollision der Lobby (Dreieck in der Turmecke)
 var _leucht: Array = []
 
 func setup(t: Turm) -> void:
@@ -43,34 +44,80 @@ static func meter(e: Dictionary) -> int:
 
 # ---------------------------------------------------------------- Aufzug unten
 func _aufzug_unten() -> void:
-	# In der Innenecke zwischen den Flügeln bei 30° und 150° (Lücke bei 90° = Richtung +Z)
+	# Verglaste Lobby in der Innenecke zwischen den Flügeln bei 30° und 150° (Lücke bei 90° = Richtung +Z):
+	# Grundriss = Dreieck aus Ecke und den beiden Flügelwänden, Glasfront über zwei Stockwerke im Fensterraster
+	# des Turms (1,5 m breit, 4,2 m hoch), Alurahmen wie am Turm, Vordach mit Spots, dahinter Aufzugstüren.
 	var r_ecke := 13.5 / sin(PI / 3.0)
-	var vorn := r_ecke + 3.0
+	var ecke := Vector2(0, r_ecke)
+	var l := 6.0
+	var a := ecke + Vector2(cos(PI / 6.0), sin(PI / 6.0)) * l            # an der Wand des Flügels bei 30°
+	var b := ecke + Vector2(-cos(PI / 6.0), sin(PI / 6.0)) * l           # an der Wand des Flügels bei 150°
+	var vorn := a.y
+	var hoch := 2.0 * Turm.STOCK_H
 	var k := Node3D.new()
 	add_child(k)
-	var stahl := Bau.metall("c9ced4", 0.25, 0.85)
-	var dunkel := Bau.matt("1b2330", 0.4)
-	var gl := RaumBau.glas("9fd6ff", 0.25)
-	# Häuschen (schließt die Ecke), Glasfront mit Stahltüren
-	RaumBau.box(k, Vector3(5.0, 7.0, vorn - r_ecke + 3.0), Vector3(0, 3.5, r_ecke + (vorn - r_ecke - 3.0) * 0.5), dunkel)
-	RaumBau.box(k, Vector3(5.4, 0.3, 4.4), Vector3(0, 7.1, vorn - 1.6), stahl)
-	RaumBau.box(k, Vector3(1.0, 3.2, 0.08), Vector3(-0.52, 1.7, vorn + 0.05), stahl)
-	RaumBau.box(k, Vector3(1.0, 3.2, 0.08), Vector3(0.52, 1.7, vorn + 0.05), stahl)
-	RaumBau.box(k, Vector3(0.04, 3.2, 0.1), Vector3(0, 1.7, vorn + 0.08), dunkel)
-	RaumBau.box(k, Vector3(2.4, 0.16, 0.14), Vector3(0, 3.38, vorn + 0.06), stahl)
-	for s in [-1.0, 1.0]:
-		RaumBau.box(k, Vector3(1.2, 6.6, 0.06), Vector3(s * 1.85, 3.5, vorn + 0.04), gl)
-	var lm := RaumBau.leuchte("35c8ff", 2.0)
-	_leucht.append(lm)
-	RaumBau.box(k, Vector3(4.6, 0.08, 0.08), Vector3(0, 6.6, vorn + 0.07), lm)
-	RaumBau.schrift(k, "SKY LOUNGE", Vector3(0, 5.2, vorn + 0.09), 0.0, 120, 0.0075, Color("e8f1fa"))
-	RaumBau.schrift(k, "EXPRESS  ·  200 m · 500 m · 800 m", Vector3(0, 4.35, vorn + 0.09), 0.0, 64, 0.0065, Color("35c8ff"), false)
-	# Ruftaste neben der Tür
-	RaumBau.box(k, Vector3(0.25, 0.4, 0.06), Vector3(1.35, 1.3, vorn + 0.06), dunkel)
-	RaumBau.box(k, Vector3(0.1, 0.1, 0.04), Vector3(1.35, 1.35, vorn + 0.1), RaumBau.leuchte("ffcf6a", 2.5))
-	RaumBau.licht(k, Vector3(0, 3.6, vorn + 1.2), "dff3ff", 1.2, 6.0)
-	unten_rect = Rect2(Vector2(-2.7, r_ecke - 2.0), Vector2(5.4, vorn - r_ecke + 2.2))
-	unten_pos = Vector2(0, vorn + 2.0)
+	var alu := Bau.metall("c9ced4", 0.35, 0.6)
+	var gl := RaumBau.glas("a9cbe6", 0.28)
+	var weiss := Bau.matt("eef0f2", 0.3)
+	# Boden + Decke der Lobby
+	var drei := PackedVector2Array([ecke, a, b])
+	RaumBau.flaeche(k, drei, 0.03, Bau.matt("d8d2c8", 0.3))
+	RaumBau.flaeche(k, drei, hoch - 0.05, weiss, false)
+	# Glasfront mit Rahmen: senkrecht alle 1,5 m, waagerecht bei 4,2 m (Stockwerk) und oben
+	var breite := a.x - b.x
+	RaumBau.box(k, Vector3(breite, hoch, 0.03), Vector3(0, hoch * 0.5, vorn), gl)
+	var n := int(round(breite / Turm.FENSTER_B))
+	for i in n + 1:
+		var x := b.x + breite * i / n
+		var dick := 0.14 if i == 0 or i == n else 0.07
+		RaumBau.box(k, Vector3(dick, hoch, 0.12), Vector3(x, hoch * 0.5, vorn), alu)
+	for y in [0.06, Turm.STOCK_H, hoch - 0.06]:
+		RaumBau.box(k, Vector3(breite, 0.12, 0.14), Vector3(0, y, vorn), alu)
+	# Glas-Schiebetür in der Mitte (zwei Felder breit), leicht geöffnet
+	var tb := 2.0 * breite / n
+	for sx in [-1.0, 1.0]:
+		var tuer := Node3D.new()
+		tuer.position = Vector3(sx * (tb * 0.25 + 0.25), 0, vorn + 0.09)
+		k.add_child(tuer)
+		RaumBau.box(tuer, Vector3(tb * 0.5, 2.9, 0.03), Vector3(0, 1.5, 0), RaumBau.glas("cfe8ff", 0.18))
+		for y in [0.08, 2.92]:
+			RaumBau.box(tuer, Vector3(tb * 0.5, 0.08, 0.06), Vector3(0, y, 0), alu)
+		for x in [-tb * 0.25, tb * 0.25]:
+			RaumBau.box(tuer, Vector3(0.06, 2.9, 0.06), Vector3(x, 1.5, 0), alu)
+		RaumBau.box(tuer, Vector3(0.03, 0.6, 0.05), Vector3(-sx * (tb * 0.25 - 0.12), 1.1, 0.05), Bau.metall("e8ecf0", 0.2, 0.9))
+	RaumBau.box(k, Vector3(tb + 0.2, 0.12, 0.16), Vector3(0, 3.0, vorn + 0.05), alu)
+	# Vordach: flache weiße Platte mit Alukante, Spots darunter, Schrift an der Kante
+	var dach_t := 3.2
+	RaumBau.box(k, Vector3(breite + 1.6, 0.32, dach_t), Vector3(0, hoch - 2.1, vorn + dach_t * 0.5), weiss)
+	RaumBau.box(k, Vector3(breite + 1.64, 0.06, dach_t + 0.04), Vector3(0, hoch - 2.27, vorn + dach_t * 0.5), alu)
+	var spot := RaumBau.leuchte("fff4e0", 2.2)
+	for ix in 5:
+		for iz in 2:
+			var sp := RaumBau.zyl(k, 0.09, 0.02, Vector3(-4.0 + ix * 2.0, hoch - 2.28, vorn + 0.9 + iz * 1.4), spot, 16)
+			sp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	RaumBau.licht(k, Vector3(0, hoch - 2.8, vorn + 1.6), "fff1dc", 1.2, 8.0)
+	var titel := RaumBau.schrift(k, "SKY LOUNGE", Vector3(0, hoch - 2.1, vorn + dach_t + 0.02), 0.0, 96, 0.0075, Color("2b3440"), false)
+	titel.outline_size = 0
+	RaumBau.schrift(k, "EXPRESS-AUFZUG  ·  200 m  ·  500 m  ·  800 m", Vector3(0, Turm.STOCK_H + 0.42, vorn + 0.08), 0.0, 44, 0.0055, Color("2b3440"), false)
+	# Lobby hinter dem Glas: je Flügelwand eine Aufzugstür aus gebürstetem Stahl, warmes Licht
+	var stahl := Bau.metall("b9bec6", 0.22, 0.9)
+	for seite in [-1.0, 1.0]:
+		var d := Vector2(seite * cos(PI / 6.0), sin(PI / 6.0))          # entlang der Wand von der Ecke weg
+		var nrm: Vector2 = Vector2(-d.y, d.x) * seite                        # zeigt in die Lobby
+		var m: Vector2 = ecke + d * 3.3 + nrm * 0.06
+		var tn := Node3D.new()
+		tn.position = Vector3(m.x, 0, m.y)
+		tn.rotation.y = atan2(nrm.x, nrm.y)
+		k.add_child(tn)
+		RaumBau.box(tn, Vector3(2.2, 3.0, 0.08), Vector3(0, 1.53, 0), Bau.matt("2b2f36", 0.4))
+		for sx in [-1.0, 1.0]:
+			RaumBau.box(tn, Vector3(0.94, 2.7, 0.05), Vector3(sx * 0.48, 1.4, 0.05), stahl)
+		RaumBau.box(tn, Vector3(0.5, 0.14, 0.04), Vector3(0, 2.85, 0.06), RaumBau.leuchte("ffcf6a", 1.6))
+	RaumBau.licht(k, Vector3(0, 3.6, r_ecke + 1.6), "ffe2b8", 1.4, 6.0)
+	RaumBau.zyl(k, 0.5, 0.04, Vector3(0, hoch - 0.08, r_ecke + 1.6), RaumBau.leuchte("fff1d6", 1.6), 24)
+	unten_poly = PackedVector2Array([ecke - Vector2(0, 1.0), a + Vector2(0.4, 0.3), b + Vector2(-0.4, 0.3)])
+	unten_rect = Rect2(Vector2(b.x, ecke.y), Vector2(breite, vorn - ecke.y))
+	unten_pos = Vector2(0, vorn + 1.9)
 	unten_ziel = Vector2(0, vorn)
 
 # ---------------------------------------------------------------- Etage im Turm (Lounge, Restaurant)

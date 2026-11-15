@@ -188,7 +188,7 @@ func _lounge() -> void:
 
 # ---------------------------------------------------------------- 26 Penthouse
 func _zum_penthouse() -> void:
-	_vor({"pos": s.casino.aufzug_pos, "ziel": s.casino.aufzug_pos + Vector2(-2, 0)})
+	_vor({"pos": s.casino.aufzug_pos, "ziel": s.casino.aufzug_ziel})
 	await _warte(0.2)
 	s._taste(KEY_E)
 	await _warte(0.3)
@@ -360,9 +360,12 @@ func _bilder() -> void:
 	w.geld = 500000
 	s._ausruestung()
 	var l := s.laeufer
-	# 0: Express-Aufzug unten
-	_blick(Vector3(9, 2.2, 36), Vector3(0, 4, 17))
+	# 0: Express-Aufzug unten, danach der Aufzug im Casino
+	_blick(Vector3(8, 1.8, 33), Vector3(0, 4.5, 17))
 	await _foto(0)
+	var cm := s.casino.mitte
+	_blick(Vector3(cm.x - 4.0, 1.75, cm.y - 3.0), Vector3(s.casino.aufzug_ziel.x, 2.2, s.casino.aufzug_ziel.y))
+	await _foto(99)
 	# 1–2: Lounge
 	x._teleport("lounge")
 	_blick(Vector3(-7, x.sky.etagen.lounge.boden + 1.9, 3), Vector3(-17, x.sky.etagen.lounge.boden + 0.4, 10))
