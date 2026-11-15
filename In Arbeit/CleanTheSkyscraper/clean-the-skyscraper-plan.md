@@ -53,12 +53,17 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
    - **Flimmer-Fix (15.11.2026):** Der User hat Flimmern bemerkt. Gemessen per Testfahrt (`--ansicht=4`, Bild-zu-Bild-Änderung der feinen Details): weiche Kanten im Glas-Shader, Rahmen blenden mit der Entfernung über, SSIL aus. Zweite, richtige Messung gegen eine fein berechnete Referenz: **TAA ist unruhiger** (3,3) als gar nichts (2,4), am besten ist **2-faches Supersampling + MSAA 4x** (1,6), bei rund 190 FPS in 1440p → Standard. Später (Phase 5) als Einstellung „Bildqualität“ wählbar machen.
 1. [x] **Spielbarer Kern:** Gondel fahren, Fenster mit der Maus wischen (Dreck-Maske), Sauberkeit pro Fenster, Zähler „X von Y“, Geld
    - **Ergebnis (15.11.2026):**
-     - `skripte/fenster_zustand.gd`: Dreck pro Fenster als Datentextur (RG8, R = Dreck, G = Wisch-Slot) und 64 feine Wisch-Masken (32×64 px) in einem Atlas, nur für die Fenster, an denen gerade geputzt wird; ab 95 % gewischt ist ein Fenster sauber.
+     - `skripte/fenster_zustand.gd`: Dreck pro Fenster als Datentextur (RG8, R = Dreck, G = Wisch-Slot) und 64 feine Wisch-Masken (64×128 px) in einem Atlas, nur für die Fenster, an denen gerade geputzt wird; ab 95 % gewischt ist ein Fenster sauber.
      - `skripte/spieler.gd`: Gondel mit Ich-Ansicht. A/D fährt entlang des Umfangs, auch um die runden Flügelspitzen; W/S fährt hoch und runter, an einer Stufe springt die Gondel an die neue Fassade. Maus schaut um; linke Maustaste halten + Maus bewegen reibt den Schwamm über das Glas, die Striche werden lückenlos gestempelt, auch über Fenstergrenzen.
      - `skripte/hud.gd`: Zähler „X / 25.638“, Geld, Höhe, Fortschrittsbalken des Fensters unter dem Schwamm, „+1 €“ beim Fertigwerden; Funkeln am Fenster.
      - Lohn: 1 € + 1 € je 10 Stockwerke. Phase 1 reicht bis Stockwerk 18 (erste Stufe), `--frei` hebt die Sperre auf.
      - Testansichten: `--ansicht=5` (Schwamm fährt automatisch Schlangenlinien, über denselben Code wie mit der Maus), `--ansicht=6` (Testfahrt um die Flügelspitze und über die Stufe).
    - **Noch offen / aufgefallen:** Der Arm ist eine lange Stange, wenn der Schwamm weit weg ist (später als Teleskopstange gestalten). Es gibt noch kein Speichern (Phase 2) und keinen Ton (Phase 5). Mit dem kleinen Schwamm dauert ein Fenster je nach Tempo etwa 5–10 s.
+   - **Nach dem ersten Spieltest des Users (15.11.2026)** – drei Probleme behoben:
+     - *Schwamm und Umschauen gingen nicht:* Das Fadenkreuz (ColorRect, `mouse_filter` STOP) lag genau dort, wo die gefangene Maus steht, und hat alle Klicks und Bewegungen geschluckt. Jetzt lässt der ganze HUD die Maus durch. Neu ist ein Maus-Test (`--ansicht=8`), der echte Eingaben schickt; die Demos davor hatten den Schwamm direkt gesteuert und das nicht gemerkt.
+     - *Frei umschauen:* Man kann rundum schauen (360°) und fast senkrecht nach oben oder unten.
+     - *Flimmern an den Turmkanten:* Die Gondel richtet sich am Mittel der Fassaden-Normalen ±2 m aus und dreht weich (`lerp_angle` statt `slerp`; `slerp` hatte Fehlermeldungen wegen nicht normierter Achse geworfen). Die Rahmen glänzen weniger. Gemessen an der Ecke 3,4 → 1,9.
+     - Dazu doppelt so feine Wisch-Masken (64×128 px), die Kanten des Wisch-Strichs sind jetzt glatt.
 2. [ ] **Fortschritt und Wirtschaft:** Terrassen als Shop und Etappenziel, Werkzeuge, Gondel-Upgrades, Abschnitte freischalten, Speichern und Laden
 3. [ ] **Leben am Turm:** Szenen hinter den Fenstern und Sammelalbum, Tauben, Wind, Sandsturm, schönere Stadt
 4. [ ] **Automatik:** Helfer, Putzroboter, Drohnen, eventuell Fortschritt auch während man nicht spielt

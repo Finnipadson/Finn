@@ -59,6 +59,14 @@ func _ready() -> void:
 	kreuz.custom_minimum_size = Vector2(6, 6)
 	wurzel.add_child(kreuz)
 	_platz(kreuz, 0.5, 0.5, 0, 0)
+	_maus_durchlassen(wurzel)
+
+# Anzeigen dürfen keine Mausklicks/-bewegungen schlucken (die Maus steht im Spiel immer in der Bildmitte!)
+func _maus_durchlassen(n: Node) -> void:
+	if n is Control:
+		n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for c in n.get_children():
+		_maus_durchlassen(c)
 
 func _karte(ax: float, ay: float, ox: float, oy: float) -> PanelContainer:
 	var pc := PanelContainer.new()
@@ -125,6 +133,7 @@ func fortschritt(wert: float, sichtbar: bool) -> void:
 # Kurze Einblendung, die nach oben wegschwebt (z. B. „+1 €“)
 func pop(t: String, farbe := "2e8b3d") -> void:
 	var l := _label(wurzel, t, 30, "ffffff")
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.label_settings.outline_size = 9
 	l.label_settings.outline_color = Color(farbe)
 	l.custom_minimum_size = Vector2(300, 0)

@@ -155,7 +155,7 @@ func _spiel_starten() -> void:
 	hud = Hud.new()
 	add_child(hud)
 	_grafik()
-	if ansicht >= 5:
+	if ansicht >= 5 and ansicht != 8:
 		spieler.gesperrt = true
 		spieler.yaw = 0.25
 		spieler.pitch = 0.05
@@ -216,6 +216,11 @@ func _funkel_textur() -> Texture2D:
 func _spiel_takt(dt: float) -> void:
 	if ansicht == 5:
 		_demo(dt)
+	elif ansicht == 8:
+		_maus_test(dt)
+	elif ansicht == 7:
+		# Testfahrt waagerecht um Flügelspitzen und Innenecken (Flimmern an Kanten)
+		spieler.weg += 4.0 * dt
 	elif ansicht == 6:
 		# Testfahrt: seitlich um die Flügelspitze und nach oben über eine Stufe
 		spieler.weg += 5.0 * dt
@@ -240,6 +245,43 @@ func _demo(dt: float) -> void:
 	if r % 2 == 1:
 		t = 1.0 - t
 	spieler.schwamm_off = Vector2(lerpf(-1.7, 1.2, t), lerpf(0.35, 2.5, float(r) / (reihen - 1)))
+
+# Test: echte Maus-Ereignisse durch das ganze Eingabesystem schicken (wie beim Spielen)
+var _mt_schritt := 0
+func _maus_test(dt: float) -> void:
+	demo_zeit += dt
+	var mitte := get_viewport().get_visible_rect().size * 0.5
+	if _mt_schritt == 0 and demo_zeit > 0.3:
+		_klick(mitte, true)
+		_klick(mitte, false)           # 1. Klick: Maus fangen
+		_mt_schritt = 1
+	elif _mt_schritt == 1 and demo_zeit > 0.6:
+		_klick(mitte, true)            # gedrückt halten → putzen
+		_mt_schritt = 2
+	elif _mt_schritt == 2:
+		var b := InputEventMouseMotion.new()
+		b.position = mitte
+		b.relative = Vector2(cos(demo_zeit * 7.0) * 60.0, sin(demo_zeit * 2.3) * 25.0)
+		Input.parse_input_event(b)
+		if demo_zeit > 3.0:
+			_klick(mitte, false)
+			print("TEST putzen: Fortschritt=%.2f sauber=%d wischt=%s" % [zustand.fortschritt(spieler.stock, int(fposmod(spieler.weg, turm.umfaenge[spieler.stock]) / Turm.FENSTER_B)), zustand.sauber_zahl, spieler.wischt])
+			_mt_schritt = 3
+	elif _mt_schritt == 3 and demo_zeit < 4.0:
+		var b2 := InputEventMouseMotion.new()
+		b2.position = mitte
+		b2.relative = Vector2(-25.0, 0.0)  # umschauen nach links
+		Input.parse_input_event(b2)
+	elif _mt_schritt == 3:
+		print("TEST umschauen: yaw=%.2f rad (Ziel > 1.0)" % spieler.yaw)
+		_mt_schritt = 4
+
+func _klick(p: Vector2, gedrueckt: bool) -> void:
+	var e := InputEventMouseButton.new()
+	e.button_index = MOUSE_BUTTON_LEFT
+	e.pressed = gedrueckt
+	e.position = p
+	Input.parse_input_event(e)
 
 func _process(dt: float) -> void:
 	if spiel:

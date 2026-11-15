@@ -21,6 +21,7 @@ uniform sampler2D zustand : filter_nearest;
 uniform sampler2D wisch : filter_linear;
 uniform vec2 zustand_px = vec2(1.0, 1.0);
 uniform vec2 slots = vec2(16.0, 4.0);
+uniform vec2 slot_px = vec2(64.0, 128.0);
 
 varying vec3 wp;
 varying vec3 wt;
@@ -99,7 +100,7 @@ void fragment() {
 		float slot = floor(zs.g * 255.0 + 0.5) - 1.0;
 		if (slot >= 0.0) {
 			vec2 sp = vec2(mod(slot, slots.x), floor(slot / slots.x));
-			vec2 lp = clamp(vec2(f.x, rp.y), vec2(0.5 / 32.0, 0.5 / 64.0), vec2(1.0 - 0.5 / 32.0, 1.0 - 0.5 / 64.0));
+			vec2 lp = clamp(vec2(f.x, rp.y), 0.5 / slot_px, 1.0 - 0.5 / slot_px);
 			maske = texture(wisch, (sp + lp) / slots).r;
 		}
 	}

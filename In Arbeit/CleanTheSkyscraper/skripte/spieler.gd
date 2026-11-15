@@ -27,6 +27,7 @@ var pitch := -0.08
 var gondel: Node3D
 var cam: Camera3D
 var normal := Vector3.BACK
+var winkel := 0.0             # Blickrichtung der Gondel (geglättet)
 var rechts := Vector3.RIGHT   # Bildschirm-rechts entlang der Fassade
 var richtung := 1.0           # +1 wenn „rechts“ den Weg vergrößert
 var glas_punkt := Vector3.ZERO
@@ -107,7 +108,7 @@ func _box(eltern: Node3D, groesse: Vector3, p: Vector3, m: Material) -> MeshInst
 	return mi
 
 # ---------------------------------------------------------------- Eingaben
-func _unhandled_input(e: InputEvent) -> void:
+func _input(e: InputEvent) -> void:
 	if gesperrt:
 		return
 	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
@@ -122,8 +123,8 @@ func _unhandled_input(e: InputEvent) -> void:
 			schwamm_off += Vector2(e.relative.x, -e.relative.y) * MAUS_WISCH
 			_begrenzen()
 		else:
-			yaw = clampf(yaw - e.relative.x * MAUS_LOOK, -1.9, 1.9)
-			pitch = clampf(pitch - e.relative.y * MAUS_LOOK, -1.45, 1.4)
+			yaw = wrapf(yaw - e.relative.x * MAUS_LOOK, -PI, PI)   # rundum frei umschauen
+			pitch = clampf(pitch - e.relative.y * MAUS_LOOK, -1.5, 1.5)
 	elif e is InputEventKey and e.pressed and e.keycode == KEY_ESCAPE:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		wischt = false
@@ -163,16 +164,25 @@ func _process(dt: float) -> void:
 
 func _platzieren(dt: float) -> void:
 	var f := turm.stockwerk_bei(y + 1.2)
+	var sprung := false
 	if f != stock:
 		if not turm.gleicher_grundriss(f, stock):
 			# Grundriss ändert sich (Stufe): an die nächstgelegene Stelle der neuen Fassade springen
 			weg = turm.naechster_weg(f, Vector2(glas_punkt.x, glas_punkt.z))
+			sprung = true
 		stock = f
 	weg = fposmod(weg, turm.umfaenge[stock])
 	var p := turm.fassaden_punkt(stock, weg, y)
 	glas_punkt = p.pos
-	var k := 1.0 if dt <= 0.0 else minf(1.0, dt * 7.0)
-	normal = normal.slerp(p.normal, k).normalized() if normal.dot(p.normal) > -0.99 else p.normal
+	# Ausrichtung: Mittel der Fassaden-Normalen ±2 m um die Gondel, dann weich hindrehen.
+	# So dreht die Gondel an Ecken und Rundungen gleichmäßig statt von Fassadenstück zu Fassadenstück zu springen.
+	var ziel_n := Vector3.ZERO
+	for o in [-2.0, -1.0, 0.0, 1.0, 2.0]:
+		ziel_n += turm.fassaden_punkt(stock, weg + o, y).normal
+	ziel_n = ziel_n.normalized() if ziel_n.length() > 0.01 else p.normal
+	var ziel_w := atan2(ziel_n.x, ziel_n.z)
+	winkel = ziel_w if (dt <= 0.0 or sprung) else lerp_angle(winkel, ziel_w, minf(1.0, dt * 5.0))
+	normal = Vector3(sin(winkel), 0.0, cos(winkel))
 	gondel.position = glas_punkt + normal * ABSTAND
 	gondel.basis = Basis.looking_at(-normal, Vector3.UP)
 	rechts = gondel.basis.x

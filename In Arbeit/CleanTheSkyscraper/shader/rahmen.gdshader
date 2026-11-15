@@ -16,6 +16,7 @@ void vertex() {
 void fragment() {
 	float k = smoothstep(fern_ab, fern_bis, dist);
 	ALBEDO = mix(farbe, fern_farbe, k);
-	METALLIC = mix(0.85, 0.3, k);
-	ROUGHNESS = mix(0.3, 0.6, k);
+	// wenig Metall + etwas rau: kein hartes Glitzern an den Kanten, wenn sich die Gondel dreht
+	METALLIC = mix(0.35, 0.2, k);
+	ROUGHNESS = mix(0.45, 0.6, k);
 }

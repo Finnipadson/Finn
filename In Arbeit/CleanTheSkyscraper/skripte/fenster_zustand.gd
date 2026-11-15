@@ -5,8 +5,8 @@ extends RefCounted
 #  - wisch (R8-Atlas): für Fenster, an denen gerade geputzt wird, eine feine Maske (1 = dreckig, 0 = schon gewischt)
 # So bleibt es auch bei 25.000 Fenstern schnell: feine Masken gibt es nur für die paar Fenster vor der Gondel.
 
-const SLOT_W := 32
-const SLOT_H := 64
+const SLOT_W := 64
+const SLOT_H := 128
 const SLOTS_X := 16
 const SLOTS_Y := 4
 const SAUBER_AB := 0.95      # ab so viel gewischter Fläche zählt das Fenster als sauber
@@ -60,6 +60,7 @@ func verbinde(m: ShaderMaterial) -> void:
 	m.set_shader_parameter("wisch", atlas_tex)
 	m.set_shader_parameter("zustand_px", Vector2(breite, Turm.STOCKWERKE))
 	m.set_shader_parameter("slots", Vector2(SLOTS_X, SLOTS_Y))
+	m.set_shader_parameter("slot_px", Vector2(SLOT_W, SLOT_H))
 
 func ist_sauber(f: int, spalte: int) -> bool:
 	if spalte < 0 or spalte >= turm.fenster_pro_stock[f]:

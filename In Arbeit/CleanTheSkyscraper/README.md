@@ -52,6 +52,10 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=4`: Testfahrt an der Fassade (zum Messen von Flimmern)
 - `--ansicht=5`: Spiel-Demo, der Schwamm putzt automatisch in Schlangenlinien
 - `--ansicht=6`: Gondel-Testfahrt um die Flügelspitze und über die Stufe (mit `--frei`)
+- `--ansicht=7`: waagerechte Testfahrt um Flügelspitzen und Innenecken (Flimmern an Kanten)
+- `--ansicht=8`: Maus-Test. Schickt echte Klicks und Mausbewegungen durch das Eingabesystem, putzt und schaut um, und gibt `TEST …` auf der Konsole aus.
+
+**Wichtig:** Im Spiel steht die gefangene Maus immer in der Bildmitte. Jedes Control dort, das Klicks abfängt (`mouse_filter` = STOP, der Standard bei ColorRect und PanelContainer), schluckt alle Eingaben. Deshalb setzt `Hud._maus_durchlassen()` alles auf IGNORE.
 
 Grafik-Schalter zum Vergleichen: `--taa=0|1 --msaa=0..3 --smaa=0|1 --scale=10..20 --fsr=0|1 --ssr=0|1 --ssil=0|1`, dazu `--fpstest=1` (gibt nach 6 s die FPS aus und beendet).
 
