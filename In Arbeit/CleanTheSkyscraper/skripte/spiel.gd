@@ -241,6 +241,7 @@ func _process(dt: float) -> void:
 		12: _ereignis_test(dt)
 		13: _lauf_test(dt)
 		14: _haendler_test(dt)
+		15: _kiosk_bilder(dt)
 	if ansicht == 0 or ansicht == 12:
 		ereignisse.takt(dt)
 	# Neue Höhe erreicht (je 6 Stockwerke = ein Abschnitt): einmaliger Bonus + Aussicht feiern
@@ -427,6 +428,20 @@ func _szenen_test(_dt: float) -> void:
 			_fenster_sauber(f, sp)
 		spieler.pitch = 0.18
 		print("TEST album: %s" % [wirtschaft.album])
+
+# 15: nacheinander vor jeden Kiosk stellen (für Testbilder)
+func _kiosk_bilder(dt: float) -> void:
+	demo_zeit += dt
+	if spieler.aktiv:
+		spieler.y = 0.3
+		_ein_aus()
+	var i := mini(int(demo_zeit / 1.5), 2) if demo_zeit < 4.5 else mini(int((demo_zeit - 4.5) / 1.5), 2)
+	var v: Vector2 = haendler.vorne[i]
+	var r := v.normalized()
+	var weit := 7.0 if demo_zeit < 4.5 else 1.6   # danach jeden Kiosk von nah
+	laeufer.position = Vector3(v.x - r.x * weit, 0, v.y - r.y * weit)
+	laeufer.yaw = atan2(-r.x, -r.y) + (0.25 if demo_zeit < 4.5 else 0.0)
+	laeufer.pitch = 0.02
 
 # 14: zu den Ständen gehen, mit E öffnen, über die echten Knöpfe kaufen, Wirkung prüfen
 var _ht := 0

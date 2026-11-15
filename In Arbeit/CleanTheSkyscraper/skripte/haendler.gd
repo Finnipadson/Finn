@@ -1,175 +1,165 @@
 class_name Haendler
 extends Node3D
-# Drei Marktstände auf dem Händler-Stellplatz, jeweils mit Verkäufer-Figur.
-# Zu Fuß vor einen Stand gehen und E drücken → HaendlerMenu öffnet sich.
+# Drei moderne Kioske auf dem Platz (in den Lücken zwischen den Turmflügeln), jeder mit Verkäufer.
+# Gebäude (Glas, Dach, Leuchtschild, Theke) aus Code, Einrichtung + Figuren aus Kenney-Paketen (CC0):
+# Mini Market (modelle/laden), Mini Characters (modelle/leute), Food Kit (modelle/essen), City Kit Commercial (modelle/stadt).
+# Zu Fuß vor einen Kiosk gehen und E drücken → HaendlerMenu öffnet sich.
 
 const STAENDE := [
-	{"id": "putz", "name": "Putzmittel", "farbe": "2f86c8", "streifen": "ffffff", "figur": "2f86c8"},
-	{"id": "mode", "name": "Mode & Farben", "farbe": "d84f9a", "streifen": "ffe3f1", "figur": "8a4fd8"},
-	{"id": "snack", "name": "Snacks", "farbe": "e08a1e", "streifen": "fff3d6", "figur": "e2483e"},
+	{"id": "putz", "name": "Putzmittel", "farbe": "2f86c8", "dunkel": "1d5a8a", "figur": "leute/character-worker"},
+	{"id": "mode", "name": "Mode & Farben", "farbe": "d84f9a", "dunkel": "8f2f63", "figur": "leute/character-female-c"},
+	{"id": "snack", "name": "Snacks", "farbe": "e08a1e", "dunkel": "9a5a10", "figur": "laden/character-employee"},
 ]
-const NAH := 2.6                 # so nah muss man vor dem Stand stehen
+const NAH := 2.8                 # so nah muss man vor dem Kiosk stehen
+const MINI := 2.25               # Kenney-Mini-Modelle auf Menschengröße bringen
+const BREIT := 4.6               # Kiosk-Breite (m)
+const TIEF := 3.2
 
-var vorne: Array = []            # Vector2: Punkt vor jedem Stand (zum Ansprechen)
+var vorne: Array = []            # Vector2: Punkt vor jedem Kiosk (zum Ansprechen)
 var rechtecke: Array = []        # Rect2 für die Kollision zu Fuß
-var figuren: Array = []          # Verkäufer (winken ein bisschen)
+var glas_mat: StandardMaterial3D
 
 func setup(orte: Array) -> void:
+	glas_mat = StandardMaterial3D.new()
+	glas_mat.albedo_color = Color(0.75, 0.88, 0.95, 0.28)
+	glas_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	glas_mat.metallic = 0.3
+	glas_mat.roughness = 0.05
 	for i in STAENDE.size():
 		var sp: Dictionary = STAENDE[i]
 		var ort: Vector3 = orte[i % orte.size()]
 		var p2 := Vector2(ort.x, ort.z)
 		var r := p2.normalized()      # von der Turmmitte nach außen
-		var stand := _stand(sp)
-		stand.position = Vector3(p2.x, 0, p2.y)
-		stand.basis = Basis.looking_at(Vector3(-r.x, 0, -r.y), Vector3.UP)   # Front zum Turm
-		add_child(stand)
-		vorne.append(p2 - r * 2.0)
-		rechtecke.append(Rect2(p2 - Vector2(2.0, 2.0), Vector2(4.0, 4.0)))
+		var kiosk := _kiosk(sp)
+		kiosk.position = Vector3(p2.x, 0, p2.y)
+		kiosk.basis = Basis.looking_at(Vector3(-r.x, 0, -r.y), Vector3.UP)   # Front (−Z) zum Turm
+		add_child(kiosk)
+		vorne.append(p2 - r * 2.7)
+		rechtecke.append(Rect2(p2 - Vector2(2.4, 2.4), Vector2(4.8, 4.8)))
+		if sp.id == "snack":
+			_sitzecke(p2, r)
 
-# Welcher Stand ist nah genug? (-1 = keiner)
+# Welcher Kiosk ist nah genug? (-1 = keiner)
 func stand_bei(p: Vector2) -> int:
 	for i in vorne.size():
 		if p.distance_to(vorne[i]) < NAH:
 			return i
 	return -1
 
-func _process(_dt: float) -> void:
-	var zeit := Time.get_ticks_msec() / 1000.0
-	for i in figuren.size():
-		var arm: Node3D = figuren[i]
-		arm.rotation.z = 2.4 + sin(zeit * 3.0 + i) * 0.35
-
-# ---------------------------------------------------------------- Modell
-func _box(eltern: Node3D, g: Vector3, p: Vector3, farbe: String, rau := 0.8) -> MeshInstance3D:
+# ---------------------------------------------------------------- Bausteine
+func _box(eltern: Node3D, g: Vector3, p: Vector3, m: Material) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var bm := BoxMesh.new()
 	bm.size = g
 	mi.mesh = bm
-	mi.material_override = Bau.matt(farbe, rau)
+	mi.material_override = m
 	mi.position = p
 	eltern.add_child(mi)
 	return mi
 
-func _stand(sp: Dictionary) -> Node3D:
-	var n := Node3D.new()
-	var holz := "a8794f"
-	# Theke (vorne = -Z)
-	_box(n, Vector3(3.4, 1.0, 1.0), Vector3(0, 0.5, -0.6), holz)
-	_box(n, Vector3(3.5, 0.08, 1.1), Vector3(0, 1.04, -0.6), "d9b98a")
-	_box(n, Vector3(3.4, 0.6, 0.04), Vector3(0, 0.55, -1.11), sp.farbe)
-	# Pfosten + Rückwand
-	for x in [-1.65, 1.65]:
-		for z in [-1.05, 1.0]:
-			_box(n, Vector3(0.12, 2.6, 0.12), Vector3(x, 1.3, z), holz)
-	_box(n, Vector3(3.4, 1.4, 0.06), Vector3(0, 1.6, 1.0), "efe6d6")
-	# gestreiftes Dach (leicht geneigt)
-	var dach := Node3D.new()
-	dach.position = Vector3(0, 2.7, -0.05)
-	dach.rotation.x = 0.18
-	n.add_child(dach)
-	for k in 8:
-		_box(dach, Vector3(0.44, 0.06, 2.6), Vector3(-1.54 + k * 0.44, 0, 0), sp.farbe if k % 2 == 0 else sp.streifen, 0.7)
-	for k in 8:   # Zacken vorne
-		var z := MeshInstance3D.new()
-		var cm := CylinderMesh.new()
-		cm.top_radius = 0.22
-		cm.bottom_radius = 0.0
-		cm.height = 0.28
-		cm.radial_segments = 3
-		z.mesh = cm
-		z.material_override = Bau.matt(sp.farbe if k % 2 == 0 else sp.streifen, 0.7)
-		z.position = Vector3(-1.54 + k * 0.44, -0.16, -1.3)
-		dach.add_child(z)
-	# Schild
-	var schild := Label3D.new()
-	schild.text = sp.name
-	schild.font_size = 110
-	schild.pixel_size = 0.005
-	schild.outline_size = 22
-	schild.modulate = Color(sp.farbe)
-	schild.outline_modulate = Color.WHITE
-	schild.position = Vector3(0, 3.25, -1.0)
-	schild.rotation.y = PI
-	n.add_child(schild)
-	_waren(n, sp.id)
-	_figur(n, sp.figur)
+# Kenney-Modell laden; s = Maßstab, dreh = Drehung um Y
+func _modell(name: String, p: Vector3, eltern: Node3D, s := MINI, dreh := 0.0) -> Node3D:
+	var pfad := "res://modelle/%s.glb" % name
+	if not ResourceLoader.exists(pfad):
+		push_warning("Modell fehlt: " + pfad)
+		return Node3D.new()
+	var n: Node3D = load(pfad).instantiate()
+	n.position = p
+	n.rotation.y = dreh
+	n.scale = Vector3.ONE * s
+	eltern.add_child(n)
+	var ap := n.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if ap:   # Figuren: Ruhe-Animation abspielen
+		var namen := ap.get_animation_list()
+		var wahl := ""
+		for a in namen:
+			if "idle" in a.to_lower():
+				wahl = a
+				break
+		if wahl == "" and namen.size() > 0:
+			wahl = namen[0]
+		if wahl != "":
+			ap.get_animation(wahl).loop_mode = Animation.LOOP_LINEAR
+			ap.play(wahl)
 	return n
 
-func _waren(n: Node3D, id: String) -> void:
-	match id:
+# ---------------------------------------------------------------- Kiosk (Front = −Z)
+func _kiosk(sp: Dictionary) -> Node3D:
+	var n := Node3D.new()
+	var weiss := Bau.matt("f4f4f2", 0.5)
+	var grau := Bau.matt("3b3f46", 0.7)
+	var farbe := Bau.matt(sp.farbe, 0.45)
+	var dunkel := Bau.matt(sp.dunkel, 0.6)
+	var h := 2.8
+	_box(n, Vector3(BREIT + 0.3, 0.14, TIEF + 0.3), Vector3(0, 0.07, 0), grau)                     # Sockel
+	_box(n, Vector3(BREIT, h, 0.12), Vector3(0, h * 0.5, TIEF * 0.5), dunkel)                       # Rückwand
+	for s in [-1.0, 1.0]:
+		_box(n, Vector3(0.08, h, TIEF), Vector3(s * BREIT * 0.5, h * 0.5, 0), glas_mat)             # Glas-Seitenwände
+		_box(n, Vector3(0.12, h, 0.12), Vector3(s * BREIT * 0.5, h * 0.5, -TIEF * 0.5), weiss)      # Eckpfosten vorne
+		_box(n, Vector3(0.12, h, 0.12), Vector3(s * BREIT * 0.5, h * 0.5, TIEF * 0.5), weiss)
+	_box(n, Vector3(BREIT + 0.6, 0.22, TIEF + 0.9), Vector3(0, h + 0.11, -0.2), weiss)             # Flachdach (vorne überstehend)
+	_box(n, Vector3(BREIT + 0.62, 0.55, 0.12), Vector3(0, h + 0.05, -TIEF * 0.5 - 0.62), farbe)    # Blende fürs Leuchtschild
+	_box(n, Vector3(BREIT - 0.2, 0.06, TIEF - 0.4), Vector3(0, h - 0.04, 0), Bau.matt("fff6dc", 0.3))  # Deckenlicht-Fläche
+	var licht := OmniLight3D.new()
+	licht.position = Vector3(0, h - 0.5, 0)
+	licht.light_energy = 1.2
+	licht.omni_range = 5.0
+	licht.light_color = Color("fff1d6")
+	n.add_child(licht)
+	# Theke vorne
+	_box(n, Vector3(BREIT - 0.3, 1.0, 0.6), Vector3(0, 0.5 + 0.07, -TIEF * 0.5 + 0.3), farbe)
+	_box(n, Vector3(BREIT - 0.1, 0.07, 0.75), Vector3(0, 1.1, -TIEF * 0.5 + 0.3), weiss)
+	# Leuchtschild
+	var schild := Label3D.new()
+	schild.text = sp.name.to_upper()
+	schild.font_size = 120
+	schild.pixel_size = 0.0042
+	schild.outline_size = 0
+	schild.modulate = Color.WHITE
+	schild.shaded = false
+	schild.position = Vector3(0, h + 0.05, -TIEF * 0.5 - 0.69)
+	schild.rotation.y = PI
+	n.add_child(schild)
+	# Verkäufer hinter der Theke (Kenney-Figuren schauen schon nach −Z, also zur Theke)
+	_box(n, Vector3(1.2, 0.3, 1.0), Vector3(0.35, 0.29, -0.4), Bau.matt("3b3f46", 0.7))   # Podest hinter der Theke
+	_modell(sp.figur, Vector3(0.35, 0.44, -0.4), n, 2.6, PI)
+	match sp.id:
 		"putz":
-			for i in 7:
-				var f := Bau.zylinder(0.07, 0.08, 0.32, Bau.matt(["2f86c8", "3fc29a", "ffd84a"][i % 3], 0.4), 10)
-				f.position = Vector3(-1.4 + i * 0.4, 1.24, -0.75)
-				n.add_child(f)
-				_box(n, Vector3(0.05, 0.08, 0.05), Vector3(-1.4 + i * 0.4, 1.44, -0.75), "e2483e")
+			_modell("laden/shelf-boxes", Vector3(-1.3, 0.14, 1.05), n, MINI)
+			_modell("laden/shelf-bags", Vector3(0.6, 0.14, 1.05), n, MINI)
+			_modell("laden/display-cans", Vector3(-1.4, 0.14, -0.2), n, 1.5)
+			_modell("laden/cash-register", Vector3(1.4, 1.14, -1.25), n, 0.9, PI)
 		"mode":
-			for i in 6:
-				_box(n, Vector3(0.36, 0.5, 0.06), Vector3(-1.3 + i * 0.52, 1.75, 0.9), ["e2483e", "3a86d4", "3fc29a", "ff4fb8", "e8b53a", "2b2d33"][i])
-			for i in 4:
-				var dose := Bau.zylinder(0.12, 0.12, 0.2, Bau.matt(["ff8a1e", "5ab8ff", "9a6ad6", "ffd84a"][i], 0.5), 12)
-				dose.position = Vector3(-1.0 + i * 0.6, 1.18, -0.7)
-				n.add_child(dose)
+			_modell("laden/clothing-rack", Vector3(-1.2, 0.14, 0.9), n, MINI)
+			_modell("laden/clothing-rack", Vector3(1.0, 0.14, 0.9), n, MINI)
+			_modell("laden/clothing-table", Vector3(-1.3, 1.14, -1.25), n, 1.1, PI)
+			_modell("laden/mannequin", Vector3(-BREIT * 0.5 - 0.9, 0.0, -TIEF * 0.5 - 0.3), n, 2.4, PI)
+			_modell("laden/mannequin", Vector3(BREIT * 0.5 + 0.9, 0.0, -TIEF * 0.5 - 0.3), n, 2.4, PI)
 		"snack":
-			for i in 4:
-				var becher := Bau.zylinder(0.07, 0.055, 0.18, Bau.matt("f4ede2", 0.6), 10)
-				becher.position = Vector3(-1.3 + i * 0.3, 1.17, -0.75)
-				n.add_child(becher)
-			for i in 3:
-				var waffel := Bau.zylinder(0.07, 0.0, 0.22, Bau.matt("d9a35a", 0.7), 8)
-				waffel.position = Vector3(0.4 + i * 0.35, 1.2, -0.75)
-				n.add_child(waffel)
-				var kugel := MeshInstance3D.new()
-				var sm := SphereMesh.new()
-				sm.radius = 0.08
-				sm.height = 0.16
-				kugel.mesh = sm
-				kugel.material_override = Bau.matt(["ff9ec4", "fff3d6", "8a5a3a"][i], 0.6)
-				kugel.position = Vector3(0.4 + i * 0.35, 1.34, -0.75)
-				n.add_child(kugel)
-			var limo := Bau.zylinder(0.25, 0.25, 0.5, Bau.matt("f2e04a", 0.2), 16)
-			limo.position = Vector3(1.4, 1.33, -0.3)
-			n.add_child(limo)
+			_modell("laden/freezers-standing", Vector3(-1.1, 0.14, 1.05), n, MINI)
+			_modell("laden/display-bread", Vector3(1.2, 0.14, 1.0), n, MINI)
+			_modell("laden/freezer", Vector3(-BREIT * 0.5 - 1.0, 0.0, -TIEF * 0.5 + 0.4), n, MINI, PI / 2.0)
+			var x := -1.6
+			for e in ["essen/cup-coffee", "essen/mug", "essen/ice-cream-cone", "essen/sundae", "essen/soda-can", "essen/lemon", "essen/donut-sprinkles"]:
+				_modell(e, Vector3(x, 1.14, -1.35), n, 1.25, PI)
+				x += 0.42
+	return n
 
-func _figur(n: Node3D, farbe: String) -> void:
-	var f := Node3D.new()
-	f.position = Vector3(0.3, 0, 0.2)
-	n.add_child(f)
-	var haut := Bau.matt("f1c29b", 0.6)
-	var koerper := MeshInstance3D.new()
-	var km := CapsuleMesh.new()
-	km.radius = 0.28
-	km.height = 1.3
-	koerper.mesh = km
-	koerper.material_override = Bau.matt(farbe, 0.8)
-	koerper.position = Vector3(0, 0.95, 0)
-	f.add_child(koerper)
-	var kopf := MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = 0.2
-	sm.height = 0.4
-	kopf.mesh = sm
-	kopf.material_override = haut
-	kopf.position = Vector3(0, 1.8, 0)
-	f.add_child(kopf)
-	var muetze := Bau.zylinder(0.19, 0.21, 0.14, Bau.matt("ffffff", 0.7), 14)
-	muetze.position = Vector3(0, 1.98, 0)
-	f.add_child(muetze)
-	for s in [-1, 1]:
-		var auge := MeshInstance3D.new()
-		var am := SphereMesh.new()
-		am.radius = 0.025
-		am.height = 0.05
-		auge.mesh = am
-		auge.material_override = Bau.matt("222222", 0.4)
-		auge.position = Vector3(0.07 * s, 1.84, -0.18)
-		f.add_child(auge)
-	# winkender Arm
-	var schulter := Node3D.new()
-	schulter.position = Vector3(-0.3, 1.35, 0)
-	f.add_child(schulter)
-	var arm := Bau.zylinder(0.06, 0.06, 0.55, Bau.matt(farbe, 0.8), 8)
-	arm.position = Vector3(0, -0.27, 0)
-	schulter.add_child(arm)
-	figuren.append(schulter)
+# Sonnenschirme mit Tischen vor dem Snack-Kiosk
+func _sitzecke(p2: Vector2, r: Vector2) -> void:
+	var t := Vector2(-r.y, r.x)
+	var bein_mat := Bau.metall("9aa0a8", 0.4, 0.6)
+	for k in [-1.0, 1.0]:
+		var m: Vector2 = p2 - r * 7.0 + t * (k * 3.6)
+		var schirm := _modell("stadt/detail-parasol-a" if k < 0 else "stadt/detail-parasol-b", Vector3(m.x, 0, m.y), self, 5.5)
+		schirm.position.y = 0.0
+		# der Kenney-Sonnenschirm bringt seinen Tisch schon mit
+		for j in 3:   # Hocker
+			var a := TAU * j / 3.0
+			var h := Bau.zylinder(0.2, 0.2, 0.06, Bau.matt(STAENDE[2].farbe, 0.5), 14)
+			h.position = Vector3(m.x + cos(a) * 1.0, 0.45, m.y + sin(a) * 1.0)
+			add_child(h)
+			var hb := Bau.zylinder(0.03, 0.03, 0.45, bein_mat, 6)
+			hb.position = Vector3(m.x + cos(a) * 1.0, 0.225, m.y + sin(a) * 1.0)
+			add_child(hb)
+		rechtecke.append(Rect2(m - Vector2(0.7, 0.7), Vector2(1.4, 1.4)))

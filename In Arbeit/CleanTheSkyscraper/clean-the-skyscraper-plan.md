@@ -112,6 +112,13 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - Boosts: Nochmal kaufen verlängert sie. Der Preis steigt mit der erreichten Höhe (+35 % je Abschnitt). Die Restzeit steht unter dem Geld und wird gespeichert.
      - **Mode & Farben:** 6 Gondelfarben (Gold glänzt metallisch), 4 Jacken/Overalls (Farbe des Arms), 4 Schwammfarben. Kaufen, danach jederzeit „Anziehen“. Nur Optik, wird gespeichert.
      - Alle Zahlen stehen in `wirtschaft.gd` (`BOOSTS`, `KOSMETIK`).
+     - **Umbau nach Rückmeldung des Users (15.11.2026):** Stadt noch näher (Platz 100 m), Stände verteilt in den drei Lücken zwischen den Turmflügeln (`Welt.STAND_WINKEL`), Casino-Grundstück hinter einer Flügelspitze in der Stadt (`Welt.CASINO_*`).
+     - **Moderne Kioske statt Marktständen:** Das zuerst gefundene Fantasy Town Kit ist mittelalterlich und passt nicht zur modernen Stadt (Wunsch des Users: vorher prüfen). Deshalb aus Code ein Glas-Kiosk mit Flachdach, farbigem Leuchtschild, Deckenlicht und Theke. Einrichtung und Figuren aus Kenney-Paketen (CC0, Vorschaubilder geprüft), in `modelle/` mit eigenen Textur-Ordnern:
+       - `laden/`: Mini Market – Regale, Kasse, Kleiderständer, Schaufensterpuppen, Kühlschrank, Eistruhe, Brot-Auslage
+       - `leute/`: Mini Characters – Verkäufer
+       - `essen/`: Food Kit – Kaffee, Eis, Limo, Donut, Zitrone …
+       - `stadt/`: City Kit Commercial – Sonnenschirme mit Tisch vor dem Snack-Kiosk
+     - Kenney-Mini-Modelle werden ×2,25 skaliert, Figuren stehen auf einem Podest und sind um 180° gedreht (sie schauen von Haus aus nach +Z). Größen misst `tools/messen.gd`. Testbilder: `--ansicht=15`.
      - Test `--ansicht=14 --geld=10000`: an alle drei Stände gehen, mit E öffnen, über die echten Knöpfe kaufen, Wirkung prüfen. Bestanden.
    - Bezahlt wird nur mit Spielgeld, es gibt nie Käufe mit echtem Geld. Einsatzgrenzen, damit man sich nicht in einer Minute alles verspielt.
    - Offen: Der Stellplatz für das Casino (18 × 18 m) wird für ein begehbares Gebäude wahrscheinlich größer; Preise und Dauer der Boosts noch festlegen.

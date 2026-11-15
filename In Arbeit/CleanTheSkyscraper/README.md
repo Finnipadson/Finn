@@ -40,7 +40,9 @@ skripte/spiel.gd       Spiel-Logik: Geld, Funkeln, Werkstatt, Speichern/Laden (u
 skripte/wirtschaft.gd  Zahlen zum Ausbalancieren: Lohn, Werkzeuge, Upgrades, Preise
 skripte/shop.gd        Werkstatt-Fenster
 skripte/laeufer.gd     Zu Fuß am Boden: Laufen, Springen, Kollision mit Turm/Häusern/Gondel
-skripte/haendler.gd    Drei Marktstände mit Verkäufern (Händler-Stellplatz)
+skripte/haendler.gd    Drei moderne Glas-Kioske mit Verkäufern, verteilt zwischen den Turmflügeln
+modelle/               Kenney-Modelle (CC0): laden/ (Mini Market), leute/ (Mini Characters), essen/ (Food Kit), stadt/ (City Kit Commercial) – je mit Textures/ und Lizenz
+tools/messen.gd        Größen aller Modelle ausgeben: godot --path . --headless --script tools/messen.gd
 skripte/haendler_menu.gd  Menü der Stände: Boosts kaufen, Aussehen kaufen/anziehen
 skripte/album.gd       Sammelalbum (Taste B)
 skripte/ereignisse.gd  Tauben, Windböen, Sandsturm (Zeiten oben im Skript)
@@ -72,6 +74,7 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=9 --geld=10000`: Shop-Test (Tab, echte Knöpfe, Werkzeugtasten, Hochdruck)
 - `--ansicht=10 --geld=500`, danach `--ansicht=10`: Speichern und Laden (nur `user://spielstand_test.json`)
 - `--ansicht=11`: alle 10 Szenen in den Fenstern vor der Gondel, Album-Test
+- `--ansicht=15`: nacheinander vor jedem Kiosk, erst von weitem, dann von nah (Testbilder)
 - `--ansicht=14 --geld=10000`: Händler-Test (alle Stände, echte Knöpfe, Wirkung der Boosts und Farben)
 - `--ansicht=13`: Aussteigen, Laufen, Kollision, Einsteigen, Einstellungen-Knöpfe
 - `--ansicht=12`: Taube, Windböe und Sandsturm sofort auslösen
