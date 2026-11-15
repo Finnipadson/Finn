@@ -5,7 +5,16 @@ Ideen-Inbox für **neue** Sachen: ein neues Spiel, eine neue App, irgendwas, das
 
 ## Spiele
 
--
+- [ ] **Absurd riesige Fleißaufgabe** (15.11.2026)
+	- Idee: Spiel, in dem man eine fast unmögliche Riesenaufgabe Stück für Stück erledigt; trotz der Größe befriedigend, weil man ständig kleine Fortschritte sieht
+	- Vorbilder (nur als Genre, nicht nachbauen): „Drink The Ocean“ (TikTok @malakyemong), Mond vom Staub freifegen, alle Münzen aus einem Riesenpool sammeln, Nadel im Heuhaufen
+	- Machbar als Single-File-Browserspiel (wie die anderen Spiele)
+	- Was es gut macht:
+		- Riesige Zahl, die langsam schrumpft („noch 1.332.000.000 km³“), Prozentanzeige
+		- Upgrades in Wellen (z. B. Strohhalm → Schlauch → Pumpe → Riesenmaschine)
+		- Zufällige Funde zwischendurch (Schiffswrack, Schatz, seltenes Tier …)
+		- Speicherstand, damit man über Tage weiterspielt
+	- Eigene Themen-Ideen: Wüste Sandkorn für Sandkorn sieben (irgendwo liegt ein Ring), alle Blätter eines Waldes rechen (Wind weht neue nach), den Himmel von Wolken freiwischen, einen Berg löffelweise abtragen
 
 ## Tools & Apps
 
