@@ -139,7 +139,7 @@ func _vitrine() -> void:
 		RaumBau.box(innen, Vector3(0.04, 0.03, breite - 0.1), Vector3(x - 0.3, boden + 0.34 + j * 0.75, zm), RaumBau.leuchte("fff1d6", 1.5))
 	RaumBau.box(innen, Vector3(0.03, 2.3, breite), Vector3(x - 0.34, boden + 1.45, zm), RaumBau.glas("e8f4ff", 0.12))
 	RaumBau.licht(innen, Vector3(x - 1.2, boden + 2.2, zm), "fff1d6", 0.8, 5.0)
-	RaumBau.schrift(innen, "POKALE", Vector3(x - 0.36, boden + 2.85, zm), -PI * 0.5, 70, 0.0035, Color("2b2f36"))
+	RaumBau.schrift(innen, "POKALE", Vector3(x - 0.36, boden + 2.85, zm), -PI * 0.5, 70, 0.0025, Color("2b2f36"))
 	_fest(x - 0.4, z0, HALB, z0 + breite)
 	knoten_pokale = Node3D.new()
 	knoten_pokale.position = Vector3(x, boden, z0)

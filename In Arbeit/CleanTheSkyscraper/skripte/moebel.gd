@@ -2,7 +2,7 @@ class_name Moebel
 # Modelle der Penthouse-Gegenstände (Kenney Furniture Kit in modelle/moebel, CC0): laden, einfärben,
 # Seltenheit leuchten lassen. Fehlt ein Modell, steht eine Kiste in der Farbe der Seltenheit da.
 
-const MASS := 1.0              # Furniture Kit → Meter (wird nach dem Messen angepasst)
+const MASS := 2.1              # Furniture Kit → Meter (Tür im Kit 1,01 hoch = 2,1 m)
 static var _glow := {}
 
 static func modell(id: String) -> Node3D:
@@ -58,7 +58,7 @@ static func groesse(id: String) -> Vector3:
 	if not _groesse.has(id):
 		var n := modell(id)
 		_groesse[id] = RaumBau.aabb(n).size
-		n.free()
+		n.queue_free()
 	return _groesse[id]
 
 # Grundfläche (x, z) des Modells, gedreht um dreh (Grad) – für Kollision und Platzieren

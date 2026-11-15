@@ -365,7 +365,7 @@ func _bilder() -> void:
 	await _foto(0)
 	# 1–2: Lounge
 	x._teleport("lounge")
-	_blick(Vector3(0, x.sky.etagen.lounge.boden + 1.7, 6), Vector3(26, x.sky.etagen.lounge.boden + 1.0, 15))
+	_blick(Vector3(-7, x.sky.etagen.lounge.boden + 1.9, 3), Vector3(-17, x.sky.etagen.lounge.boden + 0.4, 10))
 	await _foto(1)
 	_vor(_station("bar"))
 	await _foto(2)
@@ -404,7 +404,7 @@ func _bilder() -> void:
 		w.erfolge[e.id] = true
 	x._teleport("penthouse")
 	var pm := x.penthouse.mitte
-	_blick(Vector3(pm.x + 6, x.penthouse.boden + 2.2, pm.y + 7), Vector3(pm.x - 8, x.penthouse.boden + 0.6, pm.y - 7))
+	_blick(Vector3(pm.x + 1.5, x.penthouse.boden + 2.4, pm.y + 0.5), Vector3(pm.x - 7, x.penthouse.boden + 0.3, pm.y - 7))
 	await _foto(8)
 	_vor(_station("vitrine"))
 	l.pitch = -0.15
