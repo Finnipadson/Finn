@@ -21,6 +21,7 @@ var bob := 0.0
 var turm_rand: PackedVector2Array      # Turm-Grundriss unten, etwas vergrößert
 var haeuser: Array = []                 # Rect2 der Häuser (x, z)
 var hindernisse: Array = []             # weitere Rect2 (z. B. Stände)
+var polygone: Array = []                # PackedVector2Array, in die man nicht darf (z. B. der See)
 var gondel_pos := Vector2(INF, INF)     # die geparkte Gondel ist auch fest
 const GONDEL_R := 1.9
 
@@ -72,6 +73,9 @@ func frei(p: Vector2) -> bool:
 		return false
 	for r in haeuser + hindernisse:
 		if r.grow(RADIUS).has_point(p):
+			return false
+	for pg in polygone:
+		if Geometry2D.is_point_in_polygon(p, pg):
 			return false
 	return true
 

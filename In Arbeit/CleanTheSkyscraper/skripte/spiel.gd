@@ -72,6 +72,8 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	laeufer.setup(turm, welt)
 	for sp in welt.stellplaetze:
 		laeufer.hindernisse.append(sp.rect)
+	laeufer.hindernisse.append_array(welt.hindernisse)   # Palmen, Laternen
+	laeufer.polygone.append(welt.see_umriss(Laeufer.RADIUS + 0.75))   # nicht in den See laufen
 	haendler = Haendler.new()
 	add_child(haendler)
 	haendler.setup(welt.stand_orte)

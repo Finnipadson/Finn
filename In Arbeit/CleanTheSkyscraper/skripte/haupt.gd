@@ -89,6 +89,13 @@ func _startansicht() -> void:
 			var dist := turm.spitze * 1.3
 			cam.position = Vector3(-dist * 0.55, turm.spitze * 0.28, dist * 0.84)
 			cam.look_at(Vector3(0, turm.spitze * 0.47, 0))
+	# --kamera=x,y,z,zielx,ziely,zielz: freie Kamera an eine Stelle setzen (für Testbilder)
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--kamera="):
+			var w := arg.split("=")[1].split_floats(",")
+			if w.size() == 6:
+				cam.position = Vector3(w[0], w[1], w[2])
+				cam.look_at(Vector3(w[3], w[4], w[5]))
 	var r := cam.rotation
 	yaw = r.y
 	pitch = r.x

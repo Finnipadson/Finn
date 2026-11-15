@@ -135,6 +135,14 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      - Nebenbei behoben: Zu Fuß hat ein Klick in ein offenes Menü die Maus wieder gefangen (betraf auch die Händler-Menüs). `Laeufer.gesperrt` verhindert das jetzt.
      - Test `--ansicht=16 --geld=10000`: durch die Tür laufen, Wand prüfen, an jeder Station mit E öffnen, über die echten Knöpfe spielen (Rubbeln mit echten Mausbewegungen), Geld nachrechnen, Rückzahlung messen. Bestanden (0 Fehler). Testbilder: `--ansicht=17`.
    - Offen: Preise und Dauer der Boosts noch festlegen; im Casino gibt es noch keine Geräusche (kommt mit Phase 5).
+4c. [ ] **Stadt im Dubai-Stil** (Wunsch des Users, 15.11.2026) – **Teil 1 fertig**
+   - **See mit Fontänen** am Turmfuß hinter dem Kiosk bei 210° (`Welt.SEE_*`, `see_abstand()`, `see_umriss()`): spiegelndes Wasser (`shader/wasser.gdshader`), Steinkante, Promenade im Boden-Shader. 74 Fontänen (Bogen, niedrige Reihe, Ring, große Mittelfontäne bis 85 m) mit Strahl, Gischt und Schaum; die Show (4 Bilder, 48 s) rechnet `shader/fontaene.gdshader` selbst, kostet also kaum Leistung.
+   - **Palmen** (Kenney Pirate Kit, CC0, Farben über `shader/palme.gdshader` entsättigt): Ring am Platzrand, Promenade um den See, Mittelstreifen aller Straßen bis 540 m (`StadtDetails.ALLEE_BIS`) – zusammen ca. 860 Palmen.
+   - **Laternen** mit zwei Auslegern auf den Mittelstreifen und am See (ca. 390, aus Code).
+   - **Straßen** im Boden-Shader: Mittelstreifen mit Rasen + Bordstein, Randlinien, Zebrastreifen vor den Kreuzungen.
+   - Zu Fuß: Palmen und Laternen sind Hindernisse (`welt.hindernisse`), in den See kommt man nicht (`laeufer.polygone`).
+   - Leistung: 133–160 FPS in 1440p (vorher ca. 150).
+   - **Teil 2 offen:** fahrende Autos (Kenney Car Kit) und Ampeln/Schilder (Kenney City Kit Roads) – die Pakete lädt der User herunter.
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 
 ## Offene Fragen

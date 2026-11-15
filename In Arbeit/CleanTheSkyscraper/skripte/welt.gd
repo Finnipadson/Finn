@@ -20,6 +20,13 @@ const CASINO_R := 128.0
 const CASINO_GROESSE := 30.0
 var stand_orte: Array = []      # Vector3 je Händler-Stand
 var casino_rect := Rect2()
+var hindernisse: Array = []     # Rect2 kleiner Dinge (Palmen, Laternen) – für die Kollision zu Fuß
+# See mit Fontänen am Turmfuß (wie die Dubai Fountain): abgerundetes Rechteck hinter dem Händler bei 210°
+const SEE_WINKEL := 210.0
+const SEE_NAH := 112.0          # vordere Kante (Abstand zur Turmmitte)
+const SEE_HALB := Vector2(50.0, 85.0)   # halbe Größe: x = weg vom Turm, y = quer
+const SEE_RUND := 35.0          # Eckenradius
+const PROMENADE := 16.0         # gepflasterter Rand um den See (Boden-Shader)
 
 func _ready() -> void:
 	rng.seed = 11
@@ -27,6 +34,9 @@ func _ready() -> void:
 	_boden()
 	_stellplaetze()   # zuerst, damit die Stadt das Casino-Grundstück frei lässt
 	_stadt()
+	var details := StadtDetails.new()
+	add_child(details)
+	details.baue(self)
 
 func _umgebung() -> void:
 	env = Environment.new()
@@ -88,6 +98,12 @@ func _boden() -> void:
 	var bm := ShaderMaterial.new()
 	bm.shader = load("res://shader/boden.gdshader")
 	b.material_override = bm   # Platz, Park, Straßenraster, weicher Übergang in die Wüste
+	bm.set_shader_parameter("see_mitte", see_mitte())
+	bm.set_shader_parameter("see_dir", _see_dir())
+	bm.set_shader_parameter("see_halb", SEE_HALB)
+	bm.set_shader_parameter("see_rund", SEE_RUND)
+	bm.set_shader_parameter("promenade", PROMENADE)
+	bm.set_shader_parameter("allee_r", StadtDetails.ALLEE_BIS)
 	add_child(b)
 	for i in 40: # Dünen am Horizont
 		var a := rng.randf() * TAU
@@ -143,7 +159,8 @@ func _stadt() -> void:
 				var r := Rect2(poly[0], Vector2(bx, bz))
 				# nicht auf den Platz um den Turm bauen
 				var naechster := Vector2(clampf(0.0, r.position.x, r.end.x), clampf(0.0, r.position.y, r.end.y))
-				if naechster.length() < PLATZ_R + 6.0 or r.intersects(casino_rect.grow(6.0)):
+				var am_see := see_abstand(r.get_center()) - r.size.length() * 0.5 < PROMENADE + 2.0
+				if naechster.length() < PLATZ_R + 6.0 or r.intersects(casino_rect.grow(6.0)) or am_see:
 					z += 75.0
 					continue
 				haeuser.append(r)
@@ -153,3 +170,45 @@ func _stadt() -> void:
 				add_child(Bau.baue(stw, mats[rng.randi() % 3], dach))
 			z += 75.0
 		x += 75.0
+
+# ---------------------------------------------------------------- See (Lage + Form)
+func _see_dir() -> Vector2:
+	var a := deg_to_rad(SEE_WINKEL)
+	return Vector2(cos(a), sin(a))
+
+func see_mitte() -> Vector2:
+	return _see_dir() * (SEE_NAH + SEE_HALB.x)
+
+# See-Koordinaten (x weg vom Turm, y quer) → Welt (x, z)
+func see_welt(l: Vector2) -> Vector2:
+	var d := _see_dir()
+	return see_mitte() + d * l.x + d.orthogonal() * l.y
+
+# Abstand zum Seeufer (negativ = im Wasser)
+func see_abstand(p: Vector2) -> float:
+	var d := _see_dir()
+	var rel := p - see_mitte()
+	var l := Vector2(rel.dot(d), rel.dot(d.orthogonal()))
+	var q := l.abs() - (SEE_HALB - Vector2.ONE * SEE_RUND)
+	return Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0) - SEE_RUND
+
+# Uferlinie, um "abstand" nach außen versetzt; gleiche Punktzahl bei gleichem "schritt"
+func see_umriss(abstand: float, schritt := 4.0) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	var e := SEE_HALB - Vector2.ONE * SEE_RUND
+	var ecken := [Vector2(e.x, e.y), Vector2(-e.x, e.y), Vector2(-e.x, -e.y), Vector2(e.x, -e.y)]
+	var bogen := 10
+	for k in 4:
+		var c: Vector2 = ecken[k]
+		for j in bogen:
+			var a := deg_to_rad(k * 90.0 + 90.0 * j / bogen)
+			pts.append(see_welt(c + Vector2(cos(a), sin(a)) * (SEE_RUND + abstand)))
+		var a2 := deg_to_rad((k + 1) * 90.0)
+		var r2 := Vector2(cos(a2), sin(a2)) * (SEE_RUND + abstand)
+		var nach: Vector2 = ecken[(k + 1) % 4]
+		var von: Vector2 = c + r2
+		var bis: Vector2 = nach + r2
+		var n := maxi(1, int(ceil(c.distance_to(nach) / schritt)))
+		for i in n:
+			pts.append(see_welt(von.lerp(bis, float(i) / n)))
+	return pts

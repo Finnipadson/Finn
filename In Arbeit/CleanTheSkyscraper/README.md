@@ -42,7 +42,9 @@ skripte/wirtschaft.gd  Zahlen zum Ausbalancieren: Lohn, Werkzeuge, Upgrades, Pre
 skripte/shop.gd        Werkstatt-Fenster
 skripte/laeufer.gd     Zu Fuß am Boden: Laufen, Springen, Kollision mit Turm/Häusern/Gondel
 skripte/haendler.gd    Drei moderne Glas-Kioske mit Verkäufern, verteilt zwischen den Turmflügeln
-modelle/               Kenney-Modelle (CC0): laden/ (Mini Market), leute/ (Mini Characters), essen/ (Food Kit), stadt/ (City Kit Commercial) – je mit Textures/ und Lizenz
+skripte/stadtdetails.gd  Stadt im Dubai-Stil: See mit Fontänen-Show, Palmen (Platz, See, Mittelstreifen), Laternen – alles als MultiMesh
+shader/wasser.gdshader, fontaene.gdshader, palme.gdshader  Wasser, Fontänen (Choreografie im Shader, 48 s), Palmen-Farben
+modelle/               Kenney-Modelle (CC0): laden/ (Mini Market), leute/ (Mini Characters), essen/ (Food Kit), stadt/ (City Kit Commercial), natur/ (Palmen aus dem Pirate Kit) – je mit Textures/ und Lizenz
 tools/messen.gd        Größen aller Modelle ausgeben: godot --path . --headless --script tools/messen.gd
 skripte/haendler_menu.gd  Menü der Stände: Boosts kaufen, Aussehen kaufen/anziehen
 skripte/casino.gd       Begehbares Casino (Gebäude, Innenraum, vier Stationen, Kollisions-Rechtecke)
@@ -79,6 +81,7 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=10 --geld=500`, danach `--ansicht=10`: Speichern und Laden (nur `user://spielstand_test.json`)
 - `--ansicht=11`: alle 10 Szenen in den Fenstern vor der Gondel, Album-Test
 - `--ansicht=16 --geld=10000`: Casino-Test (hineinlaufen, alle vier Spiele über die echten Knöpfe, Geld nachrechnen, Rückzahlung messen)
+- `--ansicht=1 --kamera=x,y,z,zielx,ziely,zielz`: freie Kamera an eine feste Stelle (Testbilder), z. B. See von oben: `--kamera=-30,110,-18,-150,0,-95`
 - `--ansicht=17`: Casino von außen, innen und vor jeder Station (Testbilder)
 - `--ansicht=15`: nacheinander vor jedem Kiosk, erst von weitem, dann von nah (Testbilder)
 - `--ansicht=14 --geld=10000`: Händler-Test (alle Stände, echte Knöpfe, Wirkung der Boosts und Farben)
