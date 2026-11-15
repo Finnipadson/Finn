@@ -1,6 +1,6 @@
 ---
 typ: spiel
-status: geplant (Phase 0 als Nächstes)
+status: in Arbeit (Phase 0 fertig)
 technik: Godot 4.7, GDScript, Turm komplett aus Code
 erstellt: 2026-11-15
 ---
@@ -9,7 +9,7 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 
 - Herkunft: Idee „Absurd riesige Fleißaufgabe“ → Variante „Fenster putzen“ in [[Ideen]]
 - Bauplan: [[clean-the-skyscraper-plan]] (Phasen 0–5)
-- Ordner: `CleanTheSkyscraper/` (bisher nur der Bauplan)
+- Ordner: `CleanTheSkyscraper/`, starten mit **`start.bat`**, Aufbau in [[CleanTheSkyscraper/README|README]]
 - Grafik-Grundlage: `Grafiktest/godot-turm` (Turm-Variante 1 „Wüstennadel“, Vergleichsbilder `turm-varianten.png` und `vorher-nachher.png`)
 
 ## Ziele
@@ -21,7 +21,7 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 
 ## Offene Punkte
 
-- [ ] Phase 0: Projekt aufsetzen (Turm-Generator übernehmen)
+- [x] Phase 0: Projekt aufsetzen (Godot-Projekt, Turm mit Fenster-Nummerierung, Welt, freie Kamera; Start `start.bat`)
 - [ ] Phase 1: Spielbarer Kern (Gondel fahren, Fenster wischen, Zähler, Geld)
 - [ ] Phase 2: Fortschritt und Wirtschaft (Shop auf Terrassen, Upgrades, Speichern)
 - [ ] Phase 3: Leben am Turm (Szenen, Tauben, Wind, Sandsturm, schönere Stadt)

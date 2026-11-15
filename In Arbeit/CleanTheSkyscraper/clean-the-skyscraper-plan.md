@@ -1,6 +1,6 @@
 # Clean the Skyscraper – Bauplan
 
-Status: **geplant**, als Nächstes Phase 0
+Status: **Phase 0 fertig**, als Nächstes Phase 1
 
 ## Idee
 
@@ -48,7 +48,8 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
 
 ## Phasen
 
-0. [ ] **Projekt aufsetzen:** Turm-Generator aus `Grafiktest/godot-turm` übernehmen und aufräumen, Ordnerstruktur anlegen, `start.bat`, Testbild-Ansichten
+0. [x] **Projekt aufsetzen:** Turm-Generator aus `Grafiktest/godot-turm` übernehmen und aufräumen, Ordnerstruktur anlegen, `start.bat`, Testbild-Ansichten
+   - **Ergebnis (15.11.2026):** eigenes Godot-Projekt mit `skripte/bau.gd` (Grundrisse, Fassaden-Mesh, Rahmen), `turm.gd` (Wüstennadel, 168 Stockwerke, 935 m, **25.638 Fenster**, Fenster-Nummerierung `fenster_id()` + `fassaden_punkt()` für die Gondel), `welt.gd` (Himmel, Licht, Wüste, Stadt), `haupt.gd` (freie Kamera, Testansichten 1–3). Testbild 2 markiert ein Fenster per Nummer, und die Markierung sitzt genau in einem Shader-Fenster. Aufgefallen: Der Rand der Stadtfläche ist in der Aussicht von oben als Kreis sichtbar (→ Phase 3, schönere Stadt).
 1. [ ] **Spielbarer Kern:** Gondel fahren, Fenster mit der Maus wischen (Dreck-Maske), Sauberkeit pro Fenster, Zähler „X von Y“, Geld
 2. [ ] **Fortschritt und Wirtschaft:** Terrassen als Shop und Etappenziel, Werkzeuge, Gondel-Upgrades, Abschnitte freischalten, Speichern und Laden
 3. [ ] **Leben am Turm:** Szenen hinter den Fenstern und Sammelalbum, Tauben, Wind, Sandsturm, schönere Stadt
