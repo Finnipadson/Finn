@@ -44,7 +44,7 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 
 ## Ideen (noch nicht entschieden)
 
-Ausgewählte Ladenideen (15.11.2026):
+Ausgewählte Ladenideen (15.11.2026) – die Läden sollen auf **verschiedene Hochhäuser** in der Stadt verteilt werden (jeder Laden in einem eigenen Tower, nicht alle an einem Ort):
 - [ ] **Möbelhaus**: begehbarer Laden mit Ausstellungsräumen, Möbel fürs Penthouse ansehen und kaufen (statt nur Menü)
 - [ ] **Gondel-Werkstatt**: Lackierungen, Aufkleber, Blumenkästen, Sonnenschirm, Radio für die Gondel
 - [ ] **Souvenirshop**: Andenken für erreichte Meilensteine (Mini-Wüstennadel, Schneekugel …), im Penthouse aufstellen
