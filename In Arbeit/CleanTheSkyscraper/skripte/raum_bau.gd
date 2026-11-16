@@ -121,6 +121,48 @@ static func verschieben(poly: PackedVector2Array, um: float) -> PackedVector2Arr
 	var l := Geometry2D.offset_polygon(poly, um)
 	return l[0] if l.size() > 0 else poly
 
+# ---------------------------------------------------------------- Zusammenfassen
+# Alle MeshInstance3D mit material_override unter wurzel (außer in den Knoten aus ausser) zu je einem Mesh pro
+# gleich aussehendem Material verschmelzen. Kenney-Modelle (ohne material_override) und Label3D bleiben, ebenso
+# Materialien, die sich ändern (leuchten mit Stärke 0 = Glitzer, der aufblitzt).
+static func verschmelzen(wurzel: Node3D, ausser: Array = []) -> void:
+	var gruppen := {}     # Schlüssel -> [Material, SurfaceTool]
+	var weg: Array = []
+	_sammeln(wurzel, Transform3D.IDENTITY, gruppen, weg, ausser)
+	for c in weg:
+		c.get_parent().remove_child(c)
+		c.queue_free()
+	for k in gruppen:
+		var mi := MeshInstance3D.new()
+		mi.mesh = (gruppen[k][1] as SurfaceTool).commit()
+		mi.material_override = gruppen[k][0]
+		wurzel.add_child(mi)
+
+static func _sammeln(n: Node, xf: Transform3D, gruppen: Dictionary, weg: Array, ausser: Array) -> void:
+	for c in n.get_children():
+		if c in ausser or not (c is Node3D) or c is Label3D:
+			continue
+		var t: Transform3D = xf * (c as Node3D).transform
+		if c is MeshInstance3D and c.get_child_count() == 0:
+			var mi := c as MeshInstance3D
+			var m := mi.material_override
+			if mi.mesh == null or m == null or not (m is StandardMaterial3D) or mi.material_overlay != null:
+				continue
+			var sm := m as StandardMaterial3D
+			if sm.emission_enabled and sm.emission_energy_multiplier == 0.0:
+				continue
+			var k := "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [sm.albedo_color, sm.metallic, sm.roughness, sm.emission_enabled, sm.emission, sm.emission_energy_multiplier,
+				sm.transparency, sm.albedo_texture, sm.shading_mode, sm.blend_mode, sm.cull_mode, sm.uv1_triplanar]
+			if not gruppen.has(k):
+				var st := SurfaceTool.new()
+				st.begin(Mesh.PRIMITIVE_TRIANGLES)
+				gruppen[k] = [sm, st]
+			for s in mi.mesh.get_surface_count():
+				(gruppen[k][1] as SurfaceTool).append_from(mi.mesh, s, t)
+			weg.append(mi)
+		elif not (c is MeshInstance3D) and c.get_child_count() > 0 and c.find_child("AnimationPlayer", true, false) == null:
+			_sammeln(c, t, gruppen, weg, ausser)
+
 # ---------------------------------------------------------------- Kenney-Modelle
 static func modell_da(name: String) -> bool:
 	return ResourceLoader.exists("res://modelle/%s.glb" % name)

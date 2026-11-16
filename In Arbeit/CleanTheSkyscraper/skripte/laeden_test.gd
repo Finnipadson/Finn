@@ -240,12 +240,16 @@ func _bilder() -> void:
 		_blick(_lp(id, -h * 0.3, 1.8, h + 16.0), _lp(id, 0.0, 2.0, h))
 		await _foto(100 + nr)
 	# Möbelhaus: in einen Raum hineinschauen, Werkstatt: Gondel von nah
-	_blick(_lp("moebel", 2.0, 1.75, 1.0), _lp("moebel", 2.0, 0.6, 12.0))
+	_blick(_lp("moebel", -1.0, 1.75, -0.3), _lp("moebel", 2.0, 0.6, 12.0))
 	await _foto(nr)
 	nr += 1
-	_blick(_lp("moebel", 2.0, 1.75, -1.0), _lp("moebel", 2.0, 0.6, -12.0))
+	_blick(_lp("moebel", -1.0, 1.75, 0.3), _lp("moebel", 2.0, 0.6, -12.0))
 	await _foto(nr)
 	nr += 1
+	for blick in [[-9.5, -0.5, -7.7, 12.0], [14.5, -0.5, 12.2, 12.0], [-9.5, 0.5, -7.7, -12.0], [14.5, 0.5, 12.2, -12.0]]:
+		_blick(_lp("moebel", blick[0], 1.75, blick[1]), _lp("moebel", blick[2], 0.6, blick[3]))
+		await _foto(200 + nr)
+		nr += 1
 	_blick(_lp("werkstatt", -2.0, 2.2, -2.5), _lp("werkstatt", 2.0, 1.4, 0.0))
 	await _foto(nr)
 	nr += 1

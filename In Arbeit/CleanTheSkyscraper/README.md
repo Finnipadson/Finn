@@ -74,7 +74,9 @@ skripte/extras_test.gd Tests 24–28
 skripte/laeden.gd      Vier begehbare Läden am Platz (Möbelhaus, Gondel-Werkstatt, Souvenirshop, Goldschmuck), Stationen, Kollision
 skripte/andenken.gd    Souvenirs + Gold-Deko als Modelle aus Code ("code:…" in Wirtschaft.GEGENSTAENDE)
 skripte/gondel_deko.gd Gondel-Rumpf, Lackierungs-Muster, Aufkleber, Blumenkästen, Sonnenschirm (Gondel-Werkstatt)
+skripte/laeden_deko.gd Verschönerung der Läden: Markisen, Aufsteller, Bodenmuster, Leute, Lackierkabine, Modell-Stadt, Kronleuchter …
 skripte/laeden_test.gd Tests 29 (Läden) und 30 (Testbilder)
+tools/groessen.gd      Größen der Möbelhaus-Möbel ausgeben (zum Einrichten der Zimmer)
 shader/seltenheit.gdshader  leuchtender Rand in der Farbe der Seltenheit (auch Vorschau grün/rot beim Platzieren)
 skripte/ereignisse.gd  Tauben, Windböen, Sandsturm (Zeiten oben im Skript)
 shader/boden.gdshader  Boden: Platz, Park, Straßenraster, Übergang in die Wüste
