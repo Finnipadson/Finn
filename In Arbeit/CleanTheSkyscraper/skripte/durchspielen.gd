@@ -354,8 +354,8 @@ func _baender(f: int, c: int) -> Array:
 	var w0 := c * Turm.FENSTER_B
 	var gb := f * Turm.STOCK_H + Turm.STOCK_H * Turm.BAND_ANTEIL
 	var gt := (f + 1) * Turm.STOCK_H
-	var ix := minf(rx * 0.8, Turm.FENSTER_B * 0.5)
-	var iy := minf(ry * 0.8, (gt - gb) * 0.5)
+	var ix := minf(rx * 0.55, Turm.FENSTER_B * 0.5)   # so weit innen, dass die Ellipse auch die Ecken erwischt
+	var iy := minf(ry * 0.55, (gt - gb) * 0.5)
 	var u0 := w0 + ix
 	var u1 := w0 + Turm.FENSTER_B - ix
 	var h0 := gb + iy
@@ -546,7 +546,7 @@ func _werkstatt() -> void:
 
 # ---------------------------------------------------------------- Ausflüge zu Fuß
 # gemessen mit --werkzeugtest (Sekunden pro Fenster ohne Boosts, voller Ausbau): so viel taugt ein Werkzeug wirklich
-const GEMESSEN := {"schwamm": 8.9, "grossschwamm": 5.5, "abzieher": 4.4, "doppel": 3.4, "hochdruck": 3.6, "mikro": 4.4, "profi": 2.9, "teleskop": 1.6, "dampf": 2.3, "lanze": 1.8}
+const GEMESSEN := {"schwamm": 8.9, "grossschwamm": 5.6, "abzieher": 4.3, "doppel": 3.9, "hochdruck": 4.2, "mikro": 4.3, "profi": 3.2, "teleskop": 1.6, "dampf": 1.1, "lanze": 0.7}
 
 func _werkzeug_wert(wz: Dictionary) -> float:
 	return 1.0 / float(GEMESSEN.get(wz.id, 9.0))
@@ -1173,7 +1173,13 @@ func _werkzeugtest() -> void:
 	s._ausruestung()
 	await _einsteigen()
 	var ergebnis := []
+	var nur := []
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--werkzeuge="):
+			nur = a.split("=")[1].split(",")
 	for wz in Wirtschaft.WERKZEUGE:
+		if not nur.is_empty() and not wz.id in nur:
+			continue
 		for f in range(30, 41):
 			for c in s.turm.fenster_pro_stock[f]:
 				s.zustand.verschmutzen(f, c, 1.0)

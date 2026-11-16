@@ -60,6 +60,6 @@ Mehrspielermodus (15.11.2026, Wünsche des Users):
 
 ## Notizen
 
-- **Durchspiel-Test (16.11.2026):** Ein Bot hat das ganze Spiel durchgespielt – alle Fenster nach 4–5,5 h Spielzeit (Mensch geschätzt 6–8 h, Ziel waren 10–20 h). Zwei Fehler behoben (Gondel neben dem Sky-Lounge-Aufzug ließ sich nicht betreten). Danach umgesetzt: Boosts stapeln sich nicht mehr, Gondeln/Motor teurer → jetzt 6,5–7,5 h im Bot, Mensch geschätzt 9–11 h. Offen (Bauplan 4i): Sprühgeräte stärker machen, Gold-Preise
+- **Durchspiel-Test (16.11.2026):** Ein Bot hat das ganze Spiel durchgespielt – alle Fenster nach 4–5,5 h Spielzeit (Mensch geschätzt 6–8 h, Ziel waren 10–20 h). Zwei Fehler behoben (Gondel neben dem Sky-Lounge-Aufzug ließ sich nicht betreten). Danach umgesetzt: Boosts stapeln sich nicht mehr, Gondeln/Motor teurer ; danach Sprühgeräte stärker und Gold-Deko halb so teuer → Bot 4,5–6,5 h, Mensch geschätzt 7,5–9 h. Offen (Bauplan 4i): Spieldauer feinjustieren
 - Turm ist erfunden (kein Burj-Khalifa-Nachbau: Name und Form sind geschützt)
 - Blender bewusst weggelassen: echte Rahmen und Räume hinter den Fenstern bringen im Spiel mehr, fotorealistisch passt nicht zum Spiel

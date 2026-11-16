@@ -170,7 +170,7 @@ func _test() -> void:
 	var stueck: Array = _stationen("gold", "gold_barren")
 	_pruefe("Gold: E am Barren", stueck.size() == 1 and await _oeffnen(stueck[0]))
 	var g1 := w.geld
-	_pruefe("Gold: kaufen", _knopf("kauf_gold_barren") and g1 - w.geld == 20000)
+	_pruefe("Gold: kaufen", _knopf("kauf_gold_barren") and g1 - w.geld == w.gegenstand_preis("gold_barren"))
 	_pruefe("Gold: einzigartig", w.kauf_sperre("gold_barren") == "besitz")
 	await _schliessen()
 	var gl: Rect2 = s.welt.laden_rects.gold

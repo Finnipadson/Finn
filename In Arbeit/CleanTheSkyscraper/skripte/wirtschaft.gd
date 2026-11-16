@@ -19,8 +19,8 @@ const WERKZEUGE := [
 	{"id": "mikro", "name": "Mikrofaser-Schwamm", "text": "Weich und riesig – schafft fast doppelt so viel wie der große Schwamm.", "rx": 0.34, "ry": 0.3, "preis": 350, "art": "wisch", "modell": "schwamm", "groesse": 1.9, "profi": true, "farbe": "6ac7e8"},
 	{"id": "profi", "name": "Profi-Schwamm XXL", "text": "So groß wie ein Kissen. Ein Wisch, halbes Fenster.", "rx": 0.48, "ry": 0.4, "preis": 1800, "art": "wisch", "modell": "schwamm", "groesse": 2.7, "profi": true, "farbe": "ffb03a"},
 	{"id": "teleskop", "name": "Teleskop-Abzieher", "text": "1,80 m breite Lippe – zieht ein ganzes Fenster auf einmal ab.", "rx": 0.9, "ry": 0.16, "preis": 3500, "art": "wisch", "modell": "abzieher", "doppel": true, "profi": true},
-	{"id": "dampf", "name": "Dampfreiniger", "text": "Heißer Dampf löst jeden Dreck – breiter als der Hochdruckreiniger.", "rx": 0.5, "ry": 0.5, "preis": 9000, "art": "spray", "modell": "spray", "groesse": 1.3, "profi": true},
-	{"id": "lanze", "name": "Wasserlanze Turbo", "text": "Das Beste vom Besten: riesiger Strahl, putzt im Vorbeifahren.", "rx": 0.75, "ry": 0.7, "preis": 25000, "art": "spray", "modell": "spray", "groesse": 1.6, "profi": true},
+	{"id": "dampf", "name": "Dampfreiniger", "text": "Heißer Dampf löst jeden Dreck – breiter als der Hochdruckreiniger.", "rx": 0.9, "ry": 0.9, "preis": 9000, "art": "spray", "modell": "spray", "groesse": 1.3, "profi": true},
+	{"id": "lanze", "name": "Wasserlanze Turbo", "text": "Das Beste vom Besten: riesiger Strahl, putzt im Vorbeifahren.", "rx": 1.5, "ry": 1.5, "preis": 25000, "art": "spray", "modell": "spray", "groesse": 1.6, "profi": true},
 ]
 
 # Gondeln: eine je Turmseite. Die erste ist gratis, die zweite und dritte kosten (Preis nach Anzahl schon gekaufter).
@@ -154,13 +154,13 @@ const GEGENSTAENDE := {
 	"sv_schwamm": {"name": "Goldener Schwamm", "modell": "code:schwamm", "quelle": "souvenir", "preis": 600, "erfolg": "fenster_1000", "einmal": true, "seltenheit": 1, "bonus": "lohn"},
 	"sv_rahmen": {"name": "Szenen-Bilderrahmen", "modell": "code:rahmen", "quelle": "souvenir", "preis": 700, "erfolg": "album_alle", "einmal": true, "seltenheit": 1, "bonus": "helfer"},
 	"sv_kristall": {"name": "Kristall-Nadel", "modell": "code:kristall", "quelle": "souvenir", "preis": 800, "erfolg": "hoehe_oben", "einmal": true, "seltenheit": 1, "bonus": "tempo"},
-	# Goldschmuck-Laden neben dem Casino: legendäre Gold-Deko fürs Penthouse, je nur einmal
-	"gold_barren": {"name": "Goldbarren-Stapel", "modell": "code:barren", "quelle": "gold", "preis": 20000, "seltenheit": 3, "bonus": "lohn", "einmal": true},
-	"gold_leuchter": {"name": "Goldener Kandelaber", "modell": "code:leuchter", "quelle": "gold", "preis": 45000, "seltenheit": 3, "bonus": "boost", "einmal": true},
-	"gold_statue": {"name": "Statue „Der Fensterputzer“", "modell": "code:statue", "quelle": "gold", "preis": 80000, "seltenheit": 3, "bonus": "helfer", "einmal": true},
-	"gold_nadel": {"name": "Goldene Wüstennadel", "modell": "code:goldnadel", "quelle": "gold", "preis": 150000, "seltenheit": 3, "bonus": "tempo", "einmal": true},
-	"gold_globus": {"name": "Goldener Globus", "modell": "code:globus", "quelle": "gold", "preis": 250000, "seltenheit": 3, "bonus": "flaeche", "einmal": true},
-	"gold_brunnen": {"name": "Goldener Springbrunnen", "modell": "code:brunnen", "quelle": "gold", "preis": 500000, "seltenheit": 3, "bonus": "lohn", "einmal": true},
+	# Goldschmuck-Laden neben dem Casino: legendäre Gold-Deko fürs Penthouse, je nur einmal (Preise nach dem Durchspiel-Test halbiert: insgesamt verdient man ~0,5 Mio. €)
+	"gold_barren": {"name": "Goldbarren-Stapel", "modell": "code:barren", "quelle": "gold", "preis": 10000, "seltenheit": 3, "bonus": "lohn", "einmal": true},
+	"gold_leuchter": {"name": "Goldener Kandelaber", "modell": "code:leuchter", "quelle": "gold", "preis": 22000, "seltenheit": 3, "bonus": "boost", "einmal": true},
+	"gold_statue": {"name": "Statue „Der Fensterputzer“", "modell": "code:statue", "quelle": "gold", "preis": 40000, "seltenheit": 3, "bonus": "helfer", "einmal": true},
+	"gold_nadel": {"name": "Goldene Wüstennadel", "modell": "code:goldnadel", "quelle": "gold", "preis": 75000, "seltenheit": 3, "bonus": "tempo", "einmal": true},
+	"gold_globus": {"name": "Goldener Globus", "modell": "code:globus", "quelle": "gold", "preis": 125000, "seltenheit": 3, "bonus": "flaeche", "einmal": true},
+	"gold_brunnen": {"name": "Goldener Springbrunnen", "modell": "code:brunnen", "quelle": "gold", "preis": 250000, "seltenheit": 3, "bonus": "lohn", "einmal": true},
 }
 # Möbelhaus: Ausstellungsräume (Reihenfolge = Lage im Laden). Katalog-Möbel bekommen ihren Raum über KATALOG_RAUM.
 const MOEBELHAUS_RAEUME := [

@@ -17,7 +17,7 @@ Zentrale Übersicht über alle Projekte.
 | [[Café Reitschule]] | Restaurant-Website (Demo) | Entwurf v2 fertig |
 | [[Highlight Cutter]] | PC-App: Highlights aus NVIDIA-Aufnahmen schneiden | fertig v1 (Apex, alle 5 Phasen) |
 | [[Erklärvideo-Studio]] | PC-App: Thema eingeben → animiertes Erklärvideo | fertig (Phase 5: 4 Designs, 9 Bausteine, Musik-Stimmungen, Desktop-Icon) |
-| [[Clean the Skyscraper]] | 3D-Spiel (Godot): alle Fenster des höchsten Turms putzen | Phase 3 fertig, dazu Händler, begehbares Casino und Dubai-Stadt (See mit Fontänen, Palmen, Verkehr mit Ampeln, Fußgängerzonen), Phase 4 fertig (Helfer, 3 Gondeln, Fahrzeuge, Hotbar), Extras fertig (Sky-Lounge, Penthouse, Arcade, Erfolge + Statistik), vier Läden fertig (Möbelhaus, Gondel-Werkstatt, Souvenirshop, Goldschmuck); Durchspiel-Test + Balance-Runde (Bot 6,5–7,5 h, Mensch ~9–11 h; Sprühgeräte/Gold-Preise offen); Phase 5 als Nächstes |
+| [[Clean the Skyscraper]] | 3D-Spiel (Godot): alle Fenster des höchsten Turms putzen | Phase 3 fertig, dazu Händler, begehbares Casino und Dubai-Stadt (See mit Fontänen, Palmen, Verkehr mit Ampeln, Fußgängerzonen), Phase 4 fertig (Helfer, 3 Gondeln, Fahrzeuge, Hotbar), Extras fertig (Sky-Lounge, Penthouse, Arcade, Erfolge + Statistik), vier Läden fertig (Möbelhaus, Gondel-Werkstatt, Souvenirshop, Goldschmuck); Durchspiel-Test + 2 Balance-Runden (Bot 4,5–6,5 h, Mensch ~7,5–9 h; Feinjustierung offen); Phase 5 als Nächstes |
 
 Ältere/kleinere Projekte: [[Weitere Projekte]]
 
