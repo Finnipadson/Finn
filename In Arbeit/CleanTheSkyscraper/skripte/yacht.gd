@@ -163,11 +163,13 @@ static func bauen() -> Node3D:
 	var h: Array = spanten[0]   # Heckspiegel
 	_quad(oben, Vector3(-h[1], h[2], h[0]), Vector3(h[1], h[2], h[0]), Vector3(h[1] * 0.92, 0.15, h[0]), Vector3(-h[1] * 0.92, 0.15, h[0]), Vector3(0, 0, 1))
 	_tri(unten, Vector3(-h[1] * 0.92, 0.15, h[0]), Vector3(h[1] * 0.92, 0.15, h[0]), Vector3(0, h[3], h[0]), Vector3(0, 0, 1))
+	var rumpf: Array = []   # eigenes Vertex-Format (ohne UV) – nicht mit den Kästen verschmelzen, sonst fehlt er
 	for st_m in [[oben, weiss], [unten, blau], [deck, teak]]:
 		var mi := MeshInstance3D.new()
 		mi.mesh = (st_m[0] as SurfaceTool).commit()
 		mi.material_override = st_m[1]
 		n.add_child(mi)
+		rumpf.append(mi)
 	# Zierstreifen, Badeplattform
 	for s in [-1.0, 1.0]:
 		var z := RaumBau.box(n, Vector3(0.04, 0.12, 13.0), Vector3(s * 2.48, 0.75, 1.5), blau)
@@ -207,7 +209,7 @@ static func bauen() -> Node3D:
 		l.rotation.x = 0.08
 	var name_l := RaumBau.schrift(n, "MEERESBRISE", Vector3(0, 0.75, 8.53), 0.0, 64, 0.01, Color("163a63"))
 	name_l.rotation.y = 0.0
-	RaumBau.verschmelzen(n)
+	RaumBau.verschmelzen(n, rumpf)
 	return n
 
 static func _tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, n: Vector3) -> void:

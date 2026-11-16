@@ -447,12 +447,21 @@ func _gesperrt(p: Vector2, ebene: int) -> bool:
 		return false
 	return (_raster[zy * _rn.x + zx] & (2 if ebene == 1 else 1)) != 0
 
+# Freie Sicht von a nach b? Steht man in einem Gebäude (Laden, Casino) bzw. liegt das Ziel darin, zählen die
+# gesperrten Stücke am Anfang bzw. am Ende nicht.
 func _sicht(a: Vector2, b: Vector2, ebene: int) -> bool:
 	var n := maxi(1, int(a.distance_to(b) / 1.0))
+	var draussen := false
+	var wieder_zu := false
 	for i in range(1, n):
 		if _gesperrt(a.lerp(b, float(i) / n), ebene):
+			if draussen:
+				wieder_zu = true
+		elif wieder_zu:
 			return false
-	return true
+		else:
+			draussen = true
+	return not wieder_zu or _gesperrt(b, ebene)
 
 # Beim Setzen des Ziels: kürzeste Wege aller Wegpunkte zum Ziel (Dijkstra rückwärts)
 func _ziel_baum() -> void:

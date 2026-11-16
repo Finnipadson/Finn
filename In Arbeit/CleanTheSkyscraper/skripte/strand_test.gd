@@ -351,6 +351,9 @@ func _bilder() -> void:
 	var k := s.welt.kueste
 	var z0 := Kueste.BOUL_Z
 	w.geld = 100000
+	if "--nur-yacht" in OS.get_cmdline_user_args():
+		await _yacht_bilder()
+		return
 	s.laeufer.boden_fn = Callable()   # Kamera frei setzen (Höhe aus _blick)
 	# 0 Boulevard vom See aus, 1 Kanal mit Brücke, 2 Treppe + Wasserfall von der Promenade, 3 Strandbar, 4 Steg + Fischladen
 	_blick(Vector3(k.kanal_start - 30.0, 6.0, z0 + 14.0), Vector3(-450.0, 0.0, z0))
@@ -404,5 +407,14 @@ func _bilder() -> void:
 	st.yacht.tempo = 10.0
 	await _foto(11)
 	st.aussteigen()
-	# 12 alle Fische als Sammelbild (Fischladen-Theke von oben)
+	await _yacht_bilder()
 	print("FPS-ENDE %d" % Engine.get_frames_per_second())
+
+# 12/13 Yacht am Liegeplatz von der Seite und schräg von vorne
+func _yacht_bilder() -> void:
+	s.laeufer.boden_fn = Callable()
+	_blick(Vector3(-781.0, 4.0, -150.0), Vector3(-781.0, -1.0, -175.5))
+	await _foto(12)
+	_blick(Vector3(-805.0, 6.0, -160.0), Vector3(-781.0, -1.0, -175.5))
+	await _foto(13)
+	s.laeufer.boden_fn = s.welt.kueste.boden

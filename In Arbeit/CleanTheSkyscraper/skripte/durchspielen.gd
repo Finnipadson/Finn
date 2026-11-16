@@ -1531,6 +1531,9 @@ func _gehe_weit(ziel: Vector2, ebene := 0) -> void:
 	s.karte.ziel_setzen(ziel, "Bot", ebene)
 	var r: PackedVector2Array = s.karte.route.duplicate()
 	s.karte.ziel_loeschen()
+	var von := Vector2(s.laeufer.position.x, s.laeufer.position.z)
+	if r.size() <= 1 and von.distance_to(ziel) > 150.0:
+		_log("ROUTE fehlt von (%.0f, %.0f) nach (%.0f, %.0f) – geradeaus" % [von.x, von.y, ziel.x, ziel.y])
 	for p in r:
 		await _gehe(p)
 
@@ -1598,7 +1601,6 @@ func _angelausflug() -> void:
 	if not drinks.is_empty():
 		await _strandbar(drinks)
 	await _fischladen(kauf)
-	var hin := _zeit() - t0
 	# an die Steg-Spitze, Richtung Meer
 	var platz: Vector2 = Kueste.KOPF.get_center() + Vector2(-11.0, randf_range(-8.0, 8.0))
 	await _gehe_weit(platz)
@@ -1623,10 +1625,17 @@ func _angelausflug() -> void:
 	for id in w.fischkiste:
 		wert += int(w.fischkiste[id]) * w.fisch_preis(id)
 	await _fischladen(["verkauf_alle"])
-	var gesamt_min := (_zeit() - t0 + hin) / 60.0   # Rückweg ≈ Hinweg
+	var gesamt_min := (_zeit() - t0) / 60.0
 	var helfer_geld := int(w.statistik.verdient) - verdient0 - wert
 	st.angel_runden = int(st.angel_runden) + 1
 	st.angel_geld = int(st.angel_geld) + wert
+	st.angel_minuten = float(st.angel_minuten) + gesamt_min
+	# zurück zur Gondel (Route über Boulevard und um den See)
+	var g := s.spieler.gondel.global_position
+	var nn := s.spieler.normal
+	await _gehe_weit(Vector2(g.x + nn.x * 3.2, g.z + nn.z * 3.2))
+	st.angel_minuten = float(st.angel_minuten) - gesamt_min
+	gesamt_min = (_zeit() - t0) / 60.0   # mit echtem Rückweg
 	st.angel_minuten = float(st.angel_minuten) + gesamt_min
 	_log("ANGELN %.1f min geangelt (+%.1f min Wege): %d Fische in %d Würfen, Index %d→%d/20, Erlös %d € = %.0f €/min beim Angeln, %.0f €/min mit Wegen | Putzen vorher %.0f €/min (selbst %.1f Fenster/min), Helfer während des Ausflugs %d € | Angel %s, Abschnitt %d" % [
 		minuten, gesamt_min - minuten, fische, runden, arten0, w.fisch_index.size(), wert, wert / maxf(minuten, 0.1), wert / maxf(gesamt_min, 0.1),
