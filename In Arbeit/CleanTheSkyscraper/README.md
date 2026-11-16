@@ -77,6 +77,7 @@ skripte/gondel_deko.gd Gondel-Rumpf, Lackierungs-Muster, Aufkleber, Blumenkäste
 skripte/laeden_deko.gd Verschönerung der Läden: Markisen, Aufsteller, Bodenmuster, Leute, Lackierkabine, Modell-Stadt, Kronleuchter …
 skripte/laeden_test.gd Tests 29 (Läden) und 30 (Testbilder)
 skripte/kueste.gd      Küste hinter dem See: Meer, Strand (2 m tiefer), Ufermauer, Treppen, Palmen-Boulevard mit Kanal und Brücken, Steg mit Fischladen, Strandbar; Bodenhöhe + Sperren zu Fuß
+skripte/strand_deko.gd Strand-Deko aus Code (Rettungstürme, Volleyball, Sandburgen, Möwen, Krabben, Bojen …) + Kenney-Modelle aus modelle/strand
 skripte/strand.gd      Strand im Spiel: Stationen Strandbar/Fischladen/Yacht, Angeln zu Fuß und vom Boot, Ein-/Aussteigen Yacht
 skripte/angeln.gd      Angel-Minispiel „Spannungsbalken“ (Wurf, Biss, Drill, Fang-Karte), Angel-Modelle
 skripte/fische.gd      20 Fische aus Code (Körper-Loft, Flossen, Sonderteile), Muster über shader/fisch.gdshader

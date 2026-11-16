@@ -66,6 +66,9 @@ func baue(w: Welt) -> void:
 	_kanal()
 	_steg()
 	_bar()
+	var deko := StrandDeko.new()   # Rettungstürme, Volleyball, Sandburgen, Möwen, Krabben, Bojen … (strand_deko.gd)
+	add_child(deko)
+	deko.baue(self)
 	_schilder()
 	for r in rechtecke:
 		w.hindernisse.append(r)
@@ -525,6 +528,9 @@ func _strandmoebel() -> void:
 				continue
 			schirme.append(Vector3(reihe, sand_y(reihe), z))
 			z += 9.0
+		if reihe > -620.0:   # Südstrand zwischen Treppe und Steg (an der Mauer, neben dem Volleyballfeld)
+			for zs in [-140.0, -151.0, -177.0, -187.0]:
+				schirme.append(Vector3(reihe + 0.5, sand_y(reihe + 0.5), zs))
 		z = -232.0
 		while z > -420.0:
 			schirme.append(Vector3(reihe, sand_y(reihe), z))

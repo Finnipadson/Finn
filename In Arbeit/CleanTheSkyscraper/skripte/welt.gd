@@ -211,6 +211,8 @@ func _stadt() -> void:
 				var hoch := int((4.0 + rng.randf() * 22.0) * (1.75 - d / 1600.0))
 				if rng.randf() < (0.2 if d < 600.0 else 0.08):
 					hoch += 25
+				if x < -400.0:   # zur Küste hin niedriger, damit der Strand nachmittags nicht im Schatten liegt
+					hoch = mini(hoch, 6 + int((x + 600.0) / 15.0))
 				var poly := Bau.rechteck(bx, bz, x + (rng.randf() - 0.5) * 10.0, z + (rng.randf() - 0.5) * 10.0)
 				var r := Rect2(poly[0], Vector2(bx, bz))
 				r = _kuesten_haus(r)   # am Boulevard gekürzt, an der Küste weg

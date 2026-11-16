@@ -351,6 +351,9 @@ func _bilder() -> void:
 	var k := s.welt.kueste
 	var z0 := Kueste.BOUL_Z
 	w.geld = 100000
+	if "--nur-deko" in OS.get_cmdline_user_args():
+		await _deko_bilder()
+		return
 	if "--nur-yacht" in OS.get_cmdline_user_args():
 		await _yacht_bilder()
 		return
@@ -417,4 +420,23 @@ func _yacht_bilder() -> void:
 	await _foto(12)
 	_blick(Vector3(-805.0, 6.0, -160.0), Vector3(-781.0, -1.0, -175.5))
 	await _foto(13)
+	s.laeufer.boden_fn = s.welt.kueste.boden
+
+# 20–25 Strand-Deko: Südstrand mit Volleyball + Rettungsturm, Nordstrand, Sandburg + Krabbe nah, Steg mit Möwen, Luftbild
+func _deko_bilder() -> void:
+	s.laeufer.boden_fn = Callable()
+	var y := Kueste.STRAND_Y
+	_blick(Vector3(-612.0, y + 2.2, -128.0), Vector3(-635.0, y + 0.5, -165.0))
+	await _foto(20)
+	_blick(Vector3(-615.0, y + 1.8, -40.0), Vector3(-638.0, y + 0.5, 30.0))
+	await _foto(21)
+	_blick(Vector3(-639.0, y + 1.0, -147.0), Vector3(-642.0, y - 0.1, -150.0))
+	await _foto(22)
+	_blick(Vector3(-641.0, y + 1.6, -138.0), Vector3(-640.5, y + 3.0, -140.0) + Vector3(0, 0, 0))
+	await _foto(23)
+	_blick(Vector3(-700.0, 2.2, -190.0), Vector3(-760.0, 1.0, -200.0))
+	await _foto(24)
+	_blick(Vector3(-580.0, 45.0, -60.0), Vector3(-650.0, -2.0, -20.0))
+	await _foto(25)
+	print("FPS-ENDE %d" % Engine.get_frames_per_second())
 	s.laeufer.boden_fn = s.welt.kueste.boden
