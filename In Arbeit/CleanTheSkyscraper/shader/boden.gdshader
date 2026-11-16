@@ -19,6 +19,12 @@ uniform float promenade = 16.0;
 uniform float kreuz_see = 14.0;       // Welt.KREUZ_SEE
 uniform vec4 sperren[5];              // Casino + Läden: x0, z0, x1, z1 (schon vergrößert), keine Kreuzung darin (Welt.gebaeude)
 uniform float allee_r = 540.0;        // bis hier Mittelstreifen mit Palmen (StadtDetails.ALLEE_BIS)
+// Küste (Kueste.*): Strandpromenade westlich von prom_x bis zur Ufermauer ufer_x, Palmen-Boulevard um z = boul_z
+uniform float ufer_x = -606.0;
+uniform float prom_x = -572.0;
+uniform float boul_z = -112.5;
+uniform float boul_halb = 22.0;
+uniform float boul_x0 = -150.0;
 
 varying vec3 wp;
 
@@ -51,6 +57,8 @@ float see_sdf(vec2 p) {
 float kreuz_ok(vec2 k) {
 	if (length(k) < plaza_r + kreuz_platz) return 0.0;
 	if (see_sdf(k) < promenade + kreuz_see) return 0.0;
+	if (k.x < prom_x + 2.0) return 0.0;
+	if (abs(k.y - boul_z) < 1.0 && k.x < boul_x0) return 0.0;
 	for (int i = 0; i < 5; i++) {
 		vec4 r = sperren[i];
 		if (k.x > r.x && k.x < r.z && k.y > r.y && k.y < r.w) return 0.0;
@@ -119,6 +127,29 @@ void fragment() {
 	c = mix(c, vec3(0.92), randlinie);
 	float zebra = sst(7.5, zur_kreuzung, aa) * (1.0 - sst(11.0, zur_kreuzung, aa)) * streifen(quer / 1.2 + 0.5, 0.5, aa / 1.2) * str * (1.0 - sst(5.5, naechste, aa));
 	c = mix(c, vec3(0.93), zebra * (1.0 - smoothstep(700.0, 900.0, d)));
+
+	// ---------------- Strandpromenade + Palmen-Boulevard: große helle Platten (1,5 m), dunkle Granitbänder längs,
+	// Rasenstreifen für die Palmenreihen (|dz| 8,5–10,5 m), zur Ufermauer hin ein breites dunkles Band
+	float dz = abs(p.y - boul_z);
+	float boul = (1.0 - sst(boul_halb, dz, aa)) * (1.0 - sst(boul_x0, p.x, aa * 4.0 + 2.0));
+	float prom = 1.0 - sst(prom_x + 1.0, p.x, aa);
+	float k_kueste = max(boul, prom);
+	if (k_kueste > 0.001) {
+		vec2 kp = vec2(p.x, p.y) / 1.5;
+		float k_aa = aa / 1.5;
+		float kf = max(fuge(kp.x, 0.025, k_aa), fuge(kp.y, 0.025, k_aa));
+		float kplatte = mix(0.5, hs(floor(kp) + 11.0), nah_2);
+		vec3 kst = stein_hell * (0.9 + 0.12 * kplatte + 0.05 * mix(0.5, vn(p * 0.5), nah_2));
+		kst *= 1.0 - 0.14 * kf;
+		// Granitbänder längs: am Boulevard parallel zur Achse, an der Promenade parallel zur Küste
+		float gb = boul > prom ? max(band_k(dz - 6.2, 0.45, aa), band_k(dz - 21.2, 0.5, aa)) : max(band_k(p.x - ufer_x - 3.0, 0.6, aa), band_k(p.x - prom_x + 2.0, 0.4, aa));
+		kst = mix(kst, stein_dunkel * (0.92 + 0.12 * mix(0.5, vn(p * 0.9), nah_2)), gb);
+		vec3 krasen = gruen * (0.8 + 0.3 * mix(0.5, vn(p * 0.4), nah_2));
+		float rs = band_k(dz - 9.5, 1.0, aa) * boul * (1.0 - prom) * sst(ufer_x + 8.0, p.x, aa);
+		kst = mix(kst, krasen, rs);
+		kst = mix(kst, vec3(0.86, 0.85, 0.82), clamp(band_k(dz - 8.4, 0.12, aa) + band_k(dz - 10.6, 0.12, aa), 0.0, 1.0) * boul * (1.0 - prom) * sst(ufer_x + 8.0, p.x, aa));
+		c = mix(c, kst, k_kueste);
+	}
 
 	// ---------------- Platz + See-Promenade: polierte Steinplatten in Ringen um den Turm
 	float see_k = 1.0 - sst(promenade, see_sdf(p), 0.5);

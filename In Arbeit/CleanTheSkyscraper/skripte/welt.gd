@@ -43,6 +43,7 @@ const KREUZ_PLATZ := 30.0       # Kreuzungen erst so weit hinter dem Platzrand
 const KREUZ_SEE := 14.0         # … und so weit hinter der See-Promenade
 const KREUZ_CASINO := 15.0      # … und nicht in der Nähe des Casinos
 var boden_mat: ShaderMaterial
+var kueste: Kueste              # Meer, Strand, Palmen-Boulevard, Steg (kueste.gd)
 
 func _ready() -> void:
 	rng.seed = 11
@@ -57,6 +58,9 @@ func _ready() -> void:
 		sp.append(Vector4(1e6, 1e6, 1e6, 1e6))
 	boden_mat.set_shader_parameter("sperren", sp)
 	_stadt()
+	kueste = Kueste.new()
+	add_child(kueste)
+	kueste.baue(self)
 	var details := StadtDetails.new()
 	add_child(details)
 	details.baue(self)
@@ -118,9 +122,10 @@ func sandsturm(k: float) -> void:
 func _boden() -> void:
 	var sand := Bau.matt("d9b47a", 1.0)
 	var pm := PlaneMesh.new()
-	pm.size = Vector2(60000, 60000)
+	pm.size = Vector2(30000.0 - Kueste.UFER_X, 60000)   # endet an der Ufermauer, dahinter Strand + Meer (Kueste)
 	var b := MeshInstance3D.new()
 	b.mesh = pm
+	b.position.x = (30000.0 + Kueste.UFER_X) * 0.5
 	var bm := ShaderMaterial.new()
 	bm.shader = load("res://shader/boden.gdshader")
 	b.material_override = bm   # Platz, Park, Straßenraster, weicher Übergang in die Wüste
@@ -132,6 +137,11 @@ func _boden() -> void:
 	bm.set_shader_parameter("allee_r", StadtDetails.ALLEE_BIS)
 	bm.set_shader_parameter("kreuz_platz", KREUZ_PLATZ)
 	bm.set_shader_parameter("kreuz_see", KREUZ_SEE)
+	bm.set_shader_parameter("ufer_x", Kueste.UFER_X)
+	bm.set_shader_parameter("prom_x", Kueste.PROM_X)
+	bm.set_shader_parameter("boul_z", Kueste.BOUL_Z)
+	bm.set_shader_parameter("boul_halb", Kueste.BOUL_HALB)
+	bm.set_shader_parameter("boul_x0", Kueste.BOUL_X0)
 	boden_mat = bm
 	add_child(b)
 	for i in 40: # Dünen am Horizont
@@ -146,6 +156,9 @@ func _boden() -> void:
 		duene.position = Vector3(cos(a) * d, -20, sin(a) * d)
 		duene.scale = Vector3(500 + rng.randf() * 900, 60 + rng.randf() * 120, 400 + rng.randf() * 700)
 		duene.rotation.y = rng.randf() * TAU
+		if duene.position.x - duene.scale.x < Kueste.UFER_X + 200.0 and duene.position.x < 0.0:
+			duene.free()   # dort ist Meer
+			continue
 		add_child(duene)
 
 # Händler-Stände verteilt auf dem Platz (in den Lücken zwischen den Turmflügeln) + Grundstück für das Casino
@@ -200,6 +213,11 @@ func _stadt() -> void:
 					hoch += 25
 				var poly := Bau.rechteck(bx, bz, x + (rng.randf() - 0.5) * 10.0, z + (rng.randf() - 0.5) * 10.0)
 				var r := Rect2(poly[0], Vector2(bx, bz))
+				r = _kuesten_haus(r)   # am Boulevard gekürzt, an der Küste weg
+				if r.size.x < 1.0:
+					z += 75.0
+					continue
+				poly = Bau.rechteck(r.size.x, r.size.y, r.get_center().x, r.get_center().y)
 				# nicht auf den Platz um den Turm bauen
 				var naechster := Vector2(clampf(0.0, r.position.x, r.end.x), clampf(0.0, r.position.y, r.end.y))
 				var am_see := see_abstand(r.get_center()) - r.size.length() * 0.5 < PROMENADE + 2.0
@@ -214,6 +232,28 @@ func _stadt() -> void:
 				add_child(Bau.baue(stw, mats[rng.randi() % 3], dach))
 			z += 75.0
 		x += 75.0
+
+# Häuser am Palmen-Boulevard kürzen (Seite zum Boulevard), an der Strandpromenade weglassen. Leeres Rect2 = weg.
+const HAUS_MIN := 14.0
+func _kuesten_haus(r: Rect2) -> Rect2:
+	var grenze_x := Kueste.PROM_X + 3.0
+	if r.position.x < grenze_x:
+		if r.end.x - grenze_x < HAUS_MIN:
+			return Rect2()
+		r = Rect2(Vector2(grenze_x, r.position.y), Vector2(r.end.x - grenze_x, r.size.y))
+	var band := Rect2(Vector2(Kueste.UFER_X, Kueste.BOUL_Z - Kueste.BOUL_HALB - 4.0), Vector2(Kueste.BOUL_X0 + 40.0 - Kueste.UFER_X, Kueste.BOUL_HALB * 2.0 + 8.0))
+	if r.intersects(band):
+		if r.get_center().y > Kueste.BOUL_Z:
+			var z0 := band.end.y
+			if r.end.y - z0 < HAUS_MIN:
+				return Rect2()
+			r = Rect2(Vector2(r.position.x, z0), Vector2(r.size.x, r.end.y - z0))
+		else:
+			var z1 := band.position.y
+			if z1 - r.position.y < HAUS_MIN:
+				return Rect2()
+			r = Rect2(r.position, Vector2(r.size.x, z1 - r.position.y))
+	return r
 
 # ---------------------------------------------------------------- See (Lage + Form)
 func _see_dir() -> Vector2:
@@ -262,6 +302,10 @@ func kreuzung_ok(k: Vector2) -> bool:
 	if k.length() < PLATZ_R + KREUZ_PLATZ:
 		return false
 	if see_abstand(k) < PROMENADE + KREUZ_SEE:
+		return false
+	if k.x < Kueste.PROM_X + 2.0:   # Strandpromenade
+		return false
+	if absf(k.y - Kueste.BOUL_Z) < 1.0 and k.x < Kueste.BOUL_X0:   # Palmen-Boulevard statt Straße
 		return false
 	return not bebaut(k, KREUZ_CASINO)
 

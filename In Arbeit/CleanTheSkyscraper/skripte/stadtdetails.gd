@@ -32,6 +32,7 @@ func baue(w: Welt) -> void:
 	_platz_moebel()
 	_see_baenke()
 	_fussgaenger()
+	_kueste()
 	_leute()
 	palmen_mat = ShaderMaterial.new()
 	palmen_mat.shader = load("res://shader/palme.gdshader")
@@ -74,6 +75,8 @@ func _see() -> void:
 		var a0: Vector2 = aussen[i]
 		var a1: Vector2 = aussen[j]
 		var raus := Vector3(a0.x - i0.x, 0, a0.y - i0.y).normalized()
+		if absf((i0.y + i1.y) * 0.5 - Kueste.BOUL_Z) < Kueste.KANAL_HALB + Kueste.RAND_B * 0.5 and i0.x < Kueste.BOUL_X0:
+			continue   # hier mündet der Kanal zum Meer
 		_quad(kante, Vector3(i0.x, h, i0.y), Vector3(i1.x, h, i1.y), Vector3(a1.x, h, a1.y), Vector3(a0.x, h, a0.y), Vector3.UP)   # oben
 		_quad(kante, Vector3(a0.x, h, a0.y), Vector3(a1.x, h, a1.y), Vector3(a1.x, 0, a1.y), Vector3(a0.x, 0, a0.y), raus)        # außen
 		_quad(kante, Vector3(i1.x, h, i1.y), Vector3(i0.x, h, i0.y), Vector3(i0.x, 0, i0.y), Vector3(i1.x, 0, i1.y), -raus)       # innen
@@ -189,14 +192,14 @@ func _see_palmen() -> void:
 		weg += a.distance_to(pal[(i + 1) % pal.size()])
 		if weg >= 14.0:
 			weg = 0.0
-			if a.length() > Welt.PLATZ_R - 2.0:
+			if a.length() > Welt.PLATZ_R - 2.0 and not _am_kanal(a):
 				_palme(a)
 	weg = 0.0
 	for i in lam.size():
 		var a: Vector2 = lam[i]
 		var b: Vector2 = lam[(i + 1) % lam.size()]
 		weg += a.distance_to(b)
-		if weg >= 28.0 and a.length() > Welt.PLATZ_R + 2.0:
+		if weg >= 28.0 and a.length() > Welt.PLATZ_R + 2.0 and not _am_kanal(a):
 			weg = 0.0
 			_lampe(a, (b - a).normalized().orthogonal())
 
@@ -381,7 +384,7 @@ func _see_baenke() -> void:
 		var a: Vector2 = l[i]
 		var b: Vector2 = l[(i + 1) % l.size()]
 		weg += a.distance_to(b)
-		if weg < 20.0 or a.length() < Welt.PLATZ_R + 2.0:
+		if weg < 20.0 or a.length() < Welt.PLATZ_R + 2.0 or _am_kanal(a):
 			continue
 		weg = 0.0
 		var innen := (b - a).normalized().orthogonal()
@@ -406,7 +409,7 @@ func _fussgaenger() -> void:
 				while s <= k_lo + RASTER - 12.0:
 					var p := Vector2(c, s) if richtung == 0 else Vector2(s, c)
 					s += 10.0
-					if p.length() < Welt.PLATZ_R + 6.0 or welt.see_abstand(p) < Welt.PROMENADE + 3.0 or welt.bebaut(p, 6.0):
+					if p.length() < Welt.PLATZ_R + 6.0 or welt.see_abstand(p) < Welt.PROMENADE + 3.0 or welt.bebaut(p, 6.0) or _im_boulevard(p):
 						continue
 					var quer := Vector2(1, 0) if richtung == 0 else Vector2(0, 1)
 					match nr % 3:
@@ -419,6 +422,66 @@ func _fussgaenger() -> void:
 						_eimer(p + quer * 3.2)
 					nr += 1
 
+# ---------------------------------------------------------------- Küste: Palmen-Boulevard + Strandpromenade
+func _am_kanal(p: Vector2) -> bool:
+	return absf(p.y - Kueste.BOUL_Z) < Kueste.KANAL_HALB + Kueste.RAND_B + 2.5 and p.x < Kueste.BOUL_X0 and p.x > Kueste.UFER_X
+
+func _im_boulevard(p: Vector2) -> bool:
+	return p.x < Kueste.PROM_X + 4.0 or (absf(p.y - Kueste.BOUL_Z) < Kueste.BOUL_HALB + 2.0 and p.x < Kueste.BOUL_X0)
+
+func _kueste() -> void:
+	var k := welt.kueste
+	var z0 := Kueste.BOUL_Z
+	# Boulevard: Palmen im Rasenstreifen (|dz| 9,5), außen abwechselnd Palme und Laterne, Bänke mit Blick zum Kanal
+	var x := k.kanal_start - 16.0
+	var i := 0
+	while x > Kueste.UFER_X + 8.0:
+		var nah_bruecke := absf(x - k._naechste_bruecke(x)) < 5.5
+		for s in [-1.0, 1.0]:
+			if not nah_bruecke:
+				_palme(Vector2(x + (3.0 if s > 0.0 else -3.0), z0 + s * 9.5))
+			var aussen := Vector2(x, z0 + s * 18.5)
+			if i % 2 == 0:
+				_lampe(aussen, Vector2(0, 1))
+			elif welt.see_abstand(aussen) > 18.0:
+				_palme(aussen)
+			if i % 2 == 1 and not nah_bruecke:
+				_bank(Vector2(x, z0 + s * 5.4), Vector2(0, -s))
+			if i % 6 == 3:
+				_kuebel(Vector2(x + 4.0, z0 + s * 13.5), i % 12 == 3)
+			if i % 8 == 5:
+				_eimer(Vector2(x - 1.6, z0 + s * 5.4))
+		x -= 12.0
+		i += 1
+	# Strandpromenade: Palmen an der Mauer, Bänke mit Blick aufs Meer, Laternen zur Stadt hin
+	var z := -900.0
+	i = 0
+	while z < 700.0:
+		var frei := absf(z - z0) > Kueste.BOUL_HALB + 4.0 and absf(z - Kueste.STEG_Z) > Kueste.STEG_HALB + 3.0
+		if frei:
+			if i % 2 == 0:
+				_palme(Vector2(Kueste.UFER_X + 5.0, z))
+			else:
+				_bank(Vector2(Kueste.UFER_X + 1.6, z), Vector2(-1, 0))
+			if i % 4 == 0:
+				_lampe(Vector2(Kueste.PROM_X - 4.0, z), Vector2(1, 0))
+			if i % 10 == 5:
+				_eimer(Vector2(Kueste.UFER_X + 1.6, z + 1.8))
+		z += 8.0
+		i += 1
+	# Leute: Boulevard, Promenade, Strand, Steg
+	var orte := [[Vector2(-300.0, z0 + 14.0), 0.0], [Vector2(-302.0, z0 + 14.8), 0.0], [Vector2(-420.0, z0 - 7.0), 0.0], [Vector2(-520.0, z0 + 7.0), 0.0],
+		[Vector2(-592.0, z0 - 30.0), 0.0], [Vector2(-592.0, z0 + 40.0), 0.0], [Vector2(-700.0, Kueste.STEG_Z + 5.5), 0.0], [Vector2(-760.0, Kueste.STEG_Z - 5.0), 0.0],
+		[Vector2(-624.0, -40.0), -1.0], [Vector2(-636.0, 20.0), -1.0], [Vector2(-642.0, 60.0), -1.0], [Vector2(-622.0, 110.0), -1.0], [Vector2(-640.0, -20.0), -1.0]]
+	for o in orte:
+		var p: Vector2 = o[0]
+		var y := Kueste.sand_y(p.x) if float(o[1]) < 0.0 else 0.0
+		var f := _figur(FIGUREN[rng.randi() % FIGUREN.size()], p, y)
+		var blick := Vector2(-1, 0) if p.x < Kueste.UFER_X + 20.0 else Vector2(0, z0 - p.y)
+		f.rotation.y = atan2(blick.x, blick.y)
+		welt.hindernisse.append(Rect2(p - Vector2(0.35, 0.35), Vector2(0.7, 0.7)))
+		leute_zahl += 1
+
 # Leute, die auf dem Platz und an der Promenade herumstehen (Kenney Mini Characters, Ruhe-Animation)
 func _leute() -> void:
 	var orte := []
@@ -430,7 +493,7 @@ func _leute() -> void:
 	var l := welt.see_umriss(8.0, 3.0)
 	for i in 14:
 		var q: Vector2 = l[rng.randi() % l.size()]
-		if q.length() > Welt.PLATZ_R + 2.0:
+		if q.length() > Welt.PLATZ_R + 2.0 and not _am_kanal(q):
 			orte.append(q)
 	for o in orte:
 		var p: Vector2 = o
@@ -446,9 +509,9 @@ func _leute() -> void:
 			welt.hindernisse.append(Rect2(q - Vector2(0.35, 0.35), Vector2(0.7, 0.7)))
 			leute_zahl += 1
 
-func _figur(name: String, p: Vector2) -> Node3D:
+func _figur(name: String, p: Vector2, y := 0.0) -> Node3D:
 	var n: Node3D = load("res://modelle/%s.glb" % name).instantiate()
-	n.position = Vector3(p.x, 0, p.y)
+	n.position = Vector3(p.x, y, p.y)
 	n.scale = Vector3.ONE * 2.3
 	add_child(n)
 	var ap := n.find_child("AnimationPlayer", true, false) as AnimationPlayer

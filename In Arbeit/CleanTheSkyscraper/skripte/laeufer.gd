@@ -39,6 +39,10 @@ const KLEIN_BIS := 3.0                   # kleine Hindernisse (Bänke, Palmen, S
 # Leer = draußen am Boden.
 var raum := {}
 var gelaufen := 0.0                      # Meter zu Fuß/mit Fahrzeug (Statistik)
+# Draußen an der Küste (Kueste): Bodenhöhe (Strand 2 m tiefer, Treppen, Brücken) und zusätzliche Sperren
+# (Kanal, Ufermauer, Meer). boden_fn(p: Vector2) -> float, sperre_fn(p: Vector2, fuss_y: float) -> bool (true = frei)
+var boden_fn: Callable
+var sperre_fn: Callable
 
 func setup(t: Turm, w: Welt) -> void:
 	cam = Camera3D.new()
@@ -56,6 +60,8 @@ func aktivieren(pos: Vector3, blick_yaw: float, gondel: Vector3 = Vector3.INF) -
 	gondel_pos = Vector2(gondel.x, gondel.z) if gondel != Vector3.INF else Vector2(INF, INF)
 	raum = {}
 	position = Vector3(pos.x, 0.0, pos.z)
+	if boden_fn.is_valid():
+		position.y = boden_fn.call(Vector2(pos.x, pos.z))
 	yaw = blick_yaw
 	pitch = 0.0
 	hoch = 0.0
@@ -85,6 +91,8 @@ func _input(e: InputEvent) -> void:
 func raum_setzen(r: Dictionary, pos: Vector2, blick_yaw: float) -> void:
 	raum = r
 	position = Vector3(pos.x, float(r.get("boden", 0.0)), pos.y)
+	if r.is_empty() and boden_fn.is_valid():
+		position.y = boden_fn.call(pos)
 	yaw = blick_yaw
 	pitch = 0.0
 	hoch = 0.0
@@ -123,6 +131,8 @@ func frei(p: Vector2) -> bool:
 		for pg in polygone:
 			if Geometry2D.is_point_in_polygon(p, pg):
 				return false
+		if sperre_fn.is_valid() and not sperre_fn.call(p, position.y):
+			return false
 	else:
 		for b in bloecke:
 			if hoch < float(b[1]) and (b[0] as Rect2).grow(RADIUS).has_point(p):
@@ -169,8 +179,10 @@ func _process(dt: float) -> void:
 			position.x += d.x
 		if frei(Vector2(position.x, position.z + d.z)):
 			position.z += d.z
-		gelaufen += position.distance_to(vorher)
+		gelaufen += Vector2(position.x - vorher.x, position.z - vorher.z).length()
 		bob += dt * (13.0 if Input.is_key_pressed(KEY_SHIFT) else 9.0)
+	if raum.is_empty() and boden_fn.is_valid():   # Bodenhöhe draußen (auch nach Teleport im Stand)
+		position.y = boden_fn.call(Vector2(position.x, position.z))
 	if fz_fliegt and not gesperrt and raum.is_empty():
 		# Jetpack: Leertaste hoch, Strg runter, sonst in der Luft stehen bleiben
 		var v := 0.0

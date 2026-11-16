@@ -64,7 +64,51 @@ const BOOSTS := {
 	"mittag": {"name": "Mittagsmenü", "text": "15 Minuten: +50 % Wischfläche, +60 % Tempo, +0,8 m Reichweite und keine Tauben.", "dauer": 900, "preis": 380, "stand": "restaurant", "wirkung": {"flaeche": 0.5, "tempo": 0.6, "reich": 0.8, "tauben": 1.0}},
 	"chefmenue": {"name": "Menü des Küchenchefs", "text": "15 Minuten lang doppeltes Geld pro Fenster und +50 % Wischfläche.", "dauer": 900, "preis": 700, "stand": "restaurant", "wirkung": {"lohn": 1.0, "flaeche": 0.5}},
 	"champagner": {"name": "Gipfel-Champagner", "text": "20 Minuten lang dreifaches Geld pro Fenster, Helfer doppelt so schnell.", "dauer": 1200, "preis": 1500, "stand": "gipfel", "wirkung": {"lohn": 2.0, "helfer": 1.0}},
+	# Strandbar: Angel-Wirkungen zappeln (Fisch zappelt langsamer), selten (seltene beißen öfter), kasten (Fangkasten größer),
+	# biss (Wartezeit kürzer), fischpreis (mehr Geld beim Verkaufen) – plus bekannte Cocktails
+	"kokos": {"name": "Kokos-Shake", "text": "10 Minuten lang zappeln die Fische 30 % langsamer.", "dauer": 600, "preis": 30, "stand": "strandbar", "wirkung": {"zappeln": 0.3}},
+	"mango": {"name": "Mango-Smoothie", "text": "10 Minuten lang beißen seltene Fische viel öfter.", "dauer": 600, "preis": 45, "stand": "strandbar", "wirkung": {"selten": 0.6}},
+	"ananas": {"name": "Ananas-Eistee", "text": "10 Minuten lang ist der Fangkasten 25 % größer.", "dauer": 600, "preis": 30, "stand": "strandbar", "wirkung": {"kasten": 0.25}},
+	"limette": {"name": "Limetten-Soda", "text": "10 Minuten lang beißen die Fische doppelt so schnell an.", "dauer": 600, "preis": 25, "stand": "strandbar", "wirkung": {"biss": 0.5}},
+	"pina": {"name": "Piña Colada", "text": "15 Minuten: Fische zappeln 20 % langsamer, Fangkasten 20 % größer.", "dauer": 900, "preis": 80, "stand": "strandbar", "wirkung": {"zappeln": 0.2, "kasten": 0.2}},
+	"lagoon": {"name": "Blue Lagoon", "text": "15 Minuten: seltene Fische beißen öfter, Wartezeit 30 % kürzer.", "dauer": 900, "preis": 90, "stand": "strandbar", "wirkung": {"selten": 0.4, "biss": 0.3}},
+	"sunrise": {"name": "Tequila Sunrise", "text": "15 Minuten lang zahlt der Fischladen 50 % mehr.", "dauer": 900, "preis": 70, "stand": "strandbar", "wirkung": {"fischpreis": 0.5}},
+	"caipi": {"name": "Caipirinha", "text": "10 Minuten lang +30 % Geld pro Fenster – für den Rückweg zum Turm.", "dauer": 600, "preis": 120, "stand": "strandbar", "wirkung": {"lohn": 0.3}},
 }
+
+# ---------------------------------------------------------------- Angeln (Steg + Fischladen am Strand)
+# 20 Fische (Golf/Arabisches Meer), je seltener desto größer; chance in %, preis = Grundpreis (steigt mit der Höhe wie
+# die Boosts). Angeln ist ein kleiner Zusatzverdienst – nie lohnender als Fenster putzen (mit dem Durchspiel-Bot gemessen).
+const FISCHE := [
+	{"id": "sergeant", "name": "Sergeant-Fisch", "groesse": 0.15, "chance": 17.0, "preis": 1, "text": "Fünf schwarze Streifen wie ein Uniform-Ärmel."},
+	{"id": "koffer", "name": "Kofferfisch", "groesse": 0.2, "chance": 15.0, "preis": 1, "text": "Eckig wie ein kleiner Koffer – schwimmt trotzdem."},
+	{"id": "sohal", "name": "Sohal-Doktorfisch", "groesse": 0.3, "chance": 12.5, "preis": 1, "text": "Hat am Schwanz ein scharfes „Skalpell“."},
+	{"id": "igel", "name": "Igelfisch", "groesse": 0.3, "chance": 10.5, "preis": 1, "text": "Bläst sich bei Gefahr zur Stachelkugel auf."},
+	{"id": "wimpel", "name": "Wimpelfisch", "groesse": 0.2, "chance": 8.5, "preis": 2, "text": "Trägt eine lange weiße Fahne auf dem Rücken."},
+	{"id": "papagei", "name": "Papageifisch", "groesse": 0.4, "chance": 7.0, "preis": 2, "text": "Knabbert Korallen – und macht daraus Sand."},
+	{"id": "kaiser", "name": "Arabischer Kaiserfisch", "groesse": 0.4, "chance": 6.0, "preis": 3, "text": "Dunkelblau mit einem großen gelben Fleck."},
+	{"id": "trompete", "name": "Trompetenfisch", "groesse": 0.6, "chance": 5.0, "preis": 3, "text": "Lang und dünn – saugt seine Beute ein."},
+	{"id": "feuer", "name": "Rotfeuerfisch", "groesse": 0.35, "chance": 4.0, "preis": 4, "text": "Prächtige Flossen voller Giftstacheln."},
+	{"id": "hornhecht", "name": "Hornhecht", "groesse": 0.7, "chance": 3.3, "preis": 5, "text": "Springt über die Wellen, Schnabel voller Zähne."},
+	{"id": "barrakuda", "name": "Barrakuda", "groesse": 1.2, "chance": 2.7, "preis": 7, "text": "Der Torpedo des Riffs."},
+	{"id": "adlerrochen", "name": "Adlerrochen", "groesse": 1.5, "chance": 2.2, "preis": 9, "text": "Fliegt mit weißen Punkten durchs Wasser."},
+	{"id": "muraene", "name": "Riesenmuräne", "groesse": 2.0, "chance": 1.7, "preis": 12, "text": "Wohnt in Felsspalten und schaut grimmig."},
+	{"id": "gitarre", "name": "Gitarrenrochen", "groesse": 2.5, "chance": 1.3, "preis": 16, "text": "Vorne Rochen, hinten Hai."},
+	{"id": "napoleon", "name": "Napoleon-Lippfisch", "groesse": 2.0, "chance": 1.0, "preis": 20, "text": "Riesig, mit Beule auf der Stirn."},
+	{"id": "segel", "name": "Segelfisch", "groesse": 3.0, "chance": 0.8, "preis": 30, "text": "Schnellster Fisch der Welt, mit Riesensegel."},
+	{"id": "manta", "name": "Riesenmanta", "groesse": 6.0, "chance": 0.6, "preis": 45, "text": "Sechs Meter Spannweite – sanft wie ein Drache."},
+	{"id": "quaste", "name": "Quastenflosser", "groesse": 2.0, "chance": 0.4, "preis": 75, "text": "Ein lebendes Fossil aus der Urzeit."},
+	{"id": "saege", "name": "Sägefisch", "groesse": 5.0, "chance": 0.3, "preis": 100, "text": "Trägt eine Säge vor der Nase."},
+	{"id": "walhai", "name": "Walhai", "groesse": 10.0, "chance": 0.2, "preis": 150, "text": "Der größte Fisch der Welt – und ganz friedlich."},
+]
+const RIESEN_AB := 15            # ab dem Segelfisch (Index 15) braucht man die Hochsee-Angel
+# kasten = Größe des Fangkastens (Anteil des Balkens), selten = seltene Fische beißen öfter
+const ANGELN := [
+	{"id": "bambus", "name": "Bambus-Angel", "text": "Einfach und billig. Kleiner Fangkasten.", "preis": 150, "kasten": 0.22, "selten": 0.0},
+	{"id": "carbon", "name": "Carbon-Angel", "text": "Leicht und stark: größerer Fangkasten.", "preis": 1500, "kasten": 0.3, "selten": 0.0},
+	{"id": "hochsee", "name": "Hochsee-Angel", "text": "Seltene Fische beißen öfter. Nötig für die Riesen ab dem Segelfisch.", "preis": 8000, "kasten": 0.3, "selten": 0.4, "riesen": true},
+]
+const YACHT_SELTEN := 0.3        # draußen auf dem Meer mit der Yacht: seltene Fische beißen öfter
 
 # ---------------------------------------------------------------- Penthouse: Möbel + Arcade-Gegenstände
 # Seltenheit 0–3: gewöhnlich, selten, episch, legendär. Bonus wirkt nur, wenn der Gegenstand im Penthouse steht.
@@ -247,7 +291,108 @@ var erfolge := {}                                       # Erfolg-ID -> true
 var besucht: Array = []                                 # besuchte Orte (lounge, restaurant, plattform, arcade, penthouse)
 var statistik := {"spielzeit": 0.0, "fenster_selbst": 0, "fenster_helfer": 0, "verdient": 0, "hoechste": 0.0, "rekord_minute": 0,
 	"sitzung_rekord": 0.0, "gelaufen": 0.0, "casino_spiele": 0, "casino_bilanz": 0, "casino_rekord": 0, "arcade_spiele": 0,
-	"arcade_gewinne": 0, "boosts": 0, "erfolg_geld": 0}
+	"arcade_gewinne": 0, "boosts": 0, "erfolg_geld": 0, "fische": 0, "fisch_geld": 0, "angel_zeit": 0.0}
+var angeln: Array = []                                  # gekaufte Angeln (ANGELN-ids)
+var fischkiste := {}                                    # Fisch-ID -> Anzahl (noch nicht verkauft)
+var fisch_index := {}                                   # Fisch-ID -> {n = so oft gefangen, max = größte Länge in m}
+var yacht := false                                      # Belohnung für alle 20 Fische
+
+# ---------------------------------------------------------------- Angeln
+static func fisch(id: String) -> Dictionary:
+	for f in FISCHE:
+		if f.id == id:
+			return f
+	return {}
+
+static func fisch_nr(id: String) -> int:
+	for i in FISCHE.size():
+		if FISCHE[i].id == id:
+			return i
+	return -1
+
+static func angel_daten(id: String) -> Dictionary:
+	for a in ANGELN:
+		if a.id == id:
+			return a
+	return {}
+
+# beste gekaufte Angel ("" = keine)
+func angel() -> String:
+	var beste := ""
+	for a in ANGELN:
+		if a.id in angeln:
+			beste = a.id
+	return beste
+
+func kaufe_angel(id: String) -> bool:
+	var a := angel_daten(id)
+	if a.is_empty() or id in angeln or geld < int(a.preis):
+		return false
+	geld -= int(a.preis)
+	angeln.append(id)
+	return true
+
+func fisch_preis(id: String) -> int:
+	return maxi(1, int(round(float(fisch(id).get("preis", 1)) * (1.0 + 0.35 * hoechster_abschnitt) * (1.0 + boost_wirkung("fischpreis")))))
+
+# Chancen (Summe 1) mit „seltene beißen öfter“: Gewicht wächst mit dem Rang (der seltenste bekommt den vollen Zuschlag)
+static func fisch_chancen(selten: float) -> PackedFloat32Array:
+	var g := PackedFloat32Array()
+	var summe := 0.0
+	for i in FISCHE.size():
+		var w: float = float(FISCHE[i].chance) * (1.0 + selten * pow(float(i) / (FISCHE.size() - 1), 1.5))
+		g.append(w)
+		summe += w
+	for i in g.size():
+		g[i] /= summe
+	return g
+
+static func fisch_ziehen(selten: float, r: float) -> String:
+	var g := fisch_chancen(selten)
+	var s := 0.0
+	for i in g.size():
+		s += g[i]
+		if r < s:
+			return FISCHE[i].id
+	return FISCHE[0].id
+
+# Fang eintragen: Kiste + Index (größte Länge). true = neue Art
+func fisch_gefangen(id: String, laenge: float) -> bool:
+	fischkiste[id] = int(fischkiste.get(id, 0)) + 1
+	var neu := not fisch_index.has(id)
+	var e: Dictionary = fisch_index.get(id, {"n": 0, "max": 0.0})
+	fisch_index[id] = {"n": int(e.n) + 1, "max": maxf(float(e.max), laenge)}
+	statistik.fische = int(statistik.fische) + 1
+	return neu
+
+func fische_in_kiste() -> int:
+	var n := 0
+	for id in fischkiste:
+		n += int(fischkiste[id])
+	return n
+
+# Fische einer Art verkaufen (anzahl < 0 = alle); gibt den Erlös zurück
+func verkaufe_fisch(id: String, anzahl := -1) -> int:
+	var da := int(fischkiste.get(id, 0))
+	var n := da if anzahl < 0 else mini(anzahl, da)
+	if n <= 0:
+		return 0
+	var erloes := n * fisch_preis(id)
+	fischkiste[id] = da - n
+	if int(fischkiste[id]) <= 0:
+		fischkiste.erase(id)
+	verdienen(erloes)
+	statistik.fisch_geld = int(statistik.fisch_geld) + erloes
+	return erloes
+
+func verkaufe_alle_fische() -> int:
+	var s := 0
+	for id in fischkiste.keys():
+		s += verkaufe_fisch(str(id))
+	return s
+
+func index_voll() -> bool:
+	return fisch_index.size() >= FISCHE.size()
 
 # ---------------------------------------------------------------- Händler
 func boost_preis(id: String) -> int:
@@ -500,7 +645,8 @@ func oberstes_stockwerk() -> int:
 
 # ---------------------------------------------------------------- Speichern
 func speichern() -> Dictionary:
-	return {"geld": geld, "besitz": besitz, "aktiv": aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen, "boosts": boosts, "kosmetik_besitz": kosmetik_besitz, "kosmetik_aktiv": kosmetik_aktiv, "helfer": helfer, "fahrzeuge": fahrzeuge, "fahrzeug": fahrzeug, "gondeln": gondeln, "aktive_gondel": aktive_gondel, "moebel": moebel, "erfolge": erfolge, "besucht": besucht, "statistik": statistik}
+	return {"geld": geld, "besitz": besitz, "aktiv": aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen, "boosts": boosts, "kosmetik_besitz": kosmetik_besitz, "kosmetik_aktiv": kosmetik_aktiv, "helfer": helfer, "fahrzeuge": fahrzeuge, "fahrzeug": fahrzeug, "gondeln": gondeln, "aktive_gondel": aktive_gondel, "moebel": moebel, "erfolge": erfolge, "besucht": besucht, "statistik": statistik,
+		"angeln": angeln, "fischkiste": fischkiste, "fisch_index": fisch_index, "yacht": yacht}
 
 func laden(d: Dictionary) -> void:
 	geld = int(d.get("geld", 0))
@@ -569,3 +715,18 @@ func laden(d: Dictionary) -> void:
 	for k in statistik:
 		if st.has(k):
 			statistik[k] = float(st[k]) if statistik[k] is float else int(st[k])
+	angeln = []
+	for a in d.get("angeln", []):
+		if not angel_daten(str(a)).is_empty() and not str(a) in angeln:
+			angeln.append(str(a))
+	fischkiste = {}
+	var fk: Dictionary = d.get("fischkiste", {})
+	for k in fk:
+		if not fisch(str(k)).is_empty() and int(fk[k]) > 0:
+			fischkiste[str(k)] = int(fk[k])
+	fisch_index = {}
+	var fi: Dictionary = d.get("fisch_index", {})
+	for k in fi:
+		if not fisch(str(k)).is_empty() and fi[k] is Dictionary:
+			fisch_index[str(k)] = {"n": int(fi[k].get("n", 1)), "max": float(fi[k].get("max", 0.0))}
+	yacht = bool(d.get("yacht", false)) or index_voll()
