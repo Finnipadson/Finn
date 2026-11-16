@@ -59,7 +59,11 @@ Strand, Angeln und Karte (16.11.2026, Wünsche des Users – Lage, Index und Bel
 - [ ] **Fisch-Index im Album (Taste B)**: zweiter Reiter „Szenen | Fische“, gefangene Fische mit Bild, fehlende als Umriss
 - [ ] **Belohnung für den vollen Index: eigene Yacht** – neues Fahrzeug, mit dem man übers Meer fahren kann
 - [ ] **Karte mit Taste M**: Übersicht über Stadt, Turm, Kioske, Läden, Casino, Strand und die eigene Position
-- Noch offen: Fischarten und Preise, wie das Angeln sich spielt (Minispiel?), wie man zum Strand kommt (Weg/Straße), Angel kaufen (Angelladen?)
+- [ ] **Weg zum Strand: Palmen-Boulevard mit Kanal** (entschieden 16.11.2026): breite Fußgänger-Allee vom Platz bis zum Meer, in der Mitte ein schmaler Wasserkanal mit kleinen Fontänen (passt zum See), Palmen, Bänke, Laternen, Schilder „Strand →“, am Ende eine große Treppe hinunter zum Sand. Zu Fuß ~1 min, mit Hoverboard ~30 s
+- [ ] **Großer Steg mit Fischladen** (entschieden): dort kauft man die Angel und verkauft alle Fische – je seltener, desto mehr Geld. Angeln bleibt eine **Nebenaufgabe** (kleiner Zusatzverdienst, nicht schneller als Fenster putzen)
+- [ ] **Angeln als Geschicklichkeitsspiel** (entschieden) – genaue Spielweise noch offen
+- **Fisch-Vorschlag** (echte Arten aus Golf/Arabischem Meer, keine Standard-Fische, je seltener desto größer; noch nicht final): 1 Sergeant-Fisch 15 cm 17 % · 2 Kofferfisch 20 cm 15 % · 3 Sohal-Doktorfisch 30 cm 12,5 % · 4 Igelfisch 30 cm 10,5 % · 5 Wimpelfisch 20 cm 8,5 % · 6 Papageifisch 40 cm 7 % · 7 Arabischer Kaiserfisch 40 cm 6 % · 8 Trompetenfisch 60 cm 5 % · 9 Rotfeuerfisch 35 cm 4 % · 10 Hornhecht 70 cm 3,3 % · 11 Barrakuda 1,2 m 2,7 % · 12 Adlerrochen 1,5 m 2,2 % · 13 Riesenmuräne 2 m 1,7 % · 14 Gitarrenrochen 2,5 m 1,3 % · 15 Napoleon-Lippfisch 2 m 1 % · 16 Segelfisch 3 m 0,8 % · 17 Riesenmanta 6 m 0,6 % · 18 Quastenflosser 2 m 0,4 % · 19 Sägefisch 5 m 0,3 % · 20 Walhai 10 m 0,2 %. Idee: Manta, Sägefisch, Walhai nur fotografieren + freilassen (geschützt), Prämie vom Meeresforscher. Modelle: Quaternius „Lowpoly Animated Fish“ (CC0, Stil vorher prüfen), Sonderformen aus Code
+- Noch offen: wie das Geschicklichkeitsspiel genau funktioniert, Fisch-Preise, Angel-Stufen
 
 Ideen aus dem Durchspiel-Test (16.11.2026, Vorschläge von Claude, noch nicht entschieden):
 - [ ] **Endlos-Modus / zweiter Turm** nach allen Fenstern: Dreck kommt langsam zurück oder ein neuer Turm, damit das Geld am Ende (100.000 € und mehr) noch etwas bringt
