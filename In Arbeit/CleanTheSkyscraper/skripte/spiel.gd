@@ -1,7 +1,7 @@
 class_name Spiel
 extends Node3D
 # Das eigentliche Spiel: Gondel + Putzen + Geld + Shop + Speichern.
-# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 15 Kiosk-Bilder, 16 Casino, 17 Casino-Bilder, 18 Start zu Fuß, 19 Werkzeug-Kiosk, 20 Gondeln, 21 Helfer, 22 Fahrzeuge + Hotbar + Werkzeug-Stand, 23 Menü-Bilder.
+# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 15 Kiosk-Bilder, 16 Casino, 17 Casino-Bilder, 18 Start zu Fuß, 19 Werkzeug-Kiosk, 20 Gondeln, 21 Helfer, 22 Fahrzeuge + Hotbar + Werkzeug-Stand, 23 Menü-Bilder, 24–28 Extras (ExtrasTest), 29–30 Läden (LaedenTest).
 
 const SPIELSTAND := "user://spielstand.json"
 const TESTSTAND := "user://spielstand_test.json"

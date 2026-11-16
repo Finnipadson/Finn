@@ -36,7 +36,8 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 - [x] Phase 4 (15.11.2026): Helfer (Putzkraft, Roboter, Drohne – Kauf + Lohn-Anteil, nur beim Spielen), drei Gondeln (eine je Turmseite), Werkzeug- und Fahrzeug-Kioske, Hotbar, E-Scooter/Hoverboard/Jetpack
 - [x] Extras (15.11.2026): Sky-Lounge mit Express-Aufzug (Lounge 200 m mit Sky-Bar, Restaurant 500 m mit Designer-Möbeln, Aussichtsplattform 800 m um die Spitze), Penthouse oben im Casino-Hochhaus (Möbel frei aufstellen, Boni, Pokal-Vitrine), Arcade-Halle im 1. Stock (Greifautomat, Kapsel-Automat; Seltenheit +2/5/10/20 %), 29 Erfolge (Geld + Pokal) + Statistik mit Rekorden (Taste P)
 - [x] Flimmern verringert (15.11.2026): Fenster-Raster der Stadthäuser, Boden (Fugen, Linien, Zebrastreifen, Platten, Blumen), Turm-Räume/Schlieren und Palmen weich gefiltert; Spiegelungen (SSR) aus, weil sie den Boden verschmiert in die Brüstungen am Turmfuß gespiegelt haben. TAA ist nur noch eine Einstellung (Werkstatt → Einstellungen, Standard aus), weil es das Bild im Stand wackeln lässt. Gemessen: beim Drehen über der Stadt ca. 65 % weniger Flimmern, Turm aus der Ferne ca. 65 % weniger, Boden 25–60 % weniger, im Stand kein Wackeln; FPS etwas höher als vorher. Danach noch: Palmen/Laternen standen auf Kreuzungen (behoben), Brüstungen als durchgehendes Band, Fensterpfosten waren gespiegelt und flackerten mit dem Glas (behoben) – vom User abgenommen: „sieht perfekt aus“
-- [ ] Phase 5: Feinschliff (Sound, Effekte, Menü, .exe)
+- [x] Vier Läden (16.11.2026) rund um den Platz, je im Erdgeschoss eines eigenen Hochhauses, zu Fuß begehbar: Möbelhaus (6 Ausstellungsräume, 18 neue Möbel, E am Möbelstück = ansehen + kaufen; Tablet bleibt), Gondel-Werkstatt (Lackierungen, Aufkleber, Blumenkästen, Sonnenschirm – nur Optik, Vorführ-Gondel zeigt die Ausstattung), Souvenirshop (12 Andenken, je nach einem Erfolg freigeschaltet, dann einmal kaufbar, kleine Boni), Goldschmuck neben dem Casino (6 legendäre Gold-Deko-Stücke 20.000–500.000 €, je +20 %)
+- [ ] Phase 5: Feinschliff (Sound, Effekte, Menü, .exe) – dabei auch das Radio für die Gondel (vom User auf Phase 5 verschoben)
 - [x] Ansicht: Ich-Ansicht aus der Gondel (15.11.2026)
 - [x] Spielgefühl: komplett entspannt, kein Scheitern (15.11.2026)
 - [x] Putzen durch Reiben mit der Maus, Gondel frei fahren, Texte auf Deutsch, Spieldauer 10–20 Stunden (15.11.2026)
@@ -44,11 +45,11 @@ Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt
 
 ## Ideen (noch nicht entschieden)
 
-Ausgewählte Ladenideen (15.11.2026) – die Läden sollen auf **verschiedene Hochhäuser** in der Stadt verteilt werden (jeder Laden in einem eigenen Tower, nicht alle an einem Ort):
-- [ ] **Möbelhaus**: begehbarer Laden mit Ausstellungsräumen, Möbel fürs Penthouse ansehen und kaufen (statt nur Menü)
-- [ ] **Gondel-Werkstatt**: Lackierungen, Aufkleber, Blumenkästen, Sonnenschirm, Radio für die Gondel
-- [ ] **Souvenirshop**: Andenken für erreichte Meilensteine (Mini-Wüstennadel, Schneekugel …), im Penthouse aufstellen
-- [ ] **Goldschmuck-Laden**: glitzerndes Schaufenster neben dem Casino, Luxus-Statussymbole (z. B. goldene Gondel)
+Ausgewählte Ladenideen (15.11.2026) – jeder Laden in einem eigenen Hochhaus, **gebaut am 16.11.2026** (rund um den Platz):
+- [x] **Möbelhaus**: begehbarer Laden mit Ausstellungsräumen, Möbel fürs Penthouse ansehen und kaufen (statt nur Menü)
+- [x] **Gondel-Werkstatt**: Lackierungen, Aufkleber, Blumenkästen, Sonnenschirm (Radio → Phase 5, wenn es Ton gibt)
+- [x] **Souvenirshop**: Andenken für erreichte Meilensteine (Mini-Wüstennadel, Schneekugel …), im Penthouse aufstellen
+- [x] **Goldschmuck-Laden**: glitzerndes Schaufenster neben dem Casino, Gold-Deko fürs Penthouse (goldene Gondel/Werkzeuge/Schmuck vom User abgewählt)
 
 Mehrspielermodus (15.11.2026, Wünsche des Users):
 - [ ] **Koop**: bis zu **4 Spieler** putzen gemeinsam **denselben Turm**, jedes Fenster zählt für alle
