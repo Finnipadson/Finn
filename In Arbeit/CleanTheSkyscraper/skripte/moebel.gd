@@ -2,7 +2,7 @@ class_name Moebel
 # Modelle der Penthouse-Gegenstände (Kenney Furniture Kit in modelle/moebel, CC0; "code:…" = Andenken.bauen): laden, einfärben,
 # Seltenheit leuchten lassen. Fehlt ein Modell, steht eine Kiste in der Farbe der Seltenheit da.
 
-const MASS := 2.1              # Furniture Kit → Meter (Tür im Kit 1,01 hoch = 2,1 m)
+const MASS := 2.5              # Furniture Kit → Meter (Tür im Kit 1,01 hoch = 2,5 m; vorher 2,1 – der User fand die Möbel zu klein)
 static var _glow := {}
 
 static func modell(id: String, nur_form := false) -> Node3D:

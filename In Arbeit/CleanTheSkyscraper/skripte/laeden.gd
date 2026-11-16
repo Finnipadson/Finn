@@ -224,7 +224,8 @@ func _schild(eltern: Node3D, t: String, p: Vector3, farbe := Color(1, 1, 1)) -> 
 
 # ---------------------------------------------------------------- Möbelhaus
 const MH_GANG := 3.0          # halbe Breite des Mittelgangs
-const MH_TIEFE := 11.0        # Tiefe der Ausstellungsräume (dahinter bis zur Außenwand: Lager)
+const MH_PLAN := 2.1          # MH_EINRICHTUNG wurde für Moebel.MASS = 2,1 geplant; größere Möbel → Abstände mitwachsen
+const MH_TIEFE := 11.0 * Moebel.MASS / MH_PLAN   # Tiefe der Ausstellungsräume (dahinter bis zur Außenwand: Lager)
 const MH_RAEUME := [[-12.5, -2.9], [-2.7, 7.1], [7.3, 17.6]]   # x-Bereiche der drei Räume je Seite
 
 func _moebelhaus() -> void:
@@ -252,7 +253,7 @@ func _moebelhaus() -> void:
 			for kk in 3:
 				var kx := lerpf(x0 + 1.2, x1 - 1.2, kk / 2.0)
 				for st in 2 + (kk % 2):
-					RaumBau.modell(n, "moebel/cardboardBoxClosed", Vector3(kx, 0.06 + st * 0.5, seite * (innen_w - 0.9)), Moebel.MASS, kk * 0.4)
+					RaumBau.modell(n, "moebel/cardboardBoxClosed", Vector3(kx, 0.06 + st * 0.5, seite * (innen_w - 0.65)), Moebel.MASS, kk * 0.4)
 			_fest(id, x0 - 0.2, minf(zw0, zw1), x0, maxf(zw0, zw1))
 			# Boden des Raums in seiner Farbe
 			var fl := PackedVector2Array([Vector2(x0, zw0), Vector2(x1, zw0), Vector2(x1, zw1), Vector2(x0, zw1)])
@@ -263,7 +264,7 @@ func _moebelhaus() -> void:
 			var sl := RaumBau.schrift(n, r.name, Vector3((x0 + x1) * 0.5, 3.4, seite * (MH_GANG + 0.05)), PI if seite > 0.0 else 0.0, 90, 0.006, Color("2b2d33"))
 			sl.modulate = Color("3a3d44")
 			RaumBau.box(n, Vector3(minf(x1 - x0 - 1.0, 6.0), 0.06, 0.06), Vector3((x0 + x1) * 0.5, 2.95, seite * (MH_GANG + 0.05)), leiste)
-			RaumBau.licht(n, Vector3((x0 + x1) * 0.5, 4.2, seite * 8.5), "fff0dc", 1.3, 10.0)
+			RaumBau.licht(n, Vector3((x0 + x1) * 0.5, 4.2, seite * (MH_GANG + MH_TIEFE * 0.5)), "fff0dc", 1.3, 11.0)
 			_raum_moebel(r.id, x0, x1, seite)
 	# Gang: Lichter + Info-Terminal im Foyer
 	for k in 2:
@@ -301,10 +302,10 @@ const MH_EINRICHTUNG := {
 		{"d": "pottedPlant", "u": 0.6, "v": 10.55, "r": 0}, {"bild": 1, "u": 0.0, "v": 9.55}, {"lampe": 1, "u": 4.8, "v": 7.55},
 	],
 	"kueche": [
-		{"g": "kueche", "u": 1.0, "v": 10.6, "r": 0}, {"g": "herd", "u": 2.0, "v": 10.63, "r": 0},
-		{"g": "spuele", "u": 2.9, "v": 10.63, "r": 0}, {"d": "kitchenCabinet", "u": 3.8, "v": 10.63, "r": 0},
-		{"d": "kitchenCabinet", "u": 4.7, "v": 10.63, "r": 0}, {"d": "kitchenMicrowave", "u": 3.8, "v": 10.65, "r": 0, "y": 0.94},
-		{"d": "kitchenCoffeeMachine", "u": 4.7, "v": 10.65, "r": 0, "y": 0.94},
+		{"g": "kueche", "u": 0.65, "v": 10.6, "r": 0}, {"g": "herd", "u": 2.35, "v": 10.63, "r": 0},
+		{"g": "spuele", "u": 3.25, "v": 10.63, "r": 0}, {"d": "kitchenCabinet", "u": 4.15, "v": 10.63, "r": 0},
+		{"d": "kitchenCabinet", "u": 5.05, "v": 10.63, "r": 0}, {"d": "kitchenMicrowave", "u": 4.15, "v": 10.65, "r": 0, "y": 0.94},
+		{"d": "kitchenCoffeeMachine", "u": 5.05, "v": 10.65, "r": 0, "y": 0.94},
 		{"g": "kuechenbar", "u": 3.0, "v": 7.75, "r": 180}, {"g": "bar_hocker", "u": 2.6, "v": 6.95, "r": 180},
 		{"d": "stoolBar", "u": 3.4, "v": 6.95, "r": 180},
 		{"g": "esstisch", "u": 7.4, "v": 8.15, "r": 0}, {"g": "stuhl", "u": 7.0, "v": 7.25, "r": 180},
@@ -324,7 +325,7 @@ const MH_EINRICHTUNG := {
 	],
 	"buero": [
 		{"g": "eckschreibtisch", "u": 1.2, "v": 9.95, "r": 0}, {"d": "computerScreen", "u": 0.9, "v": 10.55, "r": 0, "y": 0.81},
-		{"d": "chairDesk", "u": 1.7, "v": 8.75, "r": 180},
+		{"d": "chairDesk", "u": 1.7, "v": 8.5, "r": 180},
 		{"g": "schreibtisch", "u": 6.0, "v": 10.5, "r": 0}, {"d": "laptop", "u": 6.0, "v": 10.55, "r": 0, "y": 0.81},
 		{"g": "buerostuhl", "u": 6.0, "v": 9.35, "r": 180}, {"g": "regal", "u": 9.3, "v": 6.55, "r": 270},
 		{"g": "aktenschrank", "u": 0.3, "v": 5.05, "r": 90}, {"d": "rugRectangle", "u": 5.0, "v": 6.15, "r": 90},
@@ -348,11 +349,21 @@ const LAMPEN_FARBEN := ["f4f2ee", "2b2d33", "e9a23b", "c9ced4", "3fc29a"]
 # Möbel und Deko eines Ausstellungsraums nach MH_EINRICHTUNG aufstellen
 func _raum_moebel(raum: String, x0: float, x1: float, seite: float) -> void:
 	var n := _innen("moebel")
-	var versatz := ((x1 - x0) - 9.6) * 0.5
 	var feste_lokal: Array = []      # Rect2 in Laden-Koordinaten (für die Standpunkte)
 	var plaetze: Array = []
+	var k := Moebel.MASS / MH_PLAN       # Abstände wachsen mit der Möbelgröße (u um die Raummitte, v ab dem Gang)
+	var breite := x1 - x0
 	for e in MH_EINRICHTUNG.get(raum, []):
-		var p := Vector2(x0 + versatz + float(e.u), seite * (MH_GANG + float(e.v)))
+		var u: float = breite * 0.5 + (float(e.u) - 4.8) * k
+		var v: float = float(e.v) * k
+		if e.has("bild"):
+			u = float(e.u)
+		elif not e.has("lampe"):   # an den Wänden halten (Größe nach der Drehung)
+			var r0: float = float(e.r) if seite < 0.0 else 180.0 - float(e.r)
+			var fl := Moebel.flaeche(str(e.g), r0) if e.has("g") else _deko_flaeche(str(e.d), r0, float(e.get("s", 1.0)))
+			u = clampf(u, fl.x * 0.5 + 0.05, breite - fl.x * 0.5 - 0.05)
+			v = clampf(v, fl.y * 0.5 + 0.05, MH_TIEFE - fl.y * 0.5 - 0.05)
+		var p := Vector2(x0 + u, seite * (MH_GANG + v))
 		if e.has("bild"):
 			_bild(n, Vector3(x0 + 0.02, 1.75, p.y), BILD_FARBEN[int(e.bild)])
 			continue
@@ -360,7 +371,7 @@ func _raum_moebel(raum: String, x0: float, x1: float, seite: float) -> void:
 			_haengelampe(n, Vector3(p.x, 0, p.y), DATEN.moebel.hoch, LAMPEN_FARBEN[int(e.lampe)])
 			continue
 		var r: float = float(e.r) if seite < 0.0 else 180.0 - float(e.r)
-		var y: float = float(e.get("y", 0.0))
+		var y: float = float(e.get("y", 0.0)) * k
 		if e.has("d"):
 			var d := RaumBau.mittig(n, "moebel/" + str(e.d), Vector3(p.x, 0.08 + y, p.y), Moebel.MASS * float(e.get("s", 1.0)), deg_to_rad(r))
 			if y == 0.0:
@@ -386,7 +397,7 @@ func _raum_moebel(raum: String, x0: float, x1: float, seite: float) -> void:
 		for richtung in [vorne, vorne.orthogonal(), -vorne.orthogonal(), -vorne, Vector2(0, -seite)]:
 			var weit := absf(richtung.x) * f.x * 0.5 + absf(richtung.y) * f.y * 0.5 + 0.85
 			var kand: Vector2 = p + richtung * weit
-			if kand.x < x0 + 0.6 or kand.x > x1 - 0.6 or absf(kand.y) > MH_GANG + MH_TIEFE - 0.6:
+			if kand.x < x0 + 0.6 or kand.x > x1 - 0.6 or absf(kand.y) > MH_GANG + MH_TIEFE - Laeufer.RADIUS - 0.05:
 				continue
 			var frei := true
 			for q in feste_lokal:
@@ -397,6 +408,17 @@ func _raum_moebel(raum: String, x0: float, x1: float, seite: float) -> void:
 				steh = kand
 				break
 		_ausstellen(gid, p, r, steh, n, pl[3])
+
+# Grundfläche eines Deko-Modells (gedreht), einmal gemessen
+static var _deko_groesse := {}
+func _deko_flaeche(name: String, dreh: float, s: float) -> Vector2:
+	if not _deko_groesse.has(name):
+		var t := Node3D.new()
+		_deko_groesse[name] = RaumBau.aabb(RaumBau.modell(t, "moebel/" + name, Vector3.ZERO, Moebel.MASS)).size
+		t.free()
+	var b: Vector3 = _deko_groesse[name] * s
+	var a := deg_to_rad(dreh)
+	return Vector2(absf(cos(a)) * b.x + absf(sin(a)) * b.z, absf(sin(a)) * b.x + absf(cos(a)) * b.z)
 
 # Bild an der Trennwand (schaut nach +x): Rahmen + drei Farbflächen
 func _bild(n: Node3D, p: Vector3, farben: Array) -> void:
