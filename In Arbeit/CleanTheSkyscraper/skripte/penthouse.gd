@@ -9,7 +9,7 @@ const HALB := Casino.HALB - Casino.WAND      # Innenmaß (halb)
 const STOCK_AB := Casino.TURM_STOCKWERKE - 2 # unterstes der zwei Stockwerke
 const RASTER := 0.25
 const ABSTAND := 2.6                         # so weit vor dem Spieler steht die Vorschau
-const VITRINE_PLAETZE := 30
+const VITRINE_PLAETZE := 33   # 3 Böden à 11 Pokale
 
 var mitte := Vector2.ZERO
 var boden := 0.0
@@ -174,9 +174,9 @@ func pokale_aktualisieren() -> void:
 		if not wirtschaft.erfolge.has(e.id) or i >= VITRINE_PLAETZE:
 			continue
 		var p := pokal(int(e.pokal))
-		var reihe := i / 10
-		var spalte := i % 10
-		p.position = Vector3(-0.05, 0.34 + reihe * 0.75, 0.35 + spalte * 0.6)
+		var reihe := i / 11
+		var spalte := i % 11
+		p.position = Vector3(-0.05, 0.34 + reihe * 0.75, 0.35 + spalte * 0.54)
 		knoten_pokale.add_child(p)
 		i += 1
 

@@ -40,6 +40,9 @@ var bilder_ordner := ""            # --bilder=ORDNER: mit Grafik alle 60 s ein k
 var _naechstes_bild := 20.0
 var _bild_nr := 0
 var _fps_werte: Array = []
+var angeltest := 0.0               # --angeltest[=MIN]: nur angeln (Messung), dann beenden
+const ANGEL_ALLE := 50.0 * 60.0    # so oft (Spielzeit) macht der Bot einen Angel-Ausflug
+const ANGEL_DAUER := 6.0 * 60.0    # so lange angelt er dann (wie ein Mensch zwischendurch)
 
 func setup(spiel: Spiel) -> void:
 	s = spiel
@@ -53,11 +56,13 @@ func setup(spiel: Spiel) -> void:
 			hand_spray = hand * 1.2
 		if a.begins_with("--bilder="):
 			bilder_ordner = a.split("=")[1]
+		if a.begins_with("--angeltest"):
+			angeltest = float(a.split("=")[1]) if "=" in a else 30.0
 		if a.begins_with("--zeitraffer="):
 			Engine.time_scale = float(a.split("=")[1])
 	st = {"kaeufe": 0, "laden_test": false, "casino": -1e9, "arcade": -1e9, "ausflug": -1e9, "album": false, "erfolge_menue": false,
 		"jetpack_flug": false, "mode": false, "werkstatt_deko": false, "tote_zeit": 0.0, "unerreichbar": 0, "haenger_gondel": 0,
-		"haenger_fuss": 0, "teleport_raum": 0, "vorher": {}}
+		"haenger_fuss": 0, "teleport_raum": 0, "vorher": {}, "angeln": 1800.0 - ANGEL_ALLE, "angel_runden": 0, "angel_geld": 0, "angel_minuten": 0.0}
 	if FileAccess.file_exists(BOT_STAND):
 		var d = JSON.parse_string(FileAccess.get_file_as_string(BOT_STAND))
 		if d is Dictionary and d.get("neu_laden", false):
@@ -167,6 +172,10 @@ func _ablauf() -> void:
 		_log("DRECK %d Fenster ab Stockwerk 60 wieder dreckig" % n)
 	if "--werkzeugtest" in OS.get_cmdline_user_args():
 		await _werkzeugtest()
+		get_tree().quit()
+		return
+	if angeltest > 0.0:
+		await _angeltest()
 		get_tree().quit()
 		return
 	if "--wegtest" in OS.get_cmdline_user_args():
@@ -611,6 +620,9 @@ func _einkaufsliste() -> Array:
 		l.append({"art": "casino"})
 	if _zeit() - float(st.arcade) > 45.0 * 60.0 and w.arcade_preis("kapsel") <= maxf(r.geld * 4.0, 0.0) and g > 1000:
 		l.append({"art": "arcade"})
+	# Angeln: etwa jede Stunde ein Ausflug an den Strand (Nebenaufgabe), sobald eine Angel bezahlbar ist
+	if _zeit() - float(st.angeln) > ANGEL_ALLE and (w.angel() != "" or g >= 400):
+		l.append({"art": "angeln"})
 	return l
 
 func _ausflug_noetig() -> bool:
@@ -681,6 +693,8 @@ func _ausflug() -> void:
 			"arcade":
 				await _arcade()
 				platzieren = true
+			"angeln":
+				await _angelausflug()
 	if platzieren or w.moebel.any(func(m): return not m.steht and Wirtschaft.GEGENSTAENDE[m.id].has("bonus")):
 		await _penthouse()
 	if "jetpack" in w.fahrzeuge and not bool(st.jetpack_flug):
@@ -1508,3 +1522,200 @@ func _gehe(ziel: Vector2) -> void:
 	_halte(KEY_W, false)
 	_halte(KEY_SHIFT, false)
 	await _bild()
+
+# ---------------------------------------------------------------- Angeln (Strand, Steg, Fischladen)
+# Weit laufen: Route der Karte (um den See, über den Boulevard, Treppe) Stück für Stück mit _gehe
+func _gehe_weit(ziel: Vector2, ebene := 0) -> void:
+	if x.ort != "":
+		await _zurueck_nach_unten()
+	s.karte.ziel_setzen(ziel, "Bot", ebene)
+	var r: PackedVector2Array = s.karte.route.duplicate()
+	s.karte.ziel_loeschen()
+	for p in r:
+		await _gehe(p)
+
+func _strand_station(art: String) -> Dictionary:
+	for k in s.strand.stationen():
+		if k.art == art:
+			return k
+	return {}
+
+func _fischladen(knoepfe: Array) -> void:
+	var stt := _strand_station("fischladen")
+	await _gehe_weit(stt.pos)
+	await _hinschauen(stt.ziel)
+	s._taste(KEY_E)
+	await _warte(0.3)
+	if not s.strand.menu.offen:
+		_log("FEHLER Fischladen öffnet nicht (bei %.0f, %.0f)" % [s.laeufer.position.x, s.laeufer.position.z])
+		return
+	for n in knoepfe:
+		if str(n).begins_with("angel_"):
+			s.strand.menu.reiter = 1
+			s.strand.menu.aufbauen()
+		var g0 := w.geld
+		if _knopf(s.strand.menu, n):
+			if w.geld < g0:
+				_kauf("%s im Fischladen" % n, g0 - w.geld)
+		await _bild()
+	s._taste(KEY_E)
+	await _warte(0.3)
+
+# Strandbar: Drinks mit Angel-Wirkung
+func _strandbar(knoepfe: Array) -> void:
+	var stt := _strand_station("strandbar")
+	await _gehe_weit(stt.pos, 1)
+	await _hinschauen(stt.ziel)
+	s._taste(KEY_E)
+	await _warte(0.3)
+	if not s.hmenu.offen:
+		_log("FEHLER Strandbar öffnet nicht (bei %.0f, %.0f, y=%.1f)" % [s.laeufer.position.x, s.laeufer.position.z, s.laeufer.position.y])
+		return
+	for n in knoepfe:
+		var g0 := w.geld
+		if _knopf(s.hmenu, n):
+			_kauf("%s an der Strandbar" % n, g0 - w.geld)
+	s._taste(KEY_E)
+	await _warte(0.3)
+
+func _angelausflug() -> void:
+	st.angeln = _zeit()
+	var t0 := _zeit()
+	var r := _rate()
+	var verdient0 := int(w.statistik.verdient)
+	# Angel kaufen bzw. aufrüsten (wie ein Mensch: nur wenn es kaum weh tut)
+	var kauf := []
+	for a in Wirtschaft.ANGELN:
+		if not a.id in w.angeln and (int(a.preis) <= 0.5 * w.geld if a.id == "bambus" else int(a.preis) * 8 <= w.geld):
+			kauf.append("angel_" + str(a.id))
+	if w.angel() == "" and kauf.is_empty():
+		return
+	_log("AUSFLUG Angeln (Angel %s, Käufe %s)" % [w.angel(), str(kauf)])
+	var drinks := []
+	for d in ["b_mango", "b_kokos", "b_limette"]:
+		if w.boost_preis(d.substr(2)) * 30 <= w.geld:
+			drinks.append(d)
+	if not drinks.is_empty():
+		await _strandbar(drinks)
+	await _fischladen(kauf)
+	var hin := _zeit() - t0
+	# an die Steg-Spitze, Richtung Meer
+	var platz: Vector2 = Kueste.KOPF.get_center() + Vector2(-11.0, randf_range(-8.0, 8.0))
+	await _gehe_weit(platz)
+	await _hinschauen(platz + Vector2(-10.0, 0.0))
+	var t_angeln := _zeit()
+	var n0 := int(w.statistik.fische)
+	var arten0 := w.fisch_index.size()
+	var runden := 0
+	while _zeit() - t_angeln < ANGEL_DAUER:
+		runden += 1
+		if not await _angel_runde():
+			await _warte(1.0)
+			if s.strand.wurf_ziel() == Vector3.INF:
+				await _hinschauen(Vector2(s.laeufer.position.x - 10.0, s.laeufer.position.z))
+	var minuten := (_zeit() - t_angeln) / 60.0
+	var fische := int(w.statistik.fische) - n0
+	var wert := 0
+	for id in w.fischkiste:
+		wert += int(w.fischkiste[id]) * w.fisch_preis(id)
+	await _fischladen(["verkauf_alle"])
+	var gesamt_min := (_zeit() - t0 + hin) / 60.0   # Rückweg ≈ Hinweg
+	var helfer_geld := int(w.statistik.verdient) - verdient0 - wert
+	st.angel_runden = int(st.angel_runden) + 1
+	st.angel_geld = int(st.angel_geld) + wert
+	st.angel_minuten = float(st.angel_minuten) + gesamt_min
+	_log("ANGELN %.1f min geangelt (+%.1f min Wege): %d Fische in %d Würfen, Index %d→%d/20, Erlös %d € = %.0f €/min beim Angeln, %.0f €/min mit Wegen | Putzen vorher %.0f €/min (selbst %.1f Fenster/min), Helfer während des Ausflugs %d € | Angel %s, Abschnitt %d" % [
+		minuten, gesamt_min - minuten, fische, runden, arten0, w.fisch_index.size(), wert, wert / maxf(minuten, 0.1), wert / maxf(gesamt_min, 0.1),
+		r.geld, r.selbst, helfer_geld, w.angel(), w.hoechster_abschnitt])
+
+# Eine Angel-Runde mit echter Maustaste: Klick, warten, Spannungsbalken mit Reaktionszeit (sieht den Fisch ~0,2 s zu spät)
+func _angel_runde() -> bool:
+	var A := s.strand.angeln
+	if s.strand.wurf_ziel() == Vector3.INF:
+		return false
+	s._klick(Vector2(400, 300), true)
+	s._klick(Vector2(400, 300), false)
+	await _bild()
+	if not A.aktiv():
+		return false
+	var fische0 := int(w.statistik.fische)
+	var halte := false
+	var verlauf: Array = []
+	var t := 0.0
+	while A.aktiv() and t < 90.0:
+		await _bild()
+		t += get_process_delta_time()
+		if A.zustand != "drill":
+			continue
+		verlauf.append([t, A.fp])
+		while verlauf.size() > 1 and t - float(verlauf[1][0]) > 0.5 / hand:   # Reaktionszeit: 0,2 s (schnelle Hand) … 0,4 s (langsam)
+			verlauf.pop_front()
+		var fp_gesehen: float = verlauf[0][1]
+		var mitte := A.kp + A.kasten_g * 0.5 + A.kv * 0.2
+		var soll := fp_gesehen > mitte
+		if soll != halte:
+			halte = soll
+			s._klick(Vector2(400, 300), halte)
+	if halte:
+		s._klick(Vector2(400, 300), false)
+	await _bild()
+	return int(w.statistik.fische) > fische0
+
+# --angeltest[=MIN]: nur angeln (an der Steg-Spitze) und messen. Weitere Schalter: --angel=bambus|carbon|hochsee,
+# --abschnitt=N (Preis-Stufe), --drinks (Mango + Kokos + Limette laufen die ganze Zeit), --boot (von der Yacht weit draußen)
+func _angeltest() -> void:
+	var angel := "bambus"
+	var drinks := false
+	var boot := false
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--angel="):
+			angel = a.split("=")[1]
+		if a.begins_with("--abschnitt="):
+			w.hoechster_abschnitt = int(a.split("=")[1])
+		if a == "--drinks":
+			drinks = true
+		if a == "--boot":
+			boot = true
+	for a in Wirtschaft.ANGELN:
+		w.angeln.append(a.id)
+		if a.id == angel:
+			break
+	await _aussteigen()
+	if boot:
+		w.yacht = true
+		s.strand.einsteigen()
+		s.strand.yacht.position = Vector3(Kueste.WASSER_X - 400.0, Kueste.MEER_Y, -200.0)
+		s.strand.yacht.tempo = 0.0
+	else:
+		var platz: Vector2 = Kueste.KOPF.get_center() + Vector2(-11.0, 0.0)
+		s.laeufer.position = Vector3(platz.x, 0.0, platz.y)
+		await _hinschauen(platz + Vector2(-10.0, 0.0))
+	var t0 := _zeit()
+	var zahl := {}
+	var runden := 0
+	var erste_alle := -1.0
+	while _zeit() - t0 < angeltest * 60.0:
+		if drinks:
+			for d in ["mango", "kokos", "limette"]:
+				if not w.boost_aktiv(d):
+					w.boosts[d] = 600.0
+		runden += 1
+		var n0: Dictionary = w.fischkiste.duplicate()
+		await _angel_runde()
+		for id in w.fischkiste:
+			if int(w.fischkiste[id]) > int(n0.get(id, 0)):
+				zahl[id] = int(zahl.get(id, 0)) + 1
+		if erste_alle < 0.0 and w.index_voll():
+			erste_alle = _zeit() - t0
+	var minuten := (_zeit() - t0) / 60.0
+	var fische := 0
+	var wert := 0
+	for id in w.fischkiste:
+		fische += int(w.fischkiste[id])
+		wert += int(w.fischkiste[id]) * w.fisch_preis(id)
+	var teile := []
+	for f in Wirtschaft.FISCHE:
+		teile.append("%s %d" % [f.id, int(zahl.get(f.id, 0))])
+	_log("ANGELTEST %s%s%s Abschnitt %d: %.0f min, %d Würfe, %d Fische (%.1f/min, %.0f %% der Würfe), Index %d/20%s, Wert %d € = %.1f €/min | %s" % [
+		angel, " + Drinks" if drinks else "", " vom Boot" if boot else "", w.hoechster_abschnitt, minuten, runden, fische, fische / maxf(minuten, 0.1),
+		100.0 * fische / maxf(runden, 1), w.fisch_index.size(), (" (alle nach %.0f min)" % (erste_alle / 60.0)) if erste_alle >= 0.0 else "", wert, wert / maxf(minuten, 0.1), ", ".join(teile)])

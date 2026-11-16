@@ -23,6 +23,13 @@ func erzeugen() -> void:
 	for id in Wirtschaft.GEGENSTAENDE:   # Penthouse-Gegenstände (Möbel, Arcade-Gewinne): Bild-ID "g_" + id
 		auftraege.append(["g_" + id, Moebel.modell(id), 0.0])
 	Andenken.bild_modus = false
+	for f in Wirtschaft.FISCHE:   # Fische (Index, Fischladen, Angeln): "f_" + id, Umriss "fu_" + id
+		auftraege.append(["f_" + f.id, Fische.modell(f.id), 0.0])
+		auftraege.append(["fu_" + f.id, Fische.modell(f.id, true), 0.0])
+	for a in Wirtschaft.ANGELN:
+		var r := Angeln.modell(a.id)
+		r.rotation.z = -0.8
+		auftraege.append(["a_" + a.id, r, 0.0])
 	var figur: Node3D = load("res://modelle/leute/character-worker.glb").instantiate()
 	auftraege.append(["", figur, 0.0])
 	var studios := []
@@ -71,6 +78,9 @@ func _studio(id: String, modell: Node3D, fest: float) -> Array:
 	cam.far = 100.0
 	vp.add_child(cam)
 	var blick := Vector3(0.9, 0.75, -1.2).normalized() if id != "" else Vector3(0.5, 0.25, 1.0).normalized()
+	if id.begins_with("f_") or id.begins_with("fu_"):   # Fische fast von der Seite
+		blick = Vector3(0.3, 0.45, 1.0).normalized()
+		cam.size = maxf(box.size.x, box.size.y * 1.6) * 1.08
 	cam.look_at_from_position(mitte + blick * 10.0, mitte, Vector3.UP)
 	cam.current = true
 	return [id, vp]

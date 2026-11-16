@@ -117,7 +117,7 @@ func _stationen() -> Array:
 	match ort:
 		"":
 			return [{"art": "aufzug_turm", "name": "Express-Aufzug", "hinweis": "E: Express-Aufzug zur Sky-Lounge", "pos": sky.unten_pos, "ziel": sky.unten_ziel},
-				{"art": "aufzug_casino", "name": "Aufzug", "hinweis": "E: Aufzug (Arcade-Halle, Penthouse)", "pos": spiel.casino.aufzug_pos, "ziel": spiel.casino.aufzug_ziel}] + laeden.stationen
+				{"art": "aufzug_casino", "name": "Aufzug", "hinweis": "E: Aufzug (Arcade-Halle, Penthouse)", "pos": spiel.casino.aufzug_pos, "ziel": spiel.casino.aufzug_ziel}] + laeden.stationen + (spiel.strand.stationen() if spiel.strand else [])
 		"arcade": return arcade.stationen
 		"penthouse": return penthouse.stationen
 		_: return sky.etagen[ort].stationen
@@ -193,6 +193,8 @@ func e_druecken() -> bool:
 			menu.oeffnen(s.menue, Laeden.DATEN[s.laden].name)
 		"greif":
 			_greif_starten(int(s.nr))
+		"strandbar", "fischladen", "yacht":
+			spiel.strand.station(s)
 	return true
 
 # Tasten (vor dem Spiel): Menü zu, P, Platzieren, Greifautomat. true = verbraucht
@@ -218,7 +220,7 @@ func taste(e: InputEventKey) -> bool:
 			KEY_E: _abstellen()
 			_: return false
 		return true
-	if e.keycode == KEY_P and not spiel.shop.offen and not spiel.album.offen and not spiel.hmenu.offen and not spiel.cmenu.offen:
+	if e.keycode == KEY_P and not spiel.shop.offen and not spiel.album.offen and not spiel.hmenu.offen and not spiel.cmenu.offen and not spiel.strand.blockiert():
 		menu.oeffnen("erfolge", "Erfolge")
 		return true
 	return false

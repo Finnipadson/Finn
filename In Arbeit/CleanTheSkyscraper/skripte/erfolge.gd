@@ -36,6 +36,9 @@ const LISTE := [
 	{"id": "werkzeuge", "name": "Voll ausgerüstet", "text": "Alle 10 Werkzeuge gekauft", "wert": "werkzeuge", "ziel": 10, "geld": 15000, "pokal": 2},
 	{"id": "zeit_1h", "name": "Dranbleiben", "text": "1 Stunde gespielt", "wert": "spielzeit", "ziel": 3600, "geld": 1000, "pokal": 0},
 	{"id": "zeit_10h", "name": "Turm-Veteran", "text": "10 Stunden gespielt", "wert": "spielzeit", "ziel": 36000, "geld": 10000, "pokal": 1},
+	{"id": "fisch_1", "name": "Petri Heil", "text": "Den ersten Fisch gefangen", "wert": "fischarten", "ziel": 1, "geld": 100, "pokal": 0},
+	{"id": "fisch_10", "name": "Fischkenner", "text": "10 Fischarten im Fisch-Index", "wert": "fischarten", "ziel": 10, "geld": 1500, "pokal": 1},
+	{"id": "fisch_alle", "name": "Meister-Angler", "text": "Alle 20 Fische gefangen (die Yacht gehört dir)", "wert": "fischarten", "ziel": 20, "geld": 10000, "pokal": 2},
 ]
 
 # Alle Werte, die Erfolge prüfen (sauber/gesamt kommen aus dem Fenster-Zustand)
@@ -69,6 +72,7 @@ static func werte(w: Wirtschaft, sauber: int, gesamt: int) -> Dictionary:
 		"jetpack": 1 if "jetpack" in w.fahrzeuge else 0,
 		"werkzeuge": w.besitz.size(),
 		"spielzeit": float(st.spielzeit),
+		"fischarten": w.fisch_index.size(),
 	}
 
 # Neu geschaffte Erfolge: eintragen, Geld gutschreiben, Liste zurückgeben

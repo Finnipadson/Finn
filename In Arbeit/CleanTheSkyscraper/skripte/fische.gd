@@ -71,6 +71,12 @@ static var _cache := {}
 static func daten(id: String) -> Dictionary:
 	return Wirtschaft.fisch(id)
 
+# „15 cm“ bzw. „1,24 m“
+static func laenge_text(m: float) -> String:
+	if m < 1.0:
+		return "%d cm" % int(round(m * 100.0))
+	return ("%.2f m" % m).replace(".", ",")
+
 # Fertiges Modell (1 m lang, Mitte im Ursprung, Kopf nach +x). umriss = einfarbig dunkel (fehlende Fische im Index)
 static func modell(id: String, umriss := false) -> Node3D:
 	var f: Dictionary = FORM.get(id, FORM.sergeant)

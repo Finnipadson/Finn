@@ -144,8 +144,10 @@ func _mode_reiter(i: int) -> void:
 
 func _boosts() -> void:
 	unter.text = "WIRKT EINE ZEIT LANG – NOCHMAL KAUFEN VERLÄNGERT · GLEICHE WIRKUNG: NUR DER STÄRKSTE ZÄHLT"
-	var kurz := {"glanzspray": "GS", "goldpolitur": "GP", "kaffee": "KA", "eis": "EI", "limo": "LI", "cocktail": "SC", "mojito": "MO", "espresso": "ES", "mittag": "MM", "chefmenue": "KC", "champagner": "GC"}
-	var farbe := {"glanzspray": "35c8ff", "goldpolitur": "ffc531", "kaffee": "c8925a", "eis": "ff9ad5", "limo": "e8e04a", "cocktail": "ff4fb8", "mojito": "7fe08a", "espresso": "c8925a", "mittag": "ffb03a", "chefmenue": "ffc531", "champagner": "f2e3b0"}
+	var kurz := {"glanzspray": "GS", "goldpolitur": "GP", "kaffee": "KA", "eis": "EI", "limo": "LI", "cocktail": "SC", "mojito": "MO", "espresso": "ES", "mittag": "MM", "chefmenue": "KC", "champagner": "GC",
+		"kokos": "KO", "mango": "MA", "ananas": "AN", "limette": "LI", "pina": "PC", "lagoon": "BL", "sunrise": "TS", "caipi": "CA"}
+	var farbe := {"glanzspray": "35c8ff", "goldpolitur": "ffc531", "kaffee": "c8925a", "eis": "ff9ad5", "limo": "e8e04a", "cocktail": "ff4fb8", "mojito": "7fe08a", "espresso": "c8925a", "mittag": "ffb03a", "chefmenue": "ffc531", "champagner": "f2e3b0",
+		"kokos": "f4efe2", "mango": "ffb03a", "ananas": "ffd84a", "limette": "7fe08a", "pina": "fff2c8", "lagoon": "35c8ff", "sunrise": "ff7a3a", "caipi": "a8e063"}
 	for id in Wirtschaft.BOOSTS:
 		var b: Dictionary = Wirtschaft.BOOSTS[id]
 		if b.stand != stand:

@@ -22,6 +22,8 @@ var hmenu: HaendlerMenu
 var casino: Casino
 var cmenu: CasinoMenu
 var extras: Extras
+var strand: Strand          # Strandbar, Fischladen, Angeln, Yacht (Geometrie: welt.kueste)
+var karte: Karte            # Taste M: Stadtplan mit Ziel-Pfeil
 var wirtschaft := Wirtschaft.new()
 var ansicht := 0
 var frei := false
@@ -128,10 +130,20 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	extras = Extras.new()
 	add_child(extras)
 	extras.setup(self)
+	strand = Strand.new()
+	add_child(strand)
+	strand.setup(self)
+	karte = Karte.new()
+	add_child(karte)
+	karte.setup(self)
 	if ansicht >= 24 and ansicht <= 28:
 		var et := ExtrasTest.new()
 		add_child(et)
 		et.setup(self)
+	if ansicht == 31 or ansicht == 32:   # Strand, Angeln, Yacht, Karte: Test + Testbilder
+		var stt := StrandTest.new()
+		add_child(stt)
+		stt.setup(self)
 	if ansicht == 29 or ansicht == 30:   # Läden: Test + Testbilder
 		var lt := LaedenTest.new()
 		add_child(lt)
@@ -273,6 +285,11 @@ func _oben_gesperrt() -> void:
 
 # ---------------------------------------------------------------- Eingaben (Shop, Werkzeugwechsel)
 func _input(e: InputEvent) -> void:
+	if karte.offen:   # Karte (M) nimmt alle Eingaben selbst
+		return
+	if not shop.offen and not album.offen and not hmenu.offen and not cmenu.offen and not extras.menue_offen() and strand.maus(e):   # Angeln, Yacht
+		get_viewport().set_input_as_handled()
+		return
 	if e is InputEventMouseButton and extras.maus(e):   # Penthouse: Möbel platzieren
 		get_viewport().set_input_as_handled()
 		return
@@ -294,6 +311,13 @@ func _input(e: InputEvent) -> void:
 			_fahrzeug_waehlen(fz[posmod(fz.find(wirtschaft.fahrzeug) + schritt, fz.size())])
 		return
 	if not (e is InputEventKey) or not e.pressed or e.echo:
+		return
+	if e.keycode == KEY_M and not shop.offen and not album.offen and not hmenu.offen and not cmenu.offen and not extras.menue_offen() and not strand.menu.offen and strand.angeln.zustand != "drill":
+		karte.oeffnen()
+		get_viewport().set_input_as_handled()
+		return
+	if not hmenu.offen and not cmenu.offen and not shop.offen and not album.offen and strand.taste(e):
+		get_viewport().set_input_as_handled()
 		return
 	if not hmenu.offen and not cmenu.offen and extras.taste(e):
 		get_viewport().set_input_as_handled()
@@ -533,14 +557,16 @@ func _process(dt: float) -> void:
 		wirtschaft.geld += bonus
 		hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [int(spieler.y), bonus], 3.5)
 		_speichern()
-	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv, extras.ort_name())
-	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen()
+	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv, strand.ort_name() if strand.ort_name() != "" else extras.ort_name())
+	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen() or strand.blockiert() or karte.offen
 	laeufer.set_process(not menue)
 	laeufer.gesperrt = menue
 	wirtschaft.boosts_takt(dt)
 	_werte()
 	if spieler.aktiv:
 		hud.status("" if express else ("E: Gondel verlassen" if spieler.y <= UNTEN else "E: nach unten fahren und aussteigen"))
+	elif strand.blockiert() or strand.status() != "":
+		hud.status(strand.status())
 	elif extras.drinnen() or (extras.status() != "" and not _gondel_bevorzugt()):
 		hud.status(extras.status())
 	else:

@@ -647,5 +647,6 @@ func _schilder() -> void:
 		t.rotation.y = dreh
 		for s in [1.0, -1.0]:
 			var l := RaumBau.schrift(n, str(o[2]), Vector3(p.x, 3.0, p.y) + Vector3(b.x, 0, b.y) * 0.05 * s, dreh if s > 0.0 else dreh + PI, 44, 0.008, Color("ffffff"))
+			l.double_sided = false
 			l.rotation.y = dreh if s > 0.0 else dreh + PI
 		welt.hindernisse.append(Rect2(p - Vector2(0.25, 0.25), Vector2(0.5, 0.5)))
