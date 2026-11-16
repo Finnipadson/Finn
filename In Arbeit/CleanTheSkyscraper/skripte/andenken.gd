@@ -4,6 +4,7 @@ class_name Andenken
 # Kleine Souvenirs stehen auf einem weißen Ausstellungs-Sockel, damit man sie im Penthouse sieht.
 
 const SOCKEL_H := 0.9
+static var bild_modus := false   # Symbole: ohne Sockel rendern, damit man das Andenken selbst erkennt
 
 static func gold() -> StandardMaterial3D:
 	return Bau.metall("e8b53a", 0.2, 0.95)
@@ -34,6 +35,8 @@ static func bauen(art: String) -> Node3D:
 
 # Weißer Ausstellungs-Sockel mit dunkler Platte oben
 static func _sockel(n: Node3D, h := SOCKEL_H) -> void:
+	if bild_modus:
+		return
 	RaumBau.box(n, Vector3(0.42, h - 0.04, 0.42), Vector3(0, (h - 0.04) * 0.5, 0), Bau.matt("f1eee8", 0.35))
 	RaumBau.box(n, Vector3(0.46, 0.04, 0.46), Vector3(0, h - 0.02, 0), Bau.matt("2b2f36", 0.3))
 

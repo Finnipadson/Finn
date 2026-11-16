@@ -127,8 +127,12 @@ func _haus(id: String, grund: Rect2) -> void:
 	var poly := PackedVector2Array([Vector2(-h, -h), Vector2(h, -h), Vector2(h, h), Vector2(-h, h)])
 	RaumBau.flaeche(innen, poly, hoch - 0.02, Bau.matt("f4f2ee" if id != "gold" else "121318", 0.9), false)
 	RaumBau.box(haus, Vector3(h * 2.0 + 0.6, 0.3, h * 2.0 + 0.6), Vector3(0, hoch + 0.15, 0), stein)
-	RaumBau.box(haus, Vector3(h * 2.0 + 0.7, 0.1, h * 2.0 + 0.7), Vector3(0, hoch - 0.05, 0), akzent)
-	RaumBau.box(haus, Vector3(h * 2.0 + 0.4, 0.2, h * 2.0 + 0.4), Vector3(0, 0.1, 0), Bau.matt("8a8378", 0.7))   # Sockel
+	for s in [-1.0, 1.0]:   # Zierleiste rundum unter dem Dach (nur außen)
+		RaumBau.box(haus, Vector3(h * 2.0 + 0.7, 0.1, 0.35), Vector3(0, hoch - 0.05, s * (h + 0.17)), akzent)
+		RaumBau.box(haus, Vector3(0.35, 0.1, h * 2.0 + 0.7), Vector3(s * (h + 0.17), hoch - 0.05, 0), akzent)
+	for s in [-1.0, 1.0]:   # Sockel außen rundum (nicht durch den Innenraum)
+		RaumBau.box(haus, Vector3(h * 2.0 + 0.4, 0.2, 0.22), Vector3(0, 0.1, s * (h + 0.09)), Bau.matt("8a8378", 0.7))
+		RaumBau.box(haus, Vector3(0.22, 0.2, h * 2.0 + 0.4), Vector3(s * (h + 0.09), 0.1, 0), Bau.matt("8a8378", 0.7))
 	var stw := []
 	var turm_poly := Bau.rechteck(h * 2.0 + 0.12, h * 2.0 + 0.12)
 	for k in int(d.stock):
@@ -187,7 +191,7 @@ func _theke(id: String, p: Vector2, laenge: float, mat: Material, oben: Material
 
 # Preisschild über einem Ausstellungsstück (dreht sich zur Kamera)
 func _schild(eltern: Node3D, t: String, p: Vector3, farbe := Color(1, 1, 1)) -> Label3D:
-	var l := RaumBau.schrift(eltern, t, p, 0.0, 40, 0.0042, farbe, false)
+	var l := RaumBau.schrift(eltern, t, p, 0.0, 40, 0.006, farbe, false)
 	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	l.outline_size = 8
 	l.outline_modulate = Color(0, 0, 0, 0.7)
@@ -227,6 +231,9 @@ func _moebelhaus() -> void:
 			RaumBau.box(n, Vector3(minf(x1 - x0 - 1.0, 6.0), 0.06, 0.06), Vector3((x0 + x1) * 0.5, 2.95, seite * (MH_GANG + 0.05)), leiste)
 			RaumBau.licht(n, Vector3((x0 + x1) * 0.5, 4.6, seite * 10.0), "fff0dc", 1.2, 11.0)
 			_raum_moebel(r.id, x0, x1, seite)
+			# Deko-Teppich in der Mitte (nicht zu kaufen, nur Ausstellung)
+			if r.id != "wohnen":
+				RaumBau.mittig(n, "moebel/rugRectangle", Vector3((x0 + x1) * 0.5, 0.08, seite * (MH_GANG + (innen_w - MH_GANG) * 0.5)), Moebel.MASS * 1.5, PI * 0.5)
 	# Gang: Lichter + Info-Terminal im Foyer
 	for k in 2:
 		RaumBau.licht(n, Vector3(-10.0 + k * 18.0, 4.6, 0), "fff6e6", 1.0, 12.0)
@@ -453,7 +460,7 @@ func _goldladen() -> void:
 		RaumBau.box(n, Vector3(2.0 * iw, 0.1, 0.04), Vector3(0, 0.12, s * (iw - 0.02)), gold)
 	RaumBau.box(n, Vector3(0.04, 0.06, 2.0 * iw), Vector3(iw - 0.02, 3.6, 0), gold)
 	for k in 2:
-		RaumBau.licht(n, Vector3(-3.0 + k * 6.5, 4.2, 0), "ffe2a8", 1.4, 11.0)
+		RaumBau.licht(n, Vector3(-3.0 + k * 6.5, 4.2, 0), "ffe2a8", 2.4, 13.0)
 		RaumBau.zyl(n, 0.6, 0.08, Vector3(-3.0 + k * 6.5, 4.85, 0), gold, 20)
 		for j in 8:
 			var a := j * TAU / 8.0

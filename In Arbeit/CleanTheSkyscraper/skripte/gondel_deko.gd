@@ -221,7 +221,8 @@ static func _blumen(deko: Node3D, id: String) -> void:
 		var liste: Array = bluten.get(id, ["flower_redA"])
 		for k in 5:
 			var name: String = liste[k % liste.size()]
-			var b := RaumBau.modell(deko, "natur/" + name, mitte + Vector3(-0.36 + k * 0.18, 0.1, (k % 2) * 0.05 - 0.025), 0.55 if name != "plant_bush" else 0.32, k * 1.3)
+			var b := RaumBau.modell(deko, "natur/" + name, mitte + Vector3(-0.36 + k * 0.18, 0.1, (k % 2) * 0.05 - 0.025), 1.0, k * 1.3)
+			b.scale = Vector3.ONE * (0.34 if name != "plant_bush" else 0.26) / maxf(RaumBau.aabb(b).size.y, 0.01)   # auf feste Höhe bringen
 			if name == "plant_bush":
 				RaumBau.faerben(b, Bau.matt("3f6a2e", 0.85))
 
@@ -233,25 +234,43 @@ static func _palmen_farbe(n: Node3D) -> void:
 	RaumBau.faerben(n, m)
 
 static func _schirm(deko: Node3D, id: String) -> void:
-	# Schirm an der rechten Seitenwand festgeklemmt, Dach über der rechten Hälfte der Gondel
+	# Schirm an der rechten Seitenwand festgeklemmt, Dach (Ø 2 m) über der rechten Hälfte der Gondel
 	var p := Vector3(1.78, 0.0, 0.42)
 	var stahl := Bau.metall("c9ced4", 0.3, 0.8)
 	RaumBau.box(deko, Vector3(0.08, 0.12, 0.08), p + Vector3(0, 0.95, 0), stahl)
 	RaumBau.zyl(deko, 0.022, 2.45, p + Vector3(0, 1.22, 0), stahl, 8)
-	var top := p + Vector3(0, 2.45, 0)
-	if id == "schirm_streifen":
-		var n := RaumBau.modell(deko, "stadt/detail-parasol-a", Vector3.ZERO, 1.0)
-		_auf_dach(n, top)
-		return
-	var stoff: Material = Andenken.gold() if id == "schirm_gold" else Bau.matt("e4d3b0", 0.85)
-	var dach := RaumBau.zyl(deko, 0.04, 0.38, top + Vector3(-0.2, -0.12, 0), stoff, 8 if id != "schirm_gold" else 12, 1.25)
-	dach.rotation.z = 0.12
-	RaumBau.zyl(deko, 0.05, 0.08, top + Vector3(-0.17, 0.1, 0), stahl, 8)
+	var farben: Array = {"schirm_streifen": [Color("e2483e"), Color("f6f2ea")], "schirm_uni": [Color("e4d3b0")], "schirm_gold": [Color("e8b53a")]}.get(id, [Color("e4d3b0")])
+	var dach := _schirmdach(1.0, 0.32, farben, id == "schirm_gold")
+	dach.position = p + Vector3(-0.15, 2.48, 0)
+	dach.rotation.z = 0.1
+	deko.add_child(dach)
+	RaumBau.zyl(deko, 0.05, 0.08, p + Vector3(-0.15, 2.5, 0), stahl, 8)
 
-# Kenney-Schirm so skalieren, dass das Dach ~2,4 m breit ist, und mit der Spitze an top setzen (Stange ersetzt ihn)
-static func _auf_dach(n: Node3D, top: Vector3) -> void:
-	var b := RaumBau.aabb(n)
-	var s := 2.4 / maxf(b.size.x, 0.01)
-	n.scale = Vector3.ONE * s
-	b = RaumBau.aabb(n)
-	n.position = top - Vector3(b.get_center().x, b.end.y - 0.05, b.get_center().z) + Vector3(-0.2, 0, 0)
+# Schirmdach als flacher Kegel aus 12 Bahnen (abwechselnd in den Farben), Spitze oben bei y = 0
+static func _schirmdach(r: float, h: float, farben: Array, gold: bool) -> MeshInstance3D:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var n := 12
+	for i in n:
+		var a0 := i * TAU / n
+		var a1 := (i + 1) * TAU / n
+		var c: Color = farben[i % farben.size()]
+		var spitze := Vector3.ZERO
+		var p0 := Vector3(sin(a0) * r, -h, cos(a0) * r)
+		var p1 := Vector3(sin(a1) * r, -h, cos(a1) * r)
+		var nrm := (p1 - spitze).cross(p0 - spitze).normalized()
+		if nrm.y < 0.0:
+			nrm = -nrm
+		for q in [spitze, p1, p0]:
+			st.set_color(c)
+			st.set_normal(nrm)
+			st.add_vertex(q)
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	var m := StandardMaterial3D.new()
+	m.vertex_color_use_as_albedo = true
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.roughness = 0.25 if gold else 0.85
+	m.metallic = 0.95 if gold else 0.0
+	mi.material_override = m
+	return mi

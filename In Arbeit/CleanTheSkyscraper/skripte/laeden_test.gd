@@ -206,7 +206,7 @@ func _blick(p: Vector3, ziel: Vector3) -> void:
 
 func _foto(nr: int) -> void:
 	await _warte(1.4)
-	print("BILD %d frame=%d" % [nr, Engine.get_frames_drawn()])
+	print("BILD %d frame=%d fps=%d" % [nr, Engine.get_frames_drawn(), Engine.get_frames_per_second()])
 	await _warte(0.1)
 
 # lokaler Punkt (x, y, z) im Laden → Welt
