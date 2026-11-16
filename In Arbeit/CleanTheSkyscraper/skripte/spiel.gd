@@ -5,6 +5,7 @@ extends Node3D
 
 const SPIELSTAND := "user://spielstand.json"
 const TESTSTAND := "user://spielstand_test.json"
+const DURCHLAUF := "user://spielstand_durchlauf.json"   # --durchspielen: eigener Spielstand des Bots
 const AUTOSAVE := 20.0
 
 var turm: Turm
@@ -28,6 +29,7 @@ var test_geld := -1
 var pfad := SPIELSTAND
 var speicher_zeit := 0.0
 var demo_zeit := 0.0
+var durchlauf := false    # --durchspielen: echtes Spiel (wie ansicht 0) mit Bot (Durchspielen), eigener Spielstand
 
 func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> void:
 	turm = t
@@ -36,6 +38,16 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	frei = ohne_sperre
 	test_geld = geld_test
 	pfad = SPIELSTAND if ansicht == 0 else TESTSTAND
+	durchlauf = ansicht == 0 and "--durchspielen" in OS.get_cmdline_user_args()
+	if durchlauf:
+		pfad = DURCHLAUF
+		# neuer Lauf, außer der Bot lädt gerade mitten im Lauf neu (oder --weiter)
+		var weiter := "--weiter" in OS.get_cmdline_user_args()
+		if FileAccess.file_exists(Durchspielen.BOT_STAND):
+			var d = JSON.parse_string(FileAccess.get_file_as_string(Durchspielen.BOT_STAND))
+			weiter = weiter or (d is Dictionary and d.get("neu_laden", false))
+		if not weiter and FileAccess.file_exists(pfad):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(pfad))
 	zustand = FensterZustand.new(turm)
 	zustand.verbinde(turm.glas)
 	turm.glas.set_shader_parameter("mit_zustand", true)
@@ -122,6 +134,10 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		var lt := LaedenTest.new()
 		add_child(lt)
 		lt.setup(self)
+	if durchlauf:
+		var bot := Durchspielen.new()
+		add_child(bot)
+		bot.setup(self)
 	_ausruestung()
 	if ansicht >= 5 and ansicht <= 7:
 		spieler.gesperrt = true
@@ -347,15 +363,16 @@ func _ein_aus() -> void:
 		gondeln.aktualisieren(wirtschaft.aktive_gondel)
 		hud.steuerung(true)
 	else:
-		if extras.e_druecken():   # Aufzüge, Sky-Lounge, Arcade, Penthouse
+		var zur_gondel := _gondel_bevorzugt()
+		if not zur_gondel and extras.e_druecken():   # Aufzüge, Sky-Lounge, Arcade, Penthouse
 			return
 		var st := haendler.stand_bei(Vector2(laeufer.position.x, laeufer.position.z))
-		if st >= 0:
+		if st >= 0 and not zur_gondel:
 			hmenu.oeffnen(Haendler.STAENDE[st].id, Haendler.STAENDE[st].name)
 			laeufer.gesperrt = true
 			return
 		var cs := casino.station_bei(Vector2(laeufer.position.x, laeufer.position.z))
-		if cs >= 0:
+		if cs >= 0 and not zur_gondel:
 			cmenu.oeffnen(Casino.STATIONEN[cs].id, Casino.STATIONEN[cs].name)
 			laeufer.gesperrt = true
 			return
@@ -400,6 +417,30 @@ func _gondel_wechseln(k: int) -> void:
 	letzte_hoehe = float(wirtschaft.gondeln[k].hoehe)
 	spieler._platzieren(0.0)
 	gondeln.aktualisieren(k)
+
+# Steht man unten zugleich an der eigenen Gondel und an einer Station (Express-Aufzug, Kiosk), nimmt E das,
+# wohin man schaut. Vorher öffnete E immer die Station – parkte die Gondel neben dem Aufzug, kam man nicht mehr hinein.
+func _gondel_bevorzugt() -> bool:
+	if spieler.aktiv or extras.ort != "" or _abstand_gondel() > EINSTEIG_WEIT:
+		return false
+	var p := Vector2(laeufer.position.x, laeufer.position.z)
+	var ziele := []
+	var sx := extras.station()
+	if not sx.is_empty():
+		ziele.append(sx.get("ziel", sx.pos))
+	var hs := haendler.stand_bei(p)
+	if hs >= 0:
+		var v: Vector2 = haendler.vorne[hs]
+		ziele.append(v + v.normalized() * 2.0)
+	if ziele.is_empty():
+		return true
+	var vor := Vector2(-sin(laeufer.yaw), -cos(laeufer.yaw))
+	var g := spieler.gondel.global_position
+	var zur_g := vor.dot((Vector2(g.x, g.z) - p).normalized())
+	for z in ziele:
+		if vor.dot(((z as Vector2) - p).normalized()) >= zur_g:
+			return false
+	return true
 
 func _abstand_gondel() -> float:
 	var g := spieler.gondel.global_position
@@ -497,12 +538,12 @@ func _process(dt: float) -> void:
 	_werte()
 	if spieler.aktiv:
 		hud.status("" if express else ("E: Gondel verlassen" if spieler.y <= UNTEN else "E: nach unten fahren und aussteigen"))
-	elif extras.drinnen() or extras.status() != "":
+	elif extras.drinnen() or (extras.status() != "" and not _gondel_bevorzugt()):
 		hud.status(extras.status())
 	else:
 		var st2 := haendler.stand_bei(Vector2(laeufer.position.x, laeufer.position.z))
 		var cs2 := casino.station_bei(Vector2(laeufer.position.x, laeufer.position.z))
-		if st2 >= 0:
+		if st2 >= 0 and not _gondel_bevorzugt():
 			hud.status("E: %s ansehen" % Haendler.STAENDE[st2].name)
 		elif cs2 >= 0:
 			hud.status("E: %s" % Casino.STATIONEN[cs2].hinweis)
