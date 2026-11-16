@@ -1329,7 +1329,7 @@ func _helfer_test(dt: float) -> void:
 				kam.look_at(fp.pos + Vector3.UP * 7.0)
 				kam.current = true
 				_ht2_kam = kam
-				_ht2_geld = wirtschaft.geld
+				_ht2_geld = int(wirtschaft.statistik.verdient)   # nur Lohn (Erfolgs-Prämien landen auch auf dem Konto)
 				_ht2_sauber = zustand.sauber_zahl
 				helfer.geputzt.connect(func(f: int, _s: int, art: String) -> void:
 					_ht2_erwartet += maxi(1, int(round(wirtschaft.lohn(f) * (1.0 - float(Wirtschaft.HELFER[art].anteil)))))
@@ -1349,7 +1349,7 @@ func _helfer_test(dt: float) -> void:
 					for c in turm.fenster_pro_stock[f]:
 						if zustand.ist_sauber(f, c):
 							zu_hoch += 1
-				print("TEST helfer nach 45 s: fenster=%d je_art=%s geld +%d (soll +%d) über_grenze=%d pro_min=%d" % [zustand.sauber_zahl - _ht2_sauber, _ht2_zahl, wirtschaft.geld - _ht2_geld, _ht2_erwartet, zu_hoch, helfer.zuletzt_pro_minute()])
+				print("TEST helfer nach 45 s: fenster=%d je_art=%s geld +%d (soll +%d) über_grenze=%d pro_min=%d" % [zustand.sauber_zahl - _ht2_sauber, _ht2_zahl, int(wirtschaft.statistik.verdient) - _ht2_geld, _ht2_erwartet, zu_hoch, helfer.zuletzt_pro_minute()])
 				_ht2 = 3
 
 # 22: Fahrzeuge (Kiosk, Hotbar, Tempo, Jetpack), roter Werkzeug-Kiosk, Mausrad in der Gondel
