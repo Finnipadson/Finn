@@ -52,6 +52,27 @@ Ausgewählte Ladenideen (15.11.2026) – jeder Laden in einem eigenen Hochhaus, 
 - [x] **Souvenirshop**: Andenken für erreichte Meilensteine (Mini-Wüstennadel, Schneekugel …), im Penthouse aufstellen
 - [x] **Goldschmuck-Laden**: glitzerndes Schaufenster neben dem Casino, Gold-Deko fürs Penthouse (goldene Gondel/Werkzeuge/Schmuck vom User abgewählt)
 
+Strand, Angeln und Karte (16.11.2026, Wünsche des Users – Lage, Index und Belohnung schon entschieden):
+- [ ] **Meer mit Strand an einer Stadtseite**: Auf einer Seite endet die Stadt nach ~600 m an einer Strandpromenade, dahinter Meer bis zum Horizont (wie Dubai). Zu Fuß ~1 min, mit Hoverboard ~30 s; auch von oben aus der Gondel als Aussicht zu sehen
+- [ ] **Strandbar**: die Cocktails (Sky-Cocktail, Mojito …) gibt es dann auch am Strand – Sonnenschirme, Liegen, Bar-Hütte
+- [ ] **Angeln**: am Steg oder Strand Angel auswerfen, Fische fangen und verkaufen (kleiner Zusatzverdienst). **20 Fischarten**, jede seltener als die vorige; die **letzten 3 unter 0,5 %** Wahrscheinlichkeit
+- [ ] **Fisch-Index im Album (Taste B)**: zweiter Reiter „Szenen | Fische“, gefangene Fische mit Bild, fehlende als Umriss
+- [ ] **Belohnung für den vollen Index: eigene Yacht** – neues Fahrzeug, mit dem man übers Meer fahren kann
+- [ ] **Karte mit Taste M**: Übersicht über Stadt, Turm, Kioske, Läden, Casino, Strand und die eigene Position
+- Noch offen: Fischarten und Preise, wie das Angeln sich spielt (Minispiel?), wie man zum Strand kommt (Weg/Straße), Angel kaufen (Angelladen?)
+
+Ideen aus dem Durchspiel-Test (16.11.2026, Vorschläge von Claude, noch nicht entschieden):
+- [ ] **Endlos-Modus / zweiter Turm** nach allen Fenstern: Dreck kommt langsam zurück oder ein neuer Turm, damit das Geld am Ende (100.000 € und mehr) noch etwas bringt
+- [ ] **Kundenaufträge** mit Zeitlimit (z. B. „Stockwerk 70 bis 18 Uhr für eine Hochzeit“) gegen die eintönige Mitte (2–3 h mit demselben Werkzeug)
+- [ ] **Besondere Fenster**: goldene Fenster (10× Lohn), Graffiti (mehrmals reiben), Glaser-Auftrag
+- [ ] **Belohnungen an den Terrassen** (Andenken, Aussichts-Szene) statt nur Geld
+- [ ] **Werkzeuge ohne Sinn aufwerten**: Mikrofaser-Schwamm (nicht besser als der billigere Abzieher) und Hochdruckreiniger (langsamer als der Doppel-Abzieher) eine eigene Stärke geben, z. B. Tauben-Dreck sofort weg bzw. putzt beim Fahren mit
+- [ ] **Boosts per Tablet in die Gondel bestellen** (Lieferdrohne, etwas teurer) – der Bot musste für fast jeden Boost runterfahren und laufen
+- [ ] **Helfer verbessern und zuweisen**: schneller, weniger Lohn-Anteil, Seite/Stockwerke festlegen, Namen und Kleidung
+- [ ] **Seltene Szenen** nur hoch oben oder nur nachts (Album ist nach 1–2 h voll)
+- [ ] **Positives Ereignis**, z. B. „Goldene Taube“, die eine Münze fallen lässt
+- [ ] **Kapsel-Automat**: doppelte Gewinne sollen den Bonus nicht stapeln (sonst leicht +100 %)
+
 Mehrspielermodus (15.11.2026, Wünsche des Users):
 - [ ] **Koop**: bis zu **4 Spieler** putzen gemeinsam **denselben Turm**, jedes Fenster zählt für alle
 - [ ] **Verbinden per Code**: einer erstellt das Spiel und schickt Freunden einen Code, die anderen geben ihn ein (übers Internet)
