@@ -40,7 +40,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	pfad = SPIELSTAND if ansicht == 0 else TESTSTAND
 	durchlauf = ansicht == 0 and "--durchspielen" in OS.get_cmdline_user_args()
 	if durchlauf:
-		pfad = DURCHLAUF
+		pfad = DURCHLAUF.replace(".json", Durchspielen.endung() + ".json")
 		# neuer Lauf, außer der Bot lädt gerade mitten im Lauf neu (oder --weiter)
 		var weiter := "--weiter" in OS.get_cmdline_user_args()
 		if FileAccess.file_exists(Durchspielen.BOT_STAND):
@@ -176,15 +176,15 @@ func _ausruestung() -> void:
 # Upgrades + laufende Boosts auf die Gondel übertragen (jedes Bild, weil Boosts ablaufen)
 func _werte() -> void:
 	# Penthouse-Boni (aufgestellte Gegenstände) + Spezial-Boosts der Sky-Lounge kommen dazu
-	spieler.tempo_faktor = wirtschaft.tempo_faktor() * (1.6 if wirtschaft.boost_aktiv("kaffee") else 1.0) * (1.0 + wirtschaft.bonus("tempo") + wirtschaft.boost_wirkung("tempo"))
-	var eis := (0.8 if wirtschaft.boost_aktiv("eis") else 0.0) + wirtschaft.boost_wirkung("reich")
+	spieler.tempo_faktor = wirtschaft.tempo_faktor() * (1.0 + wirtschaft.bonus("tempo") + wirtschaft.boost_wirkung("tempo"))
+	var eis := wirtschaft.boost_wirkung("reich")
 	spieler.reich_seite = wirtschaft.reichweite_seite() + eis
 	spieler.reich_oben = wirtschaft.reichweite_oben() + eis
-	spieler.wisch_faktor = (1.5 if wirtschaft.boost_aktiv("glanzspray") else 1.0) * (1.0 + wirtschaft.bonus("flaeche") + wirtschaft.boost_wirkung("flaeche"))
+	spieler.wisch_faktor = (1.0 + wirtschaft.bonus("flaeche") + wirtschaft.boost_wirkung("flaeche"))
 	if helfer:
 		helfer.tempo = 1.0 + wirtschaft.bonus("helfer") + wirtschaft.boost_wirkung("helfer")
 	if ereignisse:
-		ereignisse.limo = wirtschaft.boost_aktiv("limo") or wirtschaft.boost_wirkung("tauben") > 0.0
+		ereignisse.limo = wirtschaft.boost_wirkung("tauben") > 0.0
 	var t := ""
 	if helfer and helfer.anzahl() > 0:
 		t += "Helfer: %d · %d Fenster/min
@@ -196,7 +196,7 @@ func _werte() -> void:
 
 # Lohn eines Fensters mit Goldpolitur, Spezial-Boosts und Penthouse-Bonus
 func lohn_mit_boni(f: int) -> int:
-	var l := wirtschaft.lohn(f) * (2 if wirtschaft.boost_aktiv("goldpolitur") else 1)
+	var l := wirtschaft.lohn(f)
 	return int(round(l * (1.0 + wirtschaft.bonus("lohn") + wirtschaft.boost_wirkung("lohn"))))
 
 func _fenster_sauber(f: int, spalte: int) -> void:

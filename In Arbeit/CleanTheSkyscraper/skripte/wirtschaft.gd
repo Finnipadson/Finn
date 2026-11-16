@@ -24,7 +24,7 @@ const WERKZEUGE := [
 ]
 
 # Gondeln: eine je Turmseite. Die erste ist gratis, die zweite und dritte kosten (Preis nach Anzahl schon gekaufter).
-const GONDEL_PREISE := [0, 300, 1200]
+const GONDEL_PREISE := [0, 1000, 5000]
 
 # Helfer putzen nur, solange man spielt, und nur bis zur Seil-Grenze. Kaufpreis steigt je Stück (basis · faktor^Anzahl),
 # dazu bekommen sie einen Anteil vom Fensterlohn (anteil). sekunden = Zeit pro Fenster.
@@ -43,18 +43,20 @@ const FAHRZEUGE := [
 ]
 
 const UPGRADES := {
-	"motor": {"name": "Gondel-Motor", "text": "Schneller fahren, seitlich und hoch (+50 % je Stufe).", "max": 5, "basis": 25, "faktor": 2.6},
+	"motor": {"name": "Gondel-Motor", "text": "Schneller fahren, seitlich und hoch (+50 % je Stufe).", "max": 5, "basis": 25, "faktor": 3.2},
 	"arm": {"name": "Teleskoparm", "text": "Größere Reichweite zur Seite und nach oben.", "max": 3, "basis": 60, "faktor": 3.0},
 	"winde": {"name": "Seilwinde", "text": "Längeres Seil: 6 Stockwerke höher fahren.", "max": 27, "basis": 40, "faktor": 1.32},
 }
 
-# Händler: Boosts wirken eine Zeit lang (Sekunden), Preise steigen mit der erreichten Höhe
+# Händler: Boosts wirken eine Zeit lang (Sekunden), Preise steigen mit der erreichten Höhe.
+# wirkung: lohn/flaeche/tempo/reich/helfer (Anteile, +0,5 = +50 %), tauben = Tauben bleiben weg.
+# Laufen mehrere Boosts mit derselben Wirkung, zählt nur der stärkste (Durchspiel-Test: addiert gab es bis zu 11-fachen Lohn).
 const BOOSTS := {
-	"glanzspray": {"name": "Glanzspray", "text": "5 Minuten lang wischt jedes Werkzeug 50 % mehr Fläche.", "dauer": 300, "preis": 60, "stand": "putz"},
-	"goldpolitur": {"name": "Goldpolitur", "text": "5 Minuten lang doppeltes Geld pro Fenster.", "dauer": 300, "preis": 150, "stand": "putz"},
-	"kaffee": {"name": "Kaffee", "text": "4 Minuten lang fährt die Gondel 60 % schneller.", "dauer": 240, "preis": 25, "stand": "snack"},
-	"eis": {"name": "Eis", "text": "4 Minuten lang größere Reichweite (+0,8 m).", "dauer": 240, "preis": 30, "stand": "snack"},
-	"limo": {"name": "Zitronenlimo", "text": "5 Minuten lang bleiben die Tauben weg – sie mögen den Geruch nicht.", "dauer": 300, "preis": 20, "stand": "snack"},
+	"glanzspray": {"name": "Glanzspray", "text": "5 Minuten lang wischt jedes Werkzeug 50 % mehr Fläche.", "dauer": 300, "preis": 60, "stand": "putz", "wirkung": {"flaeche": 0.5}},
+	"goldpolitur": {"name": "Goldpolitur", "text": "5 Minuten lang doppeltes Geld pro Fenster.", "dauer": 300, "preis": 150, "stand": "putz", "wirkung": {"lohn": 1.0}},
+	"kaffee": {"name": "Kaffee", "text": "4 Minuten lang fährt die Gondel 60 % schneller.", "dauer": 240, "preis": 25, "stand": "snack", "wirkung": {"tempo": 0.6}},
+	"eis": {"name": "Eis", "text": "4 Minuten lang größere Reichweite (+0,8 m).", "dauer": 240, "preis": 30, "stand": "snack", "wirkung": {"reich": 0.8}},
+	"limo": {"name": "Zitronenlimo", "text": "5 Minuten lang bleiben die Tauben weg – sie mögen den Geruch nicht.", "dauer": 300, "preis": 20, "stand": "snack", "wirkung": {"tauben": 1.0}},
 	# Sky-Lounge: stärkere Spezial-Boosts. wirkung: lohn/flaeche/tempo/reich/helfer (Anteile, +0,5 = +50 %), tauben = Tauben bleiben weg
 	"cocktail": {"name": "Sky-Cocktail", "text": "10 Minuten lang +50 % Geld pro Fenster.", "dauer": 600, "preis": 220, "stand": "bar", "wirkung": {"lohn": 0.5}},
 	"mojito": {"name": "Minz-Mojito", "text": "10 Minuten lang +80 % Wischfläche.", "dauer": 600, "preis": 160, "stand": "bar", "wirkung": {"flaeche": 0.8}},
@@ -263,11 +265,11 @@ func kaufe_boost(id: String) -> bool:
 func boost_aktiv(id: String) -> bool:
 	return float(boosts.get(id, 0.0)) > 0.0
 
-# Summe einer Wirkung (lohn, flaeche, tempo, reich, helfer, tauben) aller laufenden Spezial-Boosts
+# Wirkung (lohn, flaeche, tempo, reich, helfer, tauben) der laufenden Boosts: nur der stärkste zählt, nichts addiert sich
 func boost_wirkung(art: String) -> float:
 	var s := 0.0
 	for id in boosts:
-		s += float((BOOSTS[id].get("wirkung", {}) as Dictionary).get(art, 0.0))
+		s = maxf(s, float((BOOSTS[id].get("wirkung", {}) as Dictionary).get(art, 0.0)))
 	return s
 
 # ---------------------------------------------------------------- Penthouse-Gegenstände

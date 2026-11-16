@@ -181,7 +181,7 @@ func _lounge() -> void:
 	_vor(_station("gipfel"))
 	s._taste(KEY_E)
 	await _warte(0.3)
-	_pruefe("gipfel champagner", s.hmenu.offen and _knopf("b_champagner") and w.boost_wirkung("lohn") >= 2.5)
+	_pruefe("gipfel champagner", s.hmenu.offen and _knopf("b_champagner") and is_equal_approx(w.boost_wirkung("lohn"), 2.0))
 	s._taste(KEY_E)
 	await _warte(1.2)
 	_pruefe("besucht + erfolge", w.besucht.size() == 3 and w.erfolge.has("lounge") and w.erfolge.has("restaurant") and w.erfolge.has("plattform"), str(w.besucht))

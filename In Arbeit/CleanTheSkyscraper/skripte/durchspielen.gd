@@ -7,7 +7,18 @@ extends Node
 # Protokoll: Zeilen „DS …“ auf der Konsole. Schnell: --headless --fixed-fps 20 (läuft so schnell wie die CPU kann).
 # Weitere Schalter: --bis=STUNDEN (Spielzeit-Ende, Standard 30), --hand=M/S (Wischtempo, Standard 2,5), --zeitraffer=F (Engine.time_scale)
 
-const BOT_STAND := "user://durchlauf_bot.json"
+const BOT_STAND_BASIS := "user://durchlauf_bot"
+static var BOT_STAND := bot_stand()
+
+# --stand=NAME: eigener Spielstand + Bot-Zustand, damit mehrere Läufe gleichzeitig gehen
+static func endung() -> String:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--stand="):
+			return "_" + a.split("=")[1]
+	return ""
+
+static func bot_stand() -> String:
+	return BOT_STAND_BASIS + endung() + ".json"
 const ZELLE := 0.5                 # Raster der Wegsuche zu Fuß (m)
 const LADEN_TEST_NACH := 3.0 * 3600.0   # nach so viel Spielzeit einmal speichern + neu laden
 
@@ -154,6 +165,10 @@ func _ablauf() -> void:
 				if s.zustand.verschmutzen(f, c, 1.0):
 					n += 1
 		_log("DRECK %d Fenster ab Stockwerk 60 wieder dreckig" % n)
+	if "--werkzeugtest" in OS.get_cmdline_user_args():
+		await _werkzeugtest()
+		get_tree().quit()
+		return
 	if "--wegtest" in OS.get_cmdline_user_args():
 		await _wegtest()
 		get_tree().quit()
@@ -530,9 +545,11 @@ func _werkstatt() -> void:
 		pass
 
 # ---------------------------------------------------------------- Ausflüge zu Fuß
+# gemessen mit --werkzeugtest (Sekunden pro Fenster ohne Boosts, voller Ausbau): so viel taugt ein Werkzeug wirklich
+const GEMESSEN := {"schwamm": 8.9, "grossschwamm": 5.5, "abzieher": 4.4, "doppel": 3.4, "hochdruck": 3.6, "mikro": 4.4, "profi": 2.9, "teleskop": 1.6, "dampf": 2.3, "lanze": 1.8}
+
 func _werkzeug_wert(wz: Dictionary) -> float:
-	var v := 2.0 * maxf(float(wz.rx), float(wz.ry))
-	return v * (2.2 if wz.art == "spray" else 1.0)
+	return 1.0 / float(GEMESSEN.get(wz.id, 9.0))
 
 func _bestes_werkzeug() -> String:
 	var beste := "schwamm"
@@ -1143,6 +1160,39 @@ func _jetpack_flug() -> void:
 	_halte(KEY_CTRL, false)
 	_log("JETPACK geflogen bis %.0f m, gelandet=%s" % [h, s.laeufer.hoch < 0.01])
 	_fahrzeug_beste()
+
+# --werkzeugtest: jedes Werkzeug putzt 24 Fenster (Stockwerk 30–40, voller Ausbau, keine Boosts/Helfer) – Sekunden pro Fenster
+func _werkzeugtest() -> void:
+	w.geld = 10000000
+	w.stufen = {"motor": 5, "arm": 3, "winde": 10}
+	w.helfer = {"putzkraft": 0, "roboter": 0, "drohne": 0}
+	s.ereignisse.erlaubt = {"tauben": false, "sandsturm": false, "wind": false, "taa": false}
+	for wz in Wirtschaft.WERKZEUGE:
+		if not wz.id in w.besitz:
+			w.besitz.append(wz.id)
+	s._ausruestung()
+	await _einsteigen()
+	var ergebnis := []
+	for wz in Wirtschaft.WERKZEUGE:
+		for f in range(30, 41):
+			for c in s.turm.fenster_pro_stock[f]:
+				s.zustand.verschmutzen(f, c, 1.0)
+		s.spieler.y = 30 * Turm.STOCK_H + 1.0
+		s.spieler.weg = s.turm.seiten_mitte(30, w.aktive_gondel)
+		w.ausruesten(wz.id)
+		s._ausruestung()
+		s.spieler.gesperrt = true
+		await _bild()
+		var t0 := _zeit()
+		var n0 := s.zustand.sauber_zahl
+		while s.zustand.sauber_zahl - n0 < 24 and _zeit() - t0 < 900.0:
+			var z := _naechstes_fenster(w.aktive_gondel)
+			if z.is_empty():
+				break
+			await _putze(z)
+		var n := s.zustand.sauber_zahl - n0
+		ergebnis.append("%s %.2f s" % [wz.id, (_zeit() - t0) / maxf(1, n)])
+	_log("WERKZEUGTEST (hand %.1f m/s, Sekunden pro Fenster): %s" % [hand, ", ".join(ergebnis)])
 
 # Gondel parkt direkt neben dem Express-Aufzug: E soll nehmen, wohin man schaut
 func _einstieg_test() -> void:

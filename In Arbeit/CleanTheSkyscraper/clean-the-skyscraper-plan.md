@@ -1,6 +1,6 @@
 # Clean the Skyscraper – Bauplan
 
-Status: **Phase 4 + Extras + Läden fertig, Durchspiel-Test gemacht (4i)**, als Nächstes Balance-Entscheidung, dann Phase 5 (Feinschliff)
+Status: **Phase 4 + Extras + Läden fertig, Durchspiel-Test + erste Balance-Runde gemacht (4i)**, als Nächstes Sprühgeräte/Gold-Preise entscheiden, dann Phase 5 (Feinschliff)
 
 ## Idee
 
@@ -212,6 +212,9 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
      3. **Ausbau zu schnell fertig:** Motor, Arm und beide Extra-Gondeln sind nach 1–2 h komplett gekauft (Gondel 2 + 3 zusammen nur 1.500 €). Vorschlag: Gondel 2/3 1.000 / 5.000 €, Motor-Faktor 2,6 → 3,2.
      4. **Spieldauer Richtung 10 h:** Nach 1 + 2 neu messen (Bot-Lauf dauert ~15 min); falls nötig zusätzlich Seilwinde-Faktor 1,32 → 1,40.
      5. **Kleinigkeiten:** Alle 10 Szenen nach 1,5–2 h gesammelt (ok, oder seltener machen); Erfolg „Turm-Veteran (10 h)“ ist bei kürzerer Spieldauer erst nach dem Turm erreichbar.
+   - **Umgesetzt (Entscheidung des Users, 16.11.2026):** Boosts mit derselben Wirkung zählen nicht mehr zusammen, nur der stärkste (`Wirtschaft.boost_wirkung()` = Maximum; die Kiosk-Boosts haben jetzt auch `wirkung`: Goldpolitur Lohn +100 %, Glanzspray Fläche +50 %, Kaffee Tempo +60 %, Eis Reichweite +0,8, Limo Tauben; Hinweis im Boost-Menü). Gondel 2/3 kosten 1.000 / 5.000 € (vorher 300 / 1.200), Motor-Faktor 3,2 (vorher 2,6). **Vorschlag 1 zurückgenommen:** Messung mit `--werkzeugtest` (24 Fenster je Werkzeug, voller Ausbau, keine Boosts, Sekunden pro Fenster): Schwamm 8,9 · Großer Schwamm 5,5 · Abzieher 4,4 · Mikrofaser 4,4 · Doppel 3,4 · Hochdruck 3,6 · Profi XXL 2,9 · **Teleskop 1,6** · Dampf 2,3 · Lanze 1,8. Ohne Boosts sind die Sprühgeräte also *nicht* schneller als der Teleskop-Abzieher – ihre frühere Übermacht kam nur vom Stapeln der Flächen-Boosts. Größe und Preis bleiben wie vorher.
+   - **Neu gemessen mit der neuen Balance:** schnelle Hand **6:37 h** (50 % nach 4:13 h), langsame Hand **7:44 h** (50 % nach 5:20 h). Ein Mensch: geschätzt **9–11 h**. Die zweite Turmhälfte dauert jetzt ~2,4 h statt 40 min, Einnahmen steigen gleichmäßig (langsam: 1 h 14 €/min, 3 h 200, 5 h 1.400, 7 h 3.400). Tote Phasen: keine. Keine Fehler, Hänger oder unerreichbaren Fenster, Lade-Test wieder „alles gleich“.
+   - **Neue offene Punkte (User fragen):** (a) Dampfreiniger und Wasserlanze lohnen sich jetzt gar nicht mehr (langsamer als der Teleskop-Abzieher, aber 3–7× so teuer) – Vorschlag: deutlich stärker machen, Ziel etwa Dampf 1,1 s, Lanze 0,7 s pro Fenster. (b) Insgesamt werden nur noch ~520.000 € verdient: Gold-Deko (20.000–500.000 €), „Millionär“, „Alle 15 Helfer“ und „Alle 10 Werkzeuge“ sind während des Turms kaum erreichbar – Vorschlag: Gold-Preise etwa halbieren oder als Ziel für einen Endlos-Modus nach dem Turm (Phase 5) lassen. (c) Für 10 h+ noch etwas zulegen, z. B. Seilwinde-Faktor 1,32 → 1,40.
    - **Bekannte Grenzen des Bots:** Er putzt perfekt ohne Pause und kauft „vernünftig“; zu Fuß in Räumen (Penthouse mit vielen Möbeln) stellt er sich bei verstellten Wegen direkt an die Station. Ohne Grafik kann Godot die Maus nicht fangen – Test 26 deshalb mit Grafik starten.
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 
