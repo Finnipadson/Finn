@@ -1,6 +1,6 @@
 # Clean the Skyscraper – Bauplan
 
-Status: **Phase 4 + Extras + Läden fertig**, als Nächstes Phase 5 (Feinschliff)
+Status: **Phase 4 + Extras + Läden fertig, Durchspiel-Test gemacht (4i)**, als Nächstes Balance-Entscheidung, dann Phase 5 (Feinschliff)
 
 ## Idee
 
@@ -198,6 +198,21 @@ Der Turm ist erfunden (Name „Wüstennadel“, Arbeitstitel) und kein Nachbau d
    - Alte Spielstände laden weiter (neue Kosmetik-Arten bekommen „keine“ als Start, `Wirtschaft.KOSMETIK_START`).
    - Tests: `--ansicht=29` (in jeden Laden laufen, Schaufenster hält, alle Stationen erreichbar, über die echten Knöpfe kaufen, Souvenir-Sperre, Werkstatt, Speichern/Laden alt + neu) – 44 Prüfungen bestanden; `--ansicht=30` Testbilder. Leistung in 1440p: 139–158 FPS. Verkehr-Test bestanden (638 Autos, weil an den Läden Kreuzungen weggefallen sind).
 
+4i. [x] **Durchspiel-Test** (16.11.2026): Bot `skripte/durchspielen.gd` (`--headless --fixed-fps 20 -- --durchspielen`) spielt das echte Spiel ab dem Start zu Fuß durch, mit echtem Wisch-Code, Gondel-Tempo, Wegsuche zu Fuß und den echten Knöpfen. Er kauft Werkzeuge, Ausbau, Gondeln, Helfer, Fahrzeuge, Boosts und Möbel, stellt alles im Penthouse auf, besucht Lounge, Restaurant, Plattform, Arcade (Greif + Kapsel), Casino (alle 4 Spiele) und alle vier Läden und speichert und lädt bei 3 h einmal neu.
+   - **Ergebnis:** Zwei vollständige Läufe bis alle 25.638 Fenster sauber sind. *Schnelle Hand* (2,5 m/s, putzt ohne Pause): **4:02 h**. *Langsame Hand* (1,2 m/s, eher wie ein Mensch): **5:32 h**. Ein echter Spieler mit Pausen, Umschauen und weniger optimalen Käufen braucht geschätzt **6–8 h** – also unter dem Ziel von 10–20 h.
+   - **Verlauf (langsame Hand):** 1 h: 1,4 % der Fenster, 15 €/min · 2 h: 5 %, 42 €/min · 3 h: 14 % · 4 h: 28 %, 815 €/min · 4:50 h: 50 % · 5:00 h: 62 %, 23.700 €/min · 5:32 h: fertig. Schnelle Hand: 1 h 2,8 %, 2 h 11 %, 3 h 30 %, 3:22 h 50 %, 3:57 h 90 %. **Die zweite Hälfte des Turms dauert nur gut 40 min**, weil am Ende alles zusammenkommt (s. u.).
+   - **Meilensteine (langsam / schnell):** Doppel-Abzieher 1:22 / 1:00 · Seil bis Lounge (St. 48) 1:21 / 1:00 · Gondel 3 2:01 / 1:01 · Teleskop-Abzieher 2:01 / 1:24 · alle 10 Szenen (Sammler) 2:01 / 1:23 · erste Drohne 4:08 / 2:16 · Dampfreiniger 3:20 / 2:33 · Restaurant (St. 120) 4:35 / 3:02 · Wasserlanze 4:45 / 3:12 · Seil ganz oben 4:55 / 3:22 · Millionär 5:18 / 3:47. Erfolge am Ende 27 von 29 (es fehlen „Turm-Veteran 10 h“ – vorher ist der Turm fertig – und „Legendär“ bzw. „Jackpot“ je nach Glück).
+   - **Tote Phasen:** keine. Höchstens ein paar Sekunden, in denen bis zur Seil-Grenze alles sauber war; nie mehr als 20 min ohne lohnenden Kauf. Am Ende liegen ~0,5–1 Mio. € ungenutzt herum (nur der Goldene Springbrunnen für 500.000 € fehlte noch).
+   - **Gemessen pro Fenster (inkl. Fahren):** Schwamm 10,9 s · Abzieher 5,3 s · Doppel-Abzieher 3,3 s · Teleskop 1,5 s · Dampfreiniger 0,4 s · Wasserlanze 0,3 s (alle Boni eingerechnet).
+   - **Behobene Fehler:** (1) Parkte die Gondel unten neben dem Express-Aufzug der Sky-Lounge, öffnete **E** immer das Aufzug-Menü – man kam nicht mehr in die Gondel. Jetzt nimmt E das, wohin man schaut (`Spiel._gondel_bevorzugt()`), und der Hinweis unten passt dazu; die Aufzug-Stationen haben dafür ein Blickziel. (2) Test 21 verglich den Helfer-Lohn mit dem Kontostand, in den inzwischen auch Erfolgs-Prämien fließen – jetzt mit `statistik.verdient`.
+   - **Geprüft ohne Befund:** Speichern + Laden mitten im Lauf (alles gleich), alle 74 Stationen am Boden zu Fuß erreichbar (`--wegtest`), keine Fenster dauerhaft unerreichbar, keine Gondel-Hänger, keine Skript-Fehler im Log. FPS mit Grafik (1600 × 900, alle 15 Helfer, voller Turm): **168–240**.
+   - **Balance-Vorschläge (noch nicht umgesetzt, User fragen):**
+     1. **Sprüh-Werkzeuge zu stark:** Dampfreiniger und Wasserlanze putzen 4–5× schneller als der Teleskop-Abzieher und machen die zweite Turmhälfte zum Spaziergang. Vorschlag: Dampfreiniger Fläche 0,5 → 0,38 und Preis 9.000 → 30.000 €, Wasserlanze 0,75/0,7 → 0,5/0,45 und 25.000 → 120.000 €.
+     2. **Boosts stapeln sich zu stark:** Sky-Cocktail (+50 %), Chefmenü (+100 %) und Gipfel-Champagner (+200 %) zählen zusammen, dazu Goldpolitur ×2 und bis +100 % Möbel-Bonus → bis zu **11-facher Lohn**. Bei der Wischfläche genauso (Glanzspray × Mojito + Mittagsmenü + Möbel → Radius bis ×5,7). Vorschlag: Bei Spezial-Boosts mit derselben Wirkung zählt nur der stärkste.
+     3. **Ausbau zu schnell fertig:** Motor, Arm und beide Extra-Gondeln sind nach 1–2 h komplett gekauft (Gondel 2 + 3 zusammen nur 1.500 €). Vorschlag: Gondel 2/3 1.000 / 5.000 €, Motor-Faktor 2,6 → 3,2.
+     4. **Spieldauer Richtung 10 h:** Nach 1 + 2 neu messen (Bot-Lauf dauert ~15 min); falls nötig zusätzlich Seilwinde-Faktor 1,32 → 1,40.
+     5. **Kleinigkeiten:** Alle 10 Szenen nach 1,5–2 h gesammelt (ok, oder seltener machen); Erfolg „Turm-Veteran (10 h)“ ist bei kürzerer Spieldauer erst nach dem Turm erreichbar.
+   - **Bekannte Grenzen des Bots:** Er putzt perfekt ohne Pause und kauft „vernünftig“; zu Fuß in Räumen (Penthouse mit vielen Möbeln) stellt er sich bei verstellten Wegen direkt an die Station. Ohne Grafik kann Godot die Maus nicht fangen – Test 26 deshalb mit Grafik starten.
 5. [ ] **Feinschliff:** Sound und Musik, Funkel-Effekte, Menü und Einstellungen, Tageszeiten, Export als .exe
 
 ## Offene Fragen
