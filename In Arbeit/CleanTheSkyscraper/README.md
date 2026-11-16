@@ -67,7 +67,7 @@ skripte/skylounge.gd   Express-Aufzug am Turm + Sky-Lounge (Stockwerk 48), Resta
 skripte/penthouse.gd   Penthouse oben im Casino-Hochhaus: Glaswände, Vitrine mit Pokalen, Tablet, Möbel platzieren
 skripte/arcade.gd      Arcade-Halle (1. Stock Casino-Hochhaus): Greifautomaten (Spiel mit eigener Kamera), Kapsel-Automaten
 skripte/extras_menu.gd Menüs: Aufzüge, Möbel-Läden + Einrichten, Kapsel-Automat, Erfolge + Statistik
-skripte/erfolge.gd     Liste der 29 Erfolge (Geld + Pokal) und Prüfung
+skripte/erfolge.gd     Liste der 32 Erfolge (Geld + Pokal) und Prüfung
 skripte/moebel.gd      Modelle der Penthouse-Gegenstände (Kenney Furniture Kit), Einfärben, Seltenheits-Leuchten
 skripte/raum_bau.gd    Bausteine für Innenräume (Boden/Decke/Glaswand aus Grundriss, Lichter, Schrift, Kenney-Modelle)
 skripte/extras_test.gd Tests 24–28
@@ -76,6 +76,15 @@ skripte/andenken.gd    Souvenirs + Gold-Deko als Modelle aus Code ("code:…" in
 skripte/gondel_deko.gd Gondel-Rumpf, Lackierungs-Muster, Aufkleber, Blumenkästen, Sonnenschirm (Gondel-Werkstatt)
 skripte/laeden_deko.gd Verschönerung der Läden: Markisen, Aufsteller, Bodenmuster, Leute, Lackierkabine, Modell-Stadt, Kronleuchter …
 skripte/laeden_test.gd Tests 29 (Läden) und 30 (Testbilder)
+skripte/kueste.gd      Küste hinter dem See: Meer, Strand (2 m tiefer), Ufermauer, Treppen, Palmen-Boulevard mit Kanal und Brücken, Steg mit Fischladen, Strandbar; Bodenhöhe + Sperren zu Fuß
+skripte/strand.gd      Strand im Spiel: Stationen Strandbar/Fischladen/Yacht, Angeln zu Fuß und vom Boot, Ein-/Aussteigen Yacht
+skripte/angeln.gd      Angel-Minispiel „Spannungsbalken“ (Wurf, Biss, Drill, Fang-Karte), Angel-Modelle
+skripte/fische.gd      20 Fische aus Code (Körper-Loft, Flossen, Sonderteile), Muster über shader/fisch.gdshader
+skripte/fisch_menu.gd  Fischladen: Fische verkaufen, Angeln kaufen
+skripte/yacht.gd       Eigene Yacht (Modell aus Code, fahren, Kamera, Kielwasser)
+skripte/karte.gd       Karte (Taste M), Ziel per Klick, Pfeil im Bild mit Wegsuche
+skripte/strand_test.gd Tests 31 (Strand, Angeln, Yacht, Karte) und 32 (Testbilder)
+shader/meer.gdshader   Meer (türkis → tiefblau, Schaum an der Wasserlinie), sand.gdshader Strand, wasserfall.gdshader Kanal-Wasserfall
 tools/groessen.gd      Größen der Möbelhaus-Möbel ausgeben (zum Einrichten der Zimmer)
 shader/seltenheit.gdshader  leuchtender Rand in der Farbe der Seltenheit (auch Vorschau grün/rot beim Platzieren)
 skripte/ereignisse.gd  Tauben, Windböen, Sandsturm (Zeiten oben im Skript)
@@ -120,6 +129,9 @@ godot --path . --write-movie bild.png --fixed-fps 30 --quit-after 15 -- --ansich
 - `--ansicht=25 --geld=200000`: Sky-Lounge (Aufzug mit Sperre, Glaswand, Bar-Boost, Designer-Laden, Restaurant, Plattform)
 - `--ansicht=26 --geld=200000`: Penthouse (Möbel kaufen, aufstellen, drehen, Kollision, umstellen, Lager, Pokale)
 - `--ansicht=27 --geld=200000`: Arcade (Greifautomat mit Tasten, Treffer/Daneben, Kapsel-Automat, Chancen)
+- `--ansicht=31`: Strand (Boulevard, Kanal/Brücke, Mauer/Treppe/Meer, Strandbar, Fischladen, Angeln mit echter Maustaste, Riesen-Sperre, Verkaufen, Fisch-Index, Yacht fahren, Karte + Pfeil, Speichern)
+- `--ansicht=32`: Testbilder Strand (`--nur-yacht`: nur die Yacht)
+- Bot: `--headless --fixed-fps 20 -- --durchspielen --angeltest=30 [--angel=hochsee] [--abschnitt=N] [--drinks] [--boot] --stand=x` misst Angeln allein
 - `--ansicht=28`: Testbilder der Extras (alle 1,5 s eine Ansicht, Bildnummern stehen als `BILD n frame=…` auf der Konsole)
 - `--ansicht=15`: nacheinander vor jedem Kiosk, erst von weitem, dann von nah (Testbilder)
 - `--ansicht=14 --geld=10000`: Händler-Test (alle Stände, echte Knöpfe, Wirkung der Boosts und Farben)
