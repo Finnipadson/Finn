@@ -103,7 +103,7 @@ func _process(_dt: float) -> void:
 		if _verlauf.size() > 60:
 			_verlauf.pop_front()
 	if DisplayServer.get_name() != "headless" and t >= _naechstes_bild:
-		_naechstes_bild = t + 60.0
+		_naechstes_bild = t + 30.0
 		var fps := Engine.get_frames_per_second()
 		_fps_werte.append(fps)
 		var wo := "Gondel %d m" % int(s.spieler.y) if s.spieler.aktiv else ("zu Fuß" if x.ort == "" else x.ort)
@@ -147,6 +147,13 @@ func _ablauf() -> void:
 	await _warte(1.0)
 	_log("START fenster=%d geld=%d seil=%d gesamt=%d hand=%.1f m/s" % [s.zustand.sauber_zahl, w.geld, w.oberstes_stockwerk(), s.turm.fenster_gesamt, hand])
 	_raster_bauen()
+	if "--dreck" in OS.get_cmdline_user_args():   # Test (FPS-Lauf im späten Spielstand): oben wieder alles dreckig
+		var n := 0
+		for f in range(60, Turm.STOCKWERKE):
+			for c in s.turm.fenster_pro_stock[f]:
+				if s.zustand.verschmutzen(f, c, 1.0):
+					n += 1
+		_log("DRECK %d Fenster ab Stockwerk 60 wieder dreckig" % n)
 	if "--wegtest" in OS.get_cmdline_user_args():
 		await _wegtest()
 		get_tree().quit()
@@ -989,7 +996,7 @@ func _arcade() -> void:
 		while a.spiel >= 0 and t < 25.0:
 			await _warte(0.25)
 			t += 0.25
-		_log("ARCADE Greifautomat: %s (%d €)" % ["Gewinn " + str(w.moebel[w.moebel.size() - 1].id) if w.moebel.size() > n0 else "daneben", g0 - w.geld])
+		_log("ARCADE Greifautomat: %s (%d €)" % ["Gewinn " + str(w.moebel[w.moebel.size() - 1].id) if w.moebel.size() > n0 else "daneben", w.arcade_preis("greif")])
 	# Kapsel-Automat: so oft es sich lohnt (höchstens 3)
 	var ks := _station("kapsel")
 	await _im_raum_zu(ks)
@@ -1137,8 +1144,42 @@ func _jetpack_flug() -> void:
 	_log("JETPACK geflogen bis %.0f m, gelandet=%s" % [h, s.laeufer.hoch < 0.01])
 	_fahrzeug_beste()
 
+# Gondel parkt direkt neben dem Express-Aufzug: E soll nehmen, wohin man schaut
+func _einstieg_test() -> void:
+	var sp := s.spieler
+	var u := x.sky.unten_pos
+	var k := w.aktive_gondel
+	sp.weg = s.turm.weg_auf_seite(0, s.turm.naechster_weg(0, u), k)
+	sp._platzieren(0.0)
+	var g := sp.gondel.global_position
+	s.laeufer.gondel_pos = Vector2(g.x, g.z)
+	s.laeufer.position = Vector3(u.x, 0, u.y)
+	var abstand := s._abstand_gondel()
+	await _hinschauen(x.sky.unten_ziel)
+	await _bild()
+	await _bild()
+	var hinweis_a: String = s.hud.status_l.text
+	s._taste(KEY_E)
+	await _warte(0.3)
+	var aufzug := x.menu.offen and x.menu.art == "aufzug_turm" and not sp.aktiv
+	if x.menu.offen:
+		s._taste(KEY_E)
+		await _warte(0.3)
+	await _hinschauen(Vector2(g.x, g.z))
+	await _bild()
+	await _bild()
+	var hinweis_g: String = s.hud.status_l.text
+	s._taste(KEY_E)
+	await _warte(0.3)
+	var gondel := sp.aktiv and not x.menu.offen
+	_log("EINSTIEGTEST Gondel %.1f m vom Aufzug-Standpunkt: Blick Aufzug → Menü=%s ('%s'), Blick Gondel → eingestiegen=%s ('%s')" % [abstand, aufzug, hinweis_a, gondel, hinweis_g])
+	if sp.aktiv:
+		s._taste(KEY_E)
+		await _warte(0.5)
+
 # --wegtest: zu Fuß zu jeder Station am Boden laufen (echte Kollision) und prüfen, ob man ankommt
 func _wegtest() -> void:
+	await _einstieg_test()
 	var ziele := []
 	for i in s.haendler.vorne.size():
 		ziele.append(["Kiosk " + str(Haendler.STAENDE[i].id), s.haendler.vorne[i]])

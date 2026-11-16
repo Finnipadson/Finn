@@ -438,7 +438,8 @@ func _gondel_bevorzugt() -> bool:
 	var g := spieler.gondel.global_position
 	var zur_g := vor.dot((Vector2(g.x, g.z) - p).normalized())
 	for z in ziele:
-		if vor.dot(((z as Vector2) - p).normalized()) >= zur_g:
+		var d: Vector2 = (z as Vector2) - p
+		if d.length() < 0.3 or vor.dot(d.normalized()) >= zur_g:   # Station ohne Blickziel / direkt davor: Station
 			return false
 	return true
 

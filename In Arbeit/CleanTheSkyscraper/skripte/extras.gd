@@ -116,8 +116,8 @@ func erfolge_pruefen() -> Array:
 func _stationen() -> Array:
 	match ort:
 		"":
-			return [{"art": "aufzug_turm", "name": "Express-Aufzug", "hinweis": "E: Express-Aufzug zur Sky-Lounge", "pos": sky.unten_pos},
-				{"art": "aufzug_casino", "name": "Aufzug", "hinweis": "E: Aufzug (Arcade-Halle, Penthouse)", "pos": spiel.casino.aufzug_pos}] + laeden.stationen
+			return [{"art": "aufzug_turm", "name": "Express-Aufzug", "hinweis": "E: Express-Aufzug zur Sky-Lounge", "pos": sky.unten_pos, "ziel": sky.unten_ziel},
+				{"art": "aufzug_casino", "name": "Aufzug", "hinweis": "E: Aufzug (Arcade-Halle, Penthouse)", "pos": spiel.casino.aufzug_pos, "ziel": spiel.casino.aufzug_ziel}] + laeden.stationen
 		"arcade": return arcade.stationen
 		"penthouse": return penthouse.stationen
 		_: return sky.etagen[ort].stationen
