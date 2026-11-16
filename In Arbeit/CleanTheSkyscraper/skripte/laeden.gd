@@ -102,16 +102,19 @@ func _haus(id: String, grund: Rect2) -> void:
 	var innen_mat := Bau.matt(d.innen, 0.75)
 	var akzent := Bau.metall(d.farbe, 0.3, 0.6) if id != "gold" else Andenken.gold()
 	var mw := h - WAND * 0.5
-	# Rückwand + Seiten (außen Stein, innen Farbe des Ladens)
-	RaumBau.box(haus, Vector3(WAND, hoch, h * 2.0), Vector3(mw, hoch * 0.5, 0), stein)
-	RaumBau.box(innen, Vector3(0.02, hoch, h * 2.0 - 0.8), Vector3(mw - WAND * 0.5 - 0.01, hoch * 0.5, 0), innen_mat)
+	# Rückwand + Seiten: große Fenster (man sieht von überall hinein); nur die Werkstatt hat hinten ihre Werkzeugwand
+	var glas := RaumBau.glas("cfe8ff", 0.16)
+	var fenster_oben := minf(tuer_h, hoch - 1.2)
+	if id == "werkstatt":
+		RaumBau.box(haus, Vector3(WAND, hoch, h * 2.0), Vector3(mw, hoch * 0.5, 0), stein)
+		RaumBau.box(innen, Vector3(0.02, hoch, h * 2.0 - 0.8), Vector3(mw - WAND * 0.5 - 0.01, hoch * 0.5, 0), innen_mat)
+	else:
+		_glaswand(haus, Vector3(mw, 0, 0), 0.0, h * 2.0, hoch, fenster_oben, stein, glas)
 	_fest(id, h - WAND, -h, h, h)
 	for s in [-1.0, 1.0]:
-		RaumBau.box(haus, Vector3(h * 2.0, hoch, WAND), Vector3(0, hoch * 0.5, s * mw), stein)
-		RaumBau.box(innen, Vector3(h * 2.0 - 0.8, hoch, 0.02), Vector3(0, hoch * 0.5, s * (mw - WAND * 0.5 - 0.01)), innen_mat)
+		_glaswand(haus, Vector3(0, 0, s * mw), PI * 0.5, h * 2.0, hoch, fenster_oben, stein, glas)
 		_fest(id, -h, s * mw - WAND * 0.5, h, s * mw + WAND * 0.5)
 	# Vorderseite: Tür in der Mitte, daneben große Schaufenster mit Brüstung, darüber das Schild-Band
-	var glas := RaumBau.glas("cfe8ff", 0.16)
 	for s in [-1.0, 1.0]:
 		var z0 := tuer * 0.5
 		var lang := h - z0
@@ -167,6 +170,21 @@ func _haus(id: String, grund: Rect2) -> void:
 		RaumBau.box(haus, Vector3(1.0, 0.8, 1.0), Vector3(-h - 0.9, 0.4, s * (tuer * 0.5 + 1.6)), Bau.matt("2a2d38", 0.5))
 		RaumBau.modell(haus, "natur/plant_bushLarge", Vector3(-h - 0.9, 0.8, s * (tuer * 0.5 + 1.6)), 1.1)
 		_fest(id, -h - 1.4, s * (tuer * 0.5 + 1.6) - 0.5, -h - 0.4, s * (tuer * 0.5 + 1.6) + 0.5)
+
+# Wand mit Brüstung, durchgehendem Fensterband (Pfosten etwa alle 3,5 m) und Steinband darüber.
+# Lokal verläuft die Wand entlang z (wie die Vorderseite); dreh = PI/2 für die Seiten.
+func _glaswand(haus: Node3D, p: Vector3, dreh: float, lang: float, hoch: float, oben: float, stein: Material, glas: Material) -> void:
+	var w := Node3D.new()
+	w.position = p
+	w.rotation.y = dreh
+	haus.add_child(w)
+	RaumBau.box(w, Vector3(WAND, 0.5, lang), Vector3(0, 0.25, 0), stein)
+	RaumBau.box(w, Vector3(WAND, hoch - oben, lang), Vector3(0, oben + (hoch - oben) * 0.5, 0), stein)
+	RaumBau.box(w, Vector3(0.06, oben - 0.5, lang - 0.4), Vector3(0, 0.5 + (oben - 0.5) * 0.5, 0), glas)
+	var n := maxi(1, ceili((lang - 0.3) / 3.5))
+	for k in n + 1:
+		var z := -lang * 0.5 + 0.15 + k * (lang - 0.3) / n
+		RaumBau.box(w, Vector3(WAND + 0.04, oben, 0.3), Vector3(0, oben * 0.5, z), stein)
 
 func _fassade(art: int) -> ShaderMaterial:
 	var p: Dictionary = [

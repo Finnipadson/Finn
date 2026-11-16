@@ -236,6 +236,9 @@ func _bilder() -> void:
 		_blick(_lp(id, -h + 1.5, 1.75, -h * 0.55), _lp(id, h * 0.6, 0.8, h * 0.3))
 		await _foto(nr)
 		nr += 1
+		# Seitenansicht (Fenster statt glatter Wand)
+		_blick(_lp(id, -h * 0.3, 1.8, h + 16.0), _lp(id, 0.0, 2.0, h))
+		await _foto(100 + nr)
 	# Möbelhaus: in einen Raum hineinschauen, Werkstatt: Gondel von nah
 	_blick(_lp("moebel", 2.0, 1.75, 1.0), _lp("moebel", 2.0, 0.6, 12.0))
 	await _foto(nr)
