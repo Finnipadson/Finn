@@ -1357,7 +1357,7 @@ func _weg(von: Vector2, nach: Vector2) -> PackedVector2Array:
 	var start := _naechste_freie(_zelle(von), extra)
 	var ziel := _naechste_freie(_zelle(nach), extra)
 	if start.x < 0 or ziel.x < 0:
-		return PackedVector2Array([nach])
+		return PackedVector2Array([von, nach])
 	var si := start.y * r_n + start.x
 	var zi := ziel.y * r_n + ziel.x
 	var g_kosten := {si: 0.0}
@@ -1390,7 +1390,7 @@ func _weg(von: Vector2, nach: Vector2) -> PackedVector2Array:
 				_heap_push(offen_f, offen_i, ng + h, ni)
 	if not gefunden:
 		_log("WEG nicht gefunden von (%.0f, %.0f) nach (%.0f, %.0f) nach %d Schritten" % [von.x, von.y, nach.x, nach.y, schritte])
-		return PackedVector2Array([nach])
+		return PackedVector2Array([von, nach])
 	var roh := PackedVector2Array()
 	var k := zi
 	while k >= 0:
@@ -1603,6 +1603,10 @@ func _angelausflug() -> void:
 	var platz: Vector2 = Kueste.KOPF.get_center() + Vector2(-11.0, randf_range(-8.0, 8.0))
 	await _gehe_weit(platz)
 	await _hinschauen(platz + Vector2(-10.0, 0.0))
+	await _bild()
+	if s.strand.wurf_ziel() == Vector3.INF:
+		_log("FEHLER Angeln: an der Steg-Spitze kein Wurf möglich (bei %.0f, %.0f, y=%.1f)" % [s.laeufer.position.x, s.laeufer.position.z, s.laeufer.position.y])
+		return
 	var t_angeln := _zeit()
 	var n0 := int(w.statistik.fische)
 	var arten0 := w.fisch_index.size()

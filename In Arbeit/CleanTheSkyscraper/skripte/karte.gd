@@ -300,7 +300,8 @@ func pfeil_winkel() -> float:
 		return 0.0
 	var p := _spieler_pos()
 	var i := 0
-	while i < route.size() - 1 and route[i].distance_to(p) < 5.0:   # erreichte Wegpunkte überspringen
+	# erreichte bzw. schon passierte Wegpunkte überspringen (näher am übernächsten als der Wegpunkt selbst)
+	while i < route.size() - 1 and (route[i].distance_to(p) < 5.0 or p.distance_to(route[i + 1]) < route[i].distance_to(route[i + 1])):
 		i += 1
 	var d := route[i] - p
 	var yaw := _spieler_yaw()
