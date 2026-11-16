@@ -119,7 +119,59 @@ const GEGENSTAENDE := {
 	"thron": {"name": "Goldener Thron", "modell": "chairRounded", "quelle": "arcade", "seltenheit": 3, "bonus": "tempo", "s": 1.4, "farbe": "gold"},
 	"gold_tv": {"name": "Goldener Fernseher", "modell": "televisionModern", "quelle": "arcade", "seltenheit": 3, "bonus": "helfer", "farbe": "gold"},
 	"gold_uhr": {"name": "Goldene Stehlampe", "modell": "lampRoundFloor", "quelle": "arcade", "seltenheit": 3, "bonus": "boost", "s": 1.3, "farbe": "gold"},
+	# Möbelhaus (begehbar, Ausstellungsräume): zusätzlich zu den Katalog-Möbeln. raum = Ausstellungsraum (MOEBELHAUS_RAEUME)
+	"sofa_lang": {"name": "Langes Sofa", "modell": "loungeSofaLong", "quelle": "moebelhaus", "preis": 750, "raum": "wohnen", "bonus": "boost"},
+	"beistelltisch": {"name": "Beistelltisch", "modell": "sideTableDrawers", "quelle": "moebelhaus", "preis": 140, "raum": "wohnen"},
+	"glastisch": {"name": "Glas-Esstisch", "modell": "tableGlass", "quelle": "moebelhaus", "preis": 480, "raum": "kueche"},
+	"designstuhl": {"name": "Designerstuhl", "modell": "chairModernFrameCushion", "quelle": "moebelhaus", "preis": 160, "raum": "kueche"},
+	"einzelbett": {"name": "Einzelbett", "modell": "bedSingle", "quelle": "moebelhaus", "preis": 450, "raum": "schlafen"},
+	"nachttisch": {"name": "Nachttisch", "modell": "cabinetBedDrawerTable", "quelle": "moebelhaus", "preis": 110, "raum": "schlafen"},
+	"kleiderschrank": {"name": "Kleiderschrank", "modell": "bookcaseClosedDoors", "quelle": "moebelhaus", "preis": 520, "raum": "schlafen", "bonus": "helfer"},
+	"etagenbett": {"name": "Etagenbett", "modell": "bedBunk", "quelle": "moebelhaus", "preis": 600, "raum": "schlafen"},
+	"herd": {"name": "Herd", "modell": "kitchenStove", "quelle": "moebelhaus", "preis": 650, "raum": "kueche", "bonus": "tempo"},
+	"spuele": {"name": "Spüle", "modell": "kitchenSink", "quelle": "moebelhaus", "preis": 420, "raum": "kueche"},
+	"kuechenbar": {"name": "Kücheninsel", "modell": "kitchenBar", "quelle": "moebelhaus", "preis": 380, "raum": "kueche"},
+	"badewanne": {"name": "Whirlpool-Wanne", "modell": "bathtub", "quelle": "moebelhaus", "preis": 4500, "raum": "bad", "seltenheit": 1, "bonus": "boost"},
+	"dusche": {"name": "Regendusche", "modell": "shower", "quelle": "moebelhaus", "preis": 1400, "raum": "bad", "bonus": "flaeche"},
+	"waschbecken": {"name": "Waschtisch", "modell": "bathroomSinkSquare", "quelle": "moebelhaus", "preis": 360, "raum": "bad"},
+	"toilette": {"name": "Toilette", "modell": "toiletSquare", "quelle": "moebelhaus", "preis": 300, "raum": "bad"},
+	"waschturm": {"name": "Waschmaschine + Trockner", "modell": "washerDryerStacked", "quelle": "moebelhaus", "preis": 900, "raum": "bad"},
+	"eckschreibtisch": {"name": "Eck-Schreibtisch", "modell": "deskCorner", "quelle": "moebelhaus", "preis": 3200, "raum": "buero", "seltenheit": 1, "bonus": "lohn"},
+	"aktenschrank": {"name": "Aktenschrank", "modell": "bookcaseClosedWide", "quelle": "moebelhaus", "preis": 450, "raum": "buero"},
+	"garderobe": {"name": "Garderobe", "modell": "coatRackStanding", "quelle": "moebelhaus", "preis": 100, "raum": "licht"},
+	# Souvenirshop: je ein Andenken pro Meilenstein (erfolg = Erfolg-ID), erst danach kaufbar, nur einmal. Modelle aus Code (Andenken)
+	"sv_postkarten": {"name": "Postkarten-Ständer", "modell": "code:postkarten", "quelle": "souvenir", "preis": 50, "erfolg": "fenster_10", "einmal": true},
+	"sv_schneekugel": {"name": "Schneekugel Wüstennadel", "modell": "code:schneekugel", "quelle": "souvenir", "preis": 120, "erfolg": "fenster_100", "einmal": true, "bonus": "boost"},
+	"sv_taube": {"name": "Porzellan-Taube", "modell": "code:taube", "quelle": "souvenir", "preis": 90, "erfolg": "album_1", "einmal": true, "bonus": "helfer"},
+	"sv_nadel": {"name": "Mini-Wüstennadel", "modell": "code:nadel", "quelle": "souvenir", "preis": 200, "erfolg": "hoehe_100", "einmal": true, "bonus": "lohn"},
+	"sv_wuerfel": {"name": "Casino-Würfel", "modell": "code:wuerfel", "quelle": "souvenir", "preis": 150, "erfolg": "casino_1", "einmal": true},
+	"sv_fontaene": {"name": "Fontänen-Modell", "modell": "code:fontaene", "quelle": "souvenir", "preis": 250, "erfolg": "lounge", "einmal": true, "bonus": "flaeche"},
+	"sv_gondel": {"name": "Mini-Gondel", "modell": "code:gondel", "quelle": "souvenir", "preis": 300, "erfolg": "gondeln", "einmal": true, "bonus": "tempo"},
+	"sv_sanduhr": {"name": "Wüstensand-Uhr", "modell": "code:sanduhr", "quelle": "souvenir", "preis": 300, "erfolg": "zeit_1h", "einmal": true},
+	"sv_wolken": {"name": "Wolken-Schneekugel", "modell": "code:wolkenkugel", "quelle": "souvenir", "preis": 400, "erfolg": "hoehe_300", "einmal": true, "seltenheit": 1, "bonus": "flaeche"},
+	"sv_schwamm": {"name": "Goldener Schwamm", "modell": "code:schwamm", "quelle": "souvenir", "preis": 600, "erfolg": "fenster_1000", "einmal": true, "seltenheit": 1, "bonus": "lohn"},
+	"sv_rahmen": {"name": "Szenen-Bilderrahmen", "modell": "code:rahmen", "quelle": "souvenir", "preis": 700, "erfolg": "album_alle", "einmal": true, "seltenheit": 1, "bonus": "helfer"},
+	"sv_kristall": {"name": "Kristall-Nadel", "modell": "code:kristall", "quelle": "souvenir", "preis": 800, "erfolg": "hoehe_oben", "einmal": true, "seltenheit": 1, "bonus": "tempo"},
+	# Goldschmuck-Laden neben dem Casino: legendäre Gold-Deko fürs Penthouse, je nur einmal
+	"gold_barren": {"name": "Goldbarren-Stapel", "modell": "code:barren", "quelle": "gold", "preis": 20000, "seltenheit": 3, "bonus": "lohn", "einmal": true},
+	"gold_leuchter": {"name": "Goldener Kandelaber", "modell": "code:leuchter", "quelle": "gold", "preis": 45000, "seltenheit": 3, "bonus": "boost", "einmal": true},
+	"gold_statue": {"name": "Statue „Der Fensterputzer“", "modell": "code:statue", "quelle": "gold", "preis": 80000, "seltenheit": 3, "bonus": "helfer", "einmal": true},
+	"gold_nadel": {"name": "Goldene Wüstennadel", "modell": "code:goldnadel", "quelle": "gold", "preis": 150000, "seltenheit": 3, "bonus": "tempo", "einmal": true},
+	"gold_globus": {"name": "Goldener Globus", "modell": "code:globus", "quelle": "gold", "preis": 250000, "seltenheit": 3, "bonus": "flaeche", "einmal": true},
+	"gold_brunnen": {"name": "Goldener Springbrunnen", "modell": "code:brunnen", "quelle": "gold", "preis": 500000, "seltenheit": 3, "bonus": "lohn", "einmal": true},
 }
+# Möbelhaus: Ausstellungsräume (Reihenfolge = Lage im Laden). Katalog-Möbel bekommen ihren Raum über KATALOG_RAUM.
+const MOEBELHAUS_RAEUME := [
+	{"id": "wohnen", "name": "Wohnzimmer", "farbe": "c9a27a"},
+	{"id": "schlafen", "name": "Schlafzimmer", "farbe": "9fb4d6"},
+	{"id": "kueche", "name": "Küche & Essen", "farbe": "e4d3b0"},
+	{"id": "bad", "name": "Badezimmer", "farbe": "b8dfe0"},
+	{"id": "buero", "name": "Arbeitszimmer", "farbe": "a7b79a"},
+	{"id": "licht", "name": "Licht & Pflanzen", "farbe": "e9c9a8"},
+]
+const KATALOG_RAUM := {"sofa": "wohnen", "sofa_ecke": "wohnen", "sessel": "wohnen", "couchtisch": "wohnen", "teppich": "wohnen",
+	"fernseher": "wohnen", "tv_schrank": "wohnen", "esstisch": "kueche", "stuhl": "kueche", "kueche": "kueche", "bar_hocker": "kueche",
+	"bett": "schlafen", "regal": "buero", "schreibtisch": "buero", "buerostuhl": "buero", "stehlampe": "licht", "pflanze": "licht"}
 # Arcade: Preise steigen mit der erreichten Höhe (wie die Boosts). Kapsel-Chancen je Seltenheit.
 const ARCADE := {
 	"greif": {"name": "Greifautomat", "preis": 40},
@@ -143,7 +195,33 @@ const KOSMETIK := [
 	{"id": "schwamm_pink", "art": "schwamm", "name": "Schwamm: Pink", "farbe": "ff7ab8", "preis": 40},
 	{"id": "schwamm_blau", "art": "schwamm", "name": "Schwamm: Ozean", "farbe": "5ab8ff", "preis": 40},
 	{"id": "schwamm_lila", "art": "schwamm", "name": "Schwamm: Lila", "farbe": "9a6ad6", "preis": 40},
+	# Gondel-Werkstatt (nur Optik): Lackierung (Muster über der Gondelfarbe), Aufkleber, Blumenkästen, Sonnenschirm
+	{"id": "lack_uni", "art": "lack", "name": "Einfarbig", "text": "Nur die Grundfarbe.", "farbe": "c9d3dd", "preis": 0},
+	{"id": "lack_streifen", "art": "lack", "name": "Rennstreifen", "text": "Zwei weiße Streifen der Länge nach.", "farbe": "ffffff", "preis": 300},
+	{"id": "lack_punkte", "art": "lack", "name": "Tupfen", "text": "Weiße Punkte auf der Grundfarbe.", "farbe": "ff9ad5", "preis": 250},
+	{"id": "lack_karo", "art": "lack", "name": "Zielflagge", "text": "Schwarz-weißes Karomuster wie im Rennsport.", "farbe": "2b2d33", "preis": 600},
+	{"id": "lack_tarn", "art": "lack", "name": "Wüstentarn", "text": "Sandfarbene Flecken – passt zur Wüste.", "farbe": "c9955a", "preis": 900},
+	{"id": "lack_karbon", "art": "lack", "name": "Karbon", "text": "Schwarzes Kohlefaser-Geflecht, glänzt leicht.", "farbe": "3a3d44", "preis": 1800},
+	{"id": "lack_chrom", "art": "lack", "name": "Spiegel-Chrom", "text": "Hochglanz-Metall in der Grundfarbe.", "farbe": "e6eef5", "preis": 3500},
+	{"id": "kleber_keine", "art": "aufkleber", "name": "Keine Aufkleber", "text": "", "farbe": "c9d3dd", "preis": 0},
+	{"id": "kleber_herz", "art": "aufkleber", "name": "Herzen", "text": "Rote Herzen an den Seitenwänden.", "farbe": "e2483e", "preis": 80},
+	{"id": "kleber_stern", "art": "aufkleber", "name": "Sterne", "text": "Goldene Sterne an den Seitenwänden.", "farbe": "ffc531", "preis": 80},
+	{"id": "kleber_blitz", "art": "aufkleber", "name": "Blitze", "text": "Blitze für die schnellste Gondel am Turm.", "farbe": "35c8ff", "preis": 120},
+	{"id": "kleber_smiley", "art": "aufkleber", "name": "Smileys", "text": "Gute Laune an der Fassade.", "farbe": "ffd84a", "preis": 120},
+	{"id": "kleber_palme", "art": "aufkleber", "name": "Palmen", "text": "Urlaubsgefühl in 500 m Höhe.", "farbe": "3fc29a", "preis": 200},
+	{"id": "kleber_logo", "art": "aufkleber", "name": "Wüstennadel-Logo", "text": "Das offizielle Logo des Turms mit Schriftzug.", "farbe": "b36bff", "preis": 300},
+	{"id": "blumen_keine", "art": "blumen", "name": "Keine Blumenkästen", "text": "", "farbe": "c9d3dd", "preis": 0},
+	{"id": "blumen_rot", "art": "blumen", "name": "Rote Blumen", "text": "Zwei Kästen mit roten Blüten am hinteren Geländer.", "farbe": "e2483e", "preis": 150},
+	{"id": "blumen_lila", "art": "blumen", "name": "Lavendel", "text": "Lila Blüten, duften nach Urlaub.", "farbe": "b36bff", "preis": 150},
+	{"id": "blumen_bunt", "art": "blumen", "name": "Bunte Mischung", "text": "Rot, Gelb und Lila durcheinander.", "farbe": "ffc531", "preis": 250},
+	{"id": "blumen_gruen", "art": "blumen", "name": "Grüne Büsche", "text": "Kleine Buchsbäume in Kästen.", "farbe": "3f9d5a", "preis": 120},
+	{"id": "blumen_palme", "art": "blumen", "name": "Mini-Palmen", "text": "Zwei kleine Palmen in Kübeln – Dubai-Stil.", "farbe": "7fe08a", "preis": 900},
+	{"id": "schirm_keiner", "art": "schirm", "name": "Kein Sonnenschirm", "text": "", "farbe": "c9d3dd", "preis": 0},
+	{"id": "schirm_streifen", "art": "schirm", "name": "Strandschirm gestreift", "text": "Rot-weiß gestreift, an der Seitenwand befestigt.", "farbe": "e2483e", "preis": 400},
+	{"id": "schirm_uni", "art": "schirm", "name": "Sonnenschirm Sand", "text": "Schlicht und modern.", "farbe": "e4d3b0", "preis": 300},
+	{"id": "schirm_gold", "art": "schirm", "name": "Goldener Schirm", "text": "Glänzt in der Sonne – für echte Profis.", "farbe": "e8b53a", "preis": 2500},
 ]
+const KOSMETIK_START := ["gondel_gelb", "kleid_blau", "schwamm_gelb", "lack_uni", "kleber_keine", "blumen_keine", "schirm_keiner"]
 
 var geld := 0
 var besitz := ["schwamm"]       # gekaufte Werkzeuge
@@ -153,8 +231,8 @@ var album := {}                 # Szenen-Typ (als Text) -> wie oft entdeckt
 var hoechster_abschnitt := 0     # für den Bonus beim ersten Erreichen einer neuen Höhe
 var einstellungen := {"tauben": true, "sandsturm": true, "wind": true, "taa": false}
 var boosts := {}                                        # Boost-ID -> verbleibende Sekunden
-var kosmetik_besitz := ["gondel_gelb", "kleid_blau", "schwamm_gelb"]
-var kosmetik_aktiv := {"gondel": "gondel_gelb", "kleidung": "kleid_blau", "schwamm": "schwamm_gelb"}
+var kosmetik_besitz: Array = KOSMETIK_START.duplicate()
+var kosmetik_aktiv := {"gondel": "gondel_gelb", "kleidung": "kleid_blau", "schwamm": "schwamm_gelb", "lack": "lack_uni", "aufkleber": "kleber_keine", "blumen": "blumen_keine", "schirm": "schirm_keiner"}
 var helfer := {"putzkraft": 0, "roboter": 0, "drohne": 0}
 var fahrzeuge: Array = []                               # gekaufte Fahrzeug-IDs
 var fahrzeug := ""                                      # "" = zu Fuß
@@ -217,9 +295,24 @@ func bonus(art: String) -> float:
 func gegenstand_preis(id: String) -> int:
 	return int(gegenstand(id).get("preis", 0))
 
+# Darf man den Gegenstand gerade kaufen? "" = ja, sonst der Grund (Souvenir noch gesperrt, schon gekauft)
+func kauf_sperre(id: String) -> String:
+	var g := gegenstand(id)
+	if g.is_empty():
+		return "unbekannt"
+	if g.has("erfolg") and not erfolge.has(str(g.erfolg)):
+		return "gesperrt"
+	if g.get("einmal", false) and anzahl_gegenstand(id) > 0:
+		return "besitz"
+	return ""
+
+# Ausstellungsraum im Möbelhaus ("" = nicht im Möbelhaus)
+func moebel_raum(id: String) -> String:
+	return str(gegenstand(id).get("raum", KATALOG_RAUM.get(id, "")))
+
 func kaufe_gegenstand(id: String) -> bool:
 	var p := gegenstand_preis(id)
-	if gegenstand(id).is_empty() or geld < p:
+	if kauf_sperre(id) != "" or geld < p:
 		return false
 	geld -= p
 	moebel.append({"id": id, "steht": false, "x": 0.0, "z": 0.0, "dreh": 0.0})
@@ -432,8 +525,9 @@ func laden(d: Dictionary) -> void:
 			boosts[str(k)] = float(bo[k])
 	kosmetik_besitz = []
 	for k in d.get("kosmetik_besitz", []):
-		kosmetik_besitz.append(str(k))
-	for k in ["gondel_gelb", "kleid_blau", "schwamm_gelb"]:
+		if kosmetik(str(k)).id == str(k):
+			kosmetik_besitz.append(str(k))
+	for k in KOSMETIK_START:
 		if not k in kosmetik_besitz:
 			kosmetik_besitz.append(k)
 	var ka: Dictionary = d.get("kosmetik_aktiv", {})

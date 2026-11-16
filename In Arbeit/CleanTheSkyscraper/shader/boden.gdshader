@@ -17,7 +17,7 @@ uniform vec2 see_halb = vec2(50.0, 85.0);
 uniform float see_rund = 35.0;
 uniform float promenade = 16.0;
 uniform float kreuz_see = 14.0;       // Welt.KREUZ_SEE
-uniform vec4 casino = vec4(1e6);      // x0, z0, x1, z1 (schon vergrößert), keine Kreuzung darin
+uniform vec4 sperren[5];              // Casino + Läden: x0, z0, x1, z1 (schon vergrößert), keine Kreuzung darin (Welt.gebaeude)
 uniform float allee_r = 540.0;        // bis hier Mittelstreifen mit Palmen (StadtDetails.ALLEE_BIS)
 
 varying vec3 wp;
@@ -51,7 +51,10 @@ float see_sdf(vec2 p) {
 float kreuz_ok(vec2 k) {
 	if (length(k) < plaza_r + kreuz_platz) return 0.0;
 	if (see_sdf(k) < promenade + kreuz_see) return 0.0;
-	if (k.x > casino.x && k.x < casino.z && k.y > casino.y && k.y < casino.w) return 0.0;
+	for (int i = 0; i < 5; i++) {
+		vec4 r = sperren[i];
+		if (k.x > r.x && k.x < r.z && k.y > r.y && k.y < r.w) return 0.0;
+	}
 	return 1.0;
 }
 

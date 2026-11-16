@@ -1,5 +1,5 @@
 class_name Moebel
-# Modelle der Penthouse-Gegenstände (Kenney Furniture Kit in modelle/moebel, CC0): laden, einfärben,
+# Modelle der Penthouse-Gegenstände (Kenney Furniture Kit in modelle/moebel, CC0; "code:…" = Andenken.bauen): laden, einfärben,
 # Seltenheit leuchten lassen. Fehlt ein Modell, steht eine Kiste in der Farbe der Seltenheit da.
 
 const MASS := 2.1              # Furniture Kit → Meter (Tür im Kit 1,01 hoch = 2,1 m)
@@ -11,7 +11,10 @@ static func modell(id: String, nur_form := false) -> Node3D:
 	var wurzel := Node3D.new()
 	var name := "moebel/" + str(g.get("modell", ""))
 	var n: Node3D
-	if RaumBau.modell_da(name):
+	if str(g.get("modell", "")).begins_with("code:"):   # Souvenirs + Gold-Deko aus Code
+		n = Andenken.bauen(str(g.modell).substr(5))
+		wurzel.add_child(n)
+	elif RaumBau.modell_da(name):
 		n = RaumBau.modell(wurzel, name, Vector3.ZERO, MASS * float(g.get("s", 1.0)))
 	else:
 		n = Node3D.new()

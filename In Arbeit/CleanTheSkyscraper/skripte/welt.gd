@@ -21,6 +21,15 @@ const CASINO_R := 128.0
 const CASINO_GROESSE := 30.0
 var stand_orte: Array = []      # Vector3 je Händler-Stand
 var casino_rect := Rect2()
+# Läden rund um den Platz, je im Erdgeschoss eines eigenen Hochhauses (Gebäude baut laeden.gd). groesse = Grundstück
+const LAEDEN := [
+	{"id": "moebel", "winkel": 130.0, "r": 142.0, "groesse": 40.0},
+	{"id": "werkstatt", "winkel": -80.0, "r": 130.0, "groesse": 30.0},
+	{"id": "souvenir", "winkel": -30.0, "r": 126.0, "groesse": 26.0},
+	{"id": "gold", "winkel": 52.0, "r": 126.0, "groesse": 24.0},   # gleich neben dem Casino
+]
+var laden_rects := {}            # Laden-ID -> Rect2 (Grundstück)
+var gebaeude: Array = []         # Rect2 aller Sonder-Grundstücke (Casino + Läden): keine Häuser, Kreuzungen, Palmen
 var hindernisse: Array = []     # Rect2 kleiner Dinge (Palmen, Laternen) – für die Kollision zu Fuß
 # See mit Fontänen am Turmfuß (wie die Dubai Fountain): abgerundetes Rechteck hinter dem Händler bei 210°
 const SEE_WINKEL := 210.0
@@ -40,8 +49,13 @@ func _ready() -> void:
 	_umgebung()
 	_boden()
 	_stellplaetze()   # zuerst, damit die Stadt das Casino-Grundstück frei lässt
-	var cr := casino_rect.grow(KREUZ_CASINO)
-	boden_mat.set_shader_parameter("casino", Vector4(cr.position.x, cr.position.y, cr.end.x, cr.end.y))
+	var sp := []
+	for r in gebaeude:
+		var cr: Rect2 = r.grow(KREUZ_CASINO)
+		sp.append(Vector4(cr.position.x, cr.position.y, cr.end.x, cr.end.y))
+	while sp.size() < 5:
+		sp.append(Vector4(1e6, 1e6, 1e6, 1e6))
+	boden_mat.set_shader_parameter("sperren", sp)
 	_stadt()
 	var details := StadtDetails.new()
 	add_child(details)
@@ -142,6 +156,20 @@ func _stellplaetze() -> void:
 	var ac := deg_to_rad(CASINO_WINKEL)
 	var mitte := Vector2(cos(ac), sin(ac)) * CASINO_R
 	casino_rect = Rect2(mitte - Vector2.ONE * CASINO_GROESSE * 0.5, Vector2.ONE * CASINO_GROESSE)
+	gebaeude = [casino_rect]
+	for l in LAEDEN:
+		var a: float = deg_to_rad(l.winkel)
+		var lm := Vector2(cos(a), sin(a)) * float(l.r)
+		var r := Rect2(lm - Vector2.ONE * float(l.groesse) * 0.5, Vector2.ONE * float(l.groesse))
+		laden_rects[l.id] = r
+		gebaeude.append(r)
+		var lf := MeshInstance3D.new()
+		var lpm := PlaneMesh.new()
+		lpm.size = r.size
+		lf.mesh = lpm
+		lf.material_override = Bau.matt("d9cfbd", 0.9)
+		lf.position = Vector3(lm.x, 0.03, lm.y)
+		add_child(lf)
 	var flaeche := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
 	pm.size = Vector2.ONE * CASINO_GROESSE
@@ -175,7 +203,7 @@ func _stadt() -> void:
 				# nicht auf den Platz um den Turm bauen
 				var naechster := Vector2(clampf(0.0, r.position.x, r.end.x), clampf(0.0, r.position.y, r.end.y))
 				var am_see := see_abstand(r.get_center()) - r.size.length() * 0.5 < PROMENADE + 2.0
-				if naechster.length() < PLATZ_R + 6.0 or r.intersects(casino_rect.grow(6.0)) or am_see:
+				if naechster.length() < PLATZ_R + 6.0 or _trifft_gebaeude(r, 6.0) or am_see:
 					z += 75.0
 					continue
 				haeuser.append(r)
@@ -235,7 +263,20 @@ func kreuzung_ok(k: Vector2) -> bool:
 		return false
 	if see_abstand(k) < PROMENADE + KREUZ_SEE:
 		return false
-	return not casino_rect.grow(KREUZ_CASINO).has_point(k)
+	return not bebaut(k, KREUZ_CASINO)
+
+# Liegt p auf (oder bis rand Meter neben) dem Casino oder einem Laden-Grundstück?
+func bebaut(p: Vector2, rand: float) -> bool:
+	for r in gebaeude:
+		if (r as Rect2).grow(rand).has_point(p):
+			return true
+	return false
+
+func _trifft_gebaeude(r: Rect2, rand: float) -> bool:
+	for g in gebaeude:
+		if r.intersects((g as Rect2).grow(rand)):
+			return true
+	return false
 
 # Straßenstück zwischen zwei benachbarten Kreuzungen
 func stueck_da(a: Vector2, b: Vector2) -> bool:

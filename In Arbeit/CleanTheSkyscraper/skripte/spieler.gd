@@ -55,6 +55,8 @@ var wind := 0.0               # 0..1, wird von Ereignisse gesetzt: Gondel schauk
 var aktiv := true             # false = ausgestiegen, man läuft zu Fuß (Gondel bleibt unten stehen)
 var wisch_faktor := 1.0       # Glanzspray: größere Wisch-Fläche
 var gondel_mat: StandardMaterial3D
+var deko: Node3D
+var _zubehoer := []
 var arm_mat: StandardMaterial3D
 var schwamm_farbe := "ffd84a"
 var _gesperrt_zeit := 0.0
@@ -76,20 +78,10 @@ func _bauen() -> void:
 	gondel = Node3D.new()
 	add_child(gondel)
 	gondel_mat = Bau.matt("ffc531", 0.5)
-	var gelb := gondel_mat
 	var grau := Bau.metall("6b7078", 0.4, 0.6)
-	_box(gondel, Vector3(3.8, 0.12, 1.15), Vector3(0, -0.06, 0), gelb)          # Boden
-	_box(gondel, Vector3(3.8, 0.06, 0.06), Vector3(0, 1.05, -0.55), gelb)       # Geländer vorne (zur Wand)
-	_box(gondel, Vector3(3.8, 0.06, 0.06), Vector3(0, 1.05, 0.55), gelb)        # Geländer hinten
-	_box(gondel, Vector3(3.8, 0.04, 0.04), Vector3(0, 0.55, 0.55), gelb)
-	for x in [-1.88, 1.88]:
-		_box(gondel, Vector3(0.06, 1.05, 1.15), Vector3(x, 0.52, 0), gelb)      # Seitenwände
-		var seil := Bau.zylinder(0.025, 0.025, 600.0, grau, 6)
-		seil.position = Vector3(x * 0.92, 300.0, 0.0)
-		gondel.add_child(seil)
-		_box(gondel, Vector3(0.12, 0.25, 0.12), Vector3(x * 0.92, 1.25, 0.0), grau)
-	for x in [-1.2, -0.4, 0.4, 1.2]:
-		_box(gondel, Vector3(0.05, 1.05, 0.05), Vector3(x, 0.52, 0.55), gelb)
+	GondelDeko.rumpf(gondel, gondel_mat, grau)
+	deko = Node3D.new()        # Gondel-Werkstatt: Aufkleber, Blumenkästen, Schirm
+	gondel.add_child(deko)
 	var eimer := Bau.zylinder(0.17, 0.13, 0.3, Bau.matt("2f7fd6", 0.45), 16)
 	eimer.position = Vector3(-1.4, 0.15, 0.2)
 	gondel.add_child(eimer)
@@ -193,10 +185,11 @@ static func _sbox(eltern: Node3D, groesse: Vector3, p: Vector3, m: Material) -> 
 	eltern.add_child(mi)
 
 # Aussehen vom Händler „Mode & Farben“ (nur Optik)
-func aussehen(gondel_hex: String, kleidung_hex: String, schwamm_hex: String) -> void:
-	gondel_mat.albedo_color = Color(gondel_hex)
-	gondel_mat.metallic = 0.8 if gondel_hex == "e8b53a" else 0.0
-	gondel_mat.roughness = 0.3 if gondel_hex == "e8b53a" else 0.5
+func aussehen(gondel_hex: String, kleidung_hex: String, schwamm_hex: String, lack := "lack_uni", zubehoer := []) -> void:
+	GondelDeko.lack(gondel_mat, gondel_hex, lack)
+	if zubehoer.size() == 3 and zubehoer != _zubehoer:
+		_zubehoer = zubehoer.duplicate()
+		GondelDeko.zubehoer(deko, zubehoer[0], zubehoer[1], zubehoer[2])
 	arm_mat.albedo_color = Color(kleidung_hex)
 	if schwamm_hex != schwamm_farbe:
 		schwamm_farbe = schwamm_hex

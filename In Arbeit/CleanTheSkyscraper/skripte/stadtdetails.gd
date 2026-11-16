@@ -236,7 +236,7 @@ func _frei_fuer_allee(p: Vector2) -> bool:
 	for q in Verkehr.schild_punkte():   # unter den Schilderbrücken keine Palme
 		if p.distance_to(q) < 14.0:
 			return false
-	return not welt.casino_rect.grow(8.0).has_point(p)
+	return not welt.bebaut(p, 8.0)
 
 # MultiMesh(es) aus allen MeshInstance3D eines Modells
 func _mm_aus_modell(pfad: String, xf: Array, mat: Material = null) -> void:
@@ -406,7 +406,7 @@ func _fussgaenger() -> void:
 				while s <= k_lo + RASTER - 12.0:
 					var p := Vector2(c, s) if richtung == 0 else Vector2(s, c)
 					s += 10.0
-					if p.length() < Welt.PLATZ_R + 6.0 or welt.see_abstand(p) < Welt.PROMENADE + 3.0 or welt.casino_rect.grow(6.0).has_point(p):
+					if p.length() < Welt.PLATZ_R + 6.0 or welt.see_abstand(p) < Welt.PROMENADE + 3.0 or welt.bebaut(p, 6.0):
 						continue
 					var quer := Vector2(1, 0) if richtung == 0 else Vector2(0, 1)
 					match nr % 3:

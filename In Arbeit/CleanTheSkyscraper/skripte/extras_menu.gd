@@ -16,7 +16,8 @@ var geld_label: Label
 var unter: Label
 var reiter_leiste: HBoxContainer
 var fuss: Label
-var art := ""            # aufzug_turm, aufzug_casino, katalog, designer, exklusiv, kapsel, erfolge
+var art := ""            # aufzug_turm, aufzug_casino, katalog, designer, exklusiv, kapsel, erfolge, moebelhaus, werkstatt, souvenir, gold
+var fokus := ""          # Läden: dieses Stück zuerst zeigen (davor stand man beim E-Drücken)
 var reiter := 0
 var offen := false
 var oberstes := 0        # Seil reicht bis zu diesem Stockwerk (für den Turm-Aufzug)
@@ -55,6 +56,10 @@ func setup(w: Wirtschaft) -> void:
 func oeffnen(a: String, name: String) -> void:
 	art = a
 	reiter = 0
+	if a == "moebelhaus" and fokus != "":   # Reiter des Raums, in dem das Möbelstück steht
+		for i in Wirtschaft.MOEBELHAUS_RAEUME.size():
+			if Wirtschaft.MOEBELHAUS_RAEUME[i].id == wirtschaft.moebel_raum(fokus):
+				reiter = i
 	titel.text = name
 	offen = true
 	visible = true
@@ -66,6 +71,7 @@ func schliessen() -> void:
 		return
 	offen = false
 	visible = false
+	fokus = ""
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _leeren(n: Node) -> void:
@@ -96,6 +102,20 @@ func aufbauen() -> void:
 			_reiter(["Kaufen", "Meine Sachen", "Boni"])
 			[_laden, _sachen, _boni][reiter].call()
 		"designer", "exklusiv": _laden()
+		"moebelhaus":
+			_reiter(Wirtschaft.MOEBELHAUS_RAEUME.map(func(r): return r.name))
+			var raum: String = Wirtschaft.MOEBELHAUS_RAEUME[reiter].id
+			unter.text = "%s – WIRD INS PENTHOUSE-LAGER GELIEFERT, AUFSTELLEN AM TABLET" % str(Wirtschaft.MOEBELHAUS_RAEUME[reiter].name).to_upper()
+			_artikel(Wirtschaft.GEGENSTAENDE.keys().filter(func(id): return wirtschaft.moebel_raum(id) == raum))
+		"souvenir":
+			unter.text = "ANDENKEN FÜR DEINE MEILENSTEINE – JEDES GIBT ES EINMAL, AUFSTELLEN IM PENTHOUSE"
+			_artikel(Wirtschaft.GEGENSTAENDE.keys().filter(func(id): return Wirtschaft.GEGENSTAENDE[id].quelle == "souvenir"))
+		"gold":
+			unter.text = "LEGENDÄRE GOLD-DEKO – JEDES STÜCK EINZIGARTIG, BONUS WIRKT IM PENTHOUSE"
+			_artikel(Wirtschaft.GEGENSTAENDE.keys().filter(func(id): return Wirtschaft.GEGENSTAENDE[id].quelle == "gold"))
+		"werkstatt":
+			_reiter(WERKSTATT_NAMEN)
+			_werkstatt()
 		"kapsel": _kapsel()
 		"erfolge":
 			_reiter(["Erfolge", "Statistik"])
@@ -138,9 +158,12 @@ func _laden() -> void:
 	unter.text = {"katalog": "MÖBEL-KATALOG – WIRD INS LAGER GELIEFERT, AUFSTELLEN UNTER „MEINE SACHEN“",
 		"designer": "DESIGNER-MÖBEL – BONUS WIRKT, WENN SIE IM PENTHOUSE STEHEN",
 		"exklusiv": "EXKLUSIV-MÖBEL – DAS BESTE FÜR DEIN PENTHOUSE"}[quelle]
+	if quelle == "katalog":
+		unter.text = "MÖBEL-KATALOG – MEHR IM MÖBELHAUS AM PLATZ · GELIEFERT INS LAGER, AUFSTELLEN UNTER „MEINE SACHEN“"
 	for id in Wirtschaft.GEGENSTAENDE:
 		var g: Dictionary = Wirtschaft.GEGENSTAENDE[id]
-		if g.quelle != quelle:
+		var nachkauf: bool = quelle == "katalog" and g.quelle == "moebelhaus" and wirtschaft.anzahl_gegenstand(id) > 0
+		if g.quelle != quelle and not nachkauf:
 			continue
 		var p := wirtschaft.gegenstand_preis(id)
 		var k := UiGlas.knopf("%s €" % Hud.punkte(p))
@@ -154,6 +177,73 @@ func _laden() -> void:
 		var info := _bonus_text(id) + ("  ·  Hast du schon %d×" % n if n > 0 else "")
 		var stufe := wirtschaft.seltenheit(id)
 		liste.add_child(UiGlas.karte(g.name, info, k, "M", Color(Wirtschaft.SELTEN_FARBE[stufe]) if g.has("bonus") else UiGlas.AKZENT, -1, 0, Symbole.bilder.get("g_" + id)))
+
+# Karten für Laden-Artikel (Möbelhaus, Souvenirs, Gold): kaufen, gesperrt (Meilenstein fehlt) oder schon gekauft
+func _artikel(ids: Array) -> void:
+	if fokus != "" and fokus in ids:
+		ids.erase(fokus)
+		ids.push_front(fokus)
+	for id in ids:
+		var g := wirtschaft.gegenstand(id)
+		var p := wirtschaft.gegenstand_preis(id)
+		var sperre := wirtschaft.kauf_sperre(id)
+		var k: Button
+		var info := _bonus_text(id)
+		match sperre:
+			"gesperrt":
+				k = UiGlas.knopf("Gesperrt", "nehmen")
+				k.disabled = true
+				info = "Freischalten: %s · %s" % [Laeden._erfolg_text(str(g.erfolg)), info]
+			"besitz":
+				k = UiGlas.knopf("Gekauft", "besitz")
+				k.disabled = true
+				info += "  ·  Liegt im Penthouse (Tablet: Meine Sachen)"
+			_:
+				k = UiGlas.knopf("%s €" % Hud.punkte(p))
+				k.disabled = wirtschaft.geld < p
+				var n := wirtschaft.anzahl_gegenstand(id)
+				if n > 0:
+					info += "  ·  Hast du schon %d×" % n
+		k.name = "kauf_" + id
+		k.pressed.connect(func():
+			if wirtschaft.kaufe_gegenstand(id):
+				geaendert.emit()
+			aufbauen())
+		var stufe := wirtschaft.seltenheit(id)
+		var titel_t: String = ("▶ " if id == fokus else "") + str(g.name)
+		var farbe := Color(Wirtschaft.SELTEN_FARBE[stufe]) if g.has("bonus") else UiGlas.AKZENT
+		liste.add_child(UiGlas.karte(titel_t, info, k, "M", farbe if sperre != "gesperrt" else UiGlas.TEXT_LEISE, -1, 0, Symbole.bilder.get("g_" + id)))
+
+# ---------------------------------------------------------------- Gondel-Werkstatt (nur Optik)
+const WERKSTATT_ARTEN := ["gondel", "lack", "aufkleber", "blumen", "schirm"]
+const WERKSTATT_NAMEN := ["Farbe", "Lackierung", "Aufkleber", "Blumenkästen", "Sonnenschirm"]
+
+func _werkstatt() -> void:
+	var a: String = WERKSTATT_ARTEN[reiter]
+	unter.text = "NUR OPTIK – EINMAL KAUFEN, DANN JEDERZEIT WECHSELN · DIE GONDEL AUF DER HEBEBÜHNE ZEIGT DEINE AUSSTATTUNG"
+	for k in Wirtschaft.KOSMETIK:
+		if k.art != a:
+			continue
+		var b: Button
+		if wirtschaft.kosmetik_aktiv[a] == k.id:
+			b = UiGlas.knopf("Ausgewählt", "besitz")
+			b.disabled = true
+		elif k.id in wirtschaft.kosmetik_besitz:
+			b = UiGlas.knopf("Nehmen", "nehmen")
+			b.pressed.connect(func():
+				wirtschaft.nutze_kosmetik(k.id)
+				geaendert.emit()
+				aufbauen())
+		else:
+			b = UiGlas.knopf("%s €" % Hud.punkte(int(k.preis)) if int(k.preis) > 0 else "Gratis")
+			b.disabled = wirtschaft.geld < int(k.preis)
+			b.pressed.connect(func():
+				if wirtschaft.kaufe_kosmetik(k.id):
+					geaendert.emit()
+				aufbauen())
+		b.name = "k_" + k.id
+		var bild: Texture2D = GondelDeko.kleber_bild(k.id) if a == "aufkleber" and k.id != "kleber_keine" else null
+		liste.add_child(UiGlas.karte(str(k.name).trim_prefix("Gondel: "), str(k.get("text", "")), b, " ", Color(k.farbe), -1, 0, bild))
 
 func _sachen() -> void:
 	unter.text = "AUFSTELLEN: VORSCHAU MIT DER MAUS ZIELEN · R/MAUSRAD DREHEN · KLICK ABSTELLEN"

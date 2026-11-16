@@ -13,6 +13,7 @@ var sky: SkyLounge
 var arcade: Arcade
 var penthouse: Penthouse
 var menu: ExtrasMenu
+var laeden: Laeden
 var ort := ""
 var blende: ColorRect
 var _faehrt := false
@@ -35,6 +36,11 @@ func setup(s: Spiel) -> void:
 	penthouse = Penthouse.new()
 	s.add_child(penthouse)
 	penthouse.setup(s.welt.casino_rect, w, s.laeufer)
+	laeden = Laeden.new()   # Möbelhaus, Gondel-Werkstatt, Souvenirshop, Goldschmuck rund um den Platz
+	s.add_child(laeden)
+	laeden.setup(s.welt, w)
+	s.laeufer.hindernisse.append_array(laeden.rechtecke)
+	s.laeufer.bloecke.append_array(laeden.bloecke)
 	menu = ExtrasMenu.new()
 	s.add_child(menu)
 	menu.setup(w)
@@ -98,6 +104,9 @@ func erfolge_pruefen() -> Array:
 		var t := "Erfolg: %s!  +%s €\n%s-Pokal steht jetzt in der Vitrine im Penthouse (P: Erfolge)" % [e.name, Hud.punkte(e.geld), Erfolge.POKAL[e.pokal]]
 		if neu.size() > 1:
 			t += "\n…und %d weitere" % (neu.size() - 1)
+		if laeden.souvenirs_geaendert():
+			t += "\nNeues Andenken im Souvenirshop freigeschaltet!"
+			laeden.aktualisieren()
 		spiel.hud.meldung(t, 4.5)
 		penthouse.pokale_aktualisieren()
 		spiel._speichern()
@@ -108,7 +117,7 @@ func _stationen() -> Array:
 	match ort:
 		"":
 			return [{"art": "aufzug_turm", "name": "Express-Aufzug", "hinweis": "E: Express-Aufzug zur Sky-Lounge", "pos": sky.unten_pos},
-				{"art": "aufzug_casino", "name": "Aufzug", "hinweis": "E: Aufzug (Arcade-Halle, Penthouse)", "pos": spiel.casino.aufzug_pos}]
+				{"art": "aufzug_casino", "name": "Aufzug", "hinweis": "E: Aufzug (Arcade-Halle, Penthouse)", "pos": spiel.casino.aufzug_pos}] + laeden.stationen
 		"arcade": return arcade.stationen
 		"penthouse": return penthouse.stationen
 		_: return sky.etagen[ort].stationen
@@ -179,6 +188,9 @@ func e_druecken() -> bool:
 			menu.oeffnen("erfolge", "Erfolge")
 		"kapsel":
 			menu.oeffnen("kapsel", "Kapsel-Automat")
+		"laden":
+			menu.fokus = str(s.id)
+			menu.oeffnen(s.menue, Laeden.DATEN[s.laden].name)
 		"greif":
 			_greif_starten(int(s.nr))
 	return true
@@ -238,6 +250,7 @@ func _platzieren(index: int) -> void:
 
 func _geaendert() -> void:
 	penthouse.aktualisieren()
+	laeden.aktualisieren()
 	spiel._ausruestung()   # Boni übernehmen + speichern
 	if menu.offen:
 		menu.geld_label.text = "%s €" % Hud.punkte(w.geld)

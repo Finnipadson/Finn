@@ -118,6 +118,10 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		var et := ExtrasTest.new()
 		add_child(et)
 		et.setup(self)
+	if ansicht == 29 or ansicht == 30:   # Läden: Test + Testbilder
+		var lt := LaedenTest.new()
+		add_child(lt)
+		lt.setup(self)
 	_ausruestung()
 	if ansicht >= 5 and ansicht <= 7:
 		spieler.gesperrt = true
@@ -141,7 +145,7 @@ func _ausruestung() -> void:
 		get_parent()._grafik()   # Einstellung „taa“
 	spieler.werkzeug_setzen(wirtschaft.werkzeug())
 	var ka := wirtschaft.kosmetik_aktiv
-	spieler.aussehen(wirtschaft.kosmetik(ka.gondel).farbe, wirtschaft.kosmetik(ka.kleidung).farbe, wirtschaft.kosmetik(ka.schwamm).farbe)
+	spieler.aussehen(wirtschaft.kosmetik(ka.gondel).farbe, wirtschaft.kosmetik(ka.kleidung).farbe, wirtschaft.kosmetik(ka.schwamm).farbe, ka.lack, [ka.aufkleber, ka.blumen, ka.schirm])
 	_werte()
 	if helfer:
 		helfer.abgleichen()
