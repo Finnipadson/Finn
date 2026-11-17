@@ -68,7 +68,7 @@ func wurf_ziel() -> Vector3:
 	if auf_steg and Kueste.auf_steg(z):
 		return Vector3.INF
 	# nicht in die Yacht werfen
-	if Rect2(Vector2(Kueste.LIEGEPLATZ.x - Yacht.LANG * 0.5 - 1.0, Kueste.LIEGEPLATZ.z - 3.5), Vector2(Yacht.LANG + 2.0, 7.0)).has_point(z) and yacht.position.distance_to(Kueste.LIEGEPLATZ) < 5.0:
+	if Rect2(Vector2(Kueste.LIEGEPLATZ.x - Kueste.YACHT_HALB.x - 2.0, Kueste.LIEGEPLATZ.z - Kueste.YACHT_HALB.y - 2.0), Kueste.YACHT_HALB * 2.0 + Vector2(4.0, 4.0)).has_point(z) and yacht.position.distance_to(Kueste.LIEGEPLATZ) < 5.0:
 		return Vector3.INF
 	return Vector3(z.x, Kueste.MEER_Y + 0.05, z.y)
 

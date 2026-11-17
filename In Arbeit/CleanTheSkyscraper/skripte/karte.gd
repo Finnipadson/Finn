@@ -228,9 +228,20 @@ func _zeichnen() -> void:
 	_rect(Kueste.KOPF, Color("a8744a"))
 	_rect(Kueste.FISCHLADEN, Color("2f6fa8"))
 	_rect(Kueste.BAR, Color("c9a258"))
-	if spiel.strand:
-		var y := spiel.strand.yacht.position
-		c.draw_circle(_bild(Vector2(y.x, y.z)), maxf(5.0 * zoom, 3.0), Color("ffffff"))
+	if spiel.strand:   # Yacht maßstäblich (90 × 14 m, Bug spitz), mindestens ein paar Bildpunkte groß
+		var yt := spiel.strand.yacht
+		var y2 := Vector2(yt.position.x, yt.position.z)
+		var v3 := yt.vorne()
+		var v := Vector2(v3.x, v3.z)
+		var q := Vector2(-v.y, v.x)
+		var hl := maxf(Yacht.LANG * 0.5, 7.0 / maxf(zoom, 0.001))
+		var hb := hl * Yacht.BREIT / Yacht.LANG
+		var umriss := PackedVector2Array()
+		for e in [[1.0, 0.0], [0.6, 1.0], [-1.0, 0.9], [-1.0, -0.9], [0.6, -1.0]]:
+			umriss.append(_bild(y2 + v * hl * float(e[0]) + q * hb * float(e[1])))
+		c.draw_colored_polygon(umriss, Color("ffffff"))
+		umriss.append(umriss[0])
+		c.draw_polyline(umriss, Color("3a4048"), 1.5)
 	# Turm
 	var tp := PackedVector2Array()
 	for p in spiel.turm.stockwerke[0].poly:
@@ -390,8 +401,8 @@ func _raster_bauen() -> void:
 		kn.append([w.see_welt(Vector2(sx * 60.0, 0.0)), 0])
 		kn.append([w.see_welt(Vector2(0.0, sx * 95.0)), 0])
 	for s2 in [-1.0, 1.0]:
-		kn.append([Vector2(k.kanal_start - 25.0, Kueste.BOUL_Z + s2 * 12.0), 0])
-		kn.append([Vector2(-596.0, Kueste.BOUL_Z + s2 * 12.0), 0])
+		kn.append([Vector2(k.kanal_start - 25.0, Kueste.BOUL_Z + s2 * 15.0), 0])   # Mitte des äußeren Wegs (frei)
+		kn.append([Vector2(-596.0, Kueste.BOUL_Z + s2 * 15.0), 0])
 		for bx in k.bruecken:
 			kn.append([Vector2(float(bx), Kueste.BOUL_Z + s2 * 6.5), 0])
 	var treppen := []
