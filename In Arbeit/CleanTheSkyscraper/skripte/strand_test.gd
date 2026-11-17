@@ -358,6 +358,9 @@ func _bilder() -> void:
 		await _yacht_bilder()
 		print("FPS-ENDE %d" % Engine.get_frames_per_second())
 		return
+	if "--nur-hover" in OS.get_cmdline_user_args():
+		await _hover_bilder()
+		return
 	if "--nur-fix" in OS.get_cmdline_user_args():
 		await _fix_bilder()
 		return
@@ -432,6 +435,26 @@ func _yacht_bilder() -> void:
 	_blick(Vector3(y.x + 75.0, 9.0, y.z + 18.0), Vector3(y.x + 40.0, 1.0, y.z))
 	await _foto(16)
 	s.laeufer.boden_fn = s.welt.kueste.boden
+
+# 50–73: Hoverboard (bzw. --zu-fuss) fährt über den Gehweg, 24 Bilder direkt hintereinander (Flimmer-/Wackel-Suche)
+func _hover_bilder() -> void:
+	var p := Vector2(s.welt.kueste.kanal_start - 30.0, Kueste.BOUL_Z + 15.0)   # äußerer Boulevard-Gehweg (frei, Hausschatten)
+	var r := Vector2(-1, 0)
+	if "--stadt" in OS.get_cmdline_user_args():   # Gehweg zwischen Häusern und Straße (Hausschatten)
+		p = Vector2(-276.0, 100.0)
+		r = Vector2(0, -1)
+	_stelle(p, r)
+	s.laeufer.pitch = -0.25
+	if not "--zu-fuss" in OS.get_cmdline_user_args():
+		w.fahrzeuge.append("hoverboard")
+		s._fahrzeug_waehlen("hoverboard")
+	_halte(KEY_W, true)
+	await _warte(1.0)
+	for i in 24:
+		await get_tree().process_frame
+		print("BILD %d frame=%d pos=%.2f,%.2f,%.3f" % [50 + i, Engine.get_frames_drawn(), s.laeufer.position.x, s.laeufer.position.z, s.laeufer.cam.global_position.y])
+	_halte(KEY_W, false)
+	print("FPS-ENDE %d" % Engine.get_frames_per_second())
 
 # 30–41 Bilder zur Fehlerliste: Schild, Boulevard → See-Promenade, Brücke, Möblierung, Rinne, Treppenwange, Fels/Steg,
 # Fischladen innen (2), Strandbar, Liegen, Leute am Strand

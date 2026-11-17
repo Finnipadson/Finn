@@ -106,9 +106,36 @@ func _umgebung() -> void:
 	sonne.light_color = Color("ffe6bf")
 	sonne.light_energy = 1.4
 	sonne.shadow_enabled = true
-	sonne.directional_shadow_max_distance = 3000.0
+	sonne.directional_shadow_blend_splits = true
+	_schatten_nah(false)
 	add_child(sonne)
 	sonne.basis = Basis.looking_at(-SONNE_DIR.normalized(), Vector3.UP)
+
+# Sonnenschatten je nach Kamerahöhe: am Boden kurze Reichweite mit feinen Stufen (sonst sind die Schatten-Texel dort
+# ~0,3 m groß und die Schattenkanten springen beim schnellen Fahren, z. B. auf dem Hoverboard), oben weit (Aussicht).
+var _nah := false
+func _schatten_nah(nah: bool) -> void:
+	_nah = nah
+	if nah:
+		sonne.directional_shadow_max_distance = 600.0
+		sonne.directional_shadow_split_1 = 0.04   # 24 m
+		sonne.directional_shadow_split_2 = 0.12   # 72 m
+		sonne.directional_shadow_split_3 = 0.4    # 240 m
+	else:
+		sonne.directional_shadow_max_distance = 3000.0
+		sonne.directional_shadow_split_1 = 0.1
+		sonne.directional_shadow_split_2 = 0.2
+		sonne.directional_shadow_split_3 = 0.5
+
+func _process(_dt: float) -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null or sonne == null or "--schatten-fern" in OS.get_cmdline_user_args():   # Vergleichs-Schalter
+		return
+	var h := cam.global_position.y
+	if not _nah and h < 30.0:
+		_schatten_nah(true)
+	elif _nah and h > 45.0:
+		_schatten_nah(false)
 
 # Sandsturm: 0 = klar, 1 = voll. Nebel wird dicht und orange, Sonne und Himmel trüb.
 func sandsturm(k: float) -> void:
