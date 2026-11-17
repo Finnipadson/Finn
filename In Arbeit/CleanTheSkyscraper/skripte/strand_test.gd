@@ -466,7 +466,7 @@ func _fix_bilder() -> void:
 	await _foto(41)
 	_blick(Vector3(-617.0, 5.0, -40.0), Vector3(-619.0, -2.2, -40.0))   # Liegen von oben (Lehne zur Stadt = +x)
 	await _foto(42)
-	_blick(Vector3(-214.0, 7.0, z0 - 15.0), Vector3(-196.0, 0.0, z0 - 12.0))   # Bordsteinkante Boulevard → See-Promenade
+	_blick(Vector3(-203.0, 32.0, z0), Vector3(-202.0, 0.0, z0 + 0.3))   # Bordsteinkante Boulevard → See-Promenade (von oben)
 	await _foto(43)
 	print("FPS-ENDE %d" % Engine.get_frames_per_second())
 	s.laeufer.boden_fn = s.welt.kueste.boden
