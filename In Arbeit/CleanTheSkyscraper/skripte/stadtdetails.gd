@@ -443,7 +443,11 @@ func _kueste() -> void:
 		for s in [-1.0, 1.0]:
 			_palme(Vector2(x, z0 + s * 9.5), true, 0.0, true)
 			var aussen := Vector2(x, z0 + s * 20.6)
-			if welt.see_abstand(aussen) > Welt.PROMENADE + 2.0:
+			var am_schild := false   # keine Laterne/kein Kübel vor einem Wegweiser (verdeckt sonst die Schrift)
+			for sp in k.schilder:
+				if absf((sp as Vector2).x - x) < 9.0 and absf((sp as Vector2).y - aussen.y) < 6.0:
+					am_schild = true
+			if welt.see_abstand(aussen) > Welt.PROMENADE + 2.0 and not am_schild:
 				if i % 2 == 0:
 					_lampe(aussen, Vector2(0, 1))
 				else:
@@ -464,14 +468,21 @@ func _kueste() -> void:
 				_palme(Vector2(Kueste.UFER_X + 5.0, z))
 			else:
 				_bank(Vector2(Kueste.UFER_X + 1.6, z), Vector2(-1, 0))
-			if i % 4 == 0:
+			# Laternen nicht in die Verlängerung der Straßen (dort kommt man aus der Stadt auf die Promenade)
+			var strasse := absf(wrapf(z - Welt.RASTER * 0.5, -Welt.RASTER * 0.5, Welt.RASTER * 0.5))
+			if i % 4 == 0 and strasse > 10.0:
 				_lampe(Vector2(Kueste.PROM_X - 4.0, z), Vector2(1, 0))
 			if i % 10 == 5:
 				_eimer(Vector2(Kueste.UFER_X + 1.6, z + 1.8))
 		z += 8.0
 		i += 1
 	# Leute: Boulevard, Promenade, Strand, Steg
-	var orte := [[Vector2(-300.0, z0 + 14.0), 0.0], [Vector2(-302.0, z0 + 14.8), 0.0], [Vector2(-420.0, z0 - 7.0), 0.0], [Vector2(-520.0, z0 + 7.0), 0.0],
+	# Boulevard: Leute stehen im Möblierungsstreifen zwischen Laterne und Kübel (nicht auf den Gehwegen)
+	var mitte_x := func(xx: float) -> float:   # Mitte zwischen zwei Laternen-/Kübel-Plätzen nahe xx
+		var st := k.kanal_start - 16.0
+		return st - (roundf((st - xx) / 12.0) + 0.5) * 12.0
+	var orte := [[Vector2(mitte_x.call(-300.0), z0 + 20.2), 0.0], [Vector2(mitte_x.call(-300.0) - 1.1, z0 + 19.6), 0.0],
+		[Vector2(mitte_x.call(-420.0), z0 - 20.2), 0.0], [Vector2(mitte_x.call(-520.0), z0 + 20.2), 0.0],
 		[Vector2(-592.0, z0 - 30.0), 0.0], [Vector2(-592.0, z0 + 40.0), 0.0], [Vector2(-700.0, Kueste.STEG_Z + 5.5), 0.0], [Vector2(-760.0, Kueste.STEG_Z - 5.0), 0.0],
 		[Vector2(-624.0, -40.0), -1.0], [Vector2(-636.0, 20.0), -1.0], [Vector2(-642.0, 60.0), -1.0], [Vector2(-622.0, 110.0), -1.0], [Vector2(-640.0, -20.0), -1.0]]
 	for o in orte:

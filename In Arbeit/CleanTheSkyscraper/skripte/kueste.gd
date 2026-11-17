@@ -44,6 +44,7 @@ var bruecken: Array = []        # x der Brücken über den Kanal
 var rechtecke: Array = []       # feste Teile (Hütten) – für den Läufer
 var stationen: Array = []       # {art, name, hinweis, pos, ziel}
 var angel_orte: Array = []      # Vector2: gute Angelplätze (Bot, Karte)
+var schilder: Array = []        # Vector2: Lage der Wegweiser (StadtDetails hält dort Laternen/Kübel fern)
 var wasser_mat: ShaderMaterial
 var meer_mat: ShaderMaterial
 var rng := RandomNumberGenerator.new()
@@ -935,6 +936,7 @@ func _schilder() -> void:
 			var pp: Vector3 = Vector3(p.x, 0, p.y) + quer * sx * (tb * 0.5 + 0.13)
 			RaumBau.zyl(n, 0.07, ty + th * 0.5 + 0.15, Vector3(pp.x, (ty + th * 0.5 + 0.15) * 0.5, pp.z), mast, 8)
 			welt.hindernisse.append(Rect2(Vector2(pp.x, pp.z) - Vector2(0.2, 0.2), Vector2(0.4, 0.4)))
+		schilder.append(p)
 		for s in [1.0, -1.0]:
 			var l := RaumBau.schrift(n, txt, mitte + Vector3(b.x, 0, b.y) * 0.06 * s, dreh if s > 0.0 else dreh + PI, FS, PX, Color("ffffff"))
 			l.double_sided = false
