@@ -59,7 +59,7 @@ func baue(kueste: Kueste) -> void:
 	_modell(fest, "crate", Vector2(-684.5, -199.0), 0.9, 0.3, true, 0.0)
 	_modell(fest, "crate-bottles", Vector2(bar.position.x - 1.2, bar.end.y - 1.2), 0.85, 0.1, true)
 	_modell(fest, "barrel", Vector2(bar.position.x - 1.1, bar.end.y - 3.0), 0.7, 0.5, true)
-	_modell(fest, "rocks-sand-a", Vector2(-647.0, -205.0), 0.9, 0.4, true)
+	_modell(fest, "rocks-sand-a", Vector2(-649.0, -219.0), 0.9, 0.4, true)   # nicht unter dem Steg (z −208 … −192)
 	_modell(fest, "rocks-sand-c", Vector2(-646.0, 268.0), 1.0, 1.2, true)
 	_modell(fest, "rocks-sand-b", Vector2(-648.0, 300.0), 1.2, 2.0, true)
 	for i in 8:

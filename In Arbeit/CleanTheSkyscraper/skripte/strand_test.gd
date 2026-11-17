@@ -120,7 +120,7 @@ func _test() -> void:
 	_pruefe("Meer hält", _pos().x > Kueste.WASSER_X, "x=%.1f" % _pos().x)
 	_stelle(Vector2(-615.0, -60.0), Vector2(1, 0))
 	await _laufe(1.5)
-	_pruefe("Vom Strand nicht durch die Mauer", _pos().x < Kueste.UFER_X, "x=%.1f" % _pos().x)
+	_pruefe("Vom Strand nicht in die Mauer", _pos().x <= Kueste.UFER_X - Kueste.MAUER_D - Laeufer.RADIUS + 0.05, "x=%.2f" % _pos().x)
 	# ---- Strandbar: E an der Theke, Drinks kaufen
 	w.geld = 100000
 	var bar: Dictionary = k.stationen[0]
@@ -249,12 +249,12 @@ func _test() -> void:
 		r = await angeln_runde(false, true)
 	_pruefe("Angeln vom Boot", ist_frei and int(w.statistik.fische) > 0, "gefangen=%s" % r)
 	# Richtung Strand fahren: muss vor dem Ufer stoppen
-	st.yacht.position = Vector3(Kueste.WASSER_X - 40.0, Kueste.MEER_Y, 100.0)
+	st.yacht.position = Vector3(Kueste.WASSER_X - 80.0, Kueste.MEER_Y, 100.0)
 	st.yacht.richtung = -PI * 0.5   # Bug nach +x (zum Strand)
 	_halte(KEY_W, true)
 	await _warte(6.0)
 	_halte(KEY_W, false)
-	_pruefe("Yacht fährt nicht auf den Strand", st.yacht.position.x < Kueste.WASSER_X - 12.0, "x=%.1f" % st.yacht.position.x)
+	_pruefe("Yacht fährt nicht auf den Strand", st.yacht.position.x < Kueste.WASSER_X - 12.0 - Yacht.LANG * 0.5 and st.yacht.position.x > Kueste.WASSER_X - 110.0, "x=%.1f" % st.yacht.position.x)
 	st.yacht.position = Kueste.LIEGEPLATZ + Vector3(-10.0, 0, 0)
 	st.yacht.tempo = 0.0
 	await _warte(0.2)
@@ -297,7 +297,7 @@ func _test() -> void:
 		gelaufen += get_process_delta_time()
 	_halte(KEY_W, false)
 	_halte(KEY_SHIFT, false)
-	_pruefe("Dem Pfeil zur Strandbar gefolgt", s.karte.ziel == Vector2.INF and _pos().distance_to(bar_ort.pos) < 8.0, "%.0f s, bei (%.0f, %.0f)" % [gelaufen, _pos().x, _pos().y])
+	_pruefe("Dem Pfeil zur Strandbar gefolgt", s.karte.ziel == Vector2.INF and _pos().distance_to(bar_ort.pos) < 8.0, "%.0f s, bei (%.0f, %.0f), Route %s" % [gelaufen, _pos().x, _pos().y, str(s.karte.route)])
 	# ---- Speichern / Laden
 	var d := w.speichern()
 	var w2 := Wirtschaft.new()
@@ -356,6 +356,10 @@ func _bilder() -> void:
 		return
 	if "--nur-yacht" in OS.get_cmdline_user_args():
 		await _yacht_bilder()
+		print("FPS-ENDE %d" % Engine.get_frames_per_second())
+		return
+	if "--nur-fix" in OS.get_cmdline_user_args():
+		await _fix_bilder()
 		return
 	s.laeufer.boden_fn = Callable()   # Kamera frei setzen (Höhe aus _blick)
 	# 0 Boulevard vom See aus, 1 Kanal mit Brücke, 2 Treppe + Wasserfall von der Promenade, 3 Strandbar, 4 Steg + Fischladen
@@ -413,13 +417,58 @@ func _bilder() -> void:
 	await _yacht_bilder()
 	print("FPS-ENDE %d" % Engine.get_frames_per_second())
 
-# 12/13 Yacht am Liegeplatz von der Seite und schräg von vorne
+# 12–16 Mega-Yacht am Liegeplatz: von der Seite, schräg von vorne, von oben (wie das Vorbild), Gangway vom Steg, Heck
 func _yacht_bilder() -> void:
 	s.laeufer.boden_fn = Callable()
-	_blick(Vector3(-781.0, 4.0, -150.0), Vector3(-781.0, -1.0, -175.5))
+	var y := Kueste.LIEGEPLATZ
+	_blick(Vector3(y.x, 10.0, y.z + 75.0), Vector3(y.x, 2.0, y.z))
 	await _foto(12)
-	_blick(Vector3(-805.0, 6.0, -160.0), Vector3(-781.0, -1.0, -175.5))
+	_blick(Vector3(y.x - 85.0, 22.0, y.z + 50.0), Vector3(y.x - 10.0, 3.0, y.z))
 	await _foto(13)
+	_blick(Vector3(y.x + 70.0, 55.0, y.z + 60.0), Vector3(y.x - 5.0, 0.0, y.z))
+	await _foto(14)
+	_blick(Vector3(Kueste.GANGWAY_X + 4.0, 1.7, Kueste.KOPF.end.y - 6.0), Vector3(Kueste.GANGWAY_X - 6.0, 2.5, y.z))
+	await _foto(15)
+	_blick(Vector3(y.x + 75.0, 9.0, y.z + 18.0), Vector3(y.x + 40.0, 1.0, y.z))
+	await _foto(16)
+	s.laeufer.boden_fn = s.welt.kueste.boden
+
+# 30–41 Bilder zur Fehlerliste: Schild, Boulevard → See-Promenade, Brücke, Möblierung, Rinne, Treppenwange, Fels/Steg,
+# Fischladen innen (2), Strandbar, Liegen, Leute am Strand
+func _fix_bilder() -> void:
+	var k := s.welt.kueste
+	var z0 := Kueste.BOUL_Z
+	s.laeufer.boden_fn = Callable()
+	_blick(Vector3(k.kanal_start - 13.0, 2.6, z0 + 17.0), Vector3(k.kanal_start - 21.0, 2.8, z0 + 19.0))
+	await _foto(30)
+	_blick(Vector3(-226.0, 9.0, z0 + 2.0), Vector3(-200.0, 0.0, z0 + 6.0))
+	await _foto(31)
+	var b: float = k.bruecken[1]
+	_blick(Vector3(b + 11.0, 2.4, z0 + 9.0), Vector3(b, 0.8, z0))
+	await _foto(32)
+	_blick(Vector3(-385.0, 22.0, z0 + 3.0), Vector3(-430.0, 0.0, z0))
+	await _foto(33)
+	_blick(Vector3(-617.0, -0.4, z0 + 13.0), Vector3(-631.0, -2.3, z0))
+	await _foto(34)
+	_blick(Vector3(-616.0, -0.5, -126.0), Vector3(-606.0, -1.5, -117.5))
+	await _foto(35)
+	_blick(Vector3(-657.0, -0.8, -232.0), Vector3(-649.0, -2.0, -208.0))
+	await _foto(36)
+	_blick(Vector3(-694.0, 1.7, -194.5), Vector3(-694.0, 1.3, -204.0))
+	await _foto(37)
+	_blick(Vector3(-698.0, 1.6, -197.6), Vector3(-698.5, 1.0, -201.5))
+	await _foto(38)
+	_blick(Vector3(-626.0, -0.3, -86.0), Vector3(-626.0, -0.9, -72.0))
+	await _foto(39)
+	_blick(Vector3(-611.0, -0.3, -45.0), Vector3(-640.0, -2.2, -35.0))
+	await _foto(40)
+	_blick(Vector3(-614.0, -0.4, -12.0), Vector3(-640.0, -2.0, 30.0))
+	await _foto(41)
+	_blick(Vector3(-617.0, 5.0, -40.0), Vector3(-619.0, -2.2, -40.0))   # Liegen von oben (Lehne zur Stadt = +x)
+	await _foto(42)
+	_blick(Vector3(-214.0, 7.0, z0 - 15.0), Vector3(-196.0, 0.0, z0 - 12.0))   # Bordsteinkante Boulevard → See-Promenade
+	await _foto(43)
+	print("FPS-ENDE %d" % Engine.get_frames_per_second())
 	s.laeufer.boden_fn = s.welt.kueste.boden
 
 # 20–25 Strand-Deko: Südstrand mit Volleyball + Rettungsturm, Nordstrand, Sandburg + Krabbe nah, Steg mit Möwen, Luftbild

@@ -131,7 +131,10 @@ void fragment() {
 	// ---------------- Strandpromenade + Palmen-Boulevard: große helle Platten (1,5 m), dunkle Granitbänder längs,
 	// Rasenstreifen für die Palmenreihen (|dz| 8,5–10,5 m), zur Ufermauer hin ein breites dunkles Band
 	float dz = abs(p.y - boul_z);
-	float boul = (1.0 - sst(boul_halb, dz, aa)) * (1.0 - sst(boul_x0, p.x, aa * 4.0 + 2.0));
+	// Der Boulevard reicht bis unter die See-Promenade (die liegt darüber); sichtbar endet er an deren Rand mit einer
+	// klaren Bordsteinkante (sd = Abstand zur See-Promenade)
+	float sd = see_sdf(p) - promenade;
+	float boul = (1.0 - sst(boul_halb, dz, aa)) * (1.0 - sst(boul_x0, p.x, aa));
 	float prom = 1.0 - sst(prom_x + 1.0, p.x, aa);
 	float k_kueste = max(boul, prom);
 	if (k_kueste > 0.001) {
@@ -142,17 +145,24 @@ void fragment() {
 		vec3 kst = stein_hell * (0.9 + 0.12 * kplatte + 0.05 * mix(0.5, vn(p * 0.5), nah_2));
 		kst *= 1.0 - 0.14 * kf;
 		// Granitbänder längs: am Boulevard parallel zur Achse, an der Promenade parallel zur Küste
-		float gb = boul > prom ? max(band_k(dz - 6.2, 0.45, aa), band_k(dz - 21.2, 0.5, aa)) : max(band_k(p.x - ufer_x - 3.0, 0.6, aa), band_k(p.x - prom_x + 2.0, 0.4, aa));
+		float gb = boul > prom ? max(band_k(dz - 6.2, 0.45, aa), band_k(dz - 21.2, 0.5, aa)) * sst(0.5, sd, aa) : max(band_k(p.x - ufer_x - 3.0, 0.6, aa), band_k(p.x - prom_x + 2.0, 0.4, aa));
 		kst = mix(kst, stein_dunkel * (0.92 + 0.12 * mix(0.5, vn(p * 0.9), nah_2)), gb);
 		vec3 krasen = gruen * (0.8 + 0.3 * mix(0.5, vn(p * 0.4), nah_2));
-		float rs = band_k(dz - 9.5, 1.0, aa) * boul * (1.0 - prom) * sst(ufer_x + 8.0, p.x, aa);
+		// Rasenstreifen endet 1,5 m vor der See-Promenade mit einer Kante quer (wie an der Ufermauer)
+		float rs_da = boul * (1.0 - prom) * sst(ufer_x + 8.0, p.x, aa) * sst(1.5, sd, aa);
+		float rs = band_k(dz - 9.5, 1.0, aa) * rs_da;
 		kst = mix(kst, krasen, rs);
-		kst = mix(kst, vec3(0.86, 0.85, 0.82), clamp(band_k(dz - 8.4, 0.12, aa) + band_k(dz - 10.6, 0.12, aa), 0.0, 1.0) * boul * (1.0 - prom) * sst(ufer_x + 8.0, p.x, aa));
+		float rs_kante = clamp(band_k(dz - 8.4, 0.12, aa) + band_k(dz - 10.6, 0.12, aa), 0.0, 1.0) * boul * (1.0 - prom) * sst(ufer_x + 8.0, p.x, aa) * sst(1.38, sd, aa)
+			+ band_k(sd - 1.44, 0.12, aa) * band_k(dz - 9.5, 1.22, aa) * boul;
+		kst = mix(kst, vec3(0.86, 0.85, 0.82), clamp(rs_kante, 0.0, 1.0));
+		// Bordsteinkante am Übergang zur See-Promenade: heller Stein (0,35 m) mit dunkler Fuge davor
+		kst = mix(kst, vec3(0.88, 0.87, 0.84), band_k(sd - 0.2, 0.17, aa) * boul * (1.0 - prom));
+		kst = mix(kst, stein_dunkel * 0.8, band_k(sd - 0.4, 0.03, aa) * boul * (1.0 - prom));
 		c = mix(c, kst, k_kueste);
 	}
 
 	// ---------------- Platz + See-Promenade: polierte Steinplatten in Ringen um den Turm
-	float see_k = 1.0 - sst(promenade, see_sdf(p), 0.5);
+	float see_k = 1.0 - sst(promenade, see_sdf(p), mix(0.5, aa * 0.5, boul));   // am Boulevard scharf (Bordstein)
 	float plaza_k = max(1.0 - smoothstep(plaza_r - 1.0, plaza_r + 1.0, d), see_k);
 	float ringw = 1.6;
 	float ri = floor(d / ringw);

@@ -159,10 +159,11 @@ func _fontaenen() -> void:
 		basis.add_child(mi)
 
 # ---------------------------------------------------------------- Palmen + Laternen
-func _palme(p: Vector2, hindernis := true, hoehe := 0.0) -> void:
+func _palme(p: Vector2, hindernis := true, hoehe := 0.0, gerade := false) -> void:
 	var s := rng.randf_range(2.3, 3.1)
 	var b := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * s)
-	palmen_xf[0 if rng.randf() < 0.55 else 1].append(Transform3D(b, Vector3(p.x, hoehe, p.y)))
+	var art := 0 if rng.randf() < 0.55 else 1
+	palmen_xf[0 if gerade else art].append(Transform3D(b, Vector3(p.x, hoehe, p.y)))
 	if hindernis:
 		welt.hindernisse.append(Rect2(p - Vector2(0.45, 0.45), Vector2(0.9, 0.9)))
 
@@ -432,25 +433,25 @@ func _im_boulevard(p: Vector2) -> bool:
 func _kueste() -> void:
 	var k := welt.kueste
 	var z0 := Kueste.BOUL_Z
-	# Boulevard: Palmen im Rasenstreifen (|dz| 9,5), außen abwechselnd Palme und Laterne, Bänke mit Blick zum Kanal
+	# Boulevard (Querschnitt ab Kanalmitte): Kanal 0–3,6 · innerer Weg 3,6–6,7 (frei) · Bänke am Rasenrand 7,5 ·
+	# Rasenstreifen 8,4–10,6 mit einer Reihe gerader Palmen · äußerer Weg 10,6–19,7 (frei) · Möblierungsstreifen 20,6
+	# (Laternen und Pflanzkübel im Wechsel) · Granitband/Rand 21–22. So bleiben beide Gehwege und die Kartenroute frei.
 	var x := k.kanal_start - 16.0
 	var i := 0
 	while x > Kueste.UFER_X + 8.0:
-		var nah_bruecke := absf(x - k._naechste_bruecke(x)) < 5.5
+		var nah_bruecke := absf(x - k._naechste_bruecke(x)) < Kueste.BRUECKE_HALB + 3.5
 		for s in [-1.0, 1.0]:
-			if not nah_bruecke:
-				_palme(Vector2(x + (3.0 if s > 0.0 else -3.0), z0 + s * 9.5))
-			var aussen := Vector2(x, z0 + s * 18.5)
-			if i % 2 == 0:
-				_lampe(aussen, Vector2(0, 1))
-			elif welt.see_abstand(aussen) > 18.0:
-				_palme(aussen)
+			_palme(Vector2(x, z0 + s * 9.5), true, 0.0, true)
+			var aussen := Vector2(x, z0 + s * 20.6)
+			if welt.see_abstand(aussen) > Welt.PROMENADE + 2.0:
+				if i % 2 == 0:
+					_lampe(aussen, Vector2(0, 1))
+				else:
+					_kuebel(aussen)
 			if i % 2 == 1 and not nah_bruecke:
-				_bank(Vector2(x, z0 + s * 5.4), Vector2(0, -s))
-			if i % 6 == 3:
-				_kuebel(Vector2(x + 4.0, z0 + s * 13.5), i % 12 == 3)
-			if i % 8 == 5:
-				_eimer(Vector2(x - 1.6, z0 + s * 5.4))
+				_bank(Vector2(x, z0 + s * 7.5), Vector2(0, -s))
+				if i % 4 == 1:
+					_eimer(Vector2(x - 1.5, z0 + s * 7.7))
 		x -= 12.0
 		i += 1
 	# Strandpromenade: Palmen an der Mauer, Bänke mit Blick aufs Meer, Laternen zur Stadt hin
@@ -476,7 +477,7 @@ func _kueste() -> void:
 	for o in orte:
 		var p: Vector2 = o[0]
 		var y := Kueste.sand_y(p.x) if float(o[1]) < 0.0 else 0.0
-		var f := _figur(FIGUREN[rng.randi() % FIGUREN.size()], p, y)
+		var f := _figur(FIGUREN[rng.randi() % FIGUREN.size()], p, y, 2.8)   # an der Küste etwas größer (~1,55 m)
 		var blick := Vector2(-1, 0) if p.x < Kueste.UFER_X + 20.0 else Vector2(0, z0 - p.y)
 		f.rotation.y = atan2(blick.x, blick.y)
 		welt.hindernisse.append(Rect2(p - Vector2(0.35, 0.35), Vector2(0.7, 0.7)))
@@ -509,10 +510,10 @@ func _leute() -> void:
 			welt.hindernisse.append(Rect2(q - Vector2(0.35, 0.35), Vector2(0.7, 0.7)))
 			leute_zahl += 1
 
-func _figur(name: String, p: Vector2, y := 0.0) -> Node3D:
+func _figur(name: String, p: Vector2, y := 0.0, gross := 2.3) -> Node3D:
 	var n: Node3D = load("res://modelle/%s.glb" % name).instantiate()
 	n.position = Vector3(p.x, y, p.y)
-	n.scale = Vector3.ONE * 2.3
+	n.scale = Vector3.ONE * gross
 	add_child(n)
 	var ap := n.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if ap:
