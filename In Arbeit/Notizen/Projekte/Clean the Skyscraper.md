@@ -1,6 +1,6 @@
 ---
 typ: spiel
-status: in Arbeit (Phase 5 Feinschliff fertig, als Nächstes Phase 6 neuer Turm)
+status: in Arbeit (Phase 5 Feinschliff fertig, als Nächstes Phase 6 neuer Turm, Phase 7 Mehrspieler geplant)
 technik: Godot 4.7, GDScript, Turm komplett aus Code
 erstellt: 2026-11-15
 ---
@@ -8,7 +8,7 @@ erstellt: 2026-11-15
 Fleißaufgaben-Spiel: jedes der rund 25.600 Fenster des höchsten Turms der Welt putzen, aus einer Gondel heraus, Stockwerk für Stockwerk bis zur Spitze.
 
 - Herkunft: Idee „Absurd riesige Fleißaufgabe“ → Variante „Fenster putzen“ in [[Ideen]]
-- Bauplan: [[clean-the-skyscraper-plan]] (Phasen 0–6)
+- Bauplan: [[clean-the-skyscraper-plan]] (Phasen 0–7)
 - Ordner: `CleanTheSkyscraper/`, starten mit **`start.bat`**, Aufbau in [[CleanTheSkyscraper/README|README]]
 - Grafik-Grundlage: `Grafiktest/godot-turm` (Turm-Variante 1 „Wüstennadel“, Vergleichsbilder `turm-varianten.png` und `vorher-nachher.png`)
 
@@ -95,11 +95,14 @@ Ideen aus dem Durchspiel-Test (16.11.2026, Vorschläge von Claude, noch nicht en
 - [ ] **Positives Ereignis**, z. B. „Goldene Taube“, die eine Münze fallen lässt
 - [ ] **Kapsel-Automat**: doppelte Gewinne sollen den Bonus nicht stapeln (sonst leicht +100 %)
 
-Mehrspielermodus (15.11.2026, Wünsche des Users):
-- [ ] **Koop**: bis zu **4 Spieler** putzen gemeinsam **denselben Turm**, jedes Fenster zählt für alle
-- [ ] **Verbinden per Code**: einer erstellt das Spiel und schickt Freunden einen Code, die anderen geben ihn ein (übers Internet)
-- [ ] **Gemeinsame Kasse**: ein Spielstand beim Gastgeber – Geld, Fenster und alles Gekaufte gehören allen
-- Technik-Notiz: machbar mit Godot-Netzwerk (Multiplayer-API); für „Code eingeben“ übers Internet braucht es einen kleinen Vermittlungs-/Relay-Dienst. Größter Umbau bisher (Fenster-Zustand, Geld, Helfer, Gondeln, Menüs abgleichen) – am besten nach dem Feinschliff als eigene Phase
+Mehrspielermodus (Wünsche des Users 15.11.2026, am 18.11.2026 entschieden und als **Phase 7** im Bauplan [[clean-the-skyscraper-plan]] geplant, noch nicht gebaut):
+- [ ] **Koop**: bis zu **3 Spieler** putzen gemeinsam **denselben Turm**, jedes Fenster zählt für alle; eine Gondel je Spieler (zu dritt = jeder eine Seite)
+- [ ] **Verbinden per Code** übers Internet, **kostenlos über Epic Online Services** (Lobby + Relay gratis, Mitspieler brauchen kein Epic-Konto; der User legt ein kostenloses Epic-Entwicklerkonto an und lädt das Godot-Paket EOSG herunter). Für Tests LAN/IP; Plan B: IP + Tailscale
+- [ ] **Gemeinsame Kasse**: ein Spielstand beim Gastgeber – Geld, Fenster und alles Gekaufte gehören allen; Gäste behalten nur ihr Profil (Name, Farbe, Aussehen). Gastgeber weg → Runde endet für alle
+- [ ] Werkzeuge/Fahrzeuge/Kosmetik gemeinsam besessen, jeder wählt selbst; gemeinsames Penthouse; Casino/Arcade über die Kasse (Grenze je Spieler); Boosts nur für den Käufer; Yacht: ein Fahrer + Mitfahrer
+- [ ] Esc = Menü ohne Pause (nur der Gastgeber kann für alle pausieren); Namen + Farben, Emotes, Text-Chat, Ping auf Fenster
+- [ ] Preise für Fortschritts-Käufe steigen mit der Spielerzahl (+50 % je weiterem Spieler)
+- Unterphasen 7a–7h (Grundlage LAN → Befehls-Schicht + Kasse → gemeinsam putzen → Welt vom Gastgeber → Extras → Miteinander → Internet per Code → Tests/Koop-Bot), geschätzt 8–10 Arbeitssitzungen. Details, Netzwerk-Architektur, Testplan und Risiken im Bauplan unter Punkt 7
 
 ## Notizen
 
