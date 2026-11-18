@@ -68,7 +68,10 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	var stand: Dictionary = Netz.gast_stand if gast else (_lesen() if (ansicht == 0 or ansicht == 10 or ansicht == 36) else {})
 	if not gast:
 		Netz.orte = (stand.get("netz_orte", {}) as Dictionary).duplicate()
-	wirtschaft.laden(stand.get("wirtschaft", {}))
+	# Je-Spieler-Werte (Werkzeug, Boosts, Aussehen …) liegen unter der eigenen Profil-ID (Phase 7b)
+	wirtschaft.ich = str(Netz.profil.id) if str(Netz.profil.id) != "" else "ich"
+	wirtschaft.als("")
+	wirtschaft.laden(stand.get("wirtschaft", {}), gast)
 	if stand.has("sauber"):
 		zustand.laden(str(stand.sauber))
 	if test_geld >= 0:
@@ -217,15 +220,34 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		hud.meldung("Willkommen zurück! Steig mit E in die Gondel – sie fährt dich zurück auf %d m." % int(letzte_hoehe), 6.0)
 	if gast:
 		hud.meldung("Du spielst bei %s mit! Turm, Geld und Gekauftes gehören allen." % Netz.name_von(1), 5.0)
+		Netz.gast_bereit()   # ab jetzt Feld-Updates vom Gastgeber (gemeinsame Kasse)
+	elif Netz.ist_host():
+		Netz._anwesend_setzen()
 
 # Mehrspieler-Gast: eine freie gekaufte Gondel nehmen (die des Gastgebers ist belegt; Belegung richtig ab 7c)
 func _gast_gondel(stand: Dictionary) -> void:
 	var belegt: Array = (stand.get("netz", {}) as Dictionary).get("belegte_gondeln", [])
-	for k in 3:
-		if wirtschaft.gondeln[k].gekauft and not k in belegt:
-			if k != wirtschaft.aktive_gondel:
-				_gondel_wechseln(k)
-			return
+	# eigene Gondel vom letzten Mal (je Spieler, 7b), sonst die erste freie gekaufte
+	var wahl := -1
+	var eigene := wirtschaft.aktive_gondel
+	if eigene >= 0 and eigene < 3 and wirtschaft.gondeln[eigene].gekauft and not eigene in belegt:
+		wahl = eigene
+	else:
+		for k in 3:
+			if wirtschaft.gondeln[k].gekauft and not k in belegt:
+				wahl = k
+				break
+	if wahl < 0:
+		return
+	# hinstellen wie _gondel_wechseln, ohne den Parkplatz der Gondel des Gastgebers zu überschreiben
+	wirtschaft.aktive_gondel = wahl
+	spieler.seite = wahl
+	spieler.weg = gondeln.park_weg(wahl)
+	spieler.y = 0.3
+	spieler.stock = 0
+	letzte_hoehe = float(wirtschaft.gondeln[wahl].hoehe)
+	spieler._platzieren(0.0)
+	gondeln.aktualisieren(wahl)
 
 # Werkzeug + Upgrades auf die Gondel übertragen
 func _ausruestung() -> void:
@@ -244,6 +266,36 @@ func _ausruestung() -> void:
 	var oberste := Turm.STOCKWERKE if frei else wirtschaft.oberstes_stockwerk()
 	spieler.max_y = oberste * Turm.STOCK_H - 2.6
 	_speichern()
+
+# Mehrspieler-Gast: Felder vom Gastgeber sind angekommen (Netz._felder_anwenden)
+func netz_aktualisiert(menues: bool, ausruestung: bool) -> void:
+	if ausruestung:
+		_ausruestung()
+	if menues:
+		menues_aktualisieren()
+	else:
+		for m in _menues():
+			m.geld_label.text = "%s €" % Hud.punkte(wirtschaft.geld)
+			_knoepfe_geld(m)
+
+# Kauf-Knöpfe (Meta „preis“) je nach Kassenstand sperren/freigeben, ohne das Menü neu zu bauen (Klicks gehen nicht verloren)
+func _knoepfe_geld(n: Node) -> void:
+	for c in n.get_children():
+		if c is Button and c.has_meta("preis"):
+			(c as Button).disabled = wirtschaft.geld < int(c.get_meta("preis"))
+		_knoepfe_geld(c)
+
+func _menues() -> Array:
+	var l := []
+	for m in [shop, hmenu, extras.menu if extras else null, strand.menu if strand else null]:
+		if m and m.offen and not (m is ExtrasMenu and m.kapsel_laeuft):   # Kapsel-Animation nicht abreißen
+			l.append(m)
+	return l
+
+# Offene Menüs neu aufbauen (Kauf eines anderen Spielers, neue Felder vom Gastgeber)
+func menues_aktualisieren() -> void:
+	for m in _menues():
+		m.aufbauen()
 
 # Upgrades + laufende Boosts auf die Gondel übertragen (jedes Bild, weil Boosts ablaufen)
 func _werte() -> void:
@@ -481,12 +533,13 @@ func _ein_aus() -> void:
 		if andere >= 0 and (_abstand_gondel() > EINSTEIG_WEIT or not wirtschaft.gondeln[andere].gekauft):
 			if not wirtschaft.gondeln[andere].gekauft:
 				var preis := wirtschaft.gondel_preis()
-				if wirtschaft.kaufe_gondel(andere):
-					hud.meldung("Gondel %s gekauft! Drück E zum Einsteigen." % Turm.SEITEN_NAMEN[andere], 3.0)
-					gondeln.aktualisieren(wirtschaft.aktive_gondel)
-					_speichern()
-				else:
-					hud.meldung("Die Gondel %s kostet %s € – dir fehlen noch %s €." % [Turm.SEITEN_NAMEN[andere], Hud.punkte(preis), Hud.punkte(preis - wirtschaft.geld)], 3.0)
+				Netz.befehl("gondel", {"seite": andere}, func(e: Dictionary):
+					if e.get("ok", false):
+						hud.meldung("Gondel %s gekauft! Drück E zum Einsteigen." % Turm.SEITEN_NAMEN[andere], 3.0)
+						gondeln.aktualisieren(wirtschaft.aktive_gondel)
+						_speichern()
+					else:
+						hud.meldung("Die Gondel %s kostet %s € – dir fehlen noch %s €." % [Turm.SEITEN_NAMEN[andere], Hud.punkte(preis), Hud.punkte(maxi(0, preis - wirtschaft.geld))], 3.0))
 				return
 			_gondel_wechseln(andere)
 		elif _abstand_gondel() > EINSTEIG_WEIT:
@@ -708,6 +761,8 @@ func _process(dt: float) -> void:
 	laeufer.set_process(not menue)
 	laeufer.gesperrt = menue
 	wirtschaft.boosts_takt(dt)
+	if not Netz.ist_gast():   # Preis-Faktor: höchste Spielerzahl der letzten 10 min (Gast bekommt ihn vom Gastgeber)
+		wirtschaft.koop_takt(dt, Netz.spieler.size() if Netz.ist_host() else 1)
 	_werte()
 	if spieler.aktiv:
 		hud.status("" if express else ("E: Gondel verlassen" if spieler.y <= UNTEN else "E: nach unten fahren und aussteigen"))

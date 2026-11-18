@@ -168,11 +168,9 @@ func _laden() -> void:
 		var p := wirtschaft.gegenstand_preis(id)
 		var k := UiGlas.knopf("%s €" % Hud.punkte(p))
 		k.disabled = wirtschaft.geld < p
+		k.set_meta("preis", p)   # Mehrspieler: Sperre bei Geld-Änderung nachführen
 		k.name = "kauf_" + id
-		k.pressed.connect(func():
-			if wirtschaft.kaufe_gegenstand(id):
-				geaendert.emit()
-			aufbauen())
+		k.pressed.connect(func(): Netz.befehl("gegenstand", {"id": id}, _fertig))
 		var n := wirtschaft.anzahl_gegenstand(id)
 		var info := _bonus_text(id) + ("  ·  Hast du schon %d×" % n if n > 0 else "")
 		var stufe := wirtschaft.seltenheit(id)
@@ -201,14 +199,12 @@ func _artikel(ids: Array) -> void:
 			_:
 				k = UiGlas.knopf("%s €" % Hud.punkte(p))
 				k.disabled = wirtschaft.geld < p
+				k.set_meta("preis", p)   # Mehrspieler: Sperre bei Geld-Änderung nachführen
 				var n := wirtschaft.anzahl_gegenstand(id)
 				if n > 0:
 					info += "  ·  Hast du schon %d×" % n
 		k.name = "kauf_" + id
-		k.pressed.connect(func():
-			if wirtschaft.kaufe_gegenstand(id):
-				geaendert.emit()
-			aufbauen())
+		k.pressed.connect(func(): Netz.befehl("gegenstand", {"id": id}, _fertig))
 		var stufe := wirtschaft.seltenheit(id)
 		var titel_t: String = ("▶ " if id == fokus else "") + str(g.name)
 		var farbe := Color(Wirtschaft.SELTEN_FARBE[stufe]) if g.has("bonus") else UiGlas.AKZENT
@@ -230,20 +226,25 @@ func _werkstatt() -> void:
 			b.disabled = true
 		elif k.id in wirtschaft.kosmetik_besitz:
 			b = UiGlas.knopf("Nehmen", "nehmen")
-			b.pressed.connect(func():
-				wirtschaft.nutze_kosmetik(k.id)
-				geaendert.emit()
-				aufbauen())
+			b.pressed.connect(func(): Netz.befehl("kosmetik_nutzen", {"id": k.id}, _fertig_immer))
 		else:
 			b = UiGlas.knopf("%s €" % Hud.punkte(int(k.preis)) if int(k.preis) > 0 else "Gratis")
 			b.disabled = wirtschaft.geld < int(k.preis)
-			b.pressed.connect(func():
-				if wirtschaft.kaufe_kosmetik(k.id):
-					geaendert.emit()
-				aufbauen())
+			b.set_meta("preis", int(k.preis))   # Mehrspieler: Sperre bei Geld-Änderung nachführen
+			b.pressed.connect(func(): Netz.befehl("kosmetik", {"id": k.id}, _fertig))
 		b.name = "k_" + k.id
 		var bild: Texture2D = GondelDeko.kleber_bild(k.id) if a == "aufkleber" and k.id != "kleber_keine" else null
 		liste.add_child(UiGlas.karte(str(k.name).trim_prefix("Gondel: "), str(k.get("text", "")), b, " ", Color(k.farbe), -1, 0, bild))
+
+# Ergebnis eines Befehls (Einzelspieler sofort, Gast nach der Antwort des Gastgebers)
+func _fertig(e: Dictionary) -> void:
+	if e.get("ok", false):
+		geaendert.emit()
+	aufbauen()
+
+func _fertig_immer(_e: Dictionary) -> void:
+	geaendert.emit()
+	aufbauen()
 
 func _sachen() -> void:
 	unter.text = "AUFSTELLEN: VORSCHAU MIT DER MAUS ZIELEN · R/MAUSRAD DREHEN · KLICK ABSTELLEN"

@@ -87,10 +87,7 @@ func _verkaufen() -> void:
 	alle.name = "verkauf_alle"
 	alle.disabled = summe <= 0
 	alle.custom_minimum_size = Vector2(300, 42)
-	alle.pressed.connect(func():
-		wirtschaft.verkaufe_alle_fische()
-		geaendert.emit()
-		aufbauen())
+	alle.pressed.connect(func(): Netz.befehl("fische_alle", {}, _fertig))
 	liste.add_child(alle)
 	var leer := true
 	for f in Wirtschaft.FISCHE:
@@ -101,10 +98,7 @@ func _verkaufen() -> void:
 		var p := wirtschaft.fisch_preis(f.id)
 		var k := UiGlas.knopf("%d × %s €" % [n, Hud.punkte(p)])
 		k.name = "verkauf_" + str(f.id)
-		k.pressed.connect(func():
-			wirtschaft.verkaufe_fisch(str(f.id))
-			geaendert.emit()
-			aufbauen())
+		k.pressed.connect(func(): Netz.befehl("fisch", {"id": str(f.id)}, _fertig))
 		var info := "%s · gefangen bis %s" % [str(f.text), Fische.laenge_text(float(wirtschaft.fisch_index.get(f.id, {}).get("max", f.groesse)))]
 		liste.add_child(UiGlas.karte(str(f.name), info, k, "F", Color("35c8ff"), -1, 0, Symbole.bilder.get("f_" + str(f.id))))
 	if leer:
@@ -112,6 +106,11 @@ func _verkaufen() -> void:
 		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		t.custom_minimum_size = Vector2(680, 0)
 		liste.add_child(t)
+
+# Ergebnis eines Befehls (Einzelspieler sofort, Gast nach der Antwort des Gastgebers)
+func _fertig(_e: Dictionary) -> void:
+	geaendert.emit()
+	aufbauen()
 
 func _angeln() -> void:
 	unter.text = "DIE BESTE GEKAUFTE ANGEL NIMMST DU AUTOMATISCH · FISCH-INDEX: %d / %d" % [wirtschaft.fisch_index.size(), Wirtschaft.FISCHE.size()]
@@ -127,10 +126,8 @@ func _angeln() -> void:
 		else:
 			k = UiGlas.knopf("%s €" % Hud.punkte(int(a.preis)))
 			k.disabled = wirtschaft.geld < int(a.preis)
-			k.pressed.connect(func():
-				wirtschaft.kaufe_angel(str(a.id))
-				geaendert.emit()
-				aufbauen())
+			k.set_meta("preis", int(a.preis))   # Mehrspieler: Sperre bei Geld-Änderung nachführen
+			k.pressed.connect(func(): Netz.befehl("angel", {"id": str(a.id)}, _fertig))
 		k.name = "angel_" + str(a.id)
 		var info := "%s Fangkasten %d %%." % [str(a.text), int(float(a.kasten) * 100)]
 		liste.add_child(UiGlas.karte(str(a.name), info, k, {"bambus": "BA", "carbon": "CA", "hochsee": "HS"}[a.id], Color({"bambus": "c9a258", "carbon": "3a3d44", "hochsee": "35c8ff"}[a.id]), -1, 0, Symbole.bilder.get("a_" + str(a.id))))

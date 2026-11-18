@@ -6,6 +6,11 @@ extends Node
 # Ablauf: Gast 1 tritt bei (Geld, Fenster, Tageszeit, Spielerliste gleich?) → beide laufen, jeder sieht die Figur des
 # anderen an der richtigen Stelle → Gastgeber ändert Geld, Gast 2 tritt mitten im Spiel bei → Gast 3 wird abgelehnt
 # (voll) → Gast 2 verlässt die Runde selbst → Gastgeber beendet, Gast 1 landet mit Meldung im Hauptmenü.
+# Phase 7b (Befehle + Kasse): Einzelspieler-Umrechnung alt ↔ neu und koop_faktor ohne Netz; dann kauft Gast 1 über die
+# echten Knöpfe (Werkstatt: Motor, Kiosk: Abzieher, Kaffee, Espresso) → bei allen besessen, Geld stimmt, Koop-Preis ×1,5,
+# Boost nur beim Käufer (Helfer-Boost Espresso wirkt für alle); Gastgeber kauft eine Putzkraft → offenes Menü beim Gast
+# aktualisiert sich; Kasse fast leer → Knopf beim Gast gesperrt, Kauf trotzdem geschickt → vom Gastgeber abgelehnt;
+# zu dritt Preise ×2, Gast 2 hat alles Gekaufte, aber keinen Boost.
 # Gäste melden per Netz.test_nachricht („OK …“/„FEHLER …“) bzw. nach dem Trennen per Datei user://netztest_<profil>.txt.
 # Ergebnis: „NETZTEST ERGEBNIS ok=… fehler=…“.
 
@@ -63,6 +68,8 @@ func _host_setup() -> void:
 		Netz.profil_pfad = "user://profil_testhost.json"
 		Netz.profil = {"id": "", "name": "", "farbe": 0}
 		Netz.profil_laden()
+	s.wirtschaft.ich_setzen(str(Netz.profil.id))
+	_einzel_pruefen()
 	for n in ["testgast1", "testgast2", "testgast3"]:
 		var d := "user://netztest_%s.txt" % n
 		if FileAccess.file_exists(d):
@@ -77,6 +84,49 @@ func _host_setup() -> void:
 	s.spieler.y = 0.3
 	s.start_zu_fuss = 2          # zu Fuß, damit Gäste eine Figur sehen
 	schritt = 1
+
+# 7b ohne Netz: alter Stand → spieler_daten, Speichern wie früher, Koop-Stand als Gast/allein laden, Helfer-Boost, Preis-Faktor
+func _einzel_pruefen() -> void:
+	var w := s.wirtschaft
+	_p("Einzelspieler: Preis-Faktor 1", w.koop_faktor() == 1.0 and w.upgrade_preis("motor") == 25 and w.werkzeug_preis("abzieher") == 120 and w.gondel_preis() in [0, 1000, 5000], "×%.2f, Motor %d €" % [w.koop_faktor(), w.upgrade_preis("motor")])
+	var alt := {"geld": 50, "besitz": ["schwamm", "abzieher"], "aktiv": "abzieher", "boosts": {"kaffee": 100.0}, "fahrzeuge": ["scooter"], "fahrzeug": "scooter",
+		"aktive_gondel": 1, "radio": {"an": false, "sender": 2}, "kosmetik_besitz": ["gondel_rot"], "kosmetik_aktiv": {"gondel": "gondel_rot"}}
+	var w2 := Wirtschaft.new()
+	w2.ich = "p1"
+	w2.laden(alt)
+	_p("Alter Stand → Werte je Spieler", w2.spieler_daten.has("p1") and w2.aktiv == "abzieher" and w2.boost_aktiv("kaffee") and w2.fahrzeug == "scooter" and w2.aktive_gondel == 1 and not w2.radio.an and w2.kosmetik_aktiv.gondel == "gondel_rot" and w2.kosmetik_aktiv.lack == "lack_uni", str(w2.spieler_daten.get("p1", {})))
+	var d2 := w2.speichern()
+	_p("Speichern allein wie früher", d2.aktiv == "abzieher" and d2.fahrzeug == "scooter" and int(d2.aktive_gondel) == 1 and (d2.boosts as Dictionary).has("kaffee") and not d2.has("spieler_daten") and d2.spieler_id == "p1", "")
+	# Koop-Stand: p2 war Gast mit Eis
+	w2.spieler_daten["p2"] = w2.spieler_pruefen({"aktiv": "schwamm", "boosts": {"eis": 50.0, "espresso": 40.0}, "aktive_gondel": 2})
+	var d3: Dictionary = JSON.parse_string(JSON.stringify(w2.speichern()))
+	var w3 := Wirtschaft.new()
+	w3.ich = "p2"
+	w3.laden(d3, true)
+	_p("Koop-Stand als Gast laden", w3.aktiv == "schwamm" and w3.boost_aktiv("eis") and not w3.boost_aktiv("kaffee") and w3.aktive_gondel == 2 and str(w3.spieler_daten.get("p1", {}).get("aktiv", "")) == "abzieher", "aktiv=%s boosts=%s" % [w3.aktiv, w3.boosts])
+	var w4 := Wirtschaft.new()
+	w4.ich = "p1"
+	w4.laden(d3)
+	_p("Koop-Stand allein weiterspielen", w4.aktiv == "abzieher" and w4.boost_aktiv("kaffee") and w4.spieler_daten.has("p2") and (w4.speichern().get("spieler_daten", {}) as Dictionary).has("p2"), "")
+	w3.anwesend = ["p1", "p2"]
+	w3.spieler_daten["p1"].boosts = {}
+	w3.spieler_daten["p2"].boosts = {"espresso": 40.0}
+	w3.als("p1")
+	var helfer_p1 := w3.boost_wirkung("helfer")
+	var tempo_p1 := w3.boost_wirkung("tempo")
+	w3.als("")
+	_p("Boost nur beim Käufer, Helfer-Boost für alle", tempo_p1 == 0.0 and helfer_p1 == 0.5 and w3.boost_wirkung("tempo") == 1.0 and w3.boost_wirkung("tempo", "p1") == 0.0, "tempo p1 %.1f / helfer p1 %.1f" % [tempo_p1, helfer_p1])
+	w3.boosts_takt(10.0)
+	_p("Boosts aller Anwesenden laufen ab", absf(float(w3.spieler_daten["p2"].boosts.espresso) - 30.0) < 0.01, "")
+	var w5 := Wirtschaft.new()
+	w5.koop_takt(1.0, 3)
+	var f3 := w5.koop_faktor()
+	w5.koop_takt(1.0, 1)
+	var f3b := w5.koop_faktor()
+	w5.koop_takt(Wirtschaft.KOOP_FENSTER, 1)
+	var f1 := w5.koop_faktor()
+	w5.koop_takt(1.0, 2)
+	_p("Preis-Faktor: höchste Spielerzahl der letzten 10 min", f3 == 2.0 and f3b == 2.0 and f1 == 1.0 and w5.koop_faktor() == 1.5 and w5.upgrade_preis("motor") == 38, "%.1f %.1f %.1f %.1f" % [f3, f3b, f1, w5.koop_faktor()])
 
 func _gast_starten(n: String) -> void:
 	var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--ansicht=37", "--rolle=gast", "--profil=" + n, "--join=127.0.0.1:%d" % TEST_PORT]
@@ -137,8 +187,67 @@ func _process(dt: float) -> void:
 				s.laeufer.pitch = -0.12
 				if d.length() < 3.0:
 					s.laeufer.position -= Vector3(d.x, 0, d.z).normalized() * (3.0 - d.length())
-			schritt = 55
+			schritt = 60
 			warte_bis = zeit + 0.6
+		60:   # 7b: Kasse setzen, Gast 1 kauft über echte Knöpfe
+			var w := s.wirtschaft
+			_p("Preis-Faktor zu zweit ×1,5", w.koop_max == 2 and w.koop_faktor() == 1.5 and w.upgrade_preis("motor") == 38 and w.werkzeug_preis("abzieher") == 180, "×%.2f" % w.koop_faktor())
+			w.geld = 5000
+			_preise = {"motor": w.upgrade_preis("motor"), "abzieher": w.werkzeug_preis("abzieher"), "kaffee": w.boost_preis("kaffee"), "espresso": w.boost_preis("espresso")}
+			schritt = 61
+			warte_bis = zeit + 1.5
+		61:
+			Netz.test_nachricht.rpc_id(ids.testgast1, "KAUFEN")
+			schritt = 62
+			frist = zeit + 40.0
+		62:
+			if _berichte.has("GEKAUFT"):
+				var b: Dictionary = _berichte.GEKAUFT
+				var w := s.wirtschaft
+				var pid := _profil_id("testgast1")
+				var soll := 5000 - int(_preise.motor) - int(_preise.abzieher) - int(_preise.kaffee) - int(_preise.espresso)
+				_p("Gast-Kauf beim Gastgeber besessen", w.stufen.motor == 1 and "abzieher" in w.besitz, "Motor %d, besitz %s" % [w.stufen.motor, w.besitz])
+				_p("Geld nach Gast-Käufen stimmt", w.geld == soll and int(b.geld) == w.geld, "%d / Gast %s / soll %d" % [w.geld, b.geld, soll])
+				_p("Beim Gast besessen", int(b.motor) == 1 and b.abzieher == "1", "")
+				_p("Gekauftes Werkzeug nur in der Hand des Käufers", w.aktiv == "schwamm" and b.aktiv == "abzieher" and str((w.spieler_daten.get(pid, {}) as Dictionary).get("aktiv", "")) == "abzieher", "Gastgeber %s, Gast %s" % [w.aktiv, b.aktiv])
+				var gb: Dictionary = (w.spieler_daten.get(pid, {}) as Dictionary).get("boosts", {})
+				_p("Boost nur beim Käufer", not w.boost_aktiv("kaffee") and w.boost_wirkung("tempo") == 0.0 and gb.has("kaffee") and b.kaffee == "1" and absf(s.spieler.tempo_faktor - w.tempo_faktor() * (1.0 + w.bonus("tempo"))) < 0.001 and float(b.tempo) > s.spieler.tempo_faktor * 1.9,
+					"Gastgeber-Tempo %.2f, Gast-Tempo %s, Gast-Boosts %s" % [s.spieler.tempo_faktor, b.tempo, gb.keys()])
+				_p("Helfer-Boost (Espresso des Gasts) wirkt für alle", w.boost_wirkung("helfer") == 0.5 and absf(s.helfer.tempo - (1.0 + w.bonus("helfer") + 0.5)) < 0.001, "helfer %.2f" % s.helfer.tempo)
+				schritt = 63
+			elif zeit >= frist:
+				_p("Gast 1 kauft", false, "keine Antwort")
+				schritt = 63
+		63:   # Gast öffnet die Werkstatt, Gastgeber kauft eine Putzkraft → offenes Menü beim Gast aktualisiert sich
+			Netz.test_nachricht.rpc_id(ids.testgast1, "SHOP_AUF")
+			schritt = 64
+			warte_bis = zeit + 1.5
+		64:
+			s.shop.umschalten()
+			var k: Button = s.shop.find_child("he_putzkraft", true, false)
+			var vor: int = s.wirtschaft.helfer.putzkraft
+			if k and not k.disabled:
+				k.pressed.emit()
+			s.shop.umschalten()
+			_p("Gastgeber kauft Putzkraft (Knopf)", s.wirtschaft.helfer.putzkraft == vor + 1, "%d" % s.wirtschaft.helfer.putzkraft)
+			schritt = 65
+			warte_bis = zeit + 1.5
+		65:
+			Netz.test_nachricht.rpc_id(ids.testgast1, "MENUE? %d" % s.wirtschaft.helfer_preis("putzkraft"))
+			s.wirtschaft.geld = 10   # Kasse fast leer
+			schritt = 66
+			warte_bis = zeit + 1.5
+		66:
+			Netz.test_nachricht.rpc_id(ids.testgast1, "OHNEGELD")
+			schritt = 67
+			frist = zeit + 30.0
+		67:
+			if _berichte.has("ABGELEHNT"):
+				_p("Kauf ohne Geld: nichts gekauft, Kasse unverändert", s.wirtschaft.stufen.arm == 0 and s.wirtschaft.geld == 10, "Arm %d, %d €" % [s.wirtschaft.stufen.arm, s.wirtschaft.geld])
+				schritt = 55
+			elif zeit >= frist:
+				_p("Kauf ohne Geld", false, "keine Antwort")
+				schritt = 55
 		55:   # Geld ändern, Gast 2 tritt mitten im Spiel bei
 			if DisplayServer.get_name() != "headless":
 				print("NETZTEST BILD frame=%d" % Engine.get_frames_drawn())
@@ -157,6 +266,11 @@ func _process(dt: float) -> void:
 				_ende()
 		7:   # Gast 1 muss jetzt 3 Spieler in der Liste haben; Gast 3 wird abgelehnt
 			Netz.test_nachricht.rpc_id(ids.testgast1, "LISTE?")
+			var w := s.wirtschaft
+			_p("Preis-Faktor zu dritt ×2", w.koop_max == 3 and w.koop_faktor() == 2.0 and w.upgrade_preis("arm") == 120, "×%.2f, Arm %d €" % [w.koop_faktor(), w.upgrade_preis("arm")])
+			_p("koop_max im Spielstand", int(s.stand_daten().wirtschaft.koop_max) == 3, "")
+			Netz.test_nachricht.rpc_id(ids.testgast1, "FAKTOR? 2.0")
+			Netz.test_nachricht.rpc_id(ids.testgast2, "BESITZ?")
 			_gast_starten("testgast3")
 			schritt = 8
 			frist = zeit + 45.0
@@ -197,6 +311,8 @@ func _process(dt: float) -> void:
 				_ende()
 
 var _ende_start := 0.0
+var _preise := {}
+var _berichte := {}        # Gast-Berichte „NAME k=v …“
 var _profil_ids := {}
 func _profil_id(n: String) -> String:
 	return str(_profil_ids.get(n, ""))
@@ -224,6 +340,13 @@ func _nachricht(id: int, t: String) -> void:
 		_p("Tageszeit bei %s wie beim Gastgeber" % wer, d < 0.003, "Unterschied %.4f (= %.1f s)" % [d, d * Tageszeit.TAG])
 	elif t.begins_with("PROFIL "):
 		_profil_ids[wer.to_lower().replace(" ", "")] = t.substr(7)
+	elif t.begins_with("GEKAUFT ") or t.begins_with("ABGELEHNT"):
+		var teile := t.split(" ")
+		var b := {}
+		for x in teile.slice(1):
+			if "=" in x:
+				b[x.get_slice("=", 0)] = x.get_slice("=", 1)
+		_berichte[teile[0]] = b
 
 func _ende() -> void:
 	print("NETZTEST ERGEBNIS ok=%d fehler=%d" % [ok, fehler])
@@ -292,3 +415,67 @@ func _gast_nachricht(_id: int, t: String) -> void:
 		_melden(Netz.spieler.size() == 3 and s.mitspieler.liste_box.get_child_count() == 4, "Liste beim Gast nach drittem Beitritt", "%d Spieler" % Netz.spieler.size())
 	elif t == "VERLASSEN":
 		s._zum_hauptmenue()
+	elif t == "KAUFEN":
+		_gast_kaufen()
+	elif t == "SHOP_AUF":
+		if not s.shop.offen:
+			s.shop.umschalten()
+		s.shop._reiter_waehlen(1)   # Helfer
+	elif t.begins_with("MENUE? "):
+		var soll := int(t.substr(7))
+		var k: Button = s.shop.find_child("he_putzkraft", true, false)
+		_melden(s.shop.offen and s.wirtschaft.helfer.putzkraft == 1 and k != null and k.text == "%s €" % Hud.punkte(soll) and soll == s.wirtschaft.helfer_preis("putzkraft"),
+			"Offene Werkstatt beim Gast aktualisiert (Putzkraft vom Gastgeber)", "%d Putzkraft, Knopf '%s', soll %d €" % [s.wirtschaft.helfer.putzkraft, k.text if k else "-", soll])
+	elif t == "OHNEGELD":
+		_gast_ohne_geld()
+	elif t.begins_with("FAKTOR? "):
+		var k: Button = s.shop.find_child("up_arm", true, false)
+		_melden(s.wirtschaft.koop_faktor() == 2.0 and s.wirtschaft.upgrade_preis("arm") == 120 and k != null and k.text == "120 €", "Preis-Faktor zu dritt beim Gast (Knopf zeigt 120 €)", "×%.2f, Knopf '%s'" % [s.wirtschaft.koop_faktor(), k.text if k else "-"])
+	elif t == "BESITZ?":
+		var w := s.wirtschaft
+		_melden(w.stufen.motor == 1 and "abzieher" in w.besitz and w.helfer.putzkraft == 1, "Gast 2: alles Gekaufte da", "Motor %d, %s" % [w.stufen.motor, w.besitz])
+		_melden(w.boosts.is_empty() and w.aktiv == "schwamm" and w.boost_wirkung("tempo") == 0.0, "Gast 2: kein fremder Boost, eigenes Werkzeug", "boosts %s, aktiv %s" % [w.boosts.keys(), w.aktiv])
+		_melden(w.koop_faktor() == 2.0, "Gast 2: Preis-Faktor ×2", "×%.2f" % w.koop_faktor())
+
+# Gast 1: über die echten Knöpfe kaufen (Werkstatt, Kiosk Werkzeuge, Snacks, Sky-Bar) – jeder Kauf wartet auf die Antwort
+func _gast_kaufen() -> void:
+	var w := s.wirtschaft
+	_melden(w.koop_faktor() == 1.5, "Preis-Faktor zu zweit beim Gast", "×%.2f" % w.koop_faktor())
+	_melden(w.geld == 5000, "Kasse vom Gastgeber übernommen", "%d €" % w.geld)
+	s.shop.umschalten()
+	s.shop._reiter_waehlen(2)   # Ausbau
+	await _druecken(s.shop, "up_motor", "%s €" % Hud.punkte(38))
+	s.shop.umschalten()
+	s.hmenu.oeffnen("grund", "Werkzeuge")
+	await _druecken(s.hmenu, "w_abzieher", "180 €")
+	s.hmenu.schliessen()
+	s.hmenu.oeffnen("snack", "Snacks")
+	await _druecken(s.hmenu, "b_kaffee", "")
+	s.hmenu.schliessen()
+	s.hmenu.oeffnen("bar", "Sky-Bar")
+	await _druecken(s.hmenu, "b_espresso", "")
+	s.hmenu.schliessen()
+	await get_tree().create_timer(1.0).timeout   # eigene Werte (Werkzeug in der Hand) sind beim Gastgeber
+	Netz.test_nachricht.rpc_id(1, "GEKAUFT geld=%d motor=%d abzieher=%d aktiv=%s kaffee=%d tempo=%.3f" % [w.geld, w.stufen.motor, int("abzieher" in w.besitz), w.aktiv, int(w.boost_aktiv("kaffee")), s.spieler.tempo_faktor])
+
+func _druecken(menu: Node, name: String, text: String) -> void:
+	var k: Button = menu.find_child(name, true, false)
+	if k == null or k.disabled or (text != "" and k.text != text):
+		_melden(false, "Knopf %s" % name, "fehlt/gesperrt/Text '%s' statt '%s'" % [k.text if k else "-", text])
+		return
+	k.pressed.emit()
+	var r: Array = await Netz.befehl_fertig
+	var e: Dictionary = r[1]
+	_melden(e.get("ok", false), "Gast kauft %s (Antwort vom Gastgeber)" % name, str(e))
+
+# Gast 1: Kasse fast leer → Knopf gesperrt; Wunsch trotzdem schicken (wie bei einem Kauf, den ein anderer gerade überholt)
+func _gast_ohne_geld() -> void:
+	var w := s.wirtschaft
+	var k: Button = s.shop.find_child("up_arm", true, false)
+	_melden(w.geld == 10 and k != null and k.disabled, "Knopf ohne Geld gesperrt (offenes Menü)", "%d €, gesperrt %s" % [w.geld, k.disabled if k else "-"])
+	Netz.befehl("upgrade", {"id": "arm"})
+	var r: Array = await Netz.befehl_fertig
+	var e: Dictionary = r[1]
+	await get_tree().create_timer(0.6).timeout
+	_melden(not e.get("ok", true) and w.stufen.arm == 0 and w.geld == 10 and "Kasse" in str(e.get("grund", "")), "Kauf ohne Geld vom Gastgeber abgelehnt", str(e.get("grund", "")))
+	Netz.test_nachricht.rpc_id(1, "ABGELEHNT arm=%d" % w.stufen.arm)

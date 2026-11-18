@@ -286,22 +286,103 @@ static func turm_daten(nr: int) -> Dictionary:
 			return t
 	return TUERME[0]
 
+# ---------------------------------------------------------------- Je Spieler (Phase 7b, Mehrspieler)
+# Werkzeug in der Hand, Boosts, Aussehen, Fahrzeug, Gondel und Radio gehören jedem Spieler selbst. Sie liegen in
+# spieler_daten[profil_id]; die Felder aktiv/boosts/kosmetik_aktiv/fahrzeug/aktive_gondel/radio unten lesen und schreiben
+# immer den Eintrag des „aktuellen“ Spielers (_akt, normalerweise ich = eigenes Profil). Der Gastgeber schaltet mit als()
+# kurz auf einen Gast um, während er dessen Befehl ausführt (Netz.befehl) – die Kauf-Funktionen bleiben dadurch unverändert.
+# Spielstand: die eigenen Werte stehen wie früher oben im Stand (alte Stände laden weiter), die der anderen unter „spieler_daten“.
+const JE_SPIELER := ["aktiv", "boosts", "kosmetik_aktiv", "fahrzeug", "aktive_gondel", "radio"]
+const SPIELER_START := {"aktiv": "schwamm", "boosts": {}, "fahrzeug": "", "aktive_gondel": -1, "radio": {"an": true, "sender": 0},
+	"kosmetik_aktiv": {"gondel": "gondel_gelb", "kleidung": "kleid_blau", "schwamm": "schwamm_gelb", "lack": "lack_uni", "aufkleber": "kleber_keine", "blumen": "blumen_keine", "schirm": "schirm_keiner", "radio": "gradio_keins"}}
+const KOOP_FENSTER := 600.0     # Preis-Faktor: höchste Spielerzahl der letzten 10 min zählt
+var ich := "ich"                # eigene Profil-ID (setzt Spiel.starten aus Netz.profil)
+var _akt := "ich"               # wessen Werte die Felder gerade zeigen
+var spieler_daten := {}         # profil_id -> {aktiv, boosts, kosmetik_aktiv, fahrzeug, aktive_gondel, radio}
+var anwesend: Array = []        # Profil-IDs der Spieler in der Runde (leer = nur ich)
+var koop_max := 1               # höchste Spielerzahl der letzten 10 min (Gastgeber, wird gespeichert)
+var koop_rest := {2: 0.0, 3: 0.0}   # so lange zählt die Spielerzahl noch (Sekunden)
+
+func neue_spieler_daten() -> Dictionary:
+	return SPIELER_START.duplicate(true)
+
+func _sd() -> Dictionary:
+	var d = spieler_daten.get(_akt)
+	if d == null:
+		d = neue_spieler_daten()
+		spieler_daten[_akt] = d
+	return d
+
+# Felder auf einen anderen Spieler umschalten ("" = wieder ich)
+func als(pid: String) -> void:
+	_akt = pid if pid != "" else ich
+
+# Eigene Profil-ID nachträglich ändern (Eintrag zieht mit um)
+func ich_setzen(pid: String) -> void:
+	if pid == "" or pid == ich:
+		return
+	if spieler_daten.has(ich):
+		spieler_daten[pid] = spieler_daten[ich]
+		spieler_daten.erase(ich)
+	ich = pid
+	_akt = pid
+
+var aktiv: String:
+	get: return str(_sd().aktiv)
+	set(v): _sd().aktiv = v
+var boosts: Dictionary:
+	get: return _sd().boosts
+	set(v): _sd().boosts = v
+var kosmetik_aktiv: Dictionary:
+	get: return _sd().kosmetik_aktiv
+	set(v): _sd().kosmetik_aktiv = v
+var fahrzeug: String:
+	get: return str(_sd().fahrzeug)
+	set(v): _sd().fahrzeug = v
+var aktive_gondel: int:
+	get: return int(_sd().aktive_gondel)
+	set(v): _sd().aktive_gondel = v
+var radio: Dictionary:
+	get: return _sd().radio
+	set(v): _sd().radio = v
+
+func _anwesende() -> Array:
+	return anwesend if not anwesend.is_empty() else [ich]
+
+# Preis-Faktor im Koop für Fortschritts-Käufe (Seilwinde, Werkzeuge, Motor, Teleskoparm, Gondeln, Helfer): +50 % je weiterem Spieler
+func koop_faktor() -> float:
+	return 1.0 + 0.5 * float(clampi(koop_max, 1, 3) - 1)
+
+# Hinweis für Menü-Überschriften ("" allein)
+func koop_text() -> String:
+	if koop_max <= 1:
+		return ""
+	return " · ZU %d: PREISE ×%s" % [koop_max, ("%.1f" % koop_faktor()).replace(".", ",").trim_suffix(",0")]
+
+# Gastgeber/Einzelspieler jedes Bild: n = Spieler gerade in der Runde
+func koop_takt(dt: float, n: int) -> void:
+	var m := 1
+	for k in [2, 3]:
+		if n >= k:
+			koop_rest[k] = KOOP_FENSTER
+		else:
+			koop_rest[k] = maxf(0.0, float(koop_rest[k]) - dt)
+		if float(koop_rest[k]) > 0.0:
+			m = k
+	koop_max = m
+
 var geld := 0
 var besitz := ["schwamm"]       # gekaufte Werkzeuge
-var aktiv := "schwamm"
 var stufen := {"motor": 0, "arm": 0, "winde": 0}
 var album := {}                 # Szenen-Typ (als Text) -> wie oft entdeckt
 var hoechster_abschnitt := 0     # für den Bonus beim ersten Erreichen einer neuen Höhe
 var einstellungen := {"tauben": true, "sandsturm": true, "wind": true, "taa": false}
-var boosts := {}                                        # Boost-ID -> verbleibende Sekunden
+# boosts (Boost-ID -> verbleibende Sekunden), kosmetik_aktiv, fahrzeug ("" = zu Fuß), aktive_gondel (-1 = noch keine): je Spieler, siehe oben
 var kosmetik_besitz: Array = KOSMETIK_START.duplicate()
-var kosmetik_aktiv := {"gondel": "gondel_gelb", "kleidung": "kleid_blau", "schwamm": "schwamm_gelb", "lack": "lack_uni", "aufkleber": "kleber_keine", "blumen": "blumen_keine", "schirm": "schirm_keiner", "radio": "gradio_keins"}
 var helfer := {"putzkraft": 0, "roboter": 0, "drohne": 0}
 var fahrzeuge: Array = []                               # gekaufte Fahrzeug-IDs
-var fahrzeug := ""                                      # "" = zu Fuß
 # Gondeln je Seite: gekauft, Weg (Parkplatz unten) und Höhe, auf der man zuletzt war (Express-Fahrt beim Einsteigen)
 var gondeln: Array = [{"gekauft": false, "weg": -1.0, "hoehe": 0.0}, {"gekauft": false, "weg": -1.0, "hoehe": 0.0}, {"gekauft": false, "weg": -1.0, "hoehe": 0.0}]
-var aktive_gondel := -1                                 # Seite der Gondel, in der man sitzt (-1 = noch keine)
 # Penthouse: jeder Gegenstand einzeln {id, steht, x, z, dreh} (x/z im Penthouse, dreh in Grad)
 var moebel: Array = []
 var erfolge := {}                                       # Erfolg-ID -> true
@@ -313,7 +394,7 @@ var angeln: Array = []                                  # gekaufte Angeln (ANGEL
 var fischkiste := {}                                    # Fisch-ID -> Anzahl (noch nicht verkauft)
 var fisch_index := {}                                   # Fisch-ID -> {n = so oft gefangen, max = größte Länge in m}
 var yacht := false                                      # Belohnung für alle 20 Fische
-var radio := {"an": true, "sender": 0}                  # Gondel-Radio (Phase 5)
+# radio {an, sender}: Gondel-Radio (Phase 5), je Spieler
 var tageszeit := 0.08                                   # 0..1 = ein Tag (20 min, Tageszeit.gd); Start am Morgen
 # Mehrere Türme (Phase 6 vorbereitet): Nummer des aktuellen Turms, fertige Türme, Abspann gesehen
 var turm_nr := 1
@@ -434,10 +515,22 @@ func boost_aktiv(id: String) -> bool:
 	return float(boosts.get(id, 0.0)) > 0.0
 
 # Wirkung (lohn, flaeche, tempo, reich, helfer, tauben) der laufenden Boosts: nur der stärkste zählt, nichts addiert sich
-func boost_wirkung(art: String) -> float:
+# wer = Profil-ID ("" = aktueller Spieler). Helfer-Boosts wirken, wenn irgendein Spieler in der Runde sie hat (stärkster zählt).
+func boost_wirkung(art: String, wer := "") -> float:
+	if art == "helfer":
+		var h := 0.0
+		for pid in _anwesende():
+			h = maxf(h, _wirkung_in((spieler_daten.get(pid, {}) as Dictionary).get("boosts", {}), art))
+		return h
+	if wer == "":
+		return _wirkung_in(boosts, art)
+	return _wirkung_in((spieler_daten.get(wer, {}) as Dictionary).get("boosts", {}), art)
+
+static func _wirkung_in(b: Dictionary, art: String) -> float:
 	var s := 0.0
-	for id in boosts:
-		s = maxf(s, float((BOOSTS[id].get("wirkung", {}) as Dictionary).get(art, 0.0)))
+	for id in b:
+		if BOOSTS.has(id):
+			s = maxf(s, float((BOOSTS[id].get("wirkung", {}) as Dictionary).get(art, 0.0)))
 	return s
 
 # ---------------------------------------------------------------- Penthouse-Gegenstände
@@ -540,11 +633,16 @@ func besuchen(ort: String) -> bool:
 	besucht.append(ort)
 	return true
 
+# Boosts aller Spieler in der Runde laufen ab (abwesende behalten ihre Restzeit)
 func boosts_takt(dt: float) -> void:
-	for id in boosts.keys():
-		boosts[id] = float(boosts[id]) - dt
-		if boosts[id] <= 0.0:
-			boosts.erase(id)
+	for pid in _anwesende():
+		if not spieler_daten.has(pid):
+			continue
+		var b: Dictionary = spieler_daten[pid].boosts
+		for id in b.keys():
+			b[id] = float(b[id]) - dt
+			if b[id] <= 0.0:
+				b.erase(id)
 
 func kosmetik(id: String) -> Dictionary:
 	for k in KOSMETIK:
@@ -576,7 +674,7 @@ func gondeln_gekauft() -> int:
 	return n
 
 func gondel_preis() -> int:
-	return GONDEL_PREISE[mini(gondeln_gekauft(), GONDEL_PREISE.size() - 1)]
+	return int(round(GONDEL_PREISE[mini(gondeln_gekauft(), GONDEL_PREISE.size() - 1)] * koop_faktor()))
 
 func kaufe_gondel(seite: int) -> bool:
 	if gondeln[seite].gekauft or geld < gondel_preis():
@@ -587,7 +685,7 @@ func kaufe_gondel(seite: int) -> bool:
 
 func helfer_preis(id: String) -> int:
 	var h: Dictionary = HELFER[id]
-	return int(round(h.basis * pow(h.faktor, helfer[id])))
+	return int(round(h.basis * pow(h.faktor, helfer[id]) * koop_faktor()))
 
 func helfer_voll(id: String) -> bool:
 	return helfer[id] >= HELFER[id].max
@@ -626,7 +724,7 @@ func werkzeug(id := "") -> Dictionary:
 
 func upgrade_preis(id: String) -> int:
 	var u: Dictionary = UPGRADES[id]
-	return int(round(u.basis * pow(u.faktor, stufen[id])))
+	return int(round(u.basis * pow(u.faktor, stufen[id]) * koop_faktor()))
 
 func upgrade_voll(id: String) -> bool:
 	return stufen[id] >= UPGRADES[id].max
@@ -638,11 +736,14 @@ func kaufe_upgrade(id: String) -> bool:
 	stufen[id] += 1
 	return true
 
+func werkzeug_preis(id: String) -> int:
+	return int(round(int(werkzeug(id).preis) * koop_faktor()))
+
 func kaufe_werkzeug(id: String) -> bool:
-	var w := werkzeug(id)
-	if id in besitz or geld < int(w.preis):
+	var p := werkzeug_preis(id)
+	if id in besitz or werkzeug(id).id != id or geld < p:
 		return false
-	geld -= int(w.preis)
+	geld -= p
 	besitz.append(id)
 	aktiv = id
 	return true
@@ -668,20 +769,54 @@ func oberstes_stockwerk() -> int:
 
 # ---------------------------------------------------------------- Speichern
 func speichern() -> Dictionary:
-	return {"geld": geld, "besitz": besitz, "aktiv": aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen, "boosts": boosts, "kosmetik_besitz": kosmetik_besitz, "kosmetik_aktiv": kosmetik_aktiv, "helfer": helfer, "fahrzeuge": fahrzeuge, "fahrzeug": fahrzeug, "gondeln": gondeln, "aktive_gondel": aktive_gondel, "moebel": moebel, "erfolge": erfolge, "besucht": besucht, "statistik": statistik,
+	var alt := _akt
+	_akt = ich
+	var e := _sd()
+	_akt = alt
+	var d := {"geld": geld, "besitz": besitz, "aktiv": e.aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen, "boosts": e.boosts, "kosmetik_besitz": kosmetik_besitz, "kosmetik_aktiv": e.kosmetik_aktiv, "helfer": helfer, "fahrzeuge": fahrzeuge, "fahrzeug": e.fahrzeug, "gondeln": gondeln, "aktive_gondel": e.aktive_gondel, "moebel": moebel, "erfolge": erfolge, "besucht": besucht, "statistik": statistik,
 		"angeln": angeln, "fischkiste": fischkiste, "fisch_index": fisch_index, "yacht": yacht,
-		"radio": radio, "tageszeit": tageszeit, "turm_nr": turm_nr, "tuerme_fertig": tuerme_fertig, "abspann": abspann}
+		"radio": e.radio, "tageszeit": tageszeit, "turm_nr": turm_nr, "tuerme_fertig": tuerme_fertig, "abspann": abspann,
+		"spieler_id": ich, "koop_max": koop_max, "koop_rest": {"2": koop_rest[2], "3": koop_rest[3]}}
+	var andere := {}
+	for pid in spieler_daten:
+		if pid != ich:
+			andere[pid] = spieler_daten[pid]
+	if not andere.is_empty():
+		d["spieler_daten"] = andere
+	return d
 
-func laden(d: Dictionary) -> void:
+# Werte eines Spielers prüfen (alles, was nicht passt, fällt auf den Start zurück)
+func spieler_pruefen(q: Dictionary) -> Dictionary:
+	var e := neue_spieler_daten()
+	var a := str(q.get("aktiv", "schwamm"))
+	e.aktiv = a if a in besitz else "schwamm"
+	var bo = q.get("boosts", {})
+	if bo is Dictionary:
+		for k in bo:
+			if BOOSTS.has(str(k)):
+				e.boosts[str(k)] = float(bo[k])
+	var ka = q.get("kosmetik_aktiv", {})
+	if ka is Dictionary:
+		for art in e.kosmetik_aktiv:
+			var id := str(ka.get(art, e.kosmetik_aktiv[art]))
+			if id in kosmetik_besitz:
+				e.kosmetik_aktiv[art] = id
+	var f := str(q.get("fahrzeug", ""))
+	e.fahrzeug = f if f in fahrzeuge else ""
+	e.aktive_gondel = clampi(int(q.get("aktive_gondel", -1)), -1, 2)
+	var r = q.get("radio", {})
+	if r is Dictionary:
+		e.radio = {"an": bool(r.get("an", true)), "sender": int(r.get("sender", 0))}
+	return e
+
+# als_gast: der Stand gehört einem anderen (Gastgeber) – seine Werte oben im Stand sind dann nicht meine
+func laden(d: Dictionary, als_gast := false) -> void:
 	geld = int(d.get("geld", 0))
 	besitz = []
 	for b in d.get("besitz", ["schwamm"]):
 		besitz.append(str(b))
 	if not "schwamm" in besitz:
 		besitz.append("schwamm")
-	aktiv = str(d.get("aktiv", "schwamm"))
-	if not aktiv in besitz:
-		aktiv = "schwamm"
 	album = {}
 	var al: Dictionary = d.get("album", {})
 	for k in al:
@@ -690,11 +825,6 @@ func laden(d: Dictionary) -> void:
 	var e: Dictionary = d.get("einstellungen", {})
 	for k in einstellungen:
 		einstellungen[k] = bool(e.get(k, einstellungen[k]))
-	boosts = {}
-	var bo: Dictionary = d.get("boosts", {})
-	for k in bo:
-		if BOOSTS.has(str(k)):
-			boosts[str(k)] = float(bo[k])
 	kosmetik_besitz = []
 	for k in d.get("kosmetik_besitz", []):
 		if kosmetik(str(k)).id == str(k):
@@ -702,11 +832,6 @@ func laden(d: Dictionary) -> void:
 	for k in KOSMETIK_START:
 		if not k in kosmetik_besitz:
 			kosmetik_besitz.append(k)
-	var ka: Dictionary = d.get("kosmetik_aktiv", {})
-	for art in kosmetik_aktiv:
-		var id := str(ka.get(art, kosmetik_aktiv[art]))
-		if id in kosmetik_besitz:
-			kosmetik_aktiv[art] = id
 	var s: Dictionary = d.get("stufen", {})
 	for k in stufen:
 		stufen[k] = clampi(int(s.get(k, 0)), 0, UPGRADES[k].max)
@@ -717,14 +842,10 @@ func laden(d: Dictionary) -> void:
 	for f in d.get("fahrzeuge", []):
 		if not fahrzeug_daten(str(f)).is_empty():
 			fahrzeuge.append(str(f))
-	fahrzeug = str(d.get("fahrzeug", ""))
-	if not fahrzeug in fahrzeuge:
-		fahrzeug = ""
 	var gl: Array = d.get("gondeln", [])
 	for i in mini(gl.size(), 3):
 		var g: Dictionary = gl[i]
 		gondeln[i] = {"gekauft": bool(g.get("gekauft", false)), "weg": float(g.get("weg", -1.0)), "hoehe": float(g.get("hoehe", 0.0))}
-	aktive_gondel = int(d.get("aktive_gondel", -1))
 	moebel = []
 	for m in d.get("moebel", []):
 		if m is Dictionary and GEGENSTAENDE.has(str(m.get("id", ""))):
@@ -754,11 +875,25 @@ func laden(d: Dictionary) -> void:
 		if not fisch(str(k)).is_empty() and fi[k] is Dictionary:
 			fisch_index[str(k)] = {"n": int(fi[k].get("n", 1)), "max": float(fi[k].get("max", 0.0))}
 	yacht = bool(d.get("yacht", false)) or index_voll()
-	var r: Dictionary = d.get("radio", {})
-	radio = {"an": bool(r.get("an", true)), "sender": int(r.get("sender", 0))}
 	tageszeit = fposmod(float(d.get("tageszeit", 0.08)), 1.0)
 	turm_nr = maxi(1, int(d.get("turm_nr", 1)))
 	tuerme_fertig = []
 	for t in d.get("tuerme_fertig", []):
 		tuerme_fertig.append(int(t))
 	abspann = bool(d.get("abspann", false))
+	koop_max = clampi(int(d.get("koop_max", 1)), 1, 3)
+	var kr = d.get("koop_rest", {})
+	for k in [2, 3]:
+		koop_rest[k] = float((kr as Dictionary).get(str(k), 0.0)) if kr is Dictionary else 0.0
+	# Je Spieler: die Werte oben im Stand gehören dem Besitzer des Stands (Einzelspieler: immer mir), die der anderen
+	# stehen unter „spieler_daten“
+	_akt = ich
+	spieler_daten = {}
+	var besitzer := str(d.get("spieler_id", ich)) if als_gast else ich
+	var sd = d.get("spieler_daten", {})
+	if sd is Dictionary:
+		for pid in sd:
+			if str(pid) != besitzer and sd[pid] is Dictionary:
+				spieler_daten[str(pid)] = spieler_pruefen(sd[pid])
+	spieler_daten[besitzer] = spieler_pruefen(d)
+	_sd()

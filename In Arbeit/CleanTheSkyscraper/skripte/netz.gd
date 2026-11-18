@@ -107,6 +107,7 @@ func host_starten(port := PORT) -> String:
 	multiplayer.multiplayer_peer = p
 	modus = "host"
 	spieler = {1: {"name": profil.name, "farbe": profil.farbe, "profil_id": profil.id}}
+	_anwesend_setzen()
 	spieler_geaendert.emit()
 	return ""
 
@@ -139,6 +140,13 @@ func trennen() -> void:
 	modus = ""
 	spieler = {}
 	_stuecke = {}
+	_bereite = {}
+	_bereit = false
+	_warten = {}
+	_feld_hash = {}
+	_sd_hash = {}
+	_eigen_hash = 0
+	_anwesend_setzen()
 	spieler_geaendert.emit()
 
 # Gast verlässt die Runde (selbst oder weil der Gastgeber weg ist): zurück ins eigene Spiel mit Hauptmenü
@@ -183,6 +191,8 @@ func _peer_weg(id: int) -> void:
 		return
 	var n := name_von(id)
 	spieler.erase(id)
+	_bereite.erase(id)
+	_anwesend_setzen()
 	liste.rpc(spieler)
 	spieler_geaendert.emit()
 	if spiel and is_instance_valid(spiel):
@@ -212,7 +222,8 @@ func anmelden(p: Dictionary) -> void:
 	spieler[id] = {"name": str(p.get("name", "Gast")).left(16), "farbe": fa, "profil_id": str(p.get("profil_id", p.get("id", "")))}
 	var stand := spiel.stand_daten()
 	stand["ort"] = orte.get(spieler[id].profil_id, {})
-	stand["netz"] = {"spieler": spieler, "belegte_gondeln": _belegte_gondeln()}
+	_anwesend_setzen()
+	stand["netz"] = {"spieler": spieler, "belegte_gondeln": _belegte_gondeln(id)}
 	_gross_senden(id, "stand", var_to_bytes(stand).compress(FileAccess.COMPRESSION_GZIP))
 	liste.rpc(spieler)
 	spieler_geaendert.emit()
@@ -223,10 +234,19 @@ func _rauswerfen_spaeter(id: int) -> void:
 	if multiplayer.multiplayer_peer is ENetMultiplayerPeer:
 		(multiplayer.multiplayer_peer as ENetMultiplayerPeer).disconnect_peer(id)
 
-func _belegte_gondeln() -> Array:
+# Gondeln, in denen gerade jemand sitzt (Gastgeber + andere Gäste; der Neue zählt nicht)
+func _belegte_gondeln(ausser := 0) -> Array:
 	var b := []
-	if spiel and spiel.wirtschaft.aktive_gondel >= 0:
-		b.append(spiel.wirtschaft.aktive_gondel)
+	var w := _w()
+	if w == null:
+		return b
+	for id in spieler:
+		if id == ausser:
+			continue
+		var pid: String = w.ich if id == 1 else str(spieler[id].profil_id)
+		var k := int((w.spieler_daten.get(pid, {}) as Dictionary).get("aktive_gondel", -1))
+		if k >= 0 and not k in b:
+			b.append(k)
 	return b
 
 @rpc("authority", "call_remote", "reliable")
@@ -238,6 +258,8 @@ func liste(l: Dictionary) -> void:
 	spieler = {}
 	for k in l:
 		spieler[int(k)] = l[k]
+	if _bereit:
+		_anwesend_setzen()
 	spieler_geaendert.emit()
 
 # Große Daten in Stücken (EOS lässt nur ~1 KB je Paket durch)
@@ -260,6 +282,8 @@ func stueck(kennung: String, art: String, i: int, n: int, teil: PackedByteArray)
 	_stuecke.erase(kennung)
 	if art == "stand":
 		_stand_da(alles)
+	elif art == "felder":
+		_felder_anwenden(alles, true)
 
 func _stand_da(gz: PackedByteArray) -> void:
 	var roh := gz.decompress_dynamic(-1, FileAccess.COMPRESSION_GZIP)
@@ -290,6 +314,7 @@ func ort_melden(o: Dictionary) -> void:
 func _process(dt: float) -> void:
 	if not aktiv() or spiel == null or not is_instance_valid(spiel) or spiel.zustand == null:
 		return
+	_netz_takt(dt)
 	_lage_zeit += dt
 	if _lage_zeit >= 1.0 / LAGE_HZ:
 		_lage_zeit = 0.0
@@ -332,6 +357,339 @@ func uhr(phase: float) -> void:
 		var d := wrapf(phase - z.phase, -0.5, 0.5)
 		# großer Unterschied (Beitritt, Zeitsprung): springen, sonst weich angleichen (kein Lichtsprung)
 		z.phase = phase if absf(d) > 0.01 else fposmod(z.phase + d * 0.5, 1.0)
+
+# ---------------------------------------------------------------- Befehle + gemeinsame Kasse (Phase 7b)
+# Netz.befehl(name, daten, fertig): Einzelspieler und Gastgeber führen sofort aus (fertig wird gleich gerufen – das Spiel
+# verhält sich wie vorher), ein Gast schickt den Wunsch an den Gastgeber. Der prüft (Geld, Grenzen) und führt in den
+# bestehenden Wirtschaft-Funktionen aus – für Werkzeug/Boosts/Aussehen des Gasts mit wirtschaft.als(profil_id) –, schickt die
+# geänderten Wirtschaft-Felder an alle und dem Gast die Antwort {ok, grund, …} mit seinen geänderten eigenen Werten.
+# Feld-Updates: der Gastgeber vergleicht 5× pro Sekunde (und sofort nach jedem Befehl) alle gemeinsamen Felder und schickt
+# nur geänderte. Ein Gast zeigt beim Geld immer den Stand des Gastgebers (_kasse). Seine eigenen Werte (Werkzeug in der Hand,
+# Fahrzeug, Aussehen, Gondel, Radio) meldet er selbst bei Änderung (meine_daten), damit Tasten 1–0 ohne Warten wirken.
+signal befehl_fertig(name: String, ergebnis: Dictionary)   # Gast: Antwort ist da (für Tests)
+
+const FELDER := ["geld", "besitz", "stufen", "album", "hoechster_abschnitt", "einstellungen", "kosmetik_besitz", "helfer",
+	"fahrzeuge", "gondeln", "moebel", "erfolge", "besucht", "angeln", "fischkiste", "fisch_index", "yacht", "turm_nr",
+	"tuerme_fertig", "abspann", "koop_max"]
+# Änderung eines dieser Felder → Spiel._ausruestung beim Gast (Helfer, Gondeln, Seil-Grenze, Ereignis-Schalter)
+const FELDER_AUSRUESTUNG := ["besitz", "stufen", "helfer", "fahrzeuge", "gondeln", "moebel", "einstellungen", "koop_max", "kosmetik_besitz"]
+const EIGENE := ["aktiv", "kosmetik_aktiv", "fahrzeug", "aktive_gondel", "radio"]   # meldet der Gast selbst
+const FELD_TAKT := 0.2           # höchstens 5× pro Sekunde
+const STATISTIK_TAKT := 2.0
+
+var _befehl_nr := 0
+var _warten := {}                # Gast: Nummer -> Callable
+var _feld_hash := {}             # Gastgeber: zuletzt geschickter Stand je Feld
+var _sd_hash := {}               # Gastgeber: zuletzt geschickte Spieler-Werte je Profil
+var _bereite := {}               # Gastgeber: Gäste, deren Welt fertig geladen ist (bekommen Feld-Updates)
+var _feld_zeit := 0.0
+var _stat_zeit := 0.0
+var _bereit := false             # Gast: Welt geladen, Feld-Updates gelten
+var _kasse := 0                  # Gast: Geld laut Gastgeber
+var _eigen_hash := 0
+var _eigen_zeit := 0.0
+
+func _w() -> Wirtschaft:
+	if spiel and is_instance_valid(spiel) and spiel.zustand:
+		return spiel.wirtschaft
+	return null
+
+func befehl(name: String, d: Dictionary = {}, fertig: Callable = Callable()) -> Dictionary:
+	if ist_gast():
+		_befehl_nr += 1
+		var nr := _befehl_nr
+		if fertig.is_valid():
+			_warten[nr] = fertig
+		_spaeter(func(): befehl_wunsch.rpc_id(1, nr, name, d))
+		return {"ok": false, "wartet": true}
+	var w := _w()
+	if w == null:
+		return {"ok": false}
+	var e := _ausfuehren(name, d, w.ich)
+	if ist_host():
+		if e.ok and e.has("was"):
+			for g in _bereite:
+				hinweis.rpc_id(g, "%s hat gekauft: %s" % [profil.name, e.was])
+		_felder_pruefen()
+	if fertig.is_valid():
+		fertig.call(e)
+	return e
+
+func _spaeter(f: Callable) -> void:
+	if verzoegerung > 0.0:
+		await get_tree().create_timer(verzoegerung).timeout
+		if not aktiv():
+			return
+	f.call()
+
+# Ausführung (Einzelspieler/Gastgeber) für den Spieler mit Profil pid
+func _ausfuehren(name: String, d: Dictionary, pid: String) -> Dictionary:
+	var w := _w()
+	var e := {"ok": false}
+	var id := str(d.get("id", ""))
+	var was := ""
+	w.als(pid)
+	match name:
+		"werkzeug":
+			e["ok"] = w.kaufe_werkzeug(id)
+			was = w.werkzeug(id).name
+		"ausruesten":
+			e["ok"] = w.ausruesten(id)
+		"upgrade":
+			e["ok"] = Wirtschaft.UPGRADES.has(id) and w.kaufe_upgrade(id)
+			was = Wirtschaft.UPGRADES.get(id, {}).get("name", id)
+		"helfer":
+			e["ok"] = Wirtschaft.HELFER.has(id) and w.kaufe_helfer(id)
+			was = Wirtschaft.HELFER.get(id, {}).get("name", id)
+		"gondel":
+			var k := int(d.get("seite", -1))
+			e["ok"] = k >= 0 and k < 3 and w.kaufe_gondel(k)
+			was = "Gondel " + (Turm.SEITEN_NAMEN[k] if k >= 0 and k < 3 else "")
+		"boost":
+			e["ok"] = Wirtschaft.BOOSTS.has(id) and w.kaufe_boost(id)
+		"kosmetik":
+			e["ok"] = w.kosmetik(id).id == id and w.kaufe_kosmetik(id)
+			was = str(w.kosmetik(id).name)
+		"kosmetik_nutzen":
+			e["ok"] = w.nutze_kosmetik(id)
+		"fahrzeug":
+			e["ok"] = w.kaufe_fahrzeug(id)
+			was = str(w.fahrzeug_daten(id).get("name", id))
+		"fahrzeug_nehmen":
+			e["ok"] = id == "" or id in w.fahrzeuge
+			if e.ok:
+				w.fahrzeug = id
+		"gegenstand":
+			e["ok"] = w.kaufe_gegenstand(id)
+			was = str(w.gegenstand(id).get("name", id))
+		"angel":
+			e["ok"] = w.kaufe_angel(id)
+			was = str(w.angel_daten(id).get("name", id))
+		"fisch":
+			e["erloes"] = w.verkaufe_fisch(id, int(d.get("anzahl", -1)))
+			e["ok"] = int(e.erloes) > 0
+		"fische_alle":
+			e["erloes"] = w.verkaufe_alle_fische()
+			e["ok"] = int(e.erloes) > 0
+		_:
+			e["grund"] = "Unbekannter Befehl „%s“." % name
+	w.als("")
+	if e.ok and was != "":
+		e["was"] = was
+	if not e.ok and not e.has("grund"):
+		e["grund"] = "Geht nicht – in der gemeinsamen Kasse sind %s €." % Hud.punkte(w.geld)
+	return e
+
+# Gastgeber: Wunsch eines Gasts
+@rpc("any_peer", "call_remote", "reliable")
+func befehl_wunsch(nr: int, name: String, d: Dictionary) -> void:
+	if not ist_host():
+		return
+	var id := multiplayer.get_remote_sender_id()
+	var w := _w()
+	if w == null or not spieler.has(id):
+		_spaeter(func(): befehl_antwort.rpc_id(id, nr, {"ok": false, "grund": "Der Gastgeber ist gerade nicht im Spiel."}, {}))
+		return
+	var pid := str(spieler[id].profil_id)
+	if not w.spieler_daten.has(pid):
+		w.spieler_daten[pid] = w.neue_spieler_daten()
+	var vorher: Dictionary = (w.spieler_daten[pid] as Dictionary).duplicate(true)
+	var e := _ausfuehren(name, d, pid)
+	var eigen := {}
+	var nach: Dictionary = w.spieler_daten[pid]
+	for k in nach:
+		if hash(nach[k]) != hash(vorher.get(k)):
+			eigen[k] = nach[k]
+	if e.ok:
+		spiel._ausruestung()            # Helfer, Gondeln, Seil-Grenze; speichert
+		spiel.menues_aktualisieren()
+		if e.has("was"):
+			var t := "%s hat gekauft: %s" % [name_von(id), e.was]
+			spiel.hud.meldung(t, 3.0)
+			for g in _bereite:
+				if g != id:
+					hinweis.rpc_id(g, t)
+	_felder_pruefen()
+	_spaeter(func(): befehl_antwort.rpc_id(id, nr, e, eigen))
+
+# Gast: Antwort des Gastgebers (die Felder sind schon vorher angekommen)
+@rpc("authority", "call_remote", "reliable")
+func befehl_antwort(nr: int, e: Dictionary, eigen: Dictionary) -> void:
+	var w := _w()
+	if w and _bereit:
+		var meine: Dictionary = w.spieler_daten.get(w.ich, {})
+		if meine.is_empty():
+			w.spieler_daten[w.ich] = w.neue_spieler_daten()
+			meine = w.spieler_daten[w.ich]
+		for k in eigen:
+			if k in Wirtschaft.JE_SPIELER:
+				meine[k] = eigen[k]
+		if not e.get("ok", false):
+			spiel.hud.meldung(str(e.get("grund", "Das geht gerade nicht.")), 3.0)
+	befehl_fertig.emit(str(nr), e)
+	var f: Callable = _warten.get(nr, Callable())
+	_warten.erase(nr)
+	if f.is_valid():
+		f.call(e)
+
+@rpc("authority", "call_remote", "reliable")
+func hinweis(t: String) -> void:
+	if spiel and is_instance_valid(spiel) and spiel.hud:
+		spiel.hud.meldung(t, 3.0)
+
+# Gastgeber: geänderte Felder (alle = Voll-Stand für einen frisch geladenen Gast an)
+func _felder_pruefen(alle := false, an := 0) -> void:
+	var w := _w()
+	if w == null or (_bereite.is_empty() and an == 0):
+		return
+	var neu := {}
+	for f in FELDER:
+		var v = w.get(f)
+		var h := hash(v)
+		if alle:
+			neu[f] = v
+		elif _feld_hash.get(f, 0) != h:
+			_feld_hash[f] = h
+			neu[f] = v
+	if alle:
+		neu["statistik"] = w.statistik
+	elif _stat_zeit >= STATISTIK_TAKT:
+		_stat_zeit = 0.0
+		var hs := hash(w.statistik)
+		if _feld_hash.get("statistik", 0) != hs:
+			_feld_hash["statistik"] = hs
+			neu["statistik"] = w.statistik
+	var sd := {}
+	for pid in w.spieler_daten:
+		var e: Dictionary = w.spieler_daten[pid]
+		var h := hash([e.aktiv, e.kosmetik_aktiv, e.fahrzeug, e.aktive_gondel, e.radio, (e.boosts as Dictionary).keys()])
+		if alle:
+			sd[pid] = e
+		elif _sd_hash.get(pid, 0) != h:
+			_sd_hash[pid] = h
+			sd[pid] = e
+	if not sd.is_empty():
+		neu["spieler_daten"] = sd
+	if neu.is_empty():
+		return
+	var b := var_to_bytes(neu)
+	var ziele: Array = [an] if an != 0 else _bereite.keys()
+	_spaeter(func(): _felder_senden(b, ziele))
+
+func _felder_senden(b: PackedByteArray, ziele: Array) -> void:
+	var gz := b.size() > STUECK
+	if gz:
+		b = b.compress(FileAccess.COMPRESSION_GZIP)
+	for id in ziele:
+		if not spieler.has(id):
+			continue
+		if b.size() <= STUECK:
+			felder.rpc_id(id, b, gz)
+		else:
+			_gross_senden(id, "felder", b)   # Möbel, Album … können größer als ein Paket werden
+
+@rpc("authority", "call_remote", "reliable")
+func felder(b: PackedByteArray, gz: bool) -> void:
+	_felder_anwenden(b, gz)
+
+func _felder_anwenden(b: PackedByteArray, gz: bool) -> void:
+	var w := _w()
+	if not ist_gast() or not _bereit or w == null:
+		return
+	if gz:
+		b = b.decompress_dynamic(-1, FileAccess.COMPRESSION_GZIP)
+	var d = bytes_to_var(b)
+	if not (d is Dictionary):
+		return
+	var menues := false
+	var ausruestung := false
+	for f in d:
+		if f == "spieler_daten":
+			for pid in d[f]:
+				if str(pid) != w.ich:   # eigene Werte: nur aus Befehls-Antworten
+					w.spieler_daten[str(pid)] = d[f][pid]
+			continue
+		w.set(f, d[f])
+		if f == "geld":
+			_kasse = int(d[f])
+		elif f != "statistik":
+			menues = true
+		if f in FELDER_AUSRUESTUNG:
+			ausruestung = true
+	spiel.netz_aktualisiert(menues, ausruestung)
+
+# Gast: Welt fertig geladen (Spiel.starten) → Gastgeber schickt den aktuellen Stand aller Felder
+func gast_bereit() -> void:
+	var w := _w()
+	if not ist_gast() or w == null:
+		return
+	_bereit = true
+	_kasse = w.geld
+	_anwesend_setzen()
+	_spaeter(func(): bereit.rpc_id(1))
+
+@rpc("any_peer", "call_remote", "reliable")
+func bereit() -> void:
+	if not ist_host():
+		return
+	var id := multiplayer.get_remote_sender_id()
+	if spieler.has(id):
+		_bereite[id] = true
+		_anwesend_setzen()
+		_felder_pruefen(true, id)
+
+# Gastgeber: eigene Werte eines Gasts (Werkzeug in der Hand, Fahrzeug, Aussehen, Gondel, Radio) – Boosts bleiben beim Gastgeber
+@rpc("any_peer", "call_remote", "reliable")
+func meine_daten(q: Dictionary) -> void:
+	var w := _w()
+	if not ist_host() or w == null:
+		return
+	var id := multiplayer.get_remote_sender_id()
+	if not spieler.has(id):
+		return
+	var pid := str(spieler[id].profil_id)
+	var p := w.spieler_pruefen(q)
+	var e: Dictionary = w.spieler_daten.get(pid, w.neue_spieler_daten())
+	for k in EIGENE:
+		e[k] = p[k]
+	w.spieler_daten[pid] = e
+
+# Profil-IDs der Spieler in der Runde (Boosts laufen nur bei ihnen ab, Helfer-Boosts von allen)
+func _anwesend_setzen() -> void:
+	var w := _w()
+	if w == null:
+		return
+	var l := []
+	if aktiv():
+		for id in spieler:
+			l.append(w.ich if id == meine_id() else str(spieler[id].profil_id))
+	w.anwesend = l
+
+func _netz_takt(dt: float) -> void:
+	var w := _w()
+	if w == null:
+		return
+	if ist_host():
+		_feld_zeit += dt
+		_stat_zeit += dt
+		if _feld_zeit >= FELD_TAKT:
+			_feld_zeit = 0.0
+			_felder_pruefen()
+	elif ist_gast() and _bereit:
+		if w.geld != _kasse:
+			w.geld = _kasse   # die Kasse liegt beim Gastgeber (eigener Lohn zählt erst mit 7c)
+		_eigen_zeit += dt
+		if _eigen_zeit >= FELD_TAKT:
+			_eigen_zeit = 0.0
+			var e: Dictionary = w.spieler_daten.get(w.ich, {})
+			if not e.is_empty():
+				var h := hash([e.aktiv, e.kosmetik_aktiv, e.fahrzeug, e.aktive_gondel, e.radio])
+				if h != _eigen_hash:
+					_eigen_hash = h
+					var q := {}
+					for k in EIGENE:
+						q[k] = e[k]
+					_spaeter(func(): meine_daten.rpc_id(1, q))
 
 # Nur für Test 37 (NetzTest): Textnachrichten zwischen den Test-Prozessen
 signal test_nachricht_da(id: int, text: String)

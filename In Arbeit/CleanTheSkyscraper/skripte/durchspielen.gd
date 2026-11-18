@@ -578,17 +578,17 @@ func _einkaufsliste() -> Array:
 	var jetzt := _werkzeug_wert(w.werkzeug(_bestes_werkzeug()))
 	var kauf := {}
 	for wz in Wirtschaft.WERKZEUGE:
-		if not wz.id in w.besitz and int(wz.preis) <= frei and _werkzeug_wert(wz) > jetzt * 1.05:
+		if not wz.id in w.besitz and w.werkzeug_preis(wz.id) <= frei and _werkzeug_wert(wz) > jetzt * 1.05:
 			if kauf.is_empty() or _werkzeug_wert(wz) > _werkzeug_wert(kauf):
 				kauf = wz
 	if not kauf.is_empty():
 		l.append({"art": "werkzeug", "id": kauf.id, "stand": "werkzeug" if kauf.get("profi", false) else "grund"})
-		frei -= int(kauf.preis)
+		frei -= w.werkzeug_preis(kauf.id)
 	# alle 10 Werkzeuge für den Erfolg, wenn es billig geworden ist
 	for wz in Wirtschaft.WERKZEUGE:
-		if not wz.id in w.besitz and int(wz.preis) <= 0.05 * frei and (kauf.is_empty() or wz.id != kauf.id):
+		if not wz.id in w.besitz and w.werkzeug_preis(wz.id) <= 0.05 * frei and (kauf.is_empty() or wz.id != kauf.id):
 			l.append({"art": "werkzeug", "id": wz.id, "stand": "werkzeug" if wz.get("profi", false) else "grund"})
-			frei -= int(wz.preis)
+			frei -= w.werkzeug_preis(wz.id)
 	for f in Wirtschaft.FAHRZEUGE:
 		if not f.id in w.fahrzeuge and int(f.preis) * 4 <= frei:
 			l.append({"art": "fahrzeug", "id": f.id})
@@ -813,7 +813,7 @@ func _kiosk(stand: String, knoepfe: Array) -> void:
 		var id: String = n.substr(2)
 		var preis := 0
 		match n.substr(0, 2):
-			"w_": preis = int(w.werkzeug(id).preis)
+			"w_": preis = w.werkzeug_preis(id)
 			"f_": preis = int(w.fahrzeug_daten(id).get("preis", 0))
 			"b_": preis = w.boost_preis(id)
 			"k_": preis = int(w.kosmetik(id).preis)

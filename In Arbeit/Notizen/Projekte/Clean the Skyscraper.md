@@ -1,6 +1,6 @@
 ---
 typ: spiel
-status: in Arbeit (Phase 5 Feinschliff fertig, Phase 7 Mehrspieler: 7a Grundlage fertig, Phase 6 neuer Turm vorgemerkt)
+status: in Arbeit (Phase 5 Feinschliff fertig, Phase 7 Mehrspieler: 7a Grundlage + 7b Befehle/Kasse fertig, Phase 6 neuer Turm vorgemerkt)
 technik: Godot 4.7, GDScript, Turm komplett aus Code
 erstellt: 2026-11-15
 ---
@@ -104,6 +104,7 @@ Mehrspielermodus (Wünsche des Users 15.11.2026, am 18.11.2026 entschieden und a
 - [ ] Preise für Fortschritts-Käufe steigen mit der Spielerzahl (+50 % je weiterem Spieler)
 - [x] **Vorab-Test Epic (18.11.2026):** EOSG 2.3.1 läuft unter Godot 4.7 und in der .exe; Verbindung per Code über Epic klappt (21 ms direkt, 41 ms über Relay); Epic-Entwicklerkonto + Produkt angelegt
 - [x] **7a Grundlage (18.11.2026):** Hauptmenü „Mehrspieler“ (Name, Farbe, Spiel erstellen, Beitreten mit Adresse im Heimnetz), Beitritt mitten im Spiel mit der Welt des Gastgebers, Mitspieler als Figuren mit Namen, Spielerliste, gleiche Tageszeit, Gastgeber weg → Meldung + Hauptmenü, höchstens 3 Spieler. Test 37: 25/25. Gemeinsames Putzen/Kasse noch nicht (7b/7c)
+- [x] **7b Befehle + gemeinsame Kasse (18.11.2026):** Käufe der Gäste laufen über den Gastgeber (Werkstatt, Kioske, Strandbar, Läden, Fischladen, Gondel), alles Gekaufte gehört allen, Geld überall gleich, Kauf ohne Geld abgelehnt, Boosts nur für den Käufer (Helfer-Boosts für alle), Werkzeug/Aussehen/Fahrzeug je Spieler, Preise ×1,5 zu zweit / ×2 zu dritt (10 min nachwirkend), alte Spielstände laden weiter. Test 37: 57/57. Offen: Vergleich der übrigen alten Tests
 - Unterphasen 7a–7h (Grundlage LAN → Befehls-Schicht + Kasse → gemeinsam putzen → Welt vom Gastgeber → Extras → Miteinander → Internet per Code → Tests/Koop-Bot), geschätzt 8–10 Arbeitssitzungen. Details, Netzwerk-Architektur, Testplan und Risiken im Bauplan unter Punkt 7
 
 ## Notizen

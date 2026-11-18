@@ -71,6 +71,7 @@ func aufbauen() -> void:
 
 func _werkzeuge(profi: bool) -> void:
 	unter.text = "PROFI-WERKZEUGE – MIT 6–0 ODER DEM MAUSRAD WÄHLEN" if profi else "WERKZEUGE – MIT 1–5 ODER DEM MAUSRAD WÄHLEN"
+	unter.text += wirtschaft.koop_text()
 	var farben := {"schwamm": "ffd84a", "grossschwamm": "ffd84a", "abzieher": "c9ced4", "doppel": "c9ced4", "hochdruck": "ffc531", "teleskop": "c9ced4", "dampf": "ff6b6b", "lanze": "35c8ff"}
 	for i in Wirtschaft.WERKZEUGE.size():
 		var w: Dictionary = Wirtschaft.WERKZEUGE[i]
@@ -84,8 +85,9 @@ func _werkzeuge(profi: bool) -> void:
 			knopf = UiGlas.knopf("Nehmen", "nehmen")
 			knopf.pressed.connect(_nehmen.bind(w.id))
 		else:
-			knopf = UiGlas.knopf("%s €" % Hud.punkte(int(w.preis)))
-			knopf.disabled = wirtschaft.geld < int(w.preis)
+			knopf = UiGlas.knopf("%s €" % Hud.punkte(wirtschaft.werkzeug_preis(w.id)))
+			knopf.disabled = wirtschaft.geld < wirtschaft.werkzeug_preis(w.id)
+			knopf.set_meta("preis", wirtschaft.werkzeug_preis(w.id))   # Mehrspieler: Sperre bei Geld-Änderung nachführen
 			knopf.pressed.connect(_kaufe_werkzeug.bind(w.id))
 		knopf.name = "w_" + w.id
 		var farbe := Color(w.get("farbe", farben.get(w.id, "35c8ff")))
@@ -105,6 +107,7 @@ func _fahrzeuge() -> void:
 		else:
 			knopf = UiGlas.knopf("%s €" % Hud.punkte(int(f.preis)))
 			knopf.disabled = wirtschaft.geld < int(f.preis)
+			knopf.set_meta("preis", int(f.preis))   # Mehrspieler: Sperre bei Geld-Änderung nachführen
 			knopf.pressed.connect(_kaufe_fahrzeug.bind(f.id))
 		knopf.name = "f_" + f.id
 		liste.add_child(UiGlas.karte(f.name, f.text, knopf, kurz.get(f.id, ""), Color(f.farbe), -1, 0, Symbole.bilder.get(f.id)))
@@ -134,6 +137,7 @@ func _mode() -> void:
 			else:
 				knopf = UiGlas.knopf("%s €" % Hud.punkte(int(k.preis)) if int(k.preis) > 0 else "Gratis")
 				knopf.disabled = wirtschaft.geld < int(k.preis)
+				knopf.set_meta("preis", int(k.preis))   # Mehrspieler: Sperre bei Geld-Änderung nachführen
 				knopf.pressed.connect(_kaufe_kosmetik.bind(k.id))
 			knopf.name = "k_" + k.id
 			seite.add_child(UiGlas.karte(k.name, "", knopf, " ", Color(k.farbe)))
@@ -158,41 +162,38 @@ func _boosts() -> void:
 			info += "  Läuft noch %d:%02d." % [int(rest) / 60, int(rest) % 60]
 		var knopf2 := UiGlas.knopf(("+ %s €" if rest > 0.0 else "%s €") % Hud.punkte(wirtschaft.boost_preis(id)))
 		knopf2.disabled = wirtschaft.geld < wirtschaft.boost_preis(id)
+		knopf2.set_meta("preis", wirtschaft.boost_preis(id))   # Mehrspieler: Sperre bei Geld-Änderung nachführen
 		knopf2.pressed.connect(_kaufe_boost.bind(id))
 		knopf2.name = "b_" + id
 		liste.add_child(UiGlas.karte(b.name, info, knopf2, kurz.get(id, ""), Color(farbe.get(id, "35c8ff"))))
 
+# Alle Käufe/Wechsel laufen über Netz.befehl (Einzelspieler: sofort, Gast: beim Gastgeber) – Ergebnis kommt in _fertig
 func _kaufe_fahrzeug(id: String) -> void:
-	if wirtschaft.kaufe_fahrzeug(id):
-		geaendert.emit()
-	aufbauen()
+	Netz.befehl("fahrzeug", {"id": id}, _fertig)
 
 func _fahrzeug_nehmen(id: String) -> void:
-	wirtschaft.fahrzeug = id
-	geaendert.emit()
-	aufbauen()
+	Netz.befehl("fahrzeug_nehmen", {"id": id}, _fertig_immer)
 
 func _kaufe_werkzeug(id: String) -> void:
-	if wirtschaft.kaufe_werkzeug(id):
-		geaendert.emit()
-	aufbauen()
+	Netz.befehl("werkzeug", {"id": id}, _fertig)
 
 func _nehmen(id: String) -> void:
-	wirtschaft.ausruesten(id)
-	geaendert.emit()
-	aufbauen()
+	Netz.befehl("ausruesten", {"id": id}, _fertig_immer)
 
 func _kaufe_boost(id: String) -> void:
-	if wirtschaft.kaufe_boost(id):
-		geaendert.emit()
-	aufbauen()
+	Netz.befehl("boost", {"id": id}, _fertig)
 
 func _kaufe_kosmetik(id: String) -> void:
-	if wirtschaft.kaufe_kosmetik(id):
+	Netz.befehl("kosmetik", {"id": id}, _fertig)
+
+func _nutzen(id: String) -> void:
+	Netz.befehl("kosmetik_nutzen", {"id": id}, _fertig_immer)
+
+func _fertig(e: Dictionary) -> void:
+	if e.get("ok", false):
 		geaendert.emit()
 	aufbauen()
 
-func _nutzen(id: String) -> void:
-	wirtschaft.nutze_kosmetik(id)
+func _fertig_immer(_e: Dictionary) -> void:
 	geaendert.emit()
 	aufbauen()

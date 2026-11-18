@@ -96,7 +96,7 @@ func _hoehe_anpassen() -> void:
 	scroll.custom_minimum_size = Vector2(0, clampf(inhalt, 120.0, maxf(240.0, platz)))
 
 func _gondeln(s: VBoxContainer) -> void:
-	s.add_child(UiGlas.ueberschrift("EINE GONDEL JE TURMSEITE – ZUM WECHSELN UNTEN MIT E AUSSTEIGEN UND HINLAUFEN"))
+	s.add_child(UiGlas.ueberschrift("EINE GONDEL JE TURMSEITE – ZUM WECHSELN UNTEN MIT E AUSSTEIGEN UND HINLAUFEN" + _koop_text()))
 	for k in 3:
 		var g: Dictionary = wirtschaft.gondeln[k]
 		var kg: Button
@@ -106,6 +106,7 @@ func _gondeln(s: VBoxContainer) -> void:
 		else:
 			kg = UiGlas.knopf("%s €" % Hud.punkte(wirtschaft.gondel_preis()))
 			kg.disabled = wirtschaft.geld < wirtschaft.gondel_preis()
+			kg.set_meta("preis", wirtschaft.gondel_preis())   # Mehrspieler: Sperre bei Geld-Änderung nachführen
 			kg.pressed.connect(_kaufe_gondel.bind(k))
 		kg.name = "go_%d" % k
 		var txt := "Putzt die Seite %s." % Turm.SEITEN_NAMEN[k]
@@ -116,7 +117,7 @@ func _gondeln(s: VBoxContainer) -> void:
 		s.add_child(UiGlas.karte("Gondel " + Turm.SEITEN_NAMEN[k], txt, kg, Turm.SEITEN_NAMEN[k].substr(0, 1), Color("ffc531")))
 
 func _helfer(s: VBoxContainer) -> void:
-	s.add_child(UiGlas.ueberschrift("PUTZEN, SOLANGE DU SPIELST – BIS ZUR SEIL-GRENZE"))
+	s.add_child(UiGlas.ueberschrift("PUTZEN, SOLANGE DU SPIELST – BIS ZUR SEIL-GRENZE" + _koop_text()))
 	var kurz := {"putzkraft": "PK", "roboter": "RB", "drohne": "DR"}
 	var farbe := {"putzkraft": Color("3a86d4"), "roboter": Color("b18cff"), "drohne": Color("5fd3a0")}
 	for id in Wirtschaft.HELFER:
@@ -128,12 +129,13 @@ func _helfer(s: VBoxContainer) -> void:
 		else:
 			kh = UiGlas.knopf("%s €" % Hud.punkte(wirtschaft.helfer_preis(id)))
 			kh.disabled = wirtschaft.geld < wirtschaft.helfer_preis(id)
+			kh.set_meta("preis", wirtschaft.helfer_preis(id))   # Mehrspieler: Sperre bei Geld-Änderung nachführen
 			kh.pressed.connect(_kaufe_helfer.bind(id))
 		kh.name = "he_" + id
 		s.add_child(UiGlas.karte("%s  %d/%d" % [h.name, wirtschaft.helfer[id], h.max], h.text, kh, kurz[id], farbe[id], wirtschaft.helfer[id], h.max))
 
 func _ausbau(s: VBoxContainer) -> void:
-	s.add_child(UiGlas.ueberschrift("GILT FÜR ALLE GONDELN"))
+	s.add_child(UiGlas.ueberschrift("GILT FÜR ALLE GONDELN" + _koop_text()))
 	var kurz := {"motor": "MO", "arm": "AR", "winde": "SW"}
 	for id in Wirtschaft.UPGRADES:
 		var u: Dictionary = Wirtschaft.UPGRADES[id]
@@ -145,6 +147,7 @@ func _ausbau(s: VBoxContainer) -> void:
 		else:
 			k2 = UiGlas.knopf("%s €" % Hud.punkte(wirtschaft.upgrade_preis(id)))
 			k2.disabled = wirtschaft.geld < wirtschaft.upgrade_preis(id)
+			k2.set_meta("preis", wirtschaft.upgrade_preis(id))   # Mehrspieler: Sperre bei Geld-Änderung nachführen
 			k2.pressed.connect(_kaufe_upgrade.bind(id))
 		k2.name = "up_" + id
 		var info: String = u.text
@@ -152,8 +155,12 @@ func _ausbau(s: VBoxContainer) -> void:
 			info += "  Jetzt bis Stockwerk %d." % wirtschaft.oberstes_stockwerk()
 		s.add_child(UiGlas.karte(u.name, info, k2, kurz[id], UiGlas.AKZENT, stufe, u.max))
 
+# Mehrspieler: Fortschritts-Käufe kosten mehr (höchste Spielerzahl der letzten 10 min)
+func _koop_text() -> String:
+	return wirtschaft.koop_text()
+
 func _einstellungen(s: VBoxContainer) -> void:
-	s.add_child(UiGlas.ueberschrift("EREIGNISSE"))
+	s.add_child(UiGlas.ueberschrift("EREIGNISSE" + (" – STELLT DER GASTGEBER EIN" if Netz.ist_gast() else "")))
 	var namen := {"tauben": ["Tauben", "Tauben bekleckern ab und zu ein sauberes Fenster.", "TB"], "sandsturm": ["Sandsturm", "Ab und zu ein Sandsturm, danach sind ein paar Fenster staubig.", "SS"], "wind": ["Windböen", "Die Gondel schaukelt, Putzen wird etwas ungenauer.", "WB"]}
 	for k in namen:
 		var an: bool = wirtschaft.einstellungen[k]
@@ -161,6 +168,7 @@ func _einstellungen(s: VBoxContainer) -> void:
 		k3.custom_minimum_size = Vector2(90, 38)
 		k3.name = "ein_" + k
 		k3.pressed.connect(_umschalten_einstellung.bind(k))
+		k3.disabled = Netz.ist_gast()
 		s.add_child(UiGlas.karte(namen[k][0], namen[k][1], k3, namen[k][2], Color("9fb3c8")))
 	s.add_child(EinstellungenUi.new())   # Ton, Bild, Maus, Tasten (gelten für alle Spielstände)
 	s.add_child(UiGlas.ueberschrift("SPIELSTAND"))
@@ -175,18 +183,18 @@ func _einstellungen(s: VBoxContainer) -> void:
 	menue.pressed.connect(func(): hauptmenue.emit())
 	s.add_child(UiGlas.karte("Zum Hauptmenü", "Speichert und zeigt das Startmenü mit dem Flug um den Turm.", menue, "≡", UiGlas.AKZENT))
 
+# Käufe über Netz.befehl (Einzelspieler: sofort, Gast: beim Gastgeber, Antwort in _fertig)
 func _kaufe_gondel(k: int) -> void:
-	if wirtschaft.kaufe_gondel(k):
-		geaendert.emit()
-	aufbauen()
+	Netz.befehl("gondel", {"seite": k}, _fertig)
 
 func _kaufe_helfer(id: String) -> void:
-	if wirtschaft.kaufe_helfer(id):
-		geaendert.emit()
-	aufbauen()
+	Netz.befehl("helfer", {"id": id}, _fertig)
 
 func _kaufe_upgrade(id: String) -> void:
-	if wirtschaft.kaufe_upgrade(id):
+	Netz.befehl("upgrade", {"id": id}, _fertig)
+
+func _fertig(e: Dictionary) -> void:
+	if e.get("ok", false):
 		geaendert.emit()
 	aufbauen()
 
