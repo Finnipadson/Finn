@@ -147,6 +147,9 @@ func trennen() -> void:
 	_sd_hash = {}
 	_eigen_hash = 0
 	_reserviert = {}
+	_offen = {}
+	_moebel_sperre = {}
+	_yacht_fahrer = 0
 	if _w():
 		spiel.spieler.mitschreiben = false
 		spiel.spieler.stempel_neu = PackedFloat32Array()
@@ -200,6 +203,11 @@ func _peer_weg(id: int) -> void:
 	if not ist_host() or not spieler.has(id):
 		return
 	var n := name_von(id)
+	if _yacht_fahrer == id:
+		_yacht_fahrer = 0
+	for i in _moebel_sperre.keys():
+		if int(_moebel_sperre[i][0]) == id:
+			_moebel_sperre.erase(i)
 	spieler.erase(id)
 	_bereite.erase(id)
 	_anwesend_setzen()
@@ -413,11 +421,11 @@ func befehl(name: String, d: Dictionary = {}, fertig: Callable = Callable()) -> 
 		if fertig.is_valid():
 			_warten[nr] = fertig
 		_spaeter(func(): befehl_wunsch.rpc_id(1, nr, name, d))
-		return {"ok": false, "wartet": true}
+		return {"ok": false, "wartet": true, "nr": nr}
 	var w := _w()
 	if w == null:
 		return {"ok": false}
-	var e := _ausfuehren(name, d, w.ich)
+	var e := _ausfuehren(name, d, w.ich, meine_id())
 	if ist_host():
 		if e.ok and e.has("was"):
 			for g in _bereite:
@@ -435,7 +443,7 @@ func _spaeter(f: Callable) -> void:
 	f.call()
 
 # Ausführung (Einzelspieler/Gastgeber) für den Spieler mit Profil pid
-func _ausfuehren(name: String, d: Dictionary, pid: String) -> Dictionary:
+func _ausfuehren(name: String, d: Dictionary, pid: String, peer := 1) -> Dictionary:
 	var w := _w()
 	var e := {"ok": false}
 	var id := str(d.get("id", ""))
@@ -483,6 +491,63 @@ func _ausfuehren(name: String, d: Dictionary, pid: String) -> Dictionary:
 		"fische_alle":
 			e["erloes"] = w.verkaufe_alle_fische()
 			e["ok"] = int(e.erloes) > 0
+		# ---- 7e: Casino, Arcade, Angeln, Penthouse, Yacht (nur Gäste schicken zahlen/…_gewinn/fang; Einzelspieler und
+		# Gastgeber rechnen in zahlen()/casino_gewinn()/arcade_gewinn()/fang() direkt)
+		"zahlen":
+			var b := int(d.get("betrag", 0))
+			var art := str(d.get("art", ""))
+			if art == "casino" and b > CasinoRegeln.max_einsatz(w.geld):
+				e["grund"] = "Einsatz zu hoch – höchstens %s € (10 %% der gemeinsamen Kasse)." % Hud.punkte(CasinoRegeln.max_einsatz(w.geld))
+			elif b > 0 and w.geld >= b and art in ["casino", "arcade"]:
+				w.geld -= b
+				if art == "arcade":
+					w.statistik.arcade_spiele = int(w.statistik.arcade_spiele) + 1
+				_offen[pid + "|" + art] = b
+				e["ok"] = true
+		"casino_gewinn":
+			var einsatz := int(d.get("einsatz", 0))
+			var aus := int(d.get("aus", 0))
+			if int(_offen.get(pid + "|casino", -1)) == einsatz and aus >= 0 and aus <= einsatz * 100:
+				_offen.erase(pid + "|casino")
+				w.geld += aus
+				w.casino_runde(einsatz, aus)
+				e["ok"] = true
+				if aus - einsatz >= GROSSER_GEWINN:
+					_an_alle("%s hat im Casino %s € gewonnen!" % [name_von(peer), Hud.punkte(aus - einsatz)], peer)
+			else:
+				e["grund"] = "Dieser Gewinn passt nicht zu deinem Einsatz."
+		"arcade_gewinn":
+			if _offen.has(pid + "|arcade") and str(w.gegenstand(id).get("quelle", "")) == "arcade":
+				_offen.erase(pid + "|arcade")
+				w.bekomme_gegenstand(id)
+				w.statistik.arcade_gewinne = int(w.statistik.arcade_gewinne) + 1
+				e["ok"] = true
+				if w.seltenheit(id) >= 2:
+					_an_alle("%s hat in der Arcade gewonnen: %s!" % [name_von(peer), w.gegenstand(id).name], peer)
+			else:
+				e["grund"] = ""
+		"fang":
+			if not Wirtschaft.fisch(id).is_empty():
+				if w.fisch_gefangen(id, float(d.get("laenge", 0.0)), name_von(peer)):
+					_an_alle("%s hat gefangen: %s – neu im Fisch-Index!" % [name_von(peer), Wirtschaft.fisch(id).name], peer)
+				e["ok"] = true
+		"moebel_sperren", "moebel_setzen", "moebel_frei", "moebel_lager", "moebel_verkaufen":
+			_moebel_befehl(name, d, peer, e)
+		"yacht":
+			if str(d.get("rolle", "")) == "aus":
+				if _yacht_fahrer == peer:
+					_yacht_fahrer = 0
+				e["ok"] = true
+			elif _yacht_fahrer == 0 or _yacht_fahrer == peer or not spieler.has(_yacht_fahrer):
+				_yacht_fahrer = peer
+				e["rolle"] = "fahren"
+				e["ok"] = true
+			elif spiel.strand.yacht.am_liegeplatz():
+				e["rolle"] = "mit"
+				e["fahrer"] = name_von(_yacht_fahrer)
+				e["ok"] = true
+			else:
+				e["grund"] = "Die Yacht ist gerade mit %s unterwegs – warte am Steg, dann kannst du zusteigen." % name_von(_yacht_fahrer)
 		"hoehe":   # neue Höhe erreicht: einmaliger Bonus (wer zuerst kommt)
 			var a := int(d.get("abschnitt", 0))
 			if a > w.hoechster_abschnitt:
@@ -526,15 +591,17 @@ func befehl_wunsch(nr: int, name: String, d: Dictionary) -> void:
 	if not w.spieler_daten.has(pid):
 		w.spieler_daten[pid] = w.neue_spieler_daten()
 	var vorher: Dictionary = (w.spieler_daten[pid] as Dictionary).duplicate(true)
-	var e := _ausfuehren(name, d, pid)
+	var e := _ausfuehren(name, d, pid, id)
 	var eigen := {}
 	var nach: Dictionary = w.spieler_daten[pid]
 	for k in nach:
 		if hash(nach[k]) != hash(vorher.get(k)):
 			eigen[k] = nach[k]
-	if e.ok:
+	if e.ok and not name in ["zahlen", "casino_gewinn", "fang", "moebel_sperren", "moebel_frei", "yacht", "hoehe"]:
 		spiel._ausruestung()            # Helfer, Gondeln, Seil-Grenze; speichert
 		spiel.menues_aktualisieren()
+		if name.begins_with("moebel_") or name == "arcade_gewinn":
+			spiel.extras.penthouse.aktualisieren()   # Möbel des Gasts im Penthouse des Gastgebers
 		if e.has("was"):
 			var t := "%s hat gekauft: %s" % [name_von(id), e.was]
 			spiel.hud.meldung(t, 3.0)
@@ -822,6 +889,126 @@ func abspann_senden() -> void:
 func abspann_rpc() -> void:
 	if _bereit and _w() and (spiel.abspann == null or not is_instance_valid(spiel.abspann)):
 		spiel.abspann_starten()
+
+# ---------------------------------------------------------------- Extras im Koop (Phase 7e)
+# Casino/Arcade: Einsatz und Gewinn über die gemeinsame Kasse. Der Gast rechnet sofort bei sich (Kasse vorab angepasst) und
+# schickt zahlen + casino_gewinn/arcade_gewinn; der Gastgeber prüft Grenze/Geld und dass der Gewinn zu einer bezahlten Runde
+# passt (_offen). Fang = gemeinsame Fischkiste + Index (größte Länge mit Namen). Penthouse: Umstellen sperrt das Stück beim
+# Gastgeber (_moebel_sperre), Abstellen/Lager/Verkaufen sind Befehle. Yacht: wer zuerst einsteigt, steuert (_yacht_fahrer);
+# am Liegeplatz steigen andere zu (Mitfahrer: Yacht folgt der Lage des Fahrers).
+const GROSSER_GEWINN := 1000
+var _offen := {}                 # Gastgeber: "profil|art" -> bezahlter Betrag
+var _moebel_sperre := {}         # Gastgeber: Index -> [peer, id]
+var _yacht_fahrer := 0           # Gastgeber: Peer am Steuer (0 = keiner)
+
+# Einsatz/Spielpreis abziehen. false = zu wenig Geld
+func zahlen(betrag: int, art: String) -> bool:
+	var w := _w()
+	if w == null or betrag <= 0 or w.geld < betrag:
+		return false
+	w.geld -= betrag
+	if art == "arcade":
+		w.statistik.arcade_spiele = int(w.statistik.arcade_spiele) + 1
+	if ist_gast():
+		_kasse -= betrag
+		befehl("zahlen", {"betrag": betrag, "art": art})
+	return true
+
+func casino_gewinn(einsatz: int, aus: int) -> void:
+	var w := _w()
+	if w == null:
+		return
+	w.geld += aus
+	w.casino_runde(einsatz, aus)
+	if ist_gast():
+		_kasse += aus
+		befehl("casino_gewinn", {"einsatz": einsatz, "aus": aus})
+	elif ist_host() and aus - einsatz >= GROSSER_GEWINN:
+		_an_alle("%s hat im Casino %s € gewonnen!" % [profil.name, Hud.punkte(aus - einsatz)], 1)
+
+func arcade_gewinn(id: String) -> void:
+	var w := _w()
+	if w == null:
+		return
+	w.bekomme_gegenstand(id)
+	w.statistik.arcade_gewinne = int(w.statistik.arcade_gewinne) + 1
+	if ist_gast():
+		befehl("arcade_gewinn", {"id": id})
+	elif ist_host() and w.seltenheit(id) >= 2:
+		_an_alle("%s hat in der Arcade gewonnen: %s!" % [profil.name, w.gegenstand(id).name], 1)
+
+# Fisch gefangen: true = neue Art (beim Gast vorab lokal, der Gastgeber trägt ihn in die gemeinsame Kiste ein)
+func fang(id: String, laenge: float) -> bool:
+	var w := _w()
+	if w == null:
+		return false
+	var neu := w.fisch_gefangen(id, laenge, profil.name if aktiv() else "")
+	if ist_gast():
+		befehl("fang", {"id": id, "laenge": laenge})
+	elif ist_host() and neu:
+		_an_alle("%s hat gefangen: %s – neu im Fisch-Index!" % [profil.name, Wirtschaft.fisch(id).name], 1)
+	return neu
+
+# Meldung bei allen außer wer (Gastgeber zeigt sie selbst, wenn nicht er es war)
+func _an_alle(t: String, wer: int) -> void:
+	if not ist_host():
+		return
+	if wer != 1 and spiel and spiel.hud:
+		spiel.hud.meldung(t, 3.5)
+	for g in _bereite:
+		if g != wer:
+			hinweis.rpc_id(g, t)
+
+# Gastgeber: Erfolge usw. auch bei den Gästen melden
+func an_alle(t: String) -> void:
+	if ist_host():
+		for g in _bereite:
+			hinweis.rpc_id(g, t)
+
+func _moebel_befehl(name: String, d: Dictionary, peer: int, e: Dictionary) -> void:
+	var w := _w()
+	var i := int(d.get("i", -1))
+	if i < 0 or i >= w.moebel.size() or str(w.moebel[i].id) != str(d.get("id", "")):
+		e["grund"] = "Das Möbelstück gibt es so nicht mehr."
+		return
+	var sp: Array = _moebel_sperre.get(i, [])
+	var fremd := not sp.is_empty() and int(sp[0]) != peer and spieler.has(int(sp[0]))
+	var m: Dictionary = w.moebel[i]
+	match name:
+		"moebel_sperren":
+			if fremd:
+				e["grund"] = "%s stellt das gerade um." % name_von(int(sp[0]))
+				return
+			_moebel_sperre[i] = [peer, m.id]
+		"moebel_setzen":
+			if fremd:
+				e["grund"] = "%s stellt das gerade um." % name_von(int(sp[0]))
+				return
+			m.x = float(d.get("x", m.x))
+			m.z = float(d.get("z", m.z))
+			m.dreh = float(d.get("dreh", m.dreh))
+			m.steht = true
+			_moebel_sperre.erase(i)
+		"moebel_frei":
+			if not fremd:
+				_moebel_sperre.erase(i)
+		"moebel_lager":
+			if fremd:
+				e["grund"] = "%s stellt das gerade um." % name_von(int(sp[0]))
+				return
+			m.steht = false
+			_moebel_sperre.erase(i)
+		"moebel_verkaufen":
+			if not _moebel_sperre.is_empty() and not (_moebel_sperre.size() == 1 and not fremd and _moebel_sperre.has(i)):
+				e["grund"] = "Gerade stellt jemand etwas um – gleich nochmal versuchen."
+				return
+			if m.steht:
+				e["grund"] = "Erst ins Lager räumen, dann verkaufen."
+				return
+			w.geld += w.verkaufswert(m.id)
+			w.moebel.remove_at(i)
+			_moebel_sperre.erase(i)
+	e["ok"] = true
 
 # Gast: Welt fertig geladen (Spiel.starten) → Gastgeber schickt den aktuellen Stand aller Felder
 func gast_bereit() -> void:

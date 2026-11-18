@@ -336,7 +336,7 @@ func _drill(dt: float) -> void:
 func _fang() -> void:
 	var f := Wirtschaft.fisch(fisch_id)
 	var laenge := float(f.groesse) * randf_range(0.82, 1.18)
-	var neu := w.fisch_gefangen(fisch_id, laenge)
+	var neu := Netz.fang(fisch_id, laenge)   # gemeinsame Fischkiste (Mehrspieler: beim Gastgeber)
 	zustand = "fertig"
 	t = 0.0
 	balken.visible = false

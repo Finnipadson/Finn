@@ -244,7 +244,8 @@ func _zahle() -> bool:
 	if laeuft or grenze == 0:
 		return false
 	einsatz = clampi(einsatz, CasinoRegeln.EINSATZ_MIN, grenze)
-	wirtschaft.geld -= einsatz
+	if not Netz.zahlen(einsatz, "casino"):   # Mehrspieler: aus der gemeinsamen Kasse (Gastgeber prüft die Grenze)
+		return false
 	Ton.spielen("chips", -4.0)
 	laeuft = true
 	ergebnis.text = ""
@@ -254,8 +255,7 @@ func _zahle() -> bool:
 # Runde abrechnen: faktor × Einsatz wird ausgezahlt
 func _abrechnen(faktor: float, text: String) -> void:
 	var aus := int(round(einsatz * faktor))
-	wirtschaft.geld += aus
-	wirtschaft.casino_runde(einsatz, aus)
+	Netz.casino_gewinn(einsatz, aus)   # Kasse + Statistik (Mehrspieler: beim Gastgeber)
 	letzter_gewinn = aus
 	letzter_faktor = faktor
 	if faktor >= 10.0:

@@ -462,11 +462,12 @@ static func fisch_ziehen(selten: float, r: float) -> String:
 	return FISCHE[0].id
 
 # Fang eintragen: Kiste + Index (größte Länge). true = neue Art
-func fisch_gefangen(id: String, laenge: float) -> bool:
+# wer = Name des Fängers (Mehrspieler: steht beim größten Fang im Index)
+func fisch_gefangen(id: String, laenge: float, wer := "") -> bool:
 	fischkiste[id] = int(fischkiste.get(id, 0)) + 1
 	var neu := not fisch_index.has(id)
 	var e: Dictionary = fisch_index.get(id, {"n": 0, "max": 0.0})
-	fisch_index[id] = {"n": int(e.n) + 1, "max": maxf(float(e.max), laenge)}
+	fisch_index[id] = {"n": int(e.n) + 1, "max": maxf(float(e.max), laenge), "wer": wer if laenge > float(e.max) else str(e.get("wer", ""))}
 	statistik.fische = int(statistik.fische) + 1
 	return neu
 
@@ -874,7 +875,7 @@ func laden(d: Dictionary, als_gast := false) -> void:
 	var fi: Dictionary = d.get("fisch_index", {})
 	for k in fi:
 		if not fisch(str(k)).is_empty() and fi[k] is Dictionary:
-			fisch_index[str(k)] = {"n": int(fi[k].get("n", 1)), "max": float(fi[k].get("max", 0.0))}
+			fisch_index[str(k)] = {"n": int(fi[k].get("n", 1)), "max": float(fi[k].get("max", 0.0)), "wer": str(fi[k].get("wer", ""))}
 	yacht = bool(d.get("yacht", false)) or index_voll()
 	tageszeit = fposmod(float(d.get("tageszeit", 0.08)), 1.0)
 	turm_nr = maxi(1, int(d.get("turm_nr", 1)))

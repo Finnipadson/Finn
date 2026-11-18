@@ -110,6 +110,7 @@ func erfolge_pruefen() -> Array:
 			t += "\nNeues Andenken im Souvenirshop freigeschaltet!"
 			laeden.aktualisieren()
 		spiel.hud.meldung(t, 4.5)
+		Netz.an_alle(t)   # Mehrspieler: Erfolge gelten für alle
 		penthouse.pokale_aktualisieren()
 		spiel._speichern()
 	return neu
@@ -216,9 +217,9 @@ func taste(e: InputEventKey) -> bool:
 		match Optionen.k(e):
 			KEY_R: penthouse.drehen(45.0)
 			KEY_X:
-				penthouse.platzieren_ende(false, true)
+				_platz_ende(false, true)
 				_geaendert()
-			KEY_ESCAPE: penthouse.platzieren_ende(false)
+			KEY_ESCAPE: _platz_ende(false)
 			KEY_E: _abstellen()
 			_: return false
 		return true
@@ -235,22 +236,42 @@ func maus(e: InputEventMouseButton) -> bool:
 		MOUSE_BUTTON_LEFT:
 			if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 				_abstellen()
-		MOUSE_BUTTON_RIGHT: penthouse.platzieren_ende(false)
+		MOUSE_BUTTON_RIGHT: _platz_ende(false)
 		MOUSE_BUTTON_WHEEL_UP: penthouse.drehen(-45.0)
 		MOUSE_BUTTON_WHEEL_DOWN: penthouse.drehen(45.0)
 	return true
 
 func _abstellen() -> void:
-	if penthouse.platzieren_ende(true):
+	if _platz_ende(true):
 		_geaendert()
 	else:
 		spiel.hud.meldung("Hier ist kein Platz – etwas weiter weg zielen oder drehen.", 1.5)
 
+# Umstellen sperrt das Stück beim Gastgeber (Mehrspieler 7e: „Anna stellt das gerade um.“)
 func _platzieren(index: int) -> void:
-	if ort != "penthouse":
+	if ort != "penthouse" or index < 0 or index >= w.moebel.size():
 		return
-	menu.schliessen()
-	penthouse.platzieren_start(index)
+	Netz.befehl("moebel_sperren", {"i": index, "id": w.moebel[index].id}, func(e: Dictionary):
+		if e.get("ok", false) and ort == "penthouse" and not penthouse.platzieren_aktiv() and index < w.moebel.size():
+			menu.schliessen()
+			penthouse.platzieren_start(index)
+		elif not e.get("ok", false) and not Netz.ist_gast():
+			spiel.hud.meldung(str(e.get("grund", "")), 2.5))
+
+# Umstellen beenden: abstellen / abbrechen / ins Lager – das Ergebnis geht als Befehl an den Gastgeber (gibt die Sperre frei)
+func _platz_ende(abstellen: bool, lager := false) -> bool:
+	var i := penthouse.platz_index
+	var ok := penthouse.platzieren_ende(abstellen, lager)
+	if i < 0 or i >= w.moebel.size():
+		return ok
+	var m: Dictionary = w.moebel[i]
+	if lager:
+		Netz.befehl("moebel_lager", {"i": i, "id": m.id})
+	elif ok:
+		Netz.befehl("moebel_setzen", {"i": i, "id": m.id, "x": m.x, "z": m.z, "dreh": m.dreh})
+	elif not abstellen:
+		Netz.befehl("moebel_frei", {"i": i, "id": m.id})
+	return ok
 
 func _geaendert() -> void:
 	penthouse.aktualisieren()
@@ -276,7 +297,7 @@ func fahren(ziel: String) -> void:
 
 func _teleport(ziel: String) -> void:
 	if penthouse.platzieren_aktiv():
-		penthouse.platzieren_ende(false)
+		_platz_ende(false)
 	var l := spiel.laeufer
 	var neu := ziel if ziel not in ["unten", "casino"] else ""
 	ort = neu
@@ -317,8 +338,7 @@ func _greif_starten(nr: int) -> void:
 	if w.geld < p:
 		spiel.hud.meldung("Der Greifautomat kostet %s € – dir fehlen noch %s €." % [Hud.punkte(p), Hud.punkte(p - w.geld)], 2.5)
 		return
-	w.geld -= p
-	w.statistik.arcade_spiele = int(w.statistik.arcade_spiele) + 1
+	Netz.zahlen(p, "arcade")
 	arcade.greif_starten(nr)
 
 func _greif_ende(id: String) -> void:
@@ -334,8 +354,7 @@ func _kapsel_gewonnen(id: String) -> void:
 
 func _gewonnen(id: String, zaehlen := true) -> void:
 	if zaehlen:
-		w.bekomme_gegenstand(id)
-		w.statistik.arcade_gewinne = int(w.statistik.arcade_gewinne) + 1
+		Netz.arcade_gewinn(id)
 	var stufe := w.seltenheit(id)
 	spiel.hud.meldung("Gewonnen: %s (%s)!\nLiegt jetzt im Lager deines Penthouses – am Tablet aufstellen." % [w.gegenstand(id).name, Wirtschaft.SELTENHEIT[stufe]], 3.5)
 	erfolge_pruefen()

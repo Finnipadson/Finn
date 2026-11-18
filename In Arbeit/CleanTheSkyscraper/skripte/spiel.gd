@@ -272,6 +272,8 @@ func _ausruestung() -> void:
 func netz_aktualisiert(menues: bool, ausruestung: bool) -> void:
 	if ausruestung:
 		_ausruestung()
+		if extras and extras.penthouse:
+			extras.penthouse.aktualisieren()   # Möbel der anderen
 	if menues:
 		menues_aktualisieren()
 	else:
@@ -761,8 +763,9 @@ func lage_daten() -> Array:
 		var g := spieler.gondel.global_position
 		var wp := spieler.werkzeug.global_position if spieler.werkzeug else g
 		return [1, g.x, g.y, g.z, spieler.yaw, "", "", spieler.winkel, spieler.seite, spieler.wz_id, wp.x, wp.y, wp.z, spieler.strahl.visible]
-	if strand.yacht and strand.yacht.an_bord:
-		return [2, 0.0, 0.0, 0.0, 0.0, "", ""]
+	if strand.yacht and strand.yacht.an_bord:   # 7e: Lage der Yacht; fahrer = 1 → die anderen folgen ihr
+		var yp := strand.yacht.position
+		return [2, yp.x, yp.y, yp.z, strand.yacht.richtung, "", "", 0 if strand.yacht.mitfahrer else 1, strand.yacht.tempo]
 	return [0, laeufer.position.x, laeufer.position.y + laeufer.hoch, laeufer.position.z, laeufer.yaw, extras.ort, laeufer.fahrzeug, laeufer.hoch]
 
 # ---------------------------------------------------------------- Ablauf

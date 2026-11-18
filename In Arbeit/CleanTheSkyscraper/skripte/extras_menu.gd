@@ -265,20 +265,13 @@ func _sachen() -> void:
 			var weg := UiGlas.knopf("Ins Lager", "nehmen")
 			weg.custom_minimum_size.x = 110
 			weg.name = "weg_%d" % i
-			weg.pressed.connect(func():
-				wirtschaft.moebel[i].steht = false
-				geaendert.emit()
-				aufbauen())
+			weg.pressed.connect(func(): Netz.befehl("moebel_lager", {"i": i, "id": m.id}, _fertig_immer))
 			hb.add_child(weg)
 		else:
 			var v := UiGlas.knopf("Verkaufen +%s €" % Hud.punkte(wirtschaft.verkaufswert(m.id)), "gefahr")
 			v.custom_minimum_size.x = 150
 			v.name = "verk_%d" % i
-			v.pressed.connect(func():
-				wirtschaft.geld += wirtschaft.verkaufswert(m.id)
-				wirtschaft.moebel.remove_at(i)
-				geaendert.emit()
-				aufbauen())
+			v.pressed.connect(func(): Netz.befehl("moebel_verkaufen", {"i": i, "id": m.id}, _fertig))
 			hb.add_child(v)
 		var stufe := wirtschaft.seltenheit(m.id)
 		var info := "%s · %s · %s" % [Wirtschaft.SELTENHEIT[stufe] if g.quelle == "arcade" or g.has("seltenheit") else "Möbel", _bonus_text(m.id), "steht" if m.steht else "im Lager"]
@@ -369,8 +362,7 @@ func _kapsel_ziehen() -> void:
 	var p := wirtschaft.arcade_preis("kapsel")
 	if kapsel_laeuft or wirtschaft.geld < p:
 		return
-	wirtschaft.geld -= p
-	wirtschaft.statistik.arcade_spiele = int(wirtschaft.statistik.arcade_spiele) + 1
+	Netz.zahlen(p, "arcade")
 	var stufe := wirtschaft.kapsel_stufe(randf())
 	var id := wirtschaft.zufall_gegenstand(stufe)
 	kapsel_laeuft = true
@@ -392,8 +384,7 @@ func _kapsel_ziehen() -> void:
 	tw.tween_property(ball, "scale", Vector2(1.35, 1.35), 0.18)
 	tw.tween_property(ball, "modulate:a", 0.0, 0.15)
 	await tw.finished
-	wirtschaft.bekomme_gegenstand(id)
-	wirtschaft.statistik.arcade_gewinne = int(wirtschaft.statistik.arcade_gewinne) + 1
+	Netz.arcade_gewinn(id)
 	letzte_kapsel = id
 	kapsel_laeuft = false
 	kapsel_gewonnen.emit(id)

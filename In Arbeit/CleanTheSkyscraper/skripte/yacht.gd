@@ -21,6 +21,28 @@ const SPANTEN := [[45.0, 6.3, DECK_HECK, -1.4], [40.0, 6.85, DECK_HECK, -2.2], [
 	[-43.0, 1.6, 6.1, -2.2], [-45.0, 0.25, 6.2, -2.1]]            # Seitentür (lokal z) – liegt am Liegeplatz genau bei Kueste.GANGWAY_X
 
 var an_bord := false
+# Mehrspieler (7e): mitfahrer = an Bord, aber ein anderer steuert; fremd = die Yacht folgt der Lage des Fahrers (Mitspieler)
+var mitfahrer := false
+var fremd := false
+var _fremd_pos := Vector3.ZERO
+var _fremd_richtung := 0.0
+var _fremd_tempo := 0.0
+
+func fremd_lage(p: Vector3, r: float, t: float) -> void:
+	if not fremd or position.distance_to(p) > 60.0:
+		position = p
+		richtung = r
+	fremd = true
+	_fremd_pos = p
+	_fremd_richtung = r
+	_fremd_tempo = t
+
+# kein anderer steuert mehr: zurück an den Liegeplatz (außer ich steuere selbst)
+func fremd_ende() -> void:
+	if fremd:
+		fremd = false
+		if not (an_bord and not mitfahrer):
+			anlegen()
 var tempo := 0.0
 var richtung := PI * 0.5        # rotation.y (PI/2 = Bug nach −x)
 var cam: Camera3D
@@ -120,7 +142,11 @@ func _rumpf_frei(m: Vector3) -> bool:
 
 func _process(dt: float) -> void:
 	_zeit += dt
-	if an_bord:
+	if fremd and not (an_bord and not mitfahrer):
+		position = Vector3(position.x, 0.0, position.z).lerp(Vector3(_fremd_pos.x, 0.0, _fremd_pos.z), minf(1.0, dt * 8.0))
+		richtung = lerp_angle(richtung, _fremd_richtung, minf(1.0, dt * 8.0))
+		tempo = _fremd_tempo
+	elif an_bord and not mitfahrer:
 		var gas := 0.0
 		if Optionen.gedrueckt(KEY_W): gas += 1.0
 		if Optionen.gedrueckt(KEY_S): gas -= 1.0

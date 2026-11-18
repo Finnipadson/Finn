@@ -98,15 +98,21 @@ func station(s: Dictionary) -> void:
 		"fischladen":
 			menu.oeffnen()
 		"yacht":
-			if w.yacht:
-				einsteigen()
+			if w.yacht:   # Mehrspieler: wer zuerst einsteigt, steuert; am Liegeplatz steigen andere zu
+				Netz.befehl("yacht", {"rolle": "fahren"}, func(e: Dictionary):
+					if e.get("ok", false) and not yacht.an_bord:
+						einsteigen(str(e.get("rolle", "fahren")) == "mit", str(e.get("fahrer", "")))
+					elif not e.get("ok", false) and not Netz.ist_gast():
+						spiel.hud.meldung(str(e.get("grund", "")), 3.0))
 			else:
 				spiel.hud.meldung("Diese Yacht bekommt, wer alle 20 Fische gefangen hat.\nDein Fisch-Index: %d / 20 (B: Album → Fische)" % w.fisch_index.size(), 4.0)
 
-func einsteigen() -> void:
+func einsteigen(mit := false, fahrer := "") -> void:
 	if angeln.aktiv():
 		angeln.einholen()
-	yacht.anlegen()
+	yacht.mitfahrer = mit
+	if not mit:
+		yacht.anlegen()
 	yacht.an_bord = true
 	yacht.blick = 0.45   # leicht seitlich: man sieht das Boot von der Seite
 	spiel.laeufer.deaktivieren()
@@ -114,13 +120,20 @@ func einsteigen() -> void:
 	yacht.cam.current = true
 	spiel.hud.hinweis.text = "Yacht: W Gas · S bremsen/rückwärts · A/D lenken · Shift schneller · Maus: umschauen\nStehend: Klick = angeln · E am Liegeplatz: an Land · M: Karte · Esc: Maus frei"
 	spiel.hud.meldung("Leinen los! Weit draußen beißen seltene Fische öfter.", 3.0)
+	if mit:
+		spiel.hud.hinweis.text = "Du fährst bei %s mit · Maus: umschauen · Stehend: Klick = angeln · E am Liegeplatz: an Land" % fahrer
+		spiel.hud.meldung("Du bist an Bord – %s steuert die Yacht." % fahrer, 3.0)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func aussteigen() -> void:
 	if angeln.aktiv():
 		angeln.einholen()
+	if not yacht.mitfahrer:
+		Netz.befehl("yacht", {"rolle": "aus"})
 	yacht.an_bord = false
-	yacht.anlegen()
+	if not yacht.fremd:
+		yacht.anlegen()
+	yacht.mitfahrer = false
 	var st: Vector2 = k.stationen[2].pos
 	spiel.laeufer.visible = true
 	spiel.laeufer.aktivieren(Vector3(st.x, 0, st.y), 0.0, spiel.spieler.gondel.global_position)

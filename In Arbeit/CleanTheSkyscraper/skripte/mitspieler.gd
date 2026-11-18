@@ -233,9 +233,12 @@ func _process(dt: float) -> void:
 			if spiel.gondeln:
 				spiel.gondeln.aktualisieren(spiel.wirtschaft.aktive_gondel)   # geparkte wieder zeigen
 	if figuren.is_empty():
+		if spiel.strand and spiel.strand.yacht:
+			spiel.strand.yacht.fremd_ende()
 		return
 	var cam := get_viewport().get_camera_3d()
 	var mein_innen: String = spiel.extras.ort if spiel.extras else ""
+	var fahrer := false
 	for id in figuren:
 		var f: Dictionary = figuren[id]
 		var l: Array = f.lage
@@ -250,12 +253,16 @@ func _process(dt: float) -> void:
 		f.tempo = lerpf(float(f.tempo), tempo, minf(1.0, dt * 8.0))
 		var modus := int(l[0])
 		var innen := str(l[5])
-		k.visible = innen == mein_innen and (modus == 0 or modus == 1)
+		k.visible = innen == mein_innen and (modus == 0 or modus == 1 or modus == 2)
 		k.position = f.pos
 		(f.figur as Node3D).visible = modus == 0
 		(f.ring as Node3D).visible = modus == 0
 		var schild: Label3D = f.schild
-		schild.position.y = 2.45 if modus == 0 else 2.8
+		schild.position.y = 2.45 if modus == 0 else (2.8 if modus == 1 else 9.0)   # Yacht: über dem Deck
+		if modus == 2 and l.size() >= 9 and int(l[7]) == 1:
+			fahrer = true
+			if spiel.strand and spiel.strand.yacht:
+				spiel.strand.yacht.fremd_lage(Vector3(float(l[1]), float(l[2]), float(l[3])), float(l[4]), float(l[8]))
 		if cam:
 			schild.visible = cam.global_position.distance_to(k.global_position) < SCHILD_BIS
 		if modus == 0:
@@ -272,6 +279,8 @@ func _process(dt: float) -> void:
 						fl.visible = hoch > 0.05
 						fl.scale = Vector3.ONE * (0.8 + randf() * 0.4)
 		_gondel_takt(id, f, l, modus, dt)
+	if not fahrer and spiel.strand and spiel.strand.yacht:
+		spiel.strand.yacht.fremd_ende()   # niemand anderes steuert die Yacht
 
 # Fahrzeug unter der Figur (wie beim Läufer: vorne −Z); Figur steht auf Scooter/Hoverboard etwas höher
 func _fahrzeug_setzen(f: Dictionary, id: String) -> void:

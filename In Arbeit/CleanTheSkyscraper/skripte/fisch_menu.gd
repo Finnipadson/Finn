@@ -100,6 +100,9 @@ func _verkaufen() -> void:
 		k.name = "verkauf_" + str(f.id)
 		k.pressed.connect(func(): Netz.befehl("fisch", {"id": str(f.id)}, _fertig))
 		var info := "%s · gefangen bis %s" % [str(f.text), Fische.laenge_text(float(wirtschaft.fisch_index.get(f.id, {}).get("max", f.groesse)))]
+		var wer := str(wirtschaft.fisch_index.get(f.id, {}).get("wer", ""))
+		if wer != "" and Netz.aktiv():
+			info += " (von %s)" % wer   # Mehrspieler: wer den größten gefangen hat
 		liste.add_child(UiGlas.karte(str(f.name), info, k, "F", Color("35c8ff"), -1, 0, Symbole.bilder.get("f_" + str(f.id))))
 	if leer:
 		var t := UiGlas.text("Deine Fischkiste ist leer. Am Steg oder am Strand Richtung Wasser schauen und klicken, um die Angel auszuwerfen.", 15, UiGlas.TEXT_LEISE)

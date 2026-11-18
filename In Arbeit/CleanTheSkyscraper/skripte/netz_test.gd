@@ -368,7 +368,50 @@ func _process(dt: float) -> void:
 			e.sturm_phase = 0
 			e.sturm_zeit = 600.0
 			e.ereignis.emit("sturm", {"phase": 0})
-			schritt = 55
+			schritt = 81
+		81:   # 7e: Casino (echter Hebel), Arcade-Kapsel (echter Knopf), Fang – alles über die gemeinsame Kasse/Kiste
+			var w := s.wirtschaft
+			_vor = {"bilanz": int(w.statistik.casino_bilanz), "spiele": int(w.statistik.casino_spiele), "arcade": int(w.statistik.arcade_gewinne),
+				"moebel": w.moebel.size(), "walhai": int(w.fischkiste.get("walhai", 0))}
+			Netz.test_nachricht.rpc_id(ids.testgast1, "CASINO")
+			schritt = 82
+			frist = zeit + 40.0
+		82:
+			if _berichte.has("CASINO_OK"):
+				var b: Dictionary = _berichte.CASINO_OK
+				var w := s.wirtschaft
+				_p("Casino-Runde des Gasts in der gemeinsamen Kasse", int(w.statistik.casino_spiele) - int(_vor.spiele) == 1 and int(w.statistik.casino_bilanz) - int(_vor.bilanz) == int(b.aus) - int(b.einsatz),
+					"Einsatz %s, Auszahlung %s, Bilanz %+d" % [b.einsatz, b.aus, int(w.statistik.casino_bilanz) - int(_vor.bilanz)])
+				_p("Arcade-Gewinn des Gasts im gemeinsamen Lager", int(w.statistik.arcade_gewinne) - int(_vor.arcade) == 1 and w.moebel.size() - int(_vor.moebel) == 1 and w.anzahl_gegenstand(str(b.kapsel)) >= 1, str(b.kapsel))
+				var fi: Dictionary = w.fisch_index.get("walhai", {})
+				_p("Fang des Gasts in der gemeinsamen Fischkiste, Index mit Namen", int(w.fischkiste.get("walhai", 0)) - int(_vor.walhai) == 1 and str(fi.get("wer", "")) == "Testgast 1" and absf(float(fi.get("max", 0.0)) - 10.5) < 0.01, str(fi))
+				_mi = w.moebel.size() - 1
+				var e := Netz.befehl("moebel_sperren", {"i": _mi, "id": w.moebel[_mi].id})   # Gastgeber stellt um
+				_p("Gastgeber sperrt Möbel zum Umstellen", e.ok, "")
+				Netz.test_nachricht.rpc_id(ids.testgast1, "MOEBEL1 %d %s" % [_mi, w.moebel[_mi].id])
+				schritt = 83
+				frist = zeit + 30.0
+			elif zeit >= frist:
+				_p("Casino/Arcade beim Gast", false, "keine Antwort")
+				schritt = 55
+		83:
+			if _berichte.has("MOEBEL1"):
+				var w := s.wirtschaft
+				Netz.befehl("moebel_setzen", {"i": _mi, "id": w.moebel[_mi].id, "x": 1.0, "z": 2.0, "dreh": 90.0})
+				Netz.test_nachricht.rpc_id(ids.testgast1, "MOEBEL2 %d %s" % [_mi, w.moebel[_mi].id])
+				schritt = 84
+				frist = zeit + 30.0
+			elif zeit >= frist:
+				_p("Möbel-Sperre", false, "keine Antwort")
+				schritt = 55
+		84:
+			if _berichte.has("MOEBEL2_OK"):
+				var m: Dictionary = s.wirtschaft.moebel[_mi]
+				_p("Gast räumt das Möbel ins Lager (nach dem Abstellen des Gastgebers)", not m.steht and absf(float(m.x) - 1.0) < 0.01 and absf(float(m.dreh) - 90.0) < 0.01 and Netz._moebel_sperre.is_empty(), str(m))
+				schritt = 55
+			elif zeit >= frist:
+				_p("Möbel ins Lager", false, "keine Antwort")
+				schritt = 55
 		101:   # 7d: Abspann startet der Gastgeber für alle
 			s.abspann_starten()
 			schritt = 102
@@ -408,10 +451,47 @@ func _process(dt: float) -> void:
 			var t := _datei("testgast3")
 			if t != "":
 				_p("Vierter Spieler abgelehnt (voll)", "voll" in t and Netz.spieler.size() == 3, t.strip_edges())
-				schritt = 9
+				schritt = 90
 			elif zeit >= frist:
 				_p("Vierter Spieler abgelehnt", false, "keine Antwort von testgast3")
+				schritt = 90
+		90:   # 7e: Yacht – Gastgeber steuert, Gast 2 steigt am Liegeplatz zu
+			s.wirtschaft.yacht = true
+			var e := Netz.befehl("yacht", {"rolle": "fahren"})
+			if e.ok:
+				s.strand.einsteigen()
+			_p("Gastgeber steuert die Yacht", e.ok and s.strand.yacht.an_bord and not s.strand.yacht.mitfahrer and Netz._yacht_fahrer == 1, "")
+			schritt = 91
+			warte_bis = zeit + 1.0
+		91:
+			Netz.test_nachricht.rpc_id(ids.testgast2, "YACHT_MIT")
+			schritt = 92
+			frist = zeit + 30.0
+		92:
+			if _berichte.has("YACHT_MIT"):
+				var y := s.strand.yacht
+				y.position += Vector3(-60.0, 0.0, 0.0)   # hinaus aufs Meer
+				schritt = 93
+				warte_bis = zeit + 2.0
+			elif zeit >= frist:
+				_p("Gast steigt zu", false, "keine Antwort")
 				schritt = 9
+		93:
+			var y := s.strand.yacht
+			Netz.test_nachricht.rpc_id(ids.testgast2, "YACHT? %f %f" % [y.position.x, y.position.z])
+			Netz.test_nachricht.rpc_id(ids.testgast1, "YACHT_FAHREN")
+			schritt = 94
+			warte_bis = zeit + 3.0
+		94:   # zurück an den Steg, Gastgeber steigt aus (Steuer frei), Gast 2 steigt aus
+			s.strand.yacht.anlegen()
+			s.strand.aussteigen()
+			_p("Steuer nach dem Aussteigen frei", Netz._yacht_fahrer == 0 and not s.strand.yacht.an_bord, "")
+			schritt = 95
+			warte_bis = zeit + 1.5
+		95:
+			Netz.test_nachricht.rpc_id(ids.testgast2, "YACHT_AUS")
+			schritt = 9
+			warte_bis = zeit + 2.0
 		9:   # Gast 2 verlässt die Runde selbst
 			Netz.test_nachricht.rpc_id(ids.testgast2, "VERLASSEN")
 			schritt = 10
@@ -443,6 +523,7 @@ func _process(dt: float) -> void:
 var _ende_start := 0.0
 var _preise := {}
 var _taube := Vector2i(-1, -1)
+var _mi := 0
 var _kh := 0
 var _k2 := 1
 var _vor := {}
@@ -500,7 +581,7 @@ func _nachricht(id: int, t: String) -> void:
 		await get_tree().create_timer(0.8).timeout
 		var fo := s.zustand.fortschritt(int(w2[1]), int(w2[2]))
 		_p("Wisch-Stempel des Gasts kommen beim Gastgeber an", fo > 0.0 and fo < 1.0, "Fenster %s/%s, Fortschritt %.2f" % [w2[1], w2[2], fo])
-	elif t.get_slice(" ", 0) in ["GEKAUFT", "ABGELEHNT", "IN_GONDEL", "GEWISCHT", "DOPPELT", "HOEHE_OK"]:
+	elif t.get_slice(" ", 0) in ["GEKAUFT", "ABGELEHNT", "IN_GONDEL", "GEWISCHT", "DOPPELT", "HOEHE_OK", "CASINO_OK", "MOEBEL1", "MOEBEL2_OK", "YACHT_MIT"]:
 		var teile := t.split(" ")
 		var b := {}
 		for x in teile.slice(1):
@@ -623,6 +704,44 @@ func _gast_nachricht(_id: int, t: String) -> void:
 		if "scooter" in w.fahrzeuge:
 			s._fahrzeug_waehlen("scooter")
 		Netz.test_nachricht.rpc_id(1, "FAHRZEUG")
+	elif t == "CASINO":
+		_gast_casino()
+	elif t.begins_with("MOEBEL1 "):
+		var i := int(t.get_slice(" ", 1))
+		var id := t.get_slice(" ", 2)
+		var e1 := await _befehl("moebel_sperren", {"i": i, "id": id})
+		_melden(not e1.get("ok", true) and "stellt das gerade um" in str(e1.get("grund", "")), "Möbel gesperrt, während der Gastgeber umstellt", str(e1.get("grund", "")))
+		var e2 := await _befehl("moebel_verkaufen", {"i": i, "id": id})
+		_melden(not e2.get("ok", true), "Verkaufen während des Umstellens abgelehnt", str(e2.get("grund", "")))
+		Netz.test_nachricht.rpc_id(1, "MOEBEL1")
+	elif t.begins_with("MOEBEL2 "):
+		var i := int(t.get_slice(" ", 1))
+		var id := t.get_slice(" ", 2)
+		var e1 := await _befehl("moebel_sperren", {"i": i, "id": id})
+		var e2 := await _befehl("moebel_lager", {"i": i, "id": id})
+		await get_tree().create_timer(1.0).timeout
+		_melden(e1.get("ok", false) and e2.get("ok", false) and i < s.wirtschaft.moebel.size() and not s.wirtschaft.moebel[i].steht, "Nach dem Abstellen: Gast darf umstellen und ins Lager räumen", "%s / %s" % [e1, e2])
+		Netz.test_nachricht.rpc_id(1, "MOEBEL2_OK")
+	elif t == "YACHT_MIT":
+		var e := await _befehl("yacht", {"rolle": "fahren"})
+		if e.get("ok", false) and str(e.get("rolle", "")) == "mit":
+			s.strand.einsteigen(true, str(e.get("fahrer", "")))
+		_melden(s.strand.yacht.an_bord and s.strand.yacht.mitfahrer, "Gast 2 steigt am Liegeplatz zu (Gastgeber steuert)", str(e))
+		Netz.test_nachricht.rpc_id(1, "YACHT_MIT")
+	elif t.begins_with("YACHT? "):
+		var soll := Vector3(float(t.get_slice(" ", 1)), 0.0, float(t.get_slice(" ", 2)))
+		var y := s.strand.yacht
+		var d := Vector2(y.position.x - soll.x, y.position.z - soll.z).length()
+		_melden(y.fremd and y.an_bord and d < 1.0, "Mitfahrer: Yacht folgt dem Fahrer", "Abstand %.2f m" % d)
+	elif t == "YACHT_FAHREN":
+		var e := await _befehl("yacht", {"rolle": "fahren"})
+		_melden(not e.get("ok", true) and "unterwegs" in str(e.get("grund", "")), "Yacht unterwegs → Steuern/Zusteigen abgelehnt", str(e.get("grund", "")))
+	elif t == "YACHT_AUS":
+		var y := s.strand.yacht
+		var war := y.an_bord and y.am_liegeplatz()
+		if war:
+			s.strand.aussteigen()
+		_melden(war and not y.an_bord and not y.fremd, "Mitfahrer steigt am Steg aus, Yacht wieder am Liegeplatz", "")
 	elif t == "ABSPANN?":
 		_melden(s.abspann != null and is_instance_valid(s.abspann), "Abspann beim Gast gestartet (vom Gastgeber)", "")
 	elif t.begins_with("WELT? "):
@@ -648,10 +767,44 @@ func _gast_nachricht(_id: int, t: String) -> void:
 						gut += 1
 		_melden(alle > 0 and gut == alle and not s.helfer.aktiv and s.helfer.gast, "Helfer des Gastgebers beim Gast an derselben Stelle", info)
 
+# Gast 1: Bandit über den echten Hebel, zwei unerlaubte Casino-Wünsche, Kapsel über den echten Knopf, ein Walhai
+func _gast_casino() -> void:
+	var w := s.wirtschaft
+	s.cmenu.oeffnen("bandit", "Einarmiger Bandit")
+	var k: Button = s.cmenu.find_child("b_hebel", true, false)
+	if k and not k.disabled:
+		k.pressed.emit()
+	var t0 := zeit
+	while s.cmenu.laeuft and zeit - t0 < 12.0:
+		await get_tree().process_frame
+	var einsatz := s.cmenu.einsatz
+	var aus := s.cmenu.letzter_gewinn
+	s.cmenu.schliessen()
+	_melden(k != null and not s.cmenu.laeuft, "Gast spielt Bandit (echter Hebel)", "Einsatz %d, Auszahlung %d" % [einsatz, aus])
+	var e := await _befehl("casino_gewinn", {"einsatz": 500, "aus": 5000})
+	_melden(not e.get("ok", true), "Casino-Gewinn ohne bezahlte Runde abgelehnt", str(e.get("grund", "")))
+	var e2 := await _befehl("zahlen", {"betrag": w.geld, "art": "casino"})
+	_melden(not e2.get("ok", true) and "zu hoch" in str(e2.get("grund", "")), "Casino-Einsatzgrenze vom Gastgeber geprüft", str(e2.get("grund", "")))
+	s.extras.menu.oeffnen("kapsel", "Kapsel-Automat")
+	var kk: Button = s.extras.menu.find_child("kapsel", true, false)
+	if kk and not kk.disabled:
+		kk.pressed.emit()
+	await get_tree().create_timer(2.5).timeout
+	var id := s.extras.menu.letzte_kapsel
+	s.extras.menu.schliessen()
+	_melden(id != "", "Gast zieht eine Kapsel (echter Knopf)", id)
+	Netz.fang("walhai", 10.5)
+	await get_tree().create_timer(1.5).timeout
+	_melden(int(w.fischkiste.get("walhai", 0)) >= 1, "Walhai in der Fischkiste des Gasts (vom Gastgeber bestätigt)", "")
+	Netz.test_nachricht.rpc_id(1, "CASINO_OK einsatz=%d aus=%d kapsel=%s" % [einsatz, aus, id])
+
 func _befehl(name: String, d: Dictionary) -> Dictionary:
-	Netz.befehl(name, d)
-	var r: Array = await Netz.befehl_fertig
-	return r[1]
+	var nr := str(Netz.befehl(name, d).get("nr", ""))
+	while true:   # auf genau diese Antwort warten (andere Befehle können dazwischen fertig werden)
+		var r: Array = await Netz.befehl_fertig
+		if str(r[0]) == nr:
+			return r[1]
+	return {}
 
 # Gast 1: besetzte Gondel des Gastgebers abgelehnt, freie genommen, eingestiegen
 func _gast_gondel(kh: int, k2: int) -> void:
