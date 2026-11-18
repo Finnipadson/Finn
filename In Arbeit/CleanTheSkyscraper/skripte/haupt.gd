@@ -49,6 +49,11 @@ func _ready() -> void:
 		add_child(s)
 		s.starten(turm, welt, ansicht, frei, test_geld)
 		_grafik()
+		# Hauptmenü mit Kameraflug (nicht beim Bot, nicht nach „Neues Spiel“, nicht mit --direkt); Test 35
+		var menue := ansicht == 0 and not s.durchlauf and not "--direkt" in OS.get_cmdline_user_args() and not Hauptmenue.ueberspringen
+		Hauptmenue.ueberspringen = false
+		if menue or ansicht == 35:
+			hauptmenue_zeigen()
 		return
 	cam = Camera3D.new()
 	cam.far = 40000.0
@@ -57,6 +62,12 @@ func _ready() -> void:
 	_grafik()
 	_hud()
 	_startansicht()
+
+func hauptmenue_zeigen() -> Hauptmenue:
+	var m := Hauptmenue.new()
+	add_child(m)
+	m.setup(spiel_knoten)
+	return m
 
 func _startansicht() -> void:
 	var text := ""

@@ -96,6 +96,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	shop.setup(wirtschaft)
 	shop.geaendert.connect(_ausruestung)
 	shop.neues_spiel.connect(_neues_spiel)
+	shop.hauptmenue.connect(_zum_hauptmenue)
 	album = Album.new()
 	add_child(album)
 	album.setup(wirtschaft)
@@ -142,7 +143,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		var et := ExtrasTest.new()
 		add_child(et)
 		et.setup(self)
-	if ansicht == 33 or ansicht == 34:   # Phase 5: Ton, Einstellungen, Tageszeit, Effekte, Abspann
+	if ansicht >= 33 and ansicht <= 35:   # Phase 5: Ton, Einstellungen, Tageszeit, Effekte, Abspann
 		var p5 := Phase5Test.new()
 		add_child(p5)
 		p5.setup(self)
@@ -519,6 +520,16 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
 		if zustand and spieler:
 			_speichern()
+
+# Werkstatt → Einstellungen → „Hauptmenü“: speichern und das Startmenü über das laufende Spiel legen
+func _zum_hauptmenue() -> void:
+	if shop.offen:
+		shop.umschalten()
+	spieler.gesperrt = ansicht >= 5 and ansicht <= 7
+	spieler.wischt = false
+	_speichern()
+	if get_parent().has_method("hauptmenue_zeigen"):
+		get_parent().hauptmenue_zeigen()
 
 func _neues_spiel() -> void:
 	if FileAccess.file_exists(pfad):

@@ -1,7 +1,7 @@
 class_name Phase5Test
 extends Node
 # Tests Phase 5 (gibt „TEST …“ aus): 33 = Prüfungen (Ton, Einstellungen, Tasten, Radio, Tageszeit, Effekte, Abspann),
-# 34 = Testbilder (BILD n frame=…) + FPS. Mit Grafik starten (headless gibt es keinen Ton).
+# 34 = Testbilder (BILD n frame=…) + FPS, 35 = Hauptmenü (Prüfungen + Bilder). Mit Grafik starten (headless gibt es keinen Ton).
 #   --nur=ton,tasten,…  nur diese Teile
 
 var s: Spiel
@@ -53,6 +53,7 @@ func _ablauf() -> void:
 	match s.ansicht:
 		33: await _test()
 		34: await _bilder()
+		35: await _menue()
 	print("TEST fertig: fehler=%d" % fehler)
 	get_tree().quit()
 
@@ -174,6 +175,53 @@ func _radio() -> void:
 	await _taste(KEY_R)
 	await _warte(0.3)
 	_pruefe("R schaltet aus", not Ton.i.radio.an)
+
+# ---------------------------------------------------------------- Hauptmenü (35)
+func _menue_finden() -> Hauptmenue:
+	for c in s.get_parent().get_children():
+		if c is Hauptmenue and not c.is_queued_for_deletion():
+			return c
+	return null
+
+func _menue() -> void:
+	await _warte(0.5)
+	var m := _menue_finden()
+	_pruefe("Hauptmenü beim Start", m != null)
+	if m == null:
+		return
+	_pruefe("Spiel angehalten", s.process_mode == Node.PROCESS_MODE_DISABLED and not s.hud.visible)
+	var p0 := m.cam.global_position
+	await _warte(1.0)
+	_pruefe("Kamera fliegt um den Turm", m.cam.current and m.cam.global_position.distance_to(p0) > 5.0, "%.1f m" % m.cam.global_position.distance_to(p0))
+	for n in ["weiter", "einstellungen", "beenden"]:
+		_pruefe("Knopf " + n, m.find_child(n, true, false) != null)
+	_pruefe("Musik spielt im Menü", Ton.i == null or Ton.i.menue)
+	await _warte(2.0)
+	await _bild_machen("hauptmenue")
+	_knopf(m, "einstellungen")
+	await get_tree().process_frame
+	_pruefe("Einstellungen öffnen", m.find_child("einstellungen_ui", true, false) != null)
+	await _bild_machen("hauptmenue einstellungen")
+	_knopf(m, "zurueck")
+	await get_tree().process_frame
+	_pruefe("Einstellungen schließen", m.einst == null)
+	_knopf(m, "weiter")
+	await _warte(0.8)
+	_pruefe("Weiterspielen: Menü weg", _menue_finden() == null)
+	_pruefe("Weiterspielen: Spiel läuft", s.process_mode == Node.PROCESS_MODE_INHERIT and s.hud.visible and (s.spieler.cam.current or s.laeufer.cam.current))
+	await _bild_machen("im spiel")
+	# aus der Werkstatt zurück ins Hauptmenü
+	await _taste(KEY_TAB)
+	_knopf(s.shop, "reiter_3")
+	await get_tree().process_frame
+	_knopf(s.shop, "hauptmenue")
+	await _warte(0.5)
+	m = _menue_finden()
+	_pruefe("Werkstatt → Hauptmenü", m != null and not s.shop.offen and s.process_mode == Node.PROCESS_MODE_DISABLED)
+	if m:
+		_knopf(m, "weiter")
+		await _warte(0.8)
+		_pruefe("… und wieder zurück ins Spiel", _menue_finden() == null and s.hud.visible)
 
 # ---------------------------------------------------------------- Bilder
 var _bild := 0
