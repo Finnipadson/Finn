@@ -8,6 +8,10 @@ config/name="Clean the Skyscraper"
 run/main_scene="res://szenen/haupt.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
+[autoload]
+
+Netz="*res://skripte/netz.gd"
+
 [display]
 
 window/size/viewport_width=1600

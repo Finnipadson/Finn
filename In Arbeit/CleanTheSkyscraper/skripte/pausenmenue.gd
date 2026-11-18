@@ -14,7 +14,7 @@ func setup(s: Spiel) -> void:
 	layer = 18
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	s.spieler.wischt = false
-	get_tree().paused = true
+	get_tree().paused = not Netz.aktiv()   # Mehrspieler: die Welt läuft weiter
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	var teile := UiGlas.fenster(self, 420)
 	wurzel = teile[0]
@@ -81,13 +81,12 @@ func _einstellungen() -> void:
 	sc.add_child(ui)
 
 func _hauptmenue() -> void:
-	spiel._speichern()
 	_weg()
-	if spiel.get_parent().has_method("hauptmenue_zeigen"):
-		spiel.get_parent().hauptmenue_zeigen()
+	spiel._zum_hauptmenue()   # speichert; im Mehrspieler: Runde verlassen bzw. beenden
 
 func _beenden() -> void:
 	spiel._speichern()
+	Netz.trennen()
 	get_tree().quit()
 
 func schliessen() -> void:

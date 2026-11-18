@@ -98,6 +98,8 @@ func fenster_geputzt() -> void:
 	w.statistik.rekord_minute = maxi(int(w.statistik.rekord_minute), _minute.size())
 
 func erfolge_pruefen() -> Array:
+	if Netz.ist_gast():
+		return []   # Mehrspieler: Erfolge + Prämien vergibt nur der Gastgeber (Abgleich ab 7b)
 	var neu := Erfolge.pruefen(w, spiel.zustand.sauber_zahl, spiel.turm.fenster_gesamt)
 	if neu.size() > 0:
 		var e: Dictionary = neu[0]

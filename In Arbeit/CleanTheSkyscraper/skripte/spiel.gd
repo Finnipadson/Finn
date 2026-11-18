@@ -26,6 +26,7 @@ var strand: Strand          # Strandbar, Fischladen, Angeln, Yacht (Geometrie: w
 var karte: Karte            # Taste M: Stadtplan mit Ziel-Pfeil
 var effekte: Effekte        # Phase 5: Glanz, Seifenblasen, Sprühnebel, Münzen
 var pause: Pausenmenue      # Esc: Pausenmenü (Spiel pausiert)
+var mitspieler: Mitspieler  # Mehrspieler (7a): Figuren + Spielerliste der anderen
 var wirtschaft := Wirtschaft.new()
 var ansicht := 0
 var frei := false
@@ -54,6 +55,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(pfad))
 	if Ton.i:
 		Ton.i.spiel = self
+	Netz.spiel = self
 	zustand = FensterZustand.new(turm)
 	zustand.verbinde(turm.glas)
 	turm.glas.set_shader_parameter("mit_zustand", true)
@@ -61,7 +63,11 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(pfad))
 	if ansicht == 36 and Phase5Test.ort_stufe == 0 and FileAccess.file_exists(pfad):   # Test „Ort merken“: frisch anfangen
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(pfad))
-	var stand: Dictionary = _lesen() if (ansicht == 0 or ansicht == 10 or ansicht == 36) else {}
+	# Mehrspieler-Gast: die Welt kommt vom Gastgeber (Netz.gast_stand), nicht aus der eigenen Datei
+	var gast := Netz.ist_gast() and not Netz.gast_stand.is_empty()
+	var stand: Dictionary = Netz.gast_stand if gast else (_lesen() if (ansicht == 0 or ansicht == 10 or ansicht == 36) else {})
+	if not gast:
+		Netz.orte = (stand.get("netz_orte", {}) as Dictionary).duplicate()
 	wirtschaft.laden(stand.get("wirtschaft", {}))
 	if stand.has("sauber"):
 		zustand.laden(str(stand.sauber))
@@ -84,6 +90,8 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	add_child(gondeln)
 	gondeln.setup(turm, wirtschaft)
 	gondeln.aktualisieren(wirtschaft.aktive_gondel)
+	if gast:
+		_gast_gondel(stand)
 	spieler.fenster_sauber.connect(_fenster_sauber)
 	var symbole := Symbole.new()   # Bilder für Hotbar + Menüs (einmal rendern)
 	add_child(symbole)
@@ -146,6 +154,13 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	effekte = Effekte.new()
 	add_child(effekte)
 	effekte.setup(self)
+	mitspieler = Mitspieler.new()
+	add_child(mitspieler)
+	mitspieler.setup(self)
+	if ansicht == 37:   # Mehrspieler-Test (Gastgeber + Gäste als eigene Prozesse)
+		var nt := NetzTest.new()
+		add_child(nt)
+		nt.setup(self)
 	if ansicht >= 24 and ansicht <= 28:
 		var et := ExtrasTest.new()
 		add_child(et)
@@ -173,13 +188,13 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		spieler.pitch = 0.05
 	# Weiter am gespeicherten Ort (Phase 5, Wunsch des Users): in der Gondel an derselben Stelle bzw. zu Fuß dort, wo man
 	# war (auch in Lounge, Penthouse, Arcade). Ohne gespeicherten Ort (alte Stände) wie früher zu Fuß neben der Gondel.
-	var ort: Dictionary = stand.get("ort", {}) if ((ansicht == 0 and not durchlauf) or ansicht == 36) else {}
+	var ort: Dictionary = stand.get("ort", {}) if ((ansicht == 0 and not durchlauf) or ansicht == 36 or gast) else {}
 	if str(ort.get("modus", "")) == "gondel":
 		spieler.yaw = float(ort.get("yaw", 0.0))
 		spieler.pitch = float(ort.get("pitch", -0.08))
 		letzte_hoehe = 0.0
 	# Man startet zu Fuß neben der Gondel (unten). Die Gondel merkt sich die letzte Höhe und fährt beim Einsteigen dorthin zurück.
-	elif ansicht == 0 or ansicht == 18 or ansicht == 36:
+	elif ansicht == 0 or ansicht == 18 or ansicht == 36 or gast:
 		if str(ort.get("modus", "")) == "fuss":
 			_start_ort = ort
 		if ansicht == 18:
@@ -188,7 +203,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		spieler.y = 0.3
 		start_zu_fuss = 2
 	# Tag und Nacht (Phase 5): nur im echten Spiel läuft die Zeit; Tests behalten die feste Sonne (außer --uhr=HH)
-	if ansicht == 0:
+	if ansicht == 0 or gast:
 		welt.zeit.phase = wirtschaft.tageszeit
 		welt.zeit.laeuft = true
 	_leuchtfeuer()
@@ -200,6 +215,17 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		hud.meldung("Willkommen! Geh zur Gondel am Turm und drück E zum Einsteigen.\nDann mit der linken Maustaste das Fenster sauber reiben – Tab öffnet die Werkstatt.", 8.0)
 	elif ansicht == 0 and letzte_hoehe > 0.0:
 		hud.meldung("Willkommen zurück! Steig mit E in die Gondel – sie fährt dich zurück auf %d m." % int(letzte_hoehe), 6.0)
+	if gast:
+		hud.meldung("Du spielst bei %s mit! Turm, Geld und Gekauftes gehören allen." % Netz.name_von(1), 5.0)
+
+# Mehrspieler-Gast: eine freie gekaufte Gondel nehmen (die des Gastgebers ist belegt; Belegung richtig ab 7c)
+func _gast_gondel(stand: Dictionary) -> void:
+	var belegt: Array = (stand.get("netz", {}) as Dictionary).get("belegte_gondeln", [])
+	for k in 3:
+		if wirtschaft.gondeln[k].gekauft and not k in belegt:
+			if k != wirtschaft.aktive_gondel:
+				_gondel_wechseln(k)
+			return
 
 # Werkzeug + Upgrades auf die Gondel übertragen
 func _ausruestung() -> void:
@@ -552,9 +578,8 @@ func _ort_herstellen(o: Dictionary) -> void:
 	laeufer.yaw = float(o.get("yaw", 0.0))
 	laeufer.pitch = float(o.get("pitch", 0.0))
 
-func _speichern() -> void:
-	if ansicht != 0 and ansicht != 10 and ansicht != 36:
-		return
+# Spielstand als Dictionary (Speichern + Mehrspieler-Beitritt)
+func stand_daten() -> Dictionary:
 	wirtschaft.gondeln[wirtschaft.aktive_gondel].weg = spieler.weg
 	wirtschaft.gondeln[wirtschaft.aktive_gondel].hoehe = maxf(spieler.y, letzte_hoehe)
 	var d := {
@@ -564,6 +589,16 @@ func _speichern() -> void:
 		"stock": spieler.stock, "weg": spieler.weg, "y": maxf(spieler.y, letzte_hoehe),
 		"ort": _ort_daten(),
 	}
+	if not Netz.orte.is_empty():
+		d["netz_orte"] = Netz.orte
+	return d
+
+func _speichern() -> void:
+	if ansicht != 0 and ansicht != 10 and ansicht != 36:
+		return
+	if Netz.ist_gast():
+		return   # Gast: der Stand liegt beim Gastgeber
+	var d := stand_daten()
 	var f := FileAccess.open(pfad, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d))
@@ -581,6 +616,11 @@ func pause_oeffnen() -> void:
 
 # Werkstatt → Einstellungen → „Hauptmenü“: speichern und das Startmenü über das laufende Spiel legen
 func _zum_hauptmenue() -> void:
+	if Netz.ist_gast():   # Gast verlässt die Runde → eigenes Spiel mit Hauptmenü
+		Netz.zurueck_ins_menue("Du hast das Mehrspieler-Spiel verlassen.")
+		return
+	if Netz.ist_host():   # Gastgeber geht ins Menü → Runde endet für alle
+		Netz.trennen()
 	if shop.offen:
 		shop.umschalten()
 	spieler.gesperrt = ansicht >= 5 and ansicht <= 7
@@ -590,12 +630,25 @@ func _zum_hauptmenue() -> void:
 		get_parent().hauptmenue_zeigen()
 
 func _neues_spiel() -> void:
+	if Netz.ist_gast():
+		hud.meldung("Ein neues Spiel kann nur der Gastgeber anfangen.", 3.0)
+		return
+	Netz.trennen()
 	if FileAccess.file_exists(pfad):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(pfad))
 	zustand = null   # nicht beim Beenden wieder speichern
 	set_process(false)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().reload_current_scene()
+
+# Mehrspieler: eigene Lage für die anderen (Netz schickt sie 20× pro Sekunde), siehe Mitspieler.lage
+func lage_daten() -> Array:
+	if spieler.aktiv:
+		var g := spieler.gondel.global_position
+		return [1, g.x, g.y, g.z, spieler.yaw, "", ""]
+	if strand.yacht and strand.yacht.an_bord:
+		return [2, 0.0, 0.0, 0.0, 0.0, "", ""]
+	return [0, laeufer.position.x, laeufer.position.y + laeufer.hoch, laeufer.position.z, laeufer.yaw, extras.ort, laeufer.fahrzeug]
 
 # ---------------------------------------------------------------- Ablauf
 func _process(dt: float) -> void:

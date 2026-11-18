@@ -1,6 +1,6 @@
 ---
 typ: spiel
-status: in Arbeit (Phase 5 Feinschliff fertig, als Nächstes Phase 6 neuer Turm, Phase 7 Mehrspieler geplant)
+status: in Arbeit (Phase 5 Feinschliff fertig, Phase 7 Mehrspieler: 7a Grundlage fertig, Phase 6 neuer Turm vorgemerkt)
 technik: Godot 4.7, GDScript, Turm komplett aus Code
 erstellt: 2026-11-15
 ---
@@ -102,6 +102,8 @@ Mehrspielermodus (Wünsche des Users 15.11.2026, am 18.11.2026 entschieden und a
 - [ ] Werkzeuge/Fahrzeuge/Kosmetik gemeinsam besessen, jeder wählt selbst; gemeinsames Penthouse; Casino/Arcade über die Kasse (Grenze je Spieler); Boosts nur für den Käufer; Yacht: ein Fahrer + Mitfahrer
 - [ ] Esc = Menü ohne Pause (nur der Gastgeber kann für alle pausieren); Namen + Farben, Emotes, Text-Chat, Ping auf Fenster
 - [ ] Preise für Fortschritts-Käufe steigen mit der Spielerzahl (+50 % je weiterem Spieler)
+- [x] **Vorab-Test Epic (18.11.2026):** EOSG 2.3.1 läuft unter Godot 4.7 und in der .exe; Verbindung per Code über Epic klappt (21 ms direkt, 41 ms über Relay); Epic-Entwicklerkonto + Produkt angelegt
+- [x] **7a Grundlage (18.11.2026):** Hauptmenü „Mehrspieler“ (Name, Farbe, Spiel erstellen, Beitreten mit Adresse im Heimnetz), Beitritt mitten im Spiel mit der Welt des Gastgebers, Mitspieler als Figuren mit Namen, Spielerliste, gleiche Tageszeit, Gastgeber weg → Meldung + Hauptmenü, höchstens 3 Spieler. Test 37: 25/25. Gemeinsames Putzen/Kasse noch nicht (7b/7c)
 - Unterphasen 7a–7h (Grundlage LAN → Befehls-Schicht + Kasse → gemeinsam putzen → Welt vom Gastgeber → Extras → Miteinander → Internet per Code → Tests/Koop-Bot), geschätzt 8–10 Arbeitssitzungen. Details, Netzwerk-Architektur, Testplan und Risiken im Bauplan unter Punkt 7
 
 ## Notizen

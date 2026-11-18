@@ -43,6 +43,8 @@ skripte/haupt.gd       Startszene: Welt + Turm, Spiel (Gondel, Geld, Funkeln) od
 skripte/spieler.gd     Gondel mit Ich-Ansicht: fahren, umschauen, Schwamm reiben → _stempel()
 skripte/fenster_zustand.gd  Dreck pro Fenster (Datentextur) + feine Wisch-Masken (Atlas, 64 Slots)
 skripte/spiel.gd       Spiel-Logik: Geld, Funkeln, Werkstatt, Speichern/Laden (user://spielstand.json), Tests 5–10
+skripte/netz.gd        Mehrspieler (Autoload Netz): Verbindung, Spielerliste, Profil, Beitritt, Lage, Tageszeit
+skripte/mitspieler.gd  Mehrspieler: Figuren + Namen der anderen, Spielerliste im HUD; Test 37 in netz_test.gd
 skripte/wirtschaft.gd  Zahlen zum Ausbalancieren: Lohn, Werkzeuge, Upgrades, Preise
 skripte/shop.gd        Werkstatt-Fenster
 skripte/laeufer.gd     Zu Fuß am Boden: Laufen, Springen, Kollision mit Turm/Häusern/Gondel

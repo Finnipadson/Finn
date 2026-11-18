@@ -49,8 +49,23 @@ func _ready() -> void:
 		add_child(s)
 		s.starten(turm, welt, ansicht, frei, test_geld)
 		_grafik()
+		# Mehrspieler (7a): --host[=PORT] sofort Gastgeber, --join=ADRESSE sofort beitreten (nur beim ersten Start)
+		var host_arg := ""
+		var join_arg := ""
+		for a in OS.get_cmdline_user_args():
+			if a == "--host" or a.begins_with("--host="):
+				host_arg = a.substr(7) if a.length() > 6 else "-"
+			elif a.begins_with("--join="):
+				join_arg = a.substr(7)
+		if host_arg != "" and Netz.modus == "":
+			var fehler := Netz.host_starten(int(host_arg) if host_arg.is_valid_int() else Netz.PORT)
+			if fehler != "":
+				print("NETZ ", fehler)
+		if join_arg != "" and Netz.modus == "" and Netz.gast_stand.is_empty() and Netz.menue_meldung == "":
+			Netz.beitreten(join_arg)
 		# Hauptmenü mit Kameraflug (nicht beim Bot, nicht nach „Neues Spiel“, nicht mit --direkt); Test 35
 		var menue := ansicht == 0 and not s.durchlauf and not "--direkt" in OS.get_cmdline_user_args() and not Hauptmenue.ueberspringen
+		menue = menue and host_arg == "" and (join_arg == "" or Netz.menue_meldung != "")
 		Hauptmenue.ueberspringen = false
 		if menue or ansicht == 35:
 			hauptmenue_zeigen()
