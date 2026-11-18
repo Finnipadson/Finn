@@ -88,7 +88,7 @@ static func _muster(id: String, grund: Color) -> ImageTexture:
 
 # ---------------------------------------------------------------- Zubehör
 # Baut Aufkleber, Blumenkästen und Schirm neu in den Knoten deko (alte Kinder werden entfernt)
-static func zubehoer(deko: Node3D, aufkleber: String, blumen: String, schirm: String) -> void:
+static func zubehoer(deko: Node3D, aufkleber: String, blumen: String, schirm: String, radio := "gradio_keins") -> void:
 	for c in deko.get_children():
 		deko.remove_child(c)
 		c.queue_free()
@@ -98,6 +98,52 @@ static func zubehoer(deko: Node3D, aufkleber: String, blumen: String, schirm: St
 		_blumen(deko, blumen)
 	if schirm != "schirm_keiner" and schirm != "":
 		_schirm(deko, schirm)
+	if radio != "gradio_keins" and radio != "":
+		_radio(deko, radio)
+
+# Gondel-Radio am Boden neben dem Eimer (Phase 5)
+static func _radio(deko: Node3D, id: String) -> void:
+	var r := Node3D.new()
+	r.name = "radio"
+	r.position = Vector3(-0.95, 0.0, 0.3)
+	r.rotation.y = 0.5
+	deko.add_child(r)
+	var dunkel := Bau.matt("26282d", 0.6)
+	var chrom := Bau.metall("c9ced4", 0.25, 0.9)
+	match id:
+		"gradio_koffer":
+			var rot := Bau.matt("d8443a", 0.45)
+			RaumBau.box(r, Vector3(0.36, 0.22, 0.12), Vector3(0, 0.11, 0), rot)
+			var gitter := RaumBau.zyl(r, 0.065, 0.01, Vector3(-0.08, 0.11, 0.061), dunkel, 16)
+			gitter.rotation.x = PI / 2.0
+			RaumBau.box(r, Vector3(0.1, 0.05, 0.01), Vector3(0.1, 0.14, 0.061), Bau.matt("f3ead2", 0.5))
+			RaumBau.box(r, Vector3(0.22, 0.025, 0.025), Vector3(0, 0.25, 0), dunkel)   # Griff
+			var ant := RaumBau.zyl(r, 0.004, 0.42, Vector3(0.14, 0.4, -0.03), chrom, 6)
+			ant.rotation.z = -0.35
+		"gradio_retro":
+			var holz := Bau.matt("8a5a32", 0.5)
+			RaumBau.box(r, Vector3(0.42, 0.3, 0.18), Vector3(0, 0.15, 0), holz)
+			RaumBau.box(r, Vector3(0.24, 0.2, 0.01), Vector3(-0.05, 0.16, 0.091), Bau.matt("d9b56a", 0.9))   # Stoff
+			for x in [0.12, 0.17]:
+				var kn := RaumBau.zyl(r, 0.02, 0.02, Vector3(x, 0.12, 0.095), Bau.metall("c8a24a", 0.3, 0.8), 12)
+				kn.rotation.x = PI / 2.0
+			RaumBau.box(r, Vector3(0.08, 0.04, 0.01), Vector3(0.145, 0.22, 0.091), Bau.matt("f6e7b8", 0.4))
+		_:   # Boombox
+			RaumBau.box(r, Vector3(0.62, 0.3, 0.15), Vector3(0, 0.15, 0), dunkel)
+			for x in [-0.19, 0.19]:
+				var lsp := RaumBau.zyl(r, 0.095, 0.02, Vector3(x, 0.14, 0.076), Bau.matt("3a3d44", 0.8), 20)
+				lsp.rotation.x = PI / 2.0
+				var mitte := RaumBau.zyl(r, 0.035, 0.025, Vector3(x, 0.14, 0.08), chrom, 12)
+				mitte.rotation.x = PI / 2.0
+			var anz := StandardMaterial3D.new()
+			anz.albedo_color = Color("35c8ff")
+			anz.emission_enabled = true
+			anz.emission = Color("35c8ff")
+			anz.emission_energy_multiplier = 1.5
+			RaumBau.box(r, Vector3(0.14, 0.05, 0.01), Vector3(0, 0.2, 0.076), anz)
+			RaumBau.box(r, Vector3(0.5, 0.03, 0.03), Vector3(0, 0.34, 0), chrom)
+			for x in [-0.24, 0.24]:
+				RaumBau.box(r, Vector3(0.03, 0.06, 0.03), Vector3(x, 0.31, 0), chrom)
 
 static func _aufkleber(deko: Node3D, id: String) -> void:
 	var m := StandardMaterial3D.new()

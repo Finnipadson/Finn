@@ -170,3 +170,42 @@ static func karte(titel: String, info: String, knopf_n: Control, kurz := "", far
 
 static func ueberschrift(t: String) -> Label:
 	return text(t, 13, TEXT_LEISE, true)
+
+# Schieberegler (0..1 oder min..max) im Glas-Stil
+static func regler(wert: float, von := 0.0, bis := 1.0, schritt := 0.05) -> HSlider:
+	var s := HSlider.new()
+	s.min_value = von
+	s.max_value = bis
+	s.step = schritt
+	s.value = wert
+	s.custom_minimum_size = Vector2(220, 30)
+	s.focus_mode = Control.FOCUS_NONE
+	var bahn := box(Color(1, 1, 1, 0.14), Color(0, 0, 0, 0), 4, 0)
+	bahn.content_margin_top = 3
+	bahn.content_margin_bottom = 3
+	s.add_theme_stylebox_override("slider", bahn)
+	var voll := box(AKZENT, Color(0, 0, 0, 0), 4, 0)
+	voll.content_margin_top = 3
+	voll.content_margin_bottom = 3
+	s.add_theme_stylebox_override("grabber_area", voll)
+	s.add_theme_stylebox_override("grabber_area_highlight", voll)
+	var img := Image.create(18, 18, false, Image.FORMAT_RGBA8)
+	for y in 18:
+		for x in 18:
+			var r := Vector2(x - 8.5, y - 8.5).length()
+			img.set_pixel(x, y, Color(1, 1, 1, clampf(8.6 - r, 0.0, 1.0)))
+	var t := ImageTexture.create_from_image(img)
+	s.add_theme_icon_override("grabber", t)
+	s.add_theme_icon_override("grabber_highlight", t)
+	return s
+
+# Reihe von Pillen-Knöpfen (eine davon gewählt). Gibt das HBox zurück; wahl(i) wird beim Klick gerufen.
+static func auswahl(namen: Array, gewaehlt: int, wahl: Callable) -> HBoxContainer:
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 4)
+	for i in namen.size():
+		var b := reiter(str(namen[i]), i == gewaehlt)
+		b.name = "w_%d" % i
+		b.pressed.connect(wahl.bind(i))
+		hb.add_child(b)
+	return hb

@@ -187,9 +187,9 @@ static func _sbox(eltern: Node3D, groesse: Vector3, p: Vector3, m: Material) -> 
 # Aussehen vom Händler „Mode & Farben“ (nur Optik)
 func aussehen(gondel_hex: String, kleidung_hex: String, schwamm_hex: String, lack := "lack_uni", zubehoer := []) -> void:
 	GondelDeko.lack(gondel_mat, gondel_hex, lack)
-	if zubehoer.size() == 3 and zubehoer != _zubehoer:
+	if zubehoer.size() >= 3 and zubehoer != _zubehoer:
 		_zubehoer = zubehoer.duplicate()
-		GondelDeko.zubehoer(deko, zubehoer[0], zubehoer[1], zubehoer[2])
+		GondelDeko.zubehoer(deko, zubehoer[0], zubehoer[1], zubehoer[2], zubehoer[3] if zubehoer.size() > 3 else "gradio_keins")
 	arm_mat.albedo_color = Color(kleidung_hex)
 	if schwamm_hex != schwamm_farbe:
 		schwamm_farbe = schwamm_hex
@@ -215,9 +215,9 @@ func _input(e: InputEvent) -> void:
 			schwamm_off += Vector2(e.relative.x, -e.relative.y) * MAUS_WISCH
 			_begrenzen()
 		else:
-			yaw = wrapf(yaw - e.relative.x * MAUS_LOOK, -PI, PI)   # rundum frei umschauen
-			pitch = clampf(pitch - e.relative.y * MAUS_LOOK, -1.5, 1.5)
-	elif e is InputEventKey and e.pressed and e.keycode == KEY_ESCAPE:
+			yaw = wrapf(yaw - e.relative.x * MAUS_LOOK * Optionen.maus_x(), -PI, PI)   # rundum frei umschauen
+			pitch = clampf(pitch - e.relative.y * MAUS_LOOK * Optionen.maus_y(), -1.5, 1.5)
+	elif e is InputEventKey and e.pressed and Optionen.k(e) == KEY_ESCAPE:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		wischt = false
 
@@ -253,10 +253,10 @@ func _process(dt: float) -> void:
 	if not gesperrt and aktiv:
 		var seite := 0.0
 		var hoch := 0.0
-		if Input.is_key_pressed(KEY_D): seite += 1.0
-		if Input.is_key_pressed(KEY_A): seite -= 1.0
-		if Input.is_key_pressed(KEY_W): hoch += 1.0
-		if Input.is_key_pressed(KEY_S): hoch -= 1.0
+		if Optionen.gedrueckt(KEY_D): seite += 1.0
+		if Optionen.gedrueckt(KEY_A): seite -= 1.0
+		if Optionen.gedrueckt(KEY_W): hoch += 1.0
+		if Optionen.gedrueckt(KEY_S): hoch -= 1.0
 		weg += seite * richtung * TEMPO_SEITE * tempo_faktor * dt
 		var neu := y + hoch * TEMPO_HOCH * tempo_faktor * dt
 		if hoch > 0.0 and neu > max_y and _gesperrt_zeit <= 0.0:

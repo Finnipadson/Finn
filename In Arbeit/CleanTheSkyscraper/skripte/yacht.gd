@@ -122,12 +122,12 @@ func _process(dt: float) -> void:
 	_zeit += dt
 	if an_bord:
 		var gas := 0.0
-		if Input.is_key_pressed(KEY_W): gas += 1.0
-		if Input.is_key_pressed(KEY_S): gas -= 1.0
+		if Optionen.gedrueckt(KEY_W): gas += 1.0
+		if Optionen.gedrueckt(KEY_S): gas -= 1.0
 		var lenk := 0.0
-		if Input.is_key_pressed(KEY_A): lenk += 1.0
-		if Input.is_key_pressed(KEY_D): lenk -= 1.0
-		var maxi := MAX_SCHNELL if Input.is_key_pressed(KEY_SHIFT) else MAX
+		if Optionen.gedrueckt(KEY_A): lenk += 1.0
+		if Optionen.gedrueckt(KEY_D): lenk -= 1.0
+		var maxi := MAX_SCHNELL if Optionen.gedrueckt(KEY_SHIFT) else MAX
 		if gas > 0.0:
 			tempo = move_toward(tempo, maxi, 2.6 * dt)
 		elif gas < 0.0:
@@ -168,8 +168,8 @@ func _process(dt: float) -> void:
 		cam.look_at(position + Vector3(0, 8.0, 0), Vector3.UP)
 
 func maus(rel: Vector2) -> void:
-	blick = wrapf(blick - rel.x * 0.004, -PI, PI)
-	blick_hoch = clampf(blick_hoch + rel.y * 0.003, 0.06, 1.1)
+	blick = wrapf(blick - rel.x * 0.004 * Optionen.maus_x(), -PI, PI)
+	blick_hoch = clampf(blick_hoch + rel.y * 0.003 * Optionen.maus_y(), 0.06, 1.1)
 
 # ---------------------------------------------------------------- Modell aus Code
 static func bauen() -> Node3D:

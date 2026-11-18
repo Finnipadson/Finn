@@ -200,18 +200,18 @@ func e_druecken() -> bool:
 # Tasten (vor dem Spiel): Menü zu, P, Platzieren, Greifautomat. true = verbraucht
 func taste(e: InputEventKey) -> bool:
 	if menu.offen:
-		if e.keycode == KEY_E or e.keycode == KEY_ESCAPE or (e.keycode == KEY_P and menu.art == "erfolge"):
+		if Optionen.k(e) == KEY_E or Optionen.k(e) == KEY_ESCAPE or (Optionen.k(e) == KEY_P and menu.art == "erfolge"):
 			menu.schliessen()
 			return true
 		return true
 	if arcade.spiel >= 0:
-		if e.keycode == KEY_SPACE:
+		if Optionen.k(e) == KEY_SPACE:
 			arcade.greifen()
-		elif e.keycode == KEY_ESCAPE:
+		elif Optionen.k(e) == KEY_ESCAPE:
 			arcade.greif_abbrechen()
 		return true
 	if penthouse.platzieren_aktiv():
-		match e.keycode:
+		match Optionen.k(e):
 			KEY_R: penthouse.drehen(45.0)
 			KEY_X:
 				penthouse.platzieren_ende(false, true)
@@ -220,7 +220,7 @@ func taste(e: InputEventKey) -> bool:
 			KEY_E: _abstellen()
 			_: return false
 		return true
-	if e.keycode == KEY_P and not spiel.shop.offen and not spiel.album.offen and not spiel.hmenu.offen and not spiel.cmenu.offen and not spiel.strand.blockiert():
+	if Optionen.k(e) == KEY_P and not spiel.shop.offen and not spiel.album.offen and not spiel.hmenu.offen and not spiel.cmenu.offen and not spiel.strand.blockiert():
 		menu.oeffnen("erfolge", "Erfolge")
 		return true
 	return false

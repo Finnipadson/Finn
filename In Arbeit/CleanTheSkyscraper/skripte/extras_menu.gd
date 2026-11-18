@@ -215,8 +215,8 @@ func _artikel(ids: Array) -> void:
 		liste.add_child(UiGlas.karte(titel_t, info, k, "M", farbe if sperre != "gesperrt" else UiGlas.TEXT_LEISE, -1, 0, Symbole.bilder.get("g_" + id)))
 
 # ---------------------------------------------------------------- Gondel-Werkstatt (nur Optik)
-const WERKSTATT_ARTEN := ["gondel", "lack", "aufkleber", "blumen", "schirm"]
-const WERKSTATT_NAMEN := ["Farbe", "Lackierung", "Aufkleber", "Blumenkästen", "Sonnenschirm"]
+const WERKSTATT_ARTEN := ["gondel", "lack", "aufkleber", "blumen", "schirm", "radio"]
+const WERKSTATT_NAMEN := ["Farbe", "Lackierung", "Aufkleber", "Blumenkästen", "Sonnenschirm", "Radio"]
 
 func _werkstatt() -> void:
 	var a: String = WERKSTATT_ARTEN[reiter]

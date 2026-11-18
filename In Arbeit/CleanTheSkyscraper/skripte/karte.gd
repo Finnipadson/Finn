@@ -110,7 +110,7 @@ func _input(e: InputEvent) -> void:
 	if not offen:
 		return
 	if e is InputEventKey and e.pressed and not e.echo:
-		match e.keycode:
+		match Optionen.k(e):
 			KEY_M, KEY_ESCAPE: schliessen()
 			KEY_X: ziel_loeschen()
 		get_viewport().set_input_as_handled()

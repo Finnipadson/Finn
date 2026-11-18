@@ -6,8 +6,9 @@ extends CanvasLayer
 
 signal geaendert
 signal neues_spiel
+signal hauptmenue
 
-const REITER := ["Gondeln", "Helfer", "Ausbau", "Einstellungen"]
+const REITER := ["Gondeln", "Helfer", "Ausbau", "Einstellungen"]   # Einstellungen: Ereignisse + EinstellungenUi
 
 var wirtschaft: Wirtschaft
 var scroll: ScrollContainer
@@ -161,19 +162,18 @@ func _einstellungen(s: VBoxContainer) -> void:
 		k3.name = "ein_" + k
 		k3.pressed.connect(_umschalten_einstellung.bind(k))
 		s.add_child(UiGlas.karte(namen[k][0], namen[k][1], k3, namen[k][2], Color("9fb3c8")))
-	s.add_child(UiGlas.ueberschrift("GRAFIK"))
-	var taa: bool = wirtschaft.einstellungen.taa
-	var k4 := UiGlas.knopf("An" if taa else "Aus", "an" if taa else "aus")
-	k4.custom_minimum_size = Vector2(90, 38)
-	k4.name = "ein_taa"
-	k4.pressed.connect(_umschalten_einstellung.bind("taa"))
-	s.add_child(UiGlas.karte("Extra-Kantenglättung (TAA)", "Glättet Kanten beim Fahren noch etwas mehr – dafür wackelt das Bild im Stand leicht.", k4, "AA", Color("9fb3c8")))
+	s.add_child(EinstellungenUi.new())   # Ton, Bild, Maus, Tasten (gelten für alle Spielstände)
 	s.add_child(UiGlas.ueberschrift("SPIELSTAND"))
 	var reset := UiGlas.knopf("Wirklich? Nochmal klicken" if reset_bestaetigen else "Neues Spiel", "gefahr")
 	reset.custom_minimum_size = Vector2(220, 38)
 	reset.name = "reset"
 	reset.pressed.connect(_reset)
 	s.add_child(UiGlas.karte("Neues Spiel", "Löscht deinen Fortschritt und fängt ganz von vorn an.", reset, "!", UiGlas.GEFAHR))
+	var menue := UiGlas.knopf("Hauptmenü", "nehmen")
+	menue.name = "hauptmenue"
+	menue.custom_minimum_size = Vector2(160, 38)
+	menue.pressed.connect(func(): hauptmenue.emit())
+	s.add_child(UiGlas.karte("Zum Hauptmenü", "Speichert und zeigt das Startmenü mit dem Flug um den Turm.", menue, "≡", UiGlas.AKZENT))
 
 func _kaufe_gondel(k: int) -> void:
 	if wirtschaft.kaufe_gondel(k):

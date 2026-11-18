@@ -103,8 +103,8 @@ func umschalten() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _input(e: InputEvent) -> void:
-	if offen and e is InputEventKey and e.pressed and not e.echo and e.keycode in [KEY_TAB, KEY_Q, KEY_1, KEY_2, KEY_LEFT, KEY_RIGHT]:
-		reiter = {KEY_1: 0, KEY_2: 1}.get(e.keycode, 1 - reiter)
+	if offen and e is InputEventKey and e.pressed and not e.echo and Optionen.k(e) in [KEY_TAB, KEY_Q, KEY_1, KEY_2, KEY_LEFT, KEY_RIGHT]:
+		reiter = {KEY_1: 0, KEY_2: 1}.get(Optionen.k(e), 1 - reiter)
 		aufbauen()
 		get_viewport().set_input_as_handled()
 

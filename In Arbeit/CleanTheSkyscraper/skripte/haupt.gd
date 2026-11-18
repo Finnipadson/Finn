@@ -31,6 +31,13 @@ func _ready() -> void:
 		for k in ["taa", "ssr", "ssil", "msaa", "smaa", "scale", "fsr", "fpstest", "ssao", "schatten", "glow"]:
 			if a.begins_with("--%s=" % k):
 				schalter[k] = int(a.split("=")[1])
+	# Globale Einstellungen (Phase 5): in Tests und beim Bot eigene Datei + Standardtasten
+	var test := ansicht != 0 or "--durchspielen" in OS.get_cmdline_user_args()
+	Optionen.laden(test)
+	Optionen.aktiv = not test
+	Optionen.geaendert_fn = _optionen_geaendert
+	var ton := Ton.new()
+	add_child(ton)
 	welt = Welt.new()
 	add_child(welt)
 	turm = Turm.new()
@@ -119,28 +126,48 @@ func _startansicht() -> void:
 	pitch = r.x
 	info.text = "Clean the Skyscraper · Phase 0\n%d m hoch · %d Stockwerke · %s Fenster\n%s\nKlick: Maus fangen · WASD fliegen · Q/E runter/hoch · Shift schnell · Esc Maus frei" % [int(turm.spitze), Turm.STOCKWERKE, _punkte(turm.fenster_gesamt), text]
 
-# Kantenglättung und Licht-Effekte (Standard + Test-Schalter)
+# Kantenglättung, Bildqualität und Licht-Effekte (Einstellungen + Test-Schalter)
+func _optionen_geaendert(k: String) -> void:
+	if k in ["qualitaet", "ruhig", "fps", "vollbild"]:
+		_grafik()
+
 func _grafik() -> void:
 	var vp := get_viewport()
-	# Standard: 2-faches Supersampling + MSAA 4x, kein TAA. Das Flimmern beheben die Shader selbst (gefilterte
-	# Muster). TAA (Einstellung „taa“, Standard aus) glättet beim Fahren noch etwas mehr, lässt aber das Bild
+	# Standard (Hoch): 2-faches Supersampling + MSAA 4x, kein TAA. Das Flimmern beheben die Shader selbst (gefilterte
+	# Muster). TAA (Einstellung „Ruhiges Bild“ aus) glättet beim Fahren noch etwas mehr, lässt aber das Bild
 	# im Stand an Pfosten und Schmutz sichtbar wackeln (gemessen mit tools/flimmern.py, Orte schmutz_25/60).
-	var ruhig := false
-	if spiel_knoten:
-		ruhig = spiel_knoten.wirtschaft.einstellungen.get("taa", false)
+	if spiel_knoten and spiel_knoten.wirtschaft.einstellungen.get("taa", false) and not FileAccess.file_exists(Optionen.DATEI) and ansicht == 0:
+		Optionen.d.ruhig = false   # alte Werkstatt-Einstellung übernehmen
+		Optionen.speichern()
+	var q := int(Optionen.wert("qualitaet"))
+	var ruhig := bool(Optionen.wert("ruhig"))
 	if schalter.has("taa"):
-		ruhig = schalter.taa == 1
-	vp.use_taa = ruhig
-	vp.msaa_3d = schalter.get("msaa", 2) as Viewport.MSAA
+		ruhig = schalter.taa != 1
+	vp.use_taa = not ruhig
+	vp.msaa_3d = schalter.get("msaa", 2 if q >= 1 else 1) as Viewport.MSAA
 	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_SMAA if schalter.get("smaa", 0) == 1 else Viewport.SCREEN_SPACE_AA_DISABLED
 	# Supersampling: intern höher rendern (scale in Zehnteln, 20 = 2-fach); FSR2 bringt eigene Glättung mit
-	vp.scaling_3d_scale = schalter.get("scale", 17 if ruhig else 20) / 10.0
+	var stufe: int = ([10, 13, 17] if not ruhig else [10, 15, 20])[q]
+	vp.scaling_3d_scale = schalter.get("scale", stufe) / 10.0
 	if schalter.get("fsr", 0) == 1:
 		vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR2
 		vp.use_taa = false
 	# SSR aus (15.11.2026): spiegelt den Boden verschmiert in die Brüstungen am Turmfuß, sonst kaum sichtbar
 	welt.env.ssr_enabled = schalter.get("ssr", 0) == 1
 	welt.env.ssil_enabled = schalter.get("ssil", 0) == 1
+	welt.env.ssao_enabled = q >= 1
+	RenderingServer.directional_shadow_atlas_set_size(2048 if q == 0 else 4096, true)
+	RenderingServer.directional_soft_shadow_filter_set_quality([RenderingServer.SHADOW_QUALITY_SOFT_VERY_LOW, RenderingServer.SHADOW_QUALITY_SOFT_LOW, RenderingServer.SHADOW_QUALITY_SOFT_MEDIUM][q])
+	# Bildrate + Vollbild
+	var fps := int(Optionen.wert("fps"))
+	Engine.max_fps = maxi(fps, 0)
+	var vs := DisplayServer.VSYNC_ENABLED if fps == 0 else DisplayServer.VSYNC_DISABLED
+	if DisplayServer.window_get_vsync_mode() != vs:
+		DisplayServer.window_set_vsync_mode(vs)
+	var modus := DisplayServer.WINDOW_MODE_FULLSCREEN if Optionen.wert("vollbild") else DisplayServer.WINDOW_MODE_WINDOWED
+	var jetzt := DisplayServer.window_get_mode()
+	if ansicht == 0 and (modus == DisplayServer.WINDOW_MODE_FULLSCREEN) != (jetzt == DisplayServer.WINDOW_MODE_FULLSCREEN or jetzt == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN):
+		DisplayServer.window_set_mode(modus)
 	# Test-Schalter (Flimmer-Suche): Umgebungsverdeckung, Sonnenschatten, Glühen abschaltbar
 	if schalter.has("ssao"):
 		welt.env.ssao_enabled = schalter.ssao == 1

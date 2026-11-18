@@ -474,12 +474,12 @@ func _werkstatt() -> void:
 	vorfuehr_deko = Node3D.new()
 	g.add_child(vorfuehr_deko)
 	_fest(id, 1.2, -2.0, 2.8, 2.0)
-	_station(id, "werkstatt", "", "Gondel-Werkstatt", "E: Gondel gestalten (Lack, Aufkleber, Blumen, Schirm)", Vector2(-0.4, 0), Vector2(2.0, 0))
+	_station(id, "werkstatt", "", "Gondel-Werkstatt", "E: Gondel gestalten (Lack, Aufkleber, Blumen, Schirm, Radio)", Vector2(-0.4, 0), Vector2(2.0, 0))
 	# Theke mit Mechaniker
 	var tp := Vector2(-2.0, iw - 1.6)
 	_theke(id, tp, 3.0, Bau.matt("2b2f36", 0.5), Bau.metall("35c8ff", 0.3, 0.5))
 	_figur(id, "character-worker", Vector2(tp.x + 1.1, tp.y))
-	_station(id, "werkstatt", "", "Gondel-Werkstatt", "E: Gondel gestalten (Lack, Aufkleber, Blumen, Schirm)", Vector2(tp.x - 1.3, tp.y), tp)
+	_station(id, "werkstatt", "", "Gondel-Werkstatt", "E: Gondel gestalten (Lack, Aufkleber, Blumen, Schirm, Radio)", Vector2(tp.x - 1.3, tp.y), tp)
 	# Werkzeugwand, Regale und Lackdosen
 	RaumBau.box(n, Vector3(0.05, 2.0, 6.0), Vector3(iw - 0.04, 2.0, -5.0), Bau.matt("c9a46a", 0.8))
 	var farben := ["e2483e", "35c8ff", "ffc531", "3fc29a", "ff4fb8", "b36bff", "2b2d33", "f4f4f4"]
@@ -685,10 +685,10 @@ func aktualisieren() -> void:
 	var ka := wirtschaft.kosmetik_aktiv
 	if vorfuehr_mat:
 		GondelDeko.lack(vorfuehr_mat, wirtschaft.kosmetik(ka.gondel).farbe, ka.lack)
-		var z := [ka.aufkleber, ka.blumen, ka.schirm]
+		var z := [ka.aufkleber, ka.blumen, ka.schirm, ka.radio]
 		if z != _zubehoer:
 			_zubehoer = z
-			GondelDeko.zubehoer(vorfuehr_deko, z[0], z[1], z[2])
+			GondelDeko.zubehoer(vorfuehr_deko, z[0], z[1], z[2], z[3])
 
 # Hat sich bei den Souvenirs etwas freigeschaltet? (nach neuen Erfolgen)
 func souvenirs_geaendert() -> bool:

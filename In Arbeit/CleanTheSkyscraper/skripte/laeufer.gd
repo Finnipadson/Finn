@@ -79,12 +79,12 @@ func _input(e: InputEvent) -> void:
 	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		yaw = wrapf(yaw - e.relative.x * MAUS, -PI, PI)
-		pitch = clampf(pitch - e.relative.y * MAUS, -1.5, 1.5)
+		yaw = wrapf(yaw - e.relative.x * MAUS * Optionen.maus_x(), -PI, PI)
+		pitch = clampf(pitch - e.relative.y * MAUS * Optionen.maus_y(), -1.5, 1.5)
 	elif e is InputEventKey and e.pressed and not e.echo:
-		if e.keycode == KEY_SPACE and hoch <= 0.001 and not fz_fliegt:
+		if Optionen.k(e) == KEY_SPACE and hoch <= 0.001 and not fz_fliegt:
 			vy = 4.5
-		elif e.keycode == KEY_ESCAPE:
+		elif Optionen.k(e) == KEY_ESCAPE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 # In einen Innenraum wechseln (Aufzug) bzw. zurück nach draußen (r leer)
@@ -163,15 +163,15 @@ func _process(dt: float) -> void:
 	var vor := Vector3(-sin(yaw), 0, -cos(yaw))
 	var rechts := Vector3(cos(yaw), 0, -sin(yaw))
 	var d := Vector3.ZERO
-	if Input.is_key_pressed(KEY_W): d += vor
-	if Input.is_key_pressed(KEY_S): d -= vor
-	if Input.is_key_pressed(KEY_D): d += rechts
-	if Input.is_key_pressed(KEY_A): d -= rechts
+	if Optionen.gedrueckt(KEY_W): d += vor
+	if Optionen.gedrueckt(KEY_S): d -= vor
+	if Optionen.gedrueckt(KEY_D): d += rechts
+	if Optionen.gedrueckt(KEY_A): d -= rechts
 	var laeuft := d.length_squared() > 0.0
 	if laeuft:
-		var tempo := RENNEN if Input.is_key_pressed(KEY_SHIFT) else TEMPO
+		var tempo := RENNEN if Optionen.gedrueckt(KEY_SHIFT) else TEMPO
 		if fahrzeug != "":
-			tempo = fz_tempo * (1.25 if Input.is_key_pressed(KEY_SHIFT) else 1.0)
+			tempo = fz_tempo * (1.25 if Optionen.gedrueckt(KEY_SHIFT) else 1.0)
 		d = d.normalized() * tempo * dt
 		# an Hindernissen entlanggleiten: x und z getrennt prüfen
 		var vorher := position
@@ -180,14 +180,14 @@ func _process(dt: float) -> void:
 		if frei(Vector2(position.x, position.z + d.z)):
 			position.z += d.z
 		gelaufen += Vector2(position.x - vorher.x, position.z - vorher.z).length()
-		bob += dt * (13.0 if Input.is_key_pressed(KEY_SHIFT) else 9.0)
+		bob += dt * (13.0 if Optionen.gedrueckt(KEY_SHIFT) else 9.0)
 	if raum.is_empty() and boden_fn.is_valid():   # Bodenhöhe draußen (auch nach Teleport im Stand)
 		position.y = boden_fn.call(Vector2(position.x, position.z))
 	if fz_fliegt and not gesperrt and raum.is_empty():
 		# Jetpack: Leertaste hoch, Strg runter, sonst in der Luft stehen bleiben
 		var v := 0.0
-		if Input.is_key_pressed(KEY_SPACE): v += FLUG_TEMPO_V
-		if Input.is_key_pressed(KEY_CTRL): v -= FLUG_TEMPO_V
+		if Optionen.gedrueckt(KEY_SPACE): v += FLUG_TEMPO_V
+		if Optionen.gedrueckt(KEY_CTRL): v -= FLUG_TEMPO_V
 		var neu := clampf(hoch + v * dt, 0.0, FLUG_HOCH)
 		var alt := hoch
 		hoch = neu

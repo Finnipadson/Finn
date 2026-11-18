@@ -269,10 +269,10 @@ func _greif_takt(dt: float) -> void:
 		"steuern":
 			zeit -= dt
 			var d := Vector2.ZERO
-			if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT): d.x -= 1.0
-			if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT): d.x += 1.0
-			if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP): d.y -= 1.0
-			if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN): d.y += 1.0
+			if Optionen.gedrueckt(KEY_A) or Optionen.gedrueckt(KEY_LEFT): d.x -= 1.0
+			if Optionen.gedrueckt(KEY_D) or Optionen.gedrueckt(KEY_RIGHT): d.x += 1.0
+			if Optionen.gedrueckt(KEY_W) or Optionen.gedrueckt(KEY_UP): d.y -= 1.0
+			if Optionen.gedrueckt(KEY_S) or Optionen.gedrueckt(KEY_DOWN): d.y += 1.0
 			k_pos += d.normalized() * TEMPO * dt if d != Vector2.ZERO else Vector2.ZERO
 			k_pos = k_pos.clamp(Vector2.ONE * (-KASTEN + 0.08), Vector2.ONE * (KASTEN - 0.08))
 			if zeit <= 0.0:

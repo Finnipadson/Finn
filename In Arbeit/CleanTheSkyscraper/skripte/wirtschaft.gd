@@ -266,8 +266,13 @@ const KOSMETIK := [
 	{"id": "schirm_streifen", "art": "schirm", "name": "Strandschirm gestreift", "text": "Rot-weiß gestreift, an der Seitenwand befestigt.", "farbe": "e2483e", "preis": 400},
 	{"id": "schirm_uni", "art": "schirm", "name": "Sonnenschirm Sand", "text": "Schlicht und modern.", "farbe": "e4d3b0", "preis": 300},
 	{"id": "schirm_gold", "art": "schirm", "name": "Goldener Schirm", "text": "Glänzt in der Sonne – für echte Profis.", "farbe": "e8b53a", "preis": 2500},
+	# Gondel-Radio (Phase 5): Taste R an/aus, T nächster Sender – alle Radios spielen dieselben vier Sender
+	{"id": "gradio_keins", "art": "radio", "name": "Kein Radio", "text": "", "farbe": "c9d3dd", "preis": 0},
+	{"id": "gradio_koffer", "art": "radio", "name": "Kofferradio", "text": "Kleines rotes Radio am Boden der Gondel. R: an/aus, T: Sender (Lounge, Funk, Retro, Klassik).", "farbe": "e2483e", "preis": 400},
+	{"id": "gradio_retro", "art": "radio", "name": "Röhrenradio", "text": "Holzgehäuse und goldener Stoff – wie bei Oma. Gleiche vier Sender.", "farbe": "b07a45", "preis": 1200},
+	{"id": "gradio_boombox", "art": "radio", "name": "Boombox", "text": "Große Ghettoblaster-Box mit leuchtender Anzeige. Gleiche vier Sender.", "farbe": "35c8ff", "preis": 3000},
 ]
-const KOSMETIK_START := ["gondel_gelb", "kleid_blau", "schwamm_gelb", "lack_uni", "kleber_keine", "blumen_keine", "schirm_keiner"]
+const KOSMETIK_START := ["gondel_gelb", "kleid_blau", "schwamm_gelb", "lack_uni", "kleber_keine", "blumen_keine", "schirm_keiner", "gradio_keins"]
 
 var geld := 0
 var besitz := ["schwamm"]       # gekaufte Werkzeuge
@@ -278,7 +283,7 @@ var hoechster_abschnitt := 0     # für den Bonus beim ersten Erreichen einer ne
 var einstellungen := {"tauben": true, "sandsturm": true, "wind": true, "taa": false}
 var boosts := {}                                        # Boost-ID -> verbleibende Sekunden
 var kosmetik_besitz: Array = KOSMETIK_START.duplicate()
-var kosmetik_aktiv := {"gondel": "gondel_gelb", "kleidung": "kleid_blau", "schwamm": "schwamm_gelb", "lack": "lack_uni", "aufkleber": "kleber_keine", "blumen": "blumen_keine", "schirm": "schirm_keiner"}
+var kosmetik_aktiv := {"gondel": "gondel_gelb", "kleidung": "kleid_blau", "schwamm": "schwamm_gelb", "lack": "lack_uni", "aufkleber": "kleber_keine", "blumen": "blumen_keine", "schirm": "schirm_keiner", "radio": "gradio_keins"}
 var helfer := {"putzkraft": 0, "roboter": 0, "drohne": 0}
 var fahrzeuge: Array = []                               # gekaufte Fahrzeug-IDs
 var fahrzeug := ""                                      # "" = zu Fuß
@@ -296,6 +301,12 @@ var angeln: Array = []                                  # gekaufte Angeln (ANGEL
 var fischkiste := {}                                    # Fisch-ID -> Anzahl (noch nicht verkauft)
 var fisch_index := {}                                   # Fisch-ID -> {n = so oft gefangen, max = größte Länge in m}
 var yacht := false                                      # Belohnung für alle 20 Fische
+var radio := {"an": true, "sender": 0}                  # Gondel-Radio (Phase 5)
+var tageszeit := 0.08                                   # 0..1 = ein Tag (20 min, Tageszeit.gd); Start am Morgen
+# Mehrere Türme (Phase 6 vorbereitet): Nummer des aktuellen Turms, fertige Türme, Abspann gesehen
+var turm_nr := 1
+var tuerme_fertig: Array = []
+var abspann := false
 
 # ---------------------------------------------------------------- Angeln
 static func fisch(id: String) -> Dictionary:
@@ -646,7 +657,8 @@ func oberstes_stockwerk() -> int:
 # ---------------------------------------------------------------- Speichern
 func speichern() -> Dictionary:
 	return {"geld": geld, "besitz": besitz, "aktiv": aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen, "boosts": boosts, "kosmetik_besitz": kosmetik_besitz, "kosmetik_aktiv": kosmetik_aktiv, "helfer": helfer, "fahrzeuge": fahrzeuge, "fahrzeug": fahrzeug, "gondeln": gondeln, "aktive_gondel": aktive_gondel, "moebel": moebel, "erfolge": erfolge, "besucht": besucht, "statistik": statistik,
-		"angeln": angeln, "fischkiste": fischkiste, "fisch_index": fisch_index, "yacht": yacht}
+		"angeln": angeln, "fischkiste": fischkiste, "fisch_index": fisch_index, "yacht": yacht,
+		"radio": radio, "tageszeit": tageszeit, "turm_nr": turm_nr, "tuerme_fertig": tuerme_fertig, "abspann": abspann}
 
 func laden(d: Dictionary) -> void:
 	geld = int(d.get("geld", 0))
@@ -730,3 +742,11 @@ func laden(d: Dictionary) -> void:
 		if not fisch(str(k)).is_empty() and fi[k] is Dictionary:
 			fisch_index[str(k)] = {"n": int(fi[k].get("n", 1)), "max": float(fi[k].get("max", 0.0))}
 	yacht = bool(d.get("yacht", false)) or index_voll()
+	var r: Dictionary = d.get("radio", {})
+	radio = {"an": bool(r.get("an", true)), "sender": int(r.get("sender", 0))}
+	tageszeit = fposmod(float(d.get("tageszeit", 0.08)), 1.0)
+	turm_nr = maxi(1, int(d.get("turm_nr", 1)))
+	tuerme_fertig = []
+	for t in d.get("tuerme_fertig", []):
+		tuerme_fertig.append(int(t))
+	abspann = bool(d.get("abspann", false))

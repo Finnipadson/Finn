@@ -245,6 +245,7 @@ func _zahle() -> bool:
 		return false
 	einsatz = clampi(einsatz, CasinoRegeln.EINSATZ_MIN, grenze)
 	wirtschaft.geld -= einsatz
+	Ton.spielen("chips", -4.0)
 	laeuft = true
 	ergebnis.text = ""
 	_anzeige()
@@ -257,6 +258,11 @@ func _abrechnen(faktor: float, text: String) -> void:
 	wirtschaft.casino_runde(einsatz, aus)
 	letzter_gewinn = aus
 	letzter_faktor = faktor
+	if faktor >= 10.0:
+		Ton.spielen("jackpot", 0.0)
+	elif aus > einsatz:
+		Ton.spielen("geld", -2.0)
+		Ton.spielen("glanz", -8.0)
 	laeuft = false
 	var netto := aus - einsatz
 	var farbe := Color("ffffff")
@@ -341,6 +347,8 @@ func _bj_austeilen() -> void:
 	bj_spieler = [CasinoRegeln.karte(rng), CasinoRegeln.karte(rng)]
 	bj_geber = [CasinoRegeln.karte(rng), CasinoRegeln.karte(rng)]
 	bj_verdeckt = true
+	for k in 4:
+		get_tree().create_timer(0.12 * k).timeout.connect(func(): Ton.gedrosselt("karte", 0.05, -2.0, randf_range(0.9, 1.1)))
 	if CasinoRegeln.ist_blackjack(bj_spieler) or CasinoRegeln.ist_blackjack(bj_geber):
 		_bj_ende()
 	else:
@@ -350,6 +358,7 @@ func _bj_ziehen() -> void:
 	if not laeuft or spiel != "blackjack":
 		return
 	bj_spieler.append(CasinoRegeln.karte(rng))
+	Ton.spielen("karte", -2.0)
 	var w := CasinoRegeln.wert(bj_spieler)
 	if w > 21:
 		_bj_ende()
@@ -416,7 +425,10 @@ func _rad_fertig() -> void:
 class Rad extends Control:
 	var winkel := 0.0:
 		set(v):
+			var vorher := feld()
 			winkel = v
+			if feld() != vorher:
+				Ton.gedrosselt("tick", 0.03, -6.0)
 			queue_redraw()
 
 	# Feld unter dem Zeiger (oben)
@@ -477,6 +489,8 @@ func _bandit_start() -> void:
 	if not _zahle():
 		return
 	walzen_ziel = [rng.randi() % 5, rng.randi() % 5, rng.randi() % 5]
+	if not schnell:
+		Ton.spielen("automat", -3.0)
 	_tween = create_tween()
 	_tween.set_parallel(true)
 	var lang := 0.0

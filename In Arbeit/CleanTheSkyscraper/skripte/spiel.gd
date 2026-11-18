@@ -1,7 +1,7 @@
 class_name Spiel
 extends Node3D
 # Das eigentliche Spiel: Gondel + Putzen + Geld + Shop + Speichern.
-# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 15 Kiosk-Bilder, 16 Casino, 17 Casino-Bilder, 18 Start zu Fuß, 19 Werkzeug-Kiosk, 20 Gondeln, 21 Helfer, 22 Fahrzeuge + Hotbar + Werkzeug-Stand, 23 Menü-Bilder, 24–28 Extras (ExtrasTest), 29–30 Läden (LaedenTest).
+# Testmodi (über haupt.gd, --ansicht=N): 5 Putz-Demo, 6/7 Fahrtests, 8 Maus-Test, 9 Shop-Test, 10 Speicher-Test, 13 Laufen, 14 Händler, 15 Kiosk-Bilder, 16 Casino, 17 Casino-Bilder, 18 Start zu Fuß, 19 Werkzeug-Kiosk, 20 Gondeln, 21 Helfer, 22 Fahrzeuge + Hotbar + Werkzeug-Stand, 23 Menü-Bilder, 24–28 Extras (ExtrasTest), 29–30 Läden (LaedenTest), 31–32 Strand (StrandTest), 33–34 Phase 5 (Phase5Test).
 
 const SPIELSTAND := "user://spielstand.json"
 const TESTSTAND := "user://spielstand_test.json"
@@ -50,6 +50,8 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 			weiter = weiter or (d is Dictionary and d.get("neu_laden", false))
 		if not weiter and FileAccess.file_exists(pfad):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(pfad))
+	if Ton.i:
+		Ton.i.spiel = self
 	zustand = FensterZustand.new(turm)
 	zustand.verbinde(turm.glas)
 	turm.glas.set_shader_parameter("mit_zustand", true)
@@ -140,6 +142,10 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		var et := ExtrasTest.new()
 		add_child(et)
 		et.setup(self)
+	if ansicht == 33 or ansicht == 34:   # Phase 5: Ton, Einstellungen, Tageszeit, Effekte, Abspann
+		var p5 := Phase5Test.new()
+		add_child(p5)
+		p5.setup(self)
 	if ansicht == 31 or ansicht == 32:   # Strand, Angeln, Yacht, Karte: Test + Testbilder
 		var stt := StrandTest.new()
 		add_child(stt)
@@ -172,10 +178,10 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 # Werkzeug + Upgrades auf die Gondel übertragen
 func _ausruestung() -> void:
 	if get_parent().has_method("_grafik"):
-		get_parent()._grafik()   # Einstellung „taa“
+		get_parent()._grafik()   # Bildqualität (Optionen)
 	spieler.werkzeug_setzen(wirtschaft.werkzeug())
 	var ka := wirtschaft.kosmetik_aktiv
-	spieler.aussehen(wirtschaft.kosmetik(ka.gondel).farbe, wirtschaft.kosmetik(ka.kleidung).farbe, wirtschaft.kosmetik(ka.schwamm).farbe, ka.lack, [ka.aufkleber, ka.blumen, ka.schirm])
+	spieler.aussehen(wirtschaft.kosmetik(ka.gondel).farbe, wirtschaft.kosmetik(ka.kleidung).farbe, wirtschaft.kosmetik(ka.schwamm).farbe, ka.lack, [ka.aufkleber, ka.blumen, ka.schirm, ka.radio])
 	_werte()
 	if helfer:
 		helfer.abgleichen()
@@ -219,6 +225,9 @@ func _fenster_sauber(f: int, spalte: int) -> void:
 	wirtschaft.statistik.fenster_selbst = int(wirtschaft.statistik.fenster_selbst) + 1
 	extras.fenster_geputzt()
 	hud.pop("+%d €" % lohn)
+	Ton.gedrosselt("quietschen", 0.12, -5.0, randf_range(0.9, 1.12))
+	Ton.gedrosselt("glanz", 0.25, -9.0, randf_range(0.95, 1.08))
+	Ton.gedrosselt("geld", 0.15, -12.0)
 	_funkeln(spieler.fenster_mitte(f, spalte))
 	var szene := zustand.szene(f, spalte)
 	if szene > 0:
@@ -229,6 +238,7 @@ func _fenster_sauber(f: int, spalte: int) -> void:
 		if neu:
 			var bonus := 10 * lohn
 			wirtschaft.geld += bonus
+			Ton.spielen("erfolg", -5.0)
 			hud.meldung("Neu im Sammelalbum: %s!  +%d €
 (B öffnet das Album)" % [name, bonus], 4.0)
 		else:
@@ -312,7 +322,7 @@ func _input(e: InputEvent) -> void:
 		return
 	if not (e is InputEventKey) or not e.pressed or e.echo:
 		return
-	if e.keycode == KEY_M and not shop.offen and not album.offen and not hmenu.offen and not cmenu.offen and not extras.menue_offen() and not strand.menu.offen and strand.angeln.zustand != "drill":
+	if Optionen.k(e) == KEY_M and not shop.offen and not album.offen and not hmenu.offen and not cmenu.offen and not extras.menue_offen() and not strand.menu.offen and strand.angeln.zustand != "drill":
 		karte.oeffnen()
 		get_viewport().set_input_as_handled()
 		return
@@ -323,34 +333,39 @@ func _input(e: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if cmenu.offen:
-		if e.keycode == KEY_E or e.keycode == KEY_ESCAPE:
+		if Optionen.k(e) == KEY_E or Optionen.k(e) == KEY_ESCAPE:
 			cmenu.schliessen()
 			get_viewport().set_input_as_handled()
 		return
 	if hmenu.offen:
-		if e.keycode == KEY_E or e.keycode == KEY_ESCAPE:
+		if Optionen.k(e) == KEY_E or Optionen.k(e) == KEY_ESCAPE:
 			hmenu.schliessen()
 			get_viewport().set_input_as_handled()
 		return
-	if (e.keycode == KEY_TAB and not album.offen) or (e.keycode == KEY_ESCAPE and shop.offen):
+	if (Optionen.k(e) == KEY_TAB and not album.offen) or (Optionen.k(e) == KEY_ESCAPE and shop.offen):
 		shop.umschalten()
 		spieler.gesperrt = shop.offen or (ansicht >= 5 and ansicht <= 7)
 		spieler.wischt = false
 		get_viewport().set_input_as_handled()
-	elif (e.keycode == KEY_B and not shop.offen) or (e.keycode == KEY_ESCAPE and album.offen):
+	elif (Optionen.k(e) == KEY_B and not shop.offen) or (Optionen.k(e) == KEY_ESCAPE and album.offen):
 		album.umschalten()
 		spieler.gesperrt = album.offen or (ansicht >= 5 and ansicht <= 7)
 		spieler.wischt = false
 		get_viewport().set_input_as_handled()
-	elif e.keycode == KEY_E and not shop.offen and not album.offen:
+	elif Optionen.k(e) == KEY_E and not shop.offen and not album.offen:
 		_ein_aus()
-	elif e.keycode >= KEY_1 and e.keycode <= KEY_4 and not spieler.aktiv and not shop.offen and not hmenu.offen and not cmenu.offen:
+	elif (Optionen.k(e) == KEY_R or Optionen.k(e) == KEY_T) and spieler.aktiv and not shop.offen and not album.offen and Ton.i:
+		var t := Ton.i.radio_taste(Optionen.k(e) == KEY_T)
+		if t != "":
+			hud.meldung(t, 2.5)
+			_speichern()
+	elif Optionen.k(e) >= KEY_1 and Optionen.k(e) <= KEY_4 and not spieler.aktiv and not shop.offen and not hmenu.offen and not cmenu.offen:
 		var fz := _fahrzeug_liste()
-		var i2: int = e.keycode - KEY_1
+		var i2: int = Optionen.k(e) - KEY_1
 		if i2 < fz.size():
 			_fahrzeug_waehlen(fz[i2])
-	elif e.keycode >= KEY_0 and e.keycode <= KEY_9 and spieler.aktiv and not shop.offen and not hmenu.offen and not cmenu.offen:
-		var i: int = 9 if e.keycode == KEY_0 else e.keycode - KEY_1
+	elif Optionen.k(e) >= KEY_0 and Optionen.k(e) <= KEY_9 and spieler.aktiv and not shop.offen and not hmenu.offen and not cmenu.offen:
+		var i: int = 9 if Optionen.k(e) == KEY_0 else Optionen.k(e) - KEY_1
 		if i < Wirtschaft.WERKZEUGE.size() and wirtschaft.ausruesten(Wirtschaft.WERKZEUGE[i].id):
 			_ausruestung()
 			hud.meldung(Wirtschaft.WERKZEUGE[i].name, 1.2)
@@ -555,6 +570,7 @@ func _process(dt: float) -> void:
 		wirtschaft.hoechster_abschnitt = abschnitt
 		var bonus := 25 * wirtschaft.lohn(spieler.stock)
 		wirtschaft.geld += bonus
+		Ton.spielen("glanz", -4.0, 0.8)
 		hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [int(spieler.y), bonus], 3.5)
 		_speichern()
 	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv, strand.ort_name() if strand.ort_name() != "" else extras.ort_name())
@@ -879,7 +895,7 @@ func _lauf_test(dt: float) -> void:
 		7:
 			if demo_zeit > 7.2:
 				_lt = -1
-				for n in ["ein_tauben", "ein_sandsturm", "ein_taa"]:
+				for n in ["ein_tauben", "ein_sandsturm", "s_ruhig"]:
 					var b: Button = shop.find_child(n, true, false)
 					if b:
 						b.pressed.emit()

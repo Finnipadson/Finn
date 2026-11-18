@@ -132,16 +132,16 @@ func aussteigen() -> void:
 # ---------------------------------------------------------------- Eingaben (vor dem Spiel). true = verbraucht
 func taste(e: InputEventKey) -> bool:
 	if menu.offen:
-		if e.keycode == KEY_E or e.keycode == KEY_ESCAPE:
+		if Optionen.k(e) == KEY_E or Optionen.k(e) == KEY_ESCAPE:
 			menu.schliessen()
 		return true
 	if angeln.aktiv():
-		if e.keycode in [KEY_ESCAPE, KEY_E, KEY_S, KEY_W, KEY_A, KEY_D] and angeln.zustand != "drill" and angeln.zustand != "fertig":
+		if Optionen.k(e) in [KEY_ESCAPE, KEY_E, KEY_S, KEY_W, KEY_A, KEY_D] and angeln.zustand != "drill" and angeln.zustand != "fertig":
 			angeln.einholen("Angel eingeholt.")
 			return true
-		return e.keycode not in [KEY_M, KEY_B, KEY_P]
+		return Optionen.k(e) not in [KEY_M, KEY_B, KEY_P]
 	if yacht.an_bord:
-		match e.keycode:
+		match Optionen.k(e):
 			KEY_E:
 				if yacht.am_liegeplatz():
 					aussteigen()
