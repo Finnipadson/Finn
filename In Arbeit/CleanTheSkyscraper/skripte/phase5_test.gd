@@ -73,6 +73,8 @@ func _test() -> void:
 		await _tageszeit()
 	if _teil("abspann"):
 		await _abspann()
+	if _teil("pause"):
+		await _pause()
 
 func _ton() -> void:
 	var t0 := Time.get_ticks_msec()
@@ -207,6 +209,47 @@ func _tageszeit() -> void:
 	await _warte(0.3)
 	_pruefe("Nachts leuchten Laternen", Tageszeit.lampen.size() >= 2 and (Tageszeit.lampen[0][0] as StandardMaterial3D).emission_energy_multiplier > 3.0, "%d Lampen-Materialien" % Tageszeit.lampen.size())
 	_pruefe("Nachtwert für die Shader", float(s.welt.zeit.werte.get("nacht", 0.0)) > 0.99)
+
+func _pause() -> void:
+	s.spieler.gesperrt = false
+	await _taste(KEY_ESCAPE)
+	var p := s.pause
+	_pruefe("Esc öffnet das Pausenmenü", p != null and is_instance_valid(p) and get_tree().paused)
+	if p == null:
+		return
+	for n in ["weiter", "einstellungen", "speichern", "hauptmenue", "beenden"]:
+		_pruefe("Pause-Knopf " + n, p.find_child(n, true, false) != null)
+	var y0 := s.spieler.y
+	_halte(KEY_W, true)
+	await _warte(0.5)
+	_halte(KEY_W, false)
+	_pruefe("Spiel steht in der Pause", absf(s.spieler.y - y0) < 0.001)
+	await _bild_machen("pausenmenue", 2)
+	_knopf(p, "einstellungen")
+	await get_tree().process_frame
+	_pruefe("Einstellungen aus der Pause", p.find_child("einstellungen_ui", true, false) != null)
+	await _bild_machen("pause einstellungen", 2)
+	await _taste(KEY_ESCAPE)
+	_pruefe("Esc schließt erst die Einstellungen", p.einst == null and is_instance_valid(p) and get_tree().paused)
+	_knopf(p, "speichern")
+	_pruefe("Speichern meldet sich", p.info.text.begins_with("Gespeichert"))
+	await _taste(KEY_ESCAPE)
+	await get_tree().process_frame
+	_pruefe("Esc = weiterspielen", s.pause == null and not get_tree().paused)
+	# Werkstatt offen: Esc schließt die Werkstatt, kein Pausenmenü
+	await _taste(KEY_TAB)
+	await _taste(KEY_ESCAPE)
+	_pruefe("Esc in der Werkstatt schließt nur die Werkstatt", not s.shop.offen and s.pause == null)
+	# Pause → Hauptmenü → weiter
+	await _taste(KEY_ESCAPE)
+	_knopf(s.pause, "hauptmenue")
+	await _warte(0.3)
+	var m := _menue_finden()
+	_pruefe("Pause → Hauptmenü", m != null and not get_tree().paused and s.process_mode == Node.PROCESS_MODE_DISABLED)
+	if m:
+		_knopf(m, "weiter")
+		await _warte(0.6)
+	_pruefe("… und zurück ins Spiel", _menue_finden() == null and s.process_mode == Node.PROCESS_MODE_INHERIT)
 
 func _abspann() -> void:
 	var z := s.zustand

@@ -25,6 +25,7 @@ var extras: Extras
 var strand: Strand          # Strandbar, Fischladen, Angeln, Yacht (Geometrie: welt.kueste)
 var karte: Karte            # Taste M: Stadtplan mit Ziel-Pfeil
 var effekte: Effekte        # Phase 5: Glanz, Seifenblasen, Sprühnebel, Münzen
+var pause: Pausenmenue      # Esc: Pausenmenü (Spiel pausiert)
 var wirtschaft := Wirtschaft.new()
 var ansicht := 0
 var frei := false
@@ -366,6 +367,9 @@ func _input(e: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif Optionen.k(e) == KEY_E and not shop.offen and not album.offen:
 		_ein_aus()
+	elif Optionen.k(e) == KEY_ESCAPE and pause == null and not express and not extras.menue_offen() and not strand.blockiert():
+		pause_oeffnen()
+		get_viewport().set_input_as_handled()
 	elif (Optionen.k(e) == KEY_R or Optionen.k(e) == KEY_T) and spieler.aktiv and not shop.offen and not album.offen and Ton.i:
 		var t := Ton.i.radio_taste(Optionen.k(e) == KEY_T)
 		if t != "":
@@ -526,6 +530,12 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
 		if zustand and spieler:
 			_speichern()
+
+# Esc: Pausenmenü (Weiterspielen, Einstellungen, Speichern, Hauptmenü, Beenden)
+func pause_oeffnen() -> void:
+	pause = Pausenmenue.new()
+	get_parent().add_child(pause)
+	pause.setup(self)
 
 # Werkstatt → Einstellungen → „Hauptmenü“: speichern und das Startmenü über das laufende Spiel legen
 func _zum_hauptmenue() -> void:
