@@ -321,6 +321,43 @@ func _bilder() -> void:
 		await _flimmern()
 	if _teil("effekte"):
 		await _effekt_bilder()
+	if _teil("fps"):
+		await _fps()
+
+# Bildrate (ohne --write-movie starten, z. B. --resolution 2560x1440): Spiel-Ansicht am Turm, Straße, Aussicht, Strand –
+# je am Tag und in der Nacht (Ton, Musik, Tageszeit laufen mit)
+func _fps() -> void:
+	var cam := Camera3D.new()
+	cam.far = 40000.0
+	cam.fov = 70.0
+	add_child(cam)
+	var sm := s.welt.see_mitte()
+	var orte := {
+		"gondel": [],
+		"strasse": [Vector3(262.5, 1.8, 41.5), Vector3(120, 8, 37.5)],
+		"see": [Vector3(sm.x + 70.0, 3.0, sm.y + 120.0), Vector3(0, 120, 0)],
+		"aussicht": [Vector3(160, 330, 120), Vector3(700, 0, 600)],
+		"strand": [Vector3(-560, 6, -150), Vector3(-760, 0, -175)],
+	}
+	for uhr in [13.0, 22.0]:
+		s.welt.zeit.phase = Tageszeit.phase_zu(uhr)
+		s.welt.zeit.laeuft = true
+		for k in orte:
+			if orte[k].is_empty():
+				s.spieler.cam.current = true
+			else:
+				cam.current = true
+				cam.position = orte[k][0]
+				cam.look_at(orte[k][1])
+			await _warte(2.5)
+			var summe := 0.0
+			var n := 0
+			var t0 := Time.get_ticks_usec()
+			while Time.get_ticks_usec() - t0 < 2000000:
+				await get_tree().process_frame
+				n += 1
+			summe = n / ((Time.get_ticks_usec() - t0) / 1000000.0)
+			print("FPS %s %02d Uhr: %d bei %s" % [k, int(uhr), int(summe), get_viewport().get_visible_rect().size])
 
 # Putzen mit Schwamm (Seifenblasen, Glanz, Münzen) und Wasserlanze (Sprühnebel)
 func _effekt_bilder() -> void:
