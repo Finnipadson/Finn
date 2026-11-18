@@ -739,6 +739,13 @@ func _einsteigen() -> void:
 	var n := s.spieler.normal
 	var ziel := Vector2(g.x + n.x * 3.2, g.z + n.z * 3.2)
 	await _gehe(ziel)
+	# Steckt der Bot an einem Hindernis vor der Gondel fest (Ziel aufgegeben, > 4 m weg), von schräg vorn probieren
+	# (vorher die Ursache der „Einsteigen klappt nicht“-Hänger, Abstand 4,2–4,8 m)
+	for winkel in [0.8, -0.8, 1.4, -1.4]:
+		if s._abstand_gondel() <= Spiel.EINSTEIG_WEIT - 0.3:
+			break
+		var nd := Vector2(n.x, n.z).rotated(winkel)
+		await _gehe(Vector2(g.x, g.z) + nd * 2.6)
 	await _hinschauen(Vector2(g.x, g.z))
 	s._taste(KEY_E)
 	await _warte(0.3)
