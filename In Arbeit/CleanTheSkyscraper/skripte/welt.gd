@@ -182,14 +182,43 @@ func licht(w: Dictionary) -> void:
 
 func _boden() -> void:
 	var sand := Bau.matt("d9b47a", 1.0)
-	var pm := PlaneMesh.new()
-	pm.size = Vector2(30000.0 - Kueste.UFER_X, 60000)   # endet an der Ufermauer, dahinter Strand + Meer (Kueste)
-	var b := MeshInstance3D.new()
-	b.mesh = pm
-	b.position.x = (30000.0 + Kueste.UFER_X) * 0.5
+	# Boden in zwei Teilen (18.11.2026, Video des Users „Boden wackelt vor dem Turm“): früher ein einziges Viereck
+	# 30 × 60 km. Lag beim Umschauen eine seiner fernen Ecken genau in der Kameraebene, rechnete die Grafikkarte die
+	# Weltposition des nahen Bodens für dieses Bild falsch → Muster sprang. Jetzt kleine Kacheln in der Stadt und grobe
+	# Streifen außen (siehe unten). Vergleich: --boden-alt
+	var alt := "--boden-alt" in OS.get_cmdline_user_args()
+	var teile: Array = []   # [MeshInstance3D] – alle mit demselben Boden-Shader
+	if alt:
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(30000.0 - Kueste.UFER_X, 60000)   # endet an der Ufermauer, dahinter Strand + Meer (Kueste)
+		var b0 := MeshInstance3D.new()
+		b0.mesh = pm
+		b0.position.x = (30000.0 + Kueste.UFER_X) * 0.5
+		teile.append(b0)
+	else:
+		# Stadt: 250-m-Kacheln bis 2,5 km; außen vier grobe Streifen (1 km), 3 cm tiefer und 10 m unter die Stadt
+		# geschoben, damit an den Rändern keine Lücken blitzen. Der Boden wirft keine Schatten (spart Schattenpässe).
+		var x1 := 2500.0
+		var ueber := 10.0
+		var x0 := Kueste.UFER_X
+		for r in [
+				[x0, x1, -x1, x1, 250.0, 0.0],                       # Stadt
+				[x1 - ueber, 30000.0, -30000.0, 30000.0, 1000.0, -0.03],   # Osten
+				[x0, x1, x1 - ueber, 30000.0, 1000.0, -0.03],        # Norden
+				[x0, x1, -30000.0, -x1 + ueber, 1000.0, -0.03]]:     # Süden
+			var pm2 := PlaneMesh.new()
+			pm2.size = Vector2(float(r[1]) - float(r[0]), float(r[3]) - float(r[2]))
+			pm2.subdivide_width = maxi(0, int(pm2.size.x / float(r[4])) - 1)
+			pm2.subdivide_depth = maxi(0, int(pm2.size.y / float(r[4])) - 1)
+			var t := MeshInstance3D.new()
+			t.mesh = pm2
+			t.position = Vector3((float(r[0]) + float(r[1])) * 0.5, float(r[5]), (float(r[2]) + float(r[3])) * 0.5)
+			t.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			teile.append(t)
 	var bm := ShaderMaterial.new()
 	bm.shader = load("res://shader/boden.gdshader")
-	b.material_override = bm   # Platz, Park, Straßenraster, weicher Übergang in die Wüste
+	for t in teile:
+		(t as MeshInstance3D).material_override = bm   # Platz, Park, Straßenraster, weicher Übergang in die Wüste
 	bm.set_shader_parameter("see_mitte", see_mitte())
 	bm.set_shader_parameter("see_dir", _see_dir())
 	bm.set_shader_parameter("see_halb", SEE_HALB)
@@ -204,7 +233,8 @@ func _boden() -> void:
 	bm.set_shader_parameter("boul_halb", Kueste.BOUL_HALB)
 	bm.set_shader_parameter("boul_x0", Kueste.BOUL_X0)
 	boden_mat = bm
-	add_child(b)
+	for t in teile:
+		add_child(t)
 	for i in 40: # Dünen am Horizont
 		var a := rng.randf() * TAU
 		var d := 4000.0 + rng.randf() * 9000.0

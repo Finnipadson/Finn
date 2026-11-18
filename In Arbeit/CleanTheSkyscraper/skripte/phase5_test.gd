@@ -323,6 +323,170 @@ func _bilder() -> void:
 		await _effekt_bilder()
 	if _teil("fps"):
 		await _fps()
+	if _teil("wackeln"):
+		await _wackeln()
+	if _teil("boden"):
+		await _boden_schweben()
+	if _teil("hover"):
+		await _hover_stand()
+	if _teil("ecke"):
+		await _boden_ecken()
+
+# Blickwinkel, bei denen eine Ecke der Bodenfläche genau in der Kameraebene liegt (w ≈ 0): je Ecke 13 Bilder mit
+# winzigen Drehungen darum herum. Springt dort der Boden, ist es die Riesen-Dreieck-Ungenauigkeit.
+func _boden_ecken() -> void:
+	var cam := Camera3D.new()
+	cam.far = 40000.0
+	cam.fov = 75.0
+	cam.near = 0.05
+	add_child(cam)
+	cam.current = true
+	s.hud.visible = false
+	var pos := Vector3(60, 1.9, 40)
+	var pitch := -0.25
+	var ecken := []
+	for x in [Kueste.UFER_X, 30000.0]:
+		for z in [-30000.0, 30000.0]:
+			ecken.append(Vector3(x, 0, z))
+	for x in [Kueste.UFER_X, 2500.0]:   # Ecken der feinen Stadt-Kacheln (Welt._boden)
+		for z in [-2500.0, 2500.0]:
+			ecken.append(Vector3(x, 0, z))
+	var vor := func(yaw: float) -> Vector3:
+		return Vector3(-sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch))
+	var n := 0
+	for c in ecken:
+		var r: Vector3 = c - pos
+		var schritt := TAU / 720.0
+		for i in 720:
+			var a0 := i * schritt
+			var w0: float = vor.call(a0).dot(r)
+			var w1: float = vor.call(a0 + schritt).dot(r)
+			if signf(w0) == signf(w1):
+				continue
+			var lo := a0
+			var hi := a0 + schritt
+			for k in 50:
+				var mi := (lo + hi) * 0.5
+				if signf(vor.call(mi).dot(r)) == signf(w0):
+					lo = mi
+				else:
+					hi = mi
+			n += 1
+			print("FLIMMER ecke%d_%s steht von=%d" % [n, str(snappedf(rad_to_deg(lo), 0.01)), Engine.get_frames_drawn() + 1])
+			for k in range(-7, 9):
+				cam.position = pos
+				cam.rotation = Vector3(pitch, lo + k * 0.00004, 0)
+				await get_tree().process_frame
+
+# Echt zu Fuß auf dem Hoverboard vor der Gondel stehen (wie im Video des Users), Bilder für Sprung-Suche
+func _hover_stand() -> void:
+	s.welt.zeit.phase = Tageszeit.phase_zu(8.45)
+	s.welt.zeit.laeuft = true
+	s.spieler.y = 0.3
+	s._ein_aus()
+	await _warte(0.5)
+	w.fahrzeuge.append("hoverboard")
+	s._fahrzeug_waehlen("hoverboard")
+	var g := s.spieler.gondel.global_position
+	var n := s.spieler.normal
+	s.laeufer.position = Vector3(g.x + n.x * 6.0, 0.0, g.z + n.z * 6.0)
+	s.laeufer.yaw = atan2(n.x, n.z) + 2.6
+	s.laeufer.pitch = -0.25
+	await _warte(1.0)
+	print("HOVER von=%d" % Engine.get_frames_drawn())
+	var ys := []
+	for i in 240:
+		await get_tree().process_frame
+		ys.append(s.laeufer.cam.global_position.y)
+	var spr := 0
+	for i in range(1, ys.size() - 1):
+		if absf(ys[i] - (ys[i - 1] + ys[i + 1]) * 0.5) > 0.01:
+			spr += 1
+	print("HOVER bis=%d kamera_y min=%.3f max=%.3f spruenge=%d strom=%s" % [Engine.get_frames_drawn(), ys.min(), ys.max(), spr, s.laeufer.fahrzeug])
+	# Echtzeit: Helligkeit des unteren Bildteils je Bild; einzelne Ausreißer = Boden springt (Video des Users)
+	var werte := []
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 8000:
+		await RenderingServer.frame_post_draw
+		var img := get_viewport().get_texture().get_image()
+		var h := img.get_height()
+		var wd := img.get_width()
+		var summe := 0.0
+		for y in range(int(h * 0.62), h, 12):
+			for x in range(0, wd, 12):
+				summe += img.get_pixel(x, y).get_luminance()
+		werte.append(summe)
+		if Time.get_ticks_msec() - t0 > 4000:
+			s.laeufer.yaw += 0.0008   # langsam umschauen
+	var ausr := 0
+	for i in range(1, werte.size() - 1):
+		var m: float = (werte[i - 1] + werte[i + 1]) * 0.5
+		if absf(werte[i] - m) > 0.02 * m:
+			ausr += 1
+			if ausr <= 5:
+				print("SPRUNG bild %d: %.0f zwischen %.0f und %.0f" % [i, werte[i], werte[i - 1], werte[i + 1]])
+	print("ECHTZEIT bilder=%d ausreisser=%d fps=%d" % [werte.size(), ausr, Engine.get_frames_per_second()])
+
+# Boden-Muster bei Hoverboard-Schweben (Kamera ±3 cm wie Laeufer.schweben): ruhig = nur Stand, schwebt = Kamera wippt.
+# Vergleich mit dem alten Ein-Viereck-Boden: --boden-alt
+func _boden_schweben() -> void:
+	var cam := Camera3D.new()
+	cam.far = 40000.0
+	cam.fov = 75.0
+	add_child(cam)
+	cam.current = true
+	s.hud.visible = false
+	var tp := s.turm.fassaden_punkt(0, 40.0, 1.0)
+	var orte := {
+		"vor_turm": [tp.pos + tp.normal * 22.0 + Vector3.UP * 1.85, tp.pos + Vector3.UP * 1.2],
+		"platz": [Vector3(55, 1.85, 20), Vector3(120, 1.0, 60)],
+		"strasse": [Vector3(262.5, 1.85, 41.5), Vector3(120, 1.0, 37.5)],
+	}
+	s.welt.zeit.phase = Tageszeit.phase_zu(8.4)
+	s.welt.zeit.laeuft = false
+	for k in orte:
+		for schwebt in [false, true]:
+			cam.position = orte[k][0]
+			cam.look_at(orte[k][1])
+			var y0 := cam.position.y
+			for i in 10:
+				await get_tree().process_frame
+			print("FLIMMER %s %s von=%d" % [k, "schwebt" if schwebt else "ruhig", Engine.get_frames_drawn()])
+			var yaw0 := cam.rotation.y
+			for i in 16:
+				if schwebt:   # schwebt + schaut sich langsam um (Maus), wie im Video
+					cam.position.y = y0 + sin(i * 0.1 + 1.0) * 0.03
+					cam.rotation.y = yaw0 + i * 0.0004
+				await get_tree().process_frame
+
+# Boden-Wackeln auf dem Platz (Video des Users 18.11.2026, 8:21 Uhr, Hoverboard): Uhrzeit × Zeit läuft × Kamera fährt
+# langsam (0,3 m/s, damit nur Flimmern zählt). Auswertung: tools/flimmern_zeit.py
+func _wackeln() -> void:
+	var cam := Camera3D.new()
+	cam.far = 40000.0
+	cam.fov = 75.0
+	add_child(cam)
+	cam.current = true
+	s.hud.visible = false
+	var uhren := [8.35, 13.0]
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--uhren="):
+			uhren = Array(a.split("=")[1].split_floats(","))
+	for u in uhren:
+		for lauf in [true, false]:
+			for faehrt in [false, true]:
+				s.welt.zeit.phase = Tageszeit.phase_zu(float(u))
+				s.welt.zeit.laeuft = lauf
+				cam.position = Vector3(55, 1.6, 20)
+				cam.look_at(Vector3(120, 1.0, 60))
+				for i in 10:
+					await get_tree().process_frame
+				print("FLIMMER platz_%s %s%s von=%d" % [str(u), "laeuft" if lauf else "steht", "_faehrt" if faehrt else "", Engine.get_frames_drawn()])
+				for i in 16:
+					if faehrt:
+						cam.position += Vector3(0.3, 0, -0.3).normalized() * 0.3 / 30.0
+					await get_tree().process_frame
+	s.welt.zeit.laeuft = false
 
 # Bildrate (ohne --write-movie starten, z. B. --resolution 2560x1440): Spiel-Ansicht am Turm, Straße, Aussicht, Strand –
 # je am Tag und in der Nacht (Ton, Musik, Tageszeit laufen mit)
