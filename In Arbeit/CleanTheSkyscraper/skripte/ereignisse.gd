@@ -63,6 +63,15 @@ func taube_jetzt() -> bool:
 				kandidaten.append(Vector2i(sp, f))
 	if kandidaten.is_empty():
 		return false
+	# Fenster im Blickfeld bevorzugen – vorher landete die Taube oft knapp außerhalb des Bildes (±6 Spalten ≈ ±9 m)
+	var im_bild := []
+	for kk in kandidaten:
+		var pk := turm.fassaden_punkt(kk.y, (kk.x + 0.5) * Turm.FENSTER_B, kk.y * Turm.STOCK_H + Turm.STOCK_H * Turm.BAND_ANTEIL)
+		var q: Vector3 = pk.pos + pk.normal * 0.22
+		if spieler.cam.is_position_in_frustum(q) and spieler.cam.is_position_in_frustum(q + Vector3.UP * 0.4) 				and spieler.cam.is_position_in_frustum(q + pk.tangente * 0.5) and spieler.cam.is_position_in_frustum(q - pk.tangente * 0.5):
+			im_bild.append(kk)
+	if not im_bild.is_empty():
+		kandidaten = im_bild
 	var k: Vector2i = kandidaten[rng.randi() % kandidaten.size()]
 	var fy := k.y * Turm.STOCK_H + Turm.STOCK_H * Turm.BAND_ANTEIL
 	var p := turm.fassaden_punkt(k.y, (k.x + 0.5) * Turm.FENSTER_B, fy)

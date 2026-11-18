@@ -1,2 +1,5 @@
 .godot/
 *.import
+
+# Phase 5: gebaute .exe + Hörproben (große Binärdateien)
+export/

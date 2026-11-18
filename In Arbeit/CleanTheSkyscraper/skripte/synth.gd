@@ -344,6 +344,9 @@ static func _meer() -> PackedFloat32Array:
 	for i in s.size():
 		var t := i / R
 		s[i] = s[i] * (0.15 + 0.85 * welle.call(t)) + tief[i] * 0.6
+	s = normal(s, 1.0)
+	for i in s.size():   # sanft verdichten: Brandung bleibt hörbar, Spitzen werden weicher
+		s[i] = tanh(s[i] * 2.2)
 	return normal(schleife(s, 0.6), 0.75)
 
 static func _moewe() -> PackedFloat32Array:
@@ -630,7 +633,7 @@ static func _i_chip() -> PackedFloat32Array:
 		var t := i / R
 		var puls := 0.5 if t < 0.05 else 0.25
 		s[i] = (1.0 if fmod(f * t, 1.0) < puls else -1.0) * minf(1.0, t / 0.003) * exp(-t / 0.22)
-	return normal(tiefpass(s, 6000.0), 0.55)
+	return normal(hochpass(tiefpass(s, 6000.0), 40.0), 0.55)
 
 static func _i_pluck() -> PackedFloat32Array:
 	var f := 261.63

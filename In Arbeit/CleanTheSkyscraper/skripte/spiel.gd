@@ -632,6 +632,9 @@ func _process(dt: float) -> void:
 		hud.fortschritt(zustand.fortschritt(f, int(u)), true)
 	else:
 		hud.fortschritt(0.0, false)
+	# Alle Fenster sauber → einmal der Abspann (danach frei weiterspielen)
+	if not wirtschaft.abspann and zustand.sauber_zahl >= turm.fenster_gesamt and ((ansicht == 0 and not durchlauf) or ansicht == 33):
+		abspann_starten()
 	# Tageszeit: speichern, Innenräume hell halten, Uhr anzeigen, Leuchtfeuer auf der Spitze blinkt nachts
 	if welt.zeit.phase >= 0.0:
 		if welt.zeit.laeuft:
@@ -644,6 +647,26 @@ func _process(dt: float) -> void:
 	if speicher_zeit > AUTOSAVE:
 		speicher_zeit = 0.0
 		_speichern()
+
+var abspann: Abspann
+func abspann_starten() -> void:
+	wirtschaft.abspann = true
+	if not wirtschaft.turm_nr in wirtschaft.tuerme_fertig:
+		wirtschaft.tuerme_fertig.append(wirtschaft.turm_nr)
+	_speichern()
+	if shop.offen:
+		shop.umschalten()
+	if album.offen:
+		album.umschalten()
+	if hmenu.offen:
+		hmenu.schliessen()
+	if cmenu.offen:
+		cmenu.schliessen()
+	if karte.offen:
+		karte.schliessen()
+	abspann = Abspann.new()
+	get_parent().add_child(abspann)
+	abspann.setup(self)
 
 # Rotes Flug-Warnlicht auf der Turmspitze (leuchtet nachts kräftig und blinkt)
 var _feuer_mat: StandardMaterial3D

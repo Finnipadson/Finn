@@ -274,6 +274,18 @@ const KOSMETIK := [
 ]
 const KOSMETIK_START := ["gondel_gelb", "kleid_blau", "schwamm_gelb", "lack_uni", "kleber_keine", "blumen_keine", "schirm_keiner", "gradio_keins"]
 
+# Türme (Phase 6 vorbereitet): Nummer → Name + Eckdaten. Turm 1 ist die Wüstennadel (turm.gd); weitere Türme
+# bekommen hier einen Eintrag, ihre Form baut später ein eigener Generator (siehe Bauplan „Phase 6: Neuer Turm“).
+const TUERME := [
+	{"nr": 1, "name": "Wüstennadel", "stockwerke": 168, "hoehe": 935},
+]
+
+static func turm_daten(nr: int) -> Dictionary:
+	for t in TUERME:
+		if int(t.nr) == nr:
+			return t
+	return TUERME[0]
+
 var geld := 0
 var besitz := ["schwamm"]       # gekaufte Werkzeuge
 var aktiv := "schwamm"

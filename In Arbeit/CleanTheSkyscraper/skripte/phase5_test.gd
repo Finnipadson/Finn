@@ -71,6 +71,8 @@ func _test() -> void:
 		await _effekte()
 	if _teil("tageszeit"):
 		await _tageszeit()
+	if _teil("abspann"):
+		await _abspann()
 
 func _ton() -> void:
 	var t0 := Time.get_ticks_msec()
@@ -205,6 +207,34 @@ func _tageszeit() -> void:
 	await _warte(0.3)
 	_pruefe("Nachts leuchten Laternen", Tageszeit.lampen.size() >= 2 and (Tageszeit.lampen[0][0] as StandardMaterial3D).emission_energy_multiplier > 3.0, "%d Lampen-Materialien" % Tageszeit.lampen.size())
 	_pruefe("Nachtwert für die Shader", float(s.welt.zeit.werte.get("nacht", 0.0)) > 0.99)
+
+func _abspann() -> void:
+	var z := s.zustand
+	var alt := z.sauber_zahl
+	z.sauber_zahl = s.turm.fenster_gesamt   # so tun, als wäre alles sauber
+	await _warte(0.3)
+	var a := s.abspann
+	_pruefe("Abspann startet, wenn alles sauber ist", a != null and is_instance_valid(a) and w.abspann and 1 in w.tuerme_fertig)
+	if a == null:
+		return
+	_pruefe("Abspann-Kamera aktiv, HUD aus", a.cam.current and not s.hud.visible)
+	await _taste(KEY_TAB)
+	_pruefe("Tasten gehen nicht ins Spiel", not s.shop.offen)
+	for t in [4.0, 16.0, 30.0]:
+		while a.zeit < t:
+			await get_tree().process_frame
+		await _bild_machen("abspann %d s" % int(t), 1)
+	await _warte(0.2)
+	await _taste(KEY_ESCAPE)
+	_pruefe("Esc springt zum Ende", a.zeit >= Abspann.DAUER - 6.0)
+	await _warte(1.6)
+	await _bild_machen("abspann ende", 1)
+	_knopf(a, "weiterspielen")
+	await _warte(0.3)
+	_pruefe("Weiterspielen beendet den Abspann", not is_instance_valid(a) and s.hud.visible and not s.spieler.gesperrt)
+	await _warte(0.5)
+	_pruefe("Abspann nur einmal", s.abspann == null or not is_instance_valid(s.abspann))
+	z.sauber_zahl = alt
 
 func _radio() -> void:
 	w.kosmetik_besitz.append("gradio_koffer")
