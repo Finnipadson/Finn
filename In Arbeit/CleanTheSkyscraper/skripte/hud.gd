@@ -154,6 +154,16 @@ func zeige(sauber: int, gesamt: int, euro: int, meter: float, stockwerk: int, zu
 	else:
 		hoehe.text = "Am Boden · zu Fuß" if zu_fuss else "%d m · Stockwerk %d" % [int(meter), stockwerk + 1]
 
+# Geld-Feld kurz aufpumpen (Münze angekommen)
+var _puls: Tween
+func geld_puls() -> void:
+	geld.pivot_offset = geld.size * 0.5
+	if _puls:
+		_puls.kill()
+	_puls = create_tween()
+	geld.scale = Vector2(1.18, 1.18)
+	_puls.tween_property(geld, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
 # Uhrzeit (Phase 5, Tag und Nacht) in der Kopfzeile der Höhen-Karte
 func uhr(t: String) -> void:
 	uhr_l.text = "Höhe" if t == "" else "Höhe  ·  %s Uhr" % t

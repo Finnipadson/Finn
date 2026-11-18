@@ -67,6 +67,10 @@ func _test() -> void:
 		await _einstellungen()
 	if _teil("radio"):
 		await _radio()
+	if _teil("effekte"):
+		await _effekte()
+	if _teil("tageszeit"):
+		await _tageszeit()
 
 func _ton() -> void:
 	var t0 := Time.get_ticks_msec()
@@ -153,6 +157,55 @@ func _einstellungen() -> void:
 	Optionen.setzen("tasten", {})
 	await _taste(KEY_TAB)
 
+func _effekte() -> void:
+	var e := s.effekte
+	var vor := e.aktiv_glanz.size()
+	s._fenster_sauber(3, 10)
+	await get_tree().process_frame
+	_pruefe("Glanz auf geputztem Fenster", e.aktiv_glanz.size() == vor + 1)
+	var muenzen := 0
+	for c in s.hud.wurzel.get_children():
+		if c is TextureRect and (c as TextureRect).texture == e._muenz_tex:
+			muenzen += 1
+	_pruefe("Münzen fliegen ins Geld-Feld", muenzen == 3, str(muenzen))
+	await _warte(1.2)
+	_pruefe("Glanz verschwindet wieder", e.aktiv_glanz.size() == vor)
+	s.spieler.wischt = true
+	for k in 10:
+		s.spieler.schwamm_off.x += 0.05
+		await get_tree().process_frame
+	_pruefe("Seifenblasen beim Wischen", e._blasen.emitting)
+	s.spieler.wischt = false
+	await get_tree().process_frame
+	_pruefe("… und aus ohne Wischen", not e._blasen.emitting)
+
+func _tageszeit() -> void:
+	_pruefe("Uhr 6:30 = Phase 0", is_equal_approx(Tageszeit.uhr(0.0), 6.5))
+	var ok := true
+	for h in [0.5, 3.0, 5.7, 6.5, 9.0, 12.0, 18.9, 19.5, 21.0, 23.9]:
+		if absf(Tageszeit.uhr(Tageszeit.phase_zu(h)) - h) > 0.01:
+			ok = false
+	_pruefe("Uhr ↔ Phase umkehrbar", ok)
+	var mittag := Tageszeit.berechnen(Tageszeit.phase_zu(12.75))
+	var nacht := Tageszeit.berechnen(Tageszeit.phase_zu(23.0))
+	_pruefe("Mittags hoch, nachts unter dem Horizont", float(mittag.sonne_hoehe) > 55.0 and float(nacht.sonne_hoehe) < -5.0, "%.0f° / %.0f°" % [mittag.sonne_hoehe, nacht.sonne_hoehe])
+	_pruefe("Nachtwert", float(mittag.nacht) < 0.01 and float(nacht.nacht) > 0.99)
+	var hell := 0.0
+	for k in 1200:
+		if float(Tageszeit.berechnen(k / 1200.0).tag) > 0.5:
+			hell += 1.0
+	_pruefe("Etwa 14 von 20 Minuten hell", hell / 60.0 > 13.0 and hell / 60.0 < 15.5, "%.1f min" % (hell / 60.0))
+	s.welt.zeit.phase = 0.5
+	s.welt.zeit.laeuft = true
+	await _warte(2.0)
+	var dphase := s.welt.zeit.phase - 0.5
+	_pruefe("Zeit läuft (20 min je Tag)", absf(dphase * Tageszeit.TAG - 2.0) < 0.3, "%.2f s" % (dphase * Tageszeit.TAG))
+	s.welt.zeit.laeuft = false
+	s.welt.zeit.phase = Tageszeit.phase_zu(22.0)
+	await _warte(0.3)
+	_pruefe("Nachts leuchten Laternen", Tageszeit.lampen.size() >= 2 and (Tageszeit.lampen[0][0] as StandardMaterial3D).emission_energy_multiplier > 3.0, "%d Lampen-Materialien" % Tageszeit.lampen.size())
+	_pruefe("Nachtwert für die Shader", float(s.welt.zeit.werte.get("nacht", 0.0)) > 0.99)
+
 func _radio() -> void:
 	w.kosmetik_besitz.append("gradio_koffer")
 	w.nutze_kosmetik("gradio_koffer")
@@ -236,6 +289,46 @@ func _bilder() -> void:
 		await _tag_bilder()
 	if _teil("flimmern"):
 		await _flimmern()
+	if _teil("effekte"):
+		await _effekt_bilder()
+
+# Putzen mit Schwamm (Seifenblasen, Glanz, Münzen) und Wasserlanze (Sprühnebel)
+func _effekt_bilder() -> void:
+	var sp := s.spieler
+	sp.gesperrt = true
+	sp.yaw = 0.0
+	sp.pitch = -0.05
+	var t := 0.0
+	var n := 0
+	while t < 7.0:
+		var dt := get_process_delta_time()
+		t += dt
+		sp.wischt = true
+		var reihe := int(t / 0.35)
+		var u := fmod(t, 0.35) / 0.35
+		if reihe % 2 == 1:
+			u = 1.0 - u
+		sp.schwamm_off = Vector2(lerpf(-1.5, 0.3, u), lerpf(0.5, 2.6, clampf(float(reihe) / 18.0, 0.0, 1.0)))
+		await get_tree().process_frame
+		if t > 2.6 and t - dt <= 2.6:   # ein Fenster „fertig“ melden → Glanz + Münzen im Bild
+			var spalte := int(fposmod(sp.weg, s.turm.umfaenge[sp.stock]) / Turm.FENSTER_B)
+			s._fenster_sauber(s.turm.stockwerk_bei(sp.y + 1.5), spalte)
+		if int(t / 0.7) > n:
+			n = int(t / 0.7)
+			print("BILD %d frame=%d wischen t=%.1f glanz=%d" % [100 + n, Engine.get_frames_drawn(), t, s.effekte.aktiv_glanz.size()])
+	sp.wischt = false
+	w.besitz.append("lanze")
+	w.ausruesten("lanze")
+	s._ausruestung()
+	sp.y += 3.0
+	sp.yaw = 0.25
+	sp.pitch = 0.1
+	sp.wischt = true
+	for k in 40:
+		await get_tree().process_frame
+		sp.yaw = 0.15 + sin(k * 0.08) * 0.25
+	print("BILD 120 frame=%d spruehen nebel=%s" % [Engine.get_frames_drawn(), s.effekte._nebel.emitting])
+	sp.wischt = false
 
 # Flimmert die wandernde Sonne? Je Ort 16 Bilder mit laufender Zeit (echtes Tempo) und 16 mit stehender Zeit.
 # Auswertung: tools/flimmern_zeit.py (zweite zeitliche Ableitung je Bildpunkt).

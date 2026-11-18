@@ -24,6 +24,7 @@ var cmenu: CasinoMenu
 var extras: Extras
 var strand: Strand          # Strandbar, Fischladen, Angeln, Yacht (Geometrie: welt.kueste)
 var karte: Karte            # Taste M: Stadtplan mit Ziel-Pfeil
+var effekte: Effekte        # Phase 5: Glanz, Seifenblasen, Sprühnebel, Münzen
 var wirtschaft := Wirtschaft.new()
 var ansicht := 0
 var frei := false
@@ -139,6 +140,9 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	karte = Karte.new()
 	add_child(karte)
 	karte.setup(self)
+	effekte = Effekte.new()
+	add_child(effekte)
+	effekte.setup(self)
 	if ansicht >= 24 and ansicht <= 28:
 		var et := ExtrasTest.new()
 		add_child(et)
@@ -235,6 +239,8 @@ func _fenster_sauber(f: int, spalte: int) -> void:
 	Ton.gedrosselt("glanz", 0.25, -9.0, randf_range(0.95, 1.08))
 	Ton.gedrosselt("geld", 0.15, -12.0)
 	_funkeln(spieler.fenster_mitte(f, spalte))
+	effekte.fenster_glanz(f, spalte)
+	effekte.muenzen(3)
 	var szene := zustand.szene(f, spalte)
 	if szene > 0:
 		var k := str(szene)
