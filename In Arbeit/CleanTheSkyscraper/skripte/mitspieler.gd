@@ -202,6 +202,72 @@ func gondel_orte() -> Array:
 				"pid": str((Netz.spieler.get(id, {}) as Dictionary).get("profil_id", ""))})
 	return _orte
 
+# Sprechblase über dem Kopf (Emote)
+func blase(id: int, text: String, dauer: float) -> void:
+	if not figuren.has(id):
+		return
+	var f: Dictionary = figuren[id]
+	if f.get("blase") != null and is_instance_valid(f.blase):
+		(f.blase as Node).queue_free()
+	var l := Label3D.new()
+	l.text = text
+	l.font_size = 56
+	l.pixel_size = 0.006
+	l.outline_size = 14
+	l.outline_modulate = Color(0.02, 0.04, 0.08, 0.9)
+	l.modulate = Color("ffffff")
+	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	l.position.y = 3.1
+	(f.knoten as Node3D).add_child(l)
+	f["blase"] = l
+	get_tree().create_timer(dauer).timeout.connect(func():
+		if is_instance_valid(l):
+			l.queue_free())
+
+func blase_von(id: int) -> String:
+	if not figuren.has(id) or figuren[id].get("blase") == null or not is_instance_valid(figuren[id].blase):
+		return ""
+	return (figuren[id].blase as Label3D).text
+
+# Geräusche der anderen (7f): eine räumliche Schleife je Mitspieler – Wischen/Sprühen, Gondel-Motor, Jetpack, Scooter, Hoverboard
+func _ton(f: Dictionary, l: Array, modus: int) -> void:
+	if Ton.i == null or Ton.i.aus:
+		return
+	var name := ""
+	var tempo: float = f.tempo
+	if modus == 1 and l.size() >= 15:
+		if bool(l[14]):
+			name = "spruehen" if bool(l[13]) else "wisch_nass"
+		elif (f.get("g_tempo", 0.0) as float) > 0.3:
+			name = "motor"
+	elif modus == 0:
+		var fz := str(l[6])
+		var hoch := float(l[7]) if l.size() > 7 else 0.0
+		if fz == "jetpack" and hoch > 0.05:
+			name = "jetpack"
+		elif fz == "scooter" and tempo > 0.8:
+			name = "scooter"
+		elif fz == "hoverboard" and tempo > 0.8:
+			name = "hover"
+	var p: AudioStreamPlayer3D = f.get("ton")
+	if name == "" or not Ton._cache.has(name):
+		if p and p.playing:
+			p.stop()
+		return
+	if p == null:
+		p = AudioStreamPlayer3D.new()
+		p.bus = "Geraeusche"
+		p.max_distance = 80.0
+		p.unit_size = 6.0
+		add_child(p)
+		f["ton"] = p
+	p.global_position = (f.gondel as Node3D).global_position + Vector3(0, 1.2, 0) if modus == 1 and f.gondel != null else (f.knoten as Node3D).global_position
+	if f.get("ton_name", "") != name or not p.playing:
+		f["ton_name"] = name
+		p.stream = Ton._cache[name]
+		p.volume_db = -8.0
+		p.play()
+
 func fahrzeug_von(id: int) -> String:
 	return str(figuren[id].get("fz_id", "")) if figuren.has(id) else ""
 
@@ -229,6 +295,8 @@ func _process(dt: float) -> void:
 				(figuren[id].gondel as Node3D).queue_free()
 			if figuren[id].wz != null:
 				(figuren[id].wz as Node3D).queue_free()
+			if figuren[id].get("ton") != null:
+				(figuren[id].ton as Node).queue_free()
 			figuren.erase(id)
 			if spiel.gondeln:
 				spiel.gondeln.aktualisieren(spiel.wirtschaft.aktive_gondel)   # geparkte wieder zeigen
@@ -279,6 +347,7 @@ func _process(dt: float) -> void:
 						fl.visible = hoch > 0.05
 						fl.scale = Vector3.ONE * (0.8 + randf() * 0.4)
 		_gondel_takt(id, f, l, modus, dt)
+		_ton(f, l, modus)
 	if not fahrer and spiel.strand and spiel.strand.yacht:
 		spiel.strand.yacht.fremd_ende()   # niemand anderes steuert die Yacht
 
@@ -319,6 +388,7 @@ func _gondel_takt(id: int, f: Dictionary, l: Array, modus: int, dt: float) -> vo
 	if modus == 1 and gp.distance_to(f.g_ziel) > 40.0:
 		gp = f.g_ziel   # Express/Sprung
 	f["g_pos"] = gp.lerp(f.g_ziel, minf(1.0, dt * 12.0))
+	f["g_tempo"] = gp.distance_to(f.g_ziel) / maxf(dt, 0.001) * minf(1.0, dt * 12.0)
 	if modus == 1 and l.size() >= 14:
 		f["g_winkel"] = lerp_angle(float(f.g_winkel), float(l[7]), minf(1.0, dt * 10.0))
 	g.position = f.g_pos

@@ -27,6 +27,7 @@ var karte: Karte            # Taste M: Stadtplan mit Ziel-Pfeil
 var effekte: Effekte        # Phase 5: Glanz, Seifenblasen, Sprühnebel, Münzen
 var pause: Pausenmenue      # Esc: Pausenmenü (Spiel pausiert)
 var mitspieler: Mitspieler  # Mehrspieler (7a): Figuren + Spielerliste der anderen
+var miteinander: Miteinander   # Mehrspieler (7f): Chat, Emotes, Ping, Pause für alle
 var wirtschaft := Wirtschaft.new()
 var ansicht := 0
 var frei := false
@@ -161,6 +162,9 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	mitspieler = Mitspieler.new()
 	add_child(mitspieler)
 	mitspieler.setup(self)
+	miteinander = Miteinander.new()
+	add_child(miteinander)
+	miteinander.setup(self)
 	if ansicht == 37:   # Mehrspieler-Test (Gastgeber + Gäste als eigene Prozesse)
 		var nt := NetzTest.new()
 		add_child(nt)
@@ -452,6 +456,8 @@ func _oben_gesperrt() -> void:
 
 # ---------------------------------------------------------------- Eingaben (Shop, Werkzeugwechsel)
 func _input(e: InputEvent) -> void:
+	if miteinander and miteinander.blockiert():   # Chat/Emote-Rad offen: Tasten gehören dem Chat
+		return
 	if karte.offen:   # Karte (M) nimmt alle Eingaben selbst
 		return
 	if not shop.offen and not album.offen and not hmenu.offen and not cmenu.offen and not extras.menue_offen() and strand.maus(e):   # Angeln, Yacht
@@ -762,7 +768,7 @@ func lage_daten() -> Array:
 		# 7c: dazu Drehung der Gondel, Seite, Werkzeug und wo es gerade ist (für die Gondel-Figur bei den anderen)
 		var g := spieler.gondel.global_position
 		var wp := spieler.werkzeug.global_position if spieler.werkzeug else g
-		return [1, g.x, g.y, g.z, spieler.yaw, "", "", spieler.winkel, spieler.seite, spieler.wz_id, wp.x, wp.y, wp.z, spieler.strahl.visible]
+		return [1, g.x, g.y, g.z, spieler.yaw, "", "", spieler.winkel, spieler.seite, spieler.wz_id, wp.x, wp.y, wp.z, spieler.strahl.visible, spieler.wischt]
 	if strand.yacht and strand.yacht.an_bord:   # 7e: Lage der Yacht; fahrer = 1 → die anderen folgen ihr
 		var yp := strand.yacht.position
 		return [2, yp.x, yp.y, yp.z, strand.yacht.richtung, "", "", 0 if strand.yacht.mitfahrer else 1, strand.yacht.tempo]
@@ -823,7 +829,7 @@ func _process(dt: float) -> void:
 				hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [meter, int(e.bonus)], 3.5)
 				_speichern())
 	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv, strand.ort_name() if strand.ort_name() != "" else extras.ort_name())
-	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen() or strand.blockiert() or karte.offen
+	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen() or strand.blockiert() or karte.offen or (miteinander != null and miteinander.blockiert())
 	laeufer.set_process(not menue)
 	laeufer.gesperrt = menue
 	wirtschaft.boosts_takt(dt)

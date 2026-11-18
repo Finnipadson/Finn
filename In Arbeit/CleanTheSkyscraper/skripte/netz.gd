@@ -150,6 +150,12 @@ func trennen() -> void:
 	_offen = {}
 	_moebel_sperre = {}
 	_yacht_fahrer = 0
+	if alle_pausiert:
+		alle_pausiert = false
+		if is_inside_tree():
+			get_tree().paused = false
+		if spiel and is_instance_valid(spiel) and spiel.miteinander:
+			spiel.miteinander.pause_zeigen(false)
 	if _w():
 		spiel.spieler.mitschreiben = false
 		spiel.spieler.stempel_neu = PackedFloat32Array()
@@ -1010,6 +1016,71 @@ func _moebel_befehl(name: String, d: Dictionary, peer: int, e: Dictionary) -> vo
 			_moebel_sperre.erase(i)
 	e["ok"] = true
 
+# ---------------------------------------------------------------- Miteinander (Phase 7f): Chat, Emotes, Pings, Pause, Rauswerfen
+var alle_pausiert := false
+
+# art = chat / emote / ping. Über den Gastgeber an alle (auch zurück an den Absender: gleiche Reihenfolge überall)
+func sozial_senden(art: String, d: Dictionary) -> void:
+	if ist_host():
+		_sozial_verteilen(1, art, d)
+	elif ist_gast() and _bereit:
+		_spaeter(func(): sozial_wunsch.rpc_id(1, art, d))
+
+@rpc("any_peer", "call_remote", "reliable")
+func sozial_wunsch(art: String, d: Dictionary) -> void:
+	var id := multiplayer.get_remote_sender_id()
+	if ist_host() and _bereite.has(id) and art in ["chat", "emote", "ping"]:
+		if art == "chat":
+			d = {"t": str(d.get("t", "")).left(120)}
+		_sozial_verteilen(id, art, d)
+
+func _sozial_verteilen(id: int, art: String, d: Dictionary) -> void:
+	if spiel and is_instance_valid(spiel) and spiel.miteinander:
+		spiel.miteinander.empfangen(id, art, d)
+	for g in _bereite:
+		_spaeter(func(): sozial.rpc_id(g, id, art, d))
+
+@rpc("authority", "call_remote", "reliable")
+func sozial(id: int, art: String, d: Dictionary) -> void:
+	if _bereit and _w() and spiel.miteinander:
+		spiel.miteinander.empfangen(id, art, d)
+
+# Gastgeber: Spiel für alle anhalten / weiter
+func alle_pausieren(an: bool) -> void:
+	if not ist_host():
+		return
+	_pause_setzen(an)
+	for g in _bereite:
+		_spaeter(func(): pause_rpc.rpc_id(g, an))
+
+@rpc("authority", "call_remote", "reliable")
+func pause_rpc(an: bool) -> void:
+	if _bereit:
+		_pause_setzen(an)
+
+func _pause_setzen(an: bool) -> void:
+	alle_pausiert = an
+	get_tree().paused = an
+	if spiel and is_instance_valid(spiel) and spiel.miteinander:
+		spiel.miteinander.pause_zeigen(an)
+
+# Gastgeber: einen Gast aus der Runde nehmen
+func rauswerfen(id: int) -> void:
+	if not ist_host() or id == 1 or not spieler.has(id):
+		return
+	abgelehnt.rpc_id(id, "Der Gastgeber hat dich aus dem Spiel genommen.")
+	_rauswerfen_spaeter(id)
+
+# Laufzeit hin und zurück in ms (-1 = unbekannt). Gastgeber: zu jedem Gast, Gast: zum Gastgeber
+func ping_ms(id: int) -> int:
+	var p := multiplayer.multiplayer_peer
+	if not (p is ENetMultiplayerPeer) or id == meine_id():
+		return -1
+	var pp := (p as ENetMultiplayerPeer).get_peer(id)
+	if pp == null:
+		return -1
+	return int(pp.get_statistic(ENetPacketPeer.PEER_ROUND_TRIP_TIME))
+
 # Gast: Welt fertig geladen (Spiel.starten) → Gastgeber schickt den aktuellen Stand aller Felder
 func gast_bereit() -> void:
 	var w := _w()
@@ -1039,6 +1110,8 @@ func bereit() -> void:
 		var e := spiel.ereignisse   # laufende Böe / Sandsturm gleich mitteilen
 		_spaeter(func(): ereignis_rpc.rpc_id(id, "wind", {"ziel": e.wind_ziel}))
 		_spaeter(func(): ereignis_rpc.rpc_id(id, "sturm", {"phase": e.sturm_phase}))
+		if alle_pausiert:
+			_spaeter(func(): pause_rpc.rpc_id(id, true))
 
 # Gastgeber: eigene Werte eines Gasts (Werkzeug in der Hand, Fahrzeug, Aussehen, Gondel, Radio) – Boosts bleiben beim Gastgeber
 @rpc("any_peer", "call_remote", "reliable")

@@ -126,6 +126,8 @@ func _flaeche_input(e: InputEvent) -> void:
 			_ziehen = b.pressed
 		elif b.button_index == MOUSE_BUTTON_LEFT and b.pressed:
 			klick(b.position)
+		elif b.button_index == MOUSE_BUTTON_MIDDLE and b.pressed and Netz.aktiv() and spiel.miteinander:
+			spiel.miteinander.ping_karte(_welt(b.position))   # Mehrspieler: Treffpunkt für alle
 		flaeche.queue_redraw()
 	elif e is InputEventMouseMotion and _ziehen:
 		mitte -= (e as InputEventMouseMotion).relative / zoom
@@ -266,6 +268,24 @@ func _zeichnen() -> void:
 		c.draw_arc(b, 7.5, 0, TAU, 20, Color(0, 0, 0, 0.6), 1.5)
 		c.draw_string_outline(f, b + Vector2(10, 5), str(o.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color(0, 0, 0, 0.75))
 		c.draw_string(f, b + Vector2(10, 5), str(o.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.WHITE)
+	# Mehrspieler (7f): Pings und die anderen Spieler in ihrer Farbe
+	if Netz.aktiv() and spiel.miteinander:
+		for pg in spiel.miteinander.pings:
+			var pb := _bild(Vector2(pg.pos.x, pg.pos.z))
+			c.draw_arc(pb, 11.0 + 3.0 * sin(Time.get_ticks_msec() * 0.008), 0, TAU, 24, pg.farbe, 3.0)
+			var pt := "Ping von %s" % pg.name
+			c.draw_string_outline(f, pb + Vector2(14, 16), pt, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, Color(0, 0, 0, 0.75))
+			c.draw_string(f, pb + Vector2(14, 16), pt, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, pg.farbe)
+		for id in spiel.mitspieler.figuren:
+			var l: Array = spiel.mitspieler.figuren[id].lage
+			if l.size() < 4:
+				continue
+			var mb := _bild(Vector2(float(l[1]), float(l[3])))
+			var fa := Netz.farbe(id)
+			c.draw_circle(mb, 8.0, fa)
+			c.draw_arc(mb, 8.5, 0, TAU, 20, Color(0, 0, 0, 0.7), 2.0)
+			c.draw_string_outline(f, mb + Vector2(11, -9), Netz.name_von(id), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color(0, 0, 0, 0.8))
+			c.draw_string(f, mb + Vector2(11, -9), Netz.name_von(id), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, fa)
 	# Ich
 	var ich := _bild(_spieler_pos())
 	var yaw := _spieler_yaw()

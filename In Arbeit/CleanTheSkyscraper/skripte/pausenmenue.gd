@@ -36,8 +36,57 @@ func setup(s: Spiel) -> void:
 		b.add_theme_font_size_override("font_size", 17)
 		b.pressed.connect(k[3])
 		vb.add_child(b)
+	if Netz.aktiv():
+		_mehrspieler(vb)
 	info = UiGlas.text("Esc: weiterspielen", 13, UiGlas.TEXT_LEISE)
 	vb.add_child(info)
+
+# Mehrspieler (7f): Spielerliste mit Farbe und Ping; Gastgeber: Rauswerfen + Für alle pausieren; Gast: Runde verlassen
+var liste: VBoxContainer
+func _mehrspieler(vb: VBoxContainer) -> void:
+	var hm := vb.find_child("hauptmenue", false, false) as Button
+	if hm and Netz.ist_gast():
+		hm.text = "Runde verlassen"
+	vb.add_child(UiGlas.ueberschrift("MEHRSPIELER"))
+	if Netz.ist_host():
+		var ad := Netz.lan_adressen()
+		if not ad.is_empty():
+			vb.add_child(UiGlas.text("Beitreten im Heimnetz mit: %s" % ", ".join(ad), 13, UiGlas.TEXT_LEISE))
+	liste = VBoxContainer.new()
+	liste.add_theme_constant_override("separation", 4)
+	vb.add_child(liste)
+	_liste()
+	if Netz.ist_host():
+		var p := UiGlas.knopf("Für alle pausieren", "nehmen")
+		p.name = "alle_pause"
+		p.custom_minimum_size = Vector2(370, 42)
+		p.pressed.connect(func():
+			Netz.alle_pausieren(true)
+			_weg())
+		vb.add_child(p)
+
+func _liste() -> void:
+	for c in liste.get_children():
+		liste.remove_child(c)
+		c.queue_free()
+	var ids := Netz.spieler.keys()
+	ids.sort()
+	for id in ids:
+		var hb := HBoxContainer.new()
+		var ms := Netz.ping_ms(id)
+		var t := "● %s%s%s" % [Netz.name_von(id), "  (Gastgeber)" if id == 1 else "", "  – du" if id == Netz.meine_id() else ("  · %d ms" % ms if ms >= 0 else "")]
+		var l := UiGlas.text(t, 15, Netz.farbe(id))
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hb.add_child(l)
+		if Netz.ist_host() and id != 1:
+			var k := UiGlas.knopf("Rauswerfen", "gefahr")
+			k.name = "kick_%d" % id
+			k.custom_minimum_size = Vector2(120, 32)
+			k.pressed.connect(func():
+				Netz.rauswerfen(id)
+				info.text = "%s wurde aus dem Spiel genommen." % Netz.name_von(id))
+			hb.add_child(k)
+		liste.add_child(hb)
 
 func _input(e: InputEvent) -> void:
 	if _zu or not (e is InputEventKey) or not e.pressed or e.echo:
@@ -97,6 +146,6 @@ func _weg() -> void:
 	if _zu:
 		return
 	_zu = true
-	get_tree().paused = false
+	get_tree().paused = Netz.alle_pausiert   # „Für alle pausiert“ bleibt, bis der Gastgeber weiterspielt
 	spiel.pause = null
 	queue_free()

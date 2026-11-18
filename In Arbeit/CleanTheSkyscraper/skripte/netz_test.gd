@@ -31,6 +31,7 @@ var _host_pos := Vector3.ZERO
 
 func setup(sp: Spiel) -> void:
 	s = sp
+	process_mode = Node.PROCESS_MODE_ALWAYS   # 7f: läuft auch, wenn der Gastgeber für alle pausiert
 	gast = "--rolle=gast" in OS.get_cmdline_user_args()
 	Netz.test_nachricht_da.connect(_nachricht)
 	if "--nur-menue" in OS.get_cmdline_user_args():   # Testbild: Hauptmenü → Mehrspieler-Fenster
@@ -408,10 +409,101 @@ func _process(dt: float) -> void:
 			if _berichte.has("MOEBEL2_OK"):
 				var m: Dictionary = s.wirtschaft.moebel[_mi]
 				_p("Gast räumt das Möbel ins Lager (nach dem Abstellen des Gastgebers)", not m.steht and absf(float(m.x) - 1.0) < 0.01 and absf(float(m.dreh) - 90.0) < 0.01 and Netz._moebel_sperre.is_empty(), str(m))
-				schritt = 55
+				schritt = 85
 			elif zeit >= frist:
 				_p("Möbel ins Lager", false, "keine Antwort")
+				schritt = 85
+		85:   # 7f: Gast chattet (Enter), winkt (G, 1), pingt
+			Netz.test_nachricht.rpc_id(ids.testgast1, "SOZIAL")
+			schritt = 86
+			frist = zeit + 30.0
+		86:
+			if _berichte.has("SOZIAL_OK"):
+				schritt = 87
+				warte_bis = zeit + 1.5
+			elif zeit >= frist:
+				_p("Chat/Emote/Ping beim Gast", false, "keine Antwort")
 				schritt = 55
+		87:
+			var gid: int = ids.testgast1
+			_p("Chat des Gasts beim Gastgeber", "Testgast 1: Hallo von Gast 1" in s.miteinander.chat_texte(), str(s.miteinander.chat_texte()))
+			_p("Emote des Gasts: Sprechblase über seiner Figur", s.mitspieler.blase_von(gid) == "Hallo!", s.mitspieler.blase_von(gid))
+			var pg := {}
+			for p in s.miteinander.pings:
+				if p.name == "Testgast 1":
+					pg = p
+			var g := s.mitspieler.gondel_von(gid)
+			_p("Ping des Gasts am Glas vor seiner Gondel", not pg.is_empty() and g != null and (pg.pos as Vector3).distance_to(g.global_position) < 6.0, "Abstand %.1f m" % ((pg.pos as Vector3).distance_to(g.global_position) if not pg.is_empty() and g else -1.0))
+			s.miteinander.ping_karte(Vector2(10.0, 20.0))   # Gastgeber setzt einen Treffpunkt auf der Karte
+			schritt = 874
+			if DisplayServer.get_name() != "headless" and g != null:   # Testbild: zur Gondel des Gasts schauen
+				var d := g.global_position + Vector3(0, 1.5, 0) - s.laeufer.cam.global_position
+				s.laeufer.yaw = atan2(-d.x, -d.z)
+				s.laeufer.pitch = clampf(atan2(d.y, Vector2(d.x, d.z).length()), -1.2, 1.2)
+				schritt = 871
+				warte_bis = zeit + 0.8
+		871:
+			_bild_speichern("netztest_7f_welt.png")
+			s.karte.oeffnen()
+			schritt = 872
+			warte_bis = zeit + 0.8
+		872:
+			_bild_speichern("netztest_7f_karte.png")
+			s.karte.schliessen()
+			schritt = 874
+		874:
+			Netz.alle_pausieren(true)
+			_p("Gastgeber pausiert für alle", get_tree().paused and s.miteinander.pause_ebene.visible, "")
+			schritt = 88
+			warte_bis = zeit + 1.5
+		88:
+			Netz.test_nachricht.rpc_id(ids.testgast1, "PAUSE?")
+			schritt = 89
+			warte_bis = zeit + 1.0
+		89:
+			Netz.alle_pausieren(false)
+			schritt = 890
+			warte_bis = zeit + 1.5
+		890:
+			Netz.test_nachricht.rpc_id(ids.testgast1, "WEITER?")
+			schritt = 55
+			warte_bis = zeit + 1.0
+		103:   # 7f: ein dritter Gast kommt (wieder Platz) und wird über das Pausenmenü rausgeworfen
+			s.helfer.aktiv = false
+			var d := "user://netztest_testgast3.txt"
+			if FileAccess.file_exists(d):
+				DirAccess.remove_absolute(ProjectSettings.globalize_path(d))
+			_gast_starten("testgast3")
+			schritt = 104
+			frist = zeit + 60.0
+		104:
+			if _id_von("testgast3") > 0:
+				ids.testgast3 = _id_von("testgast3")
+				schritt = 105
+				warte_bis = zeit + 10.0   # seine eigenen Beitritts-Prüfungen laufen lassen
+			elif zeit >= frist:
+				_p("Gast 3 tritt bei", false, "Zeitlimit")
+				schritt = 101
+		105:
+			s.pause_oeffnen()
+			var k: Button = s.pause.find_child("kick_%d" % ids.testgast3, true, false) if s.pause else null
+			var hat_liste := s.pause != null and s.pause.find_child("alle_pause", true, false) != null
+			if k:
+				k.pressed.emit()
+			_p("Pausenmenü im Koop: Spielerliste, Rauswerfen, Für alle pausieren", k != null and hat_liste and not get_tree().paused, "")
+			if s.pause:
+				s.pause.schliessen()
+			schritt = 106
+			frist = zeit + 25.0
+		106:
+			var t := _datei("testgast3")
+			if t != "":
+				_p("Rausgeworfener Gast im Hauptmenü mit Meldung", "genommen" in t and Netz.spieler.size() == 2, t.strip_edges())
+				schritt = 101
+				warte_bis = zeit + 1.0
+			elif zeit >= frist:
+				_p("Rauswerfen", false, "keine Antwort von testgast3")
+				schritt = 101
 		101:   # 7d: Abspann startet der Gastgeber für alle
 			s.abspann_starten()
 			schritt = 102
@@ -501,7 +593,7 @@ func _process(dt: float) -> void:
 			if t != "" and Netz.spieler.size() == 2:
 				_p("Gast 2 hat verlassen, Liste wieder 2", true, t.strip_edges())
 				_p("Ort von Gast 2 gemerkt", Netz.orte.has(_profil_id("testgast2")) or Netz.orte.size() >= 2, "%d Orte" % Netz.orte.size())
-				schritt = 101
+				schritt = 103
 				warte_bis = zeit + 1.0
 			elif zeit >= frist:
 				_p("Gast 2 hat verlassen", false, "Datei '%s', %d Spieler" % [t.strip_edges(), Netz.spieler.size()])
@@ -528,6 +620,11 @@ var _kh := 0
 var _k2 := 1
 var _vor := {}
 var _w2 := Vector2i.ZERO   # (spalte, stockwerk) für „zwei wischen dasselbe“ + Dreck
+
+func _bild_speichern(n: String) -> void:
+	var img := get_viewport().get_texture().get_image()
+	img.save_png("user://" + n)
+	print("NETZTEST BILD %s" % ProjectSettings.globalize_path("user://" + n))
 
 func lohn_ohne_boost(f := 0) -> int:
 	return s.lohn_mit_boni(f)
@@ -581,7 +678,7 @@ func _nachricht(id: int, t: String) -> void:
 		await get_tree().create_timer(0.8).timeout
 		var fo := s.zustand.fortschritt(int(w2[1]), int(w2[2]))
 		_p("Wisch-Stempel des Gasts kommen beim Gastgeber an", fo > 0.0 and fo < 1.0, "Fenster %s/%s, Fortschritt %.2f" % [w2[1], w2[2], fo])
-	elif t.get_slice(" ", 0) in ["GEKAUFT", "ABGELEHNT", "IN_GONDEL", "GEWISCHT", "DOPPELT", "HOEHE_OK", "CASINO_OK", "MOEBEL1", "MOEBEL2_OK", "YACHT_MIT"]:
+	elif t.get_slice(" ", 0) in ["GEKAUFT", "ABGELEHNT", "IN_GONDEL", "GEWISCHT", "DOPPELT", "HOEHE_OK", "CASINO_OK", "MOEBEL1", "MOEBEL2_OK", "YACHT_MIT", "SOZIAL_OK"]:
 		var teile := t.split(" ")
 		var b := {}
 		for x in teile.slice(1):
@@ -706,6 +803,17 @@ func _gast_nachricht(_id: int, t: String) -> void:
 		Netz.test_nachricht.rpc_id(1, "FAHRZEUG")
 	elif t == "CASINO":
 		_gast_casino()
+	elif t == "SOZIAL":
+		_gast_sozial()
+	elif t == "PAUSE?":
+		_melden(get_tree().paused and s.miteinander.pause_ebene.visible and "pausiert" in s.miteinander.pause_text.text and not s.miteinander.pause_knopf.visible, "Pause für alle beim Gast (ohne Weiter-Knopf)", s.miteinander.pause_text.text)
+	elif t == "WEITER?":
+		var treff := false
+		for p in s.miteinander.pings:
+			if p.name == "Testhost" and Vector2(p.pos.x, p.pos.z).distance_to(Vector2(10, 20)) < 0.5:
+				treff = true
+		_melden(not get_tree().paused and not s.miteinander.pause_ebene.visible, "Weiter für alle beim Gast", "")
+		_melden(treff, "Treffpunkt von der Karte des Gastgebers beim Gast", "")
 	elif t.begins_with("MOEBEL1 "):
 		var i := int(t.get_slice(" ", 1))
 		var id := t.get_slice(" ", 2)
@@ -766,6 +874,39 @@ func _gast_nachricht(_id: int, t: String) -> void:
 					if d < 2.5 and (h.node as Node3D).visible:
 						gut += 1
 		_melden(alle > 0 and gut == alle and not s.helfer.aktiv and s.helfer.gast, "Helfer des Gastgebers beim Gast an derselben Stelle", info)
+
+# Gast 1 (7f): Enter → Chat, G + 1 → Winken, Ping auf das Glas vor der Gondel – über echte Tasten-Ereignisse
+func _gast_sozial() -> void:
+	if s.shop.offen:
+		s.shop.umschalten()
+	await get_tree().process_frame
+	_taste_ereignis(KEY_ENTER)
+	await get_tree().process_frame
+	var chat := s.miteinander.chat_offen()
+	s.miteinander.eingabe.text = "Hallo von Gast 1"
+	s.miteinander.eingabe.text_submitted.emit(s.miteinander.eingabe.text)
+	await get_tree().process_frame
+	_taste_ereignis(KEY_G)
+	await get_tree().process_frame
+	var rad := s.miteinander.rad.visible
+	_taste_ereignis(KEY_1)
+	await get_tree().process_frame
+	_melden(chat and rad and not s.miteinander.blockiert(), "Chat (Enter) und Emote-Rad (G, 1) öffnen und schließen", "chat %s, rad %s" % [chat, rad])
+	s.miteinander.ping_hier()
+	await get_tree().create_timer(1.5).timeout
+	_melden("Testgast 1: Hallo von Gast 1" in s.miteinander.chat_texte() and s.miteinander.pings.size() >= 1, "Eigene Nachricht + Ping kommen über den Gastgeber zurück", str(s.miteinander.chat_texte()))
+	s.shop.umschalten()   # Werkstatt wieder auf (spätere Prüfung „Preis-Faktor zu dritt“)
+	Netz.test_nachricht.rpc_id(1, "SOZIAL_OK")
+
+func _taste_ereignis(k: Key) -> void:
+	var ev := InputEventKey.new()
+	ev.keycode = k
+	ev.physical_keycode = k
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	var ev2 := ev.duplicate() as InputEventKey
+	ev2.pressed = false
+	Input.parse_input_event(ev2)
 
 # Gast 1: Bandit über den echten Hebel, zwei unerlaubte Casino-Wünsche, Kapsel über den echten Knopf, ein Walhai
 func _gast_casino() -> void:

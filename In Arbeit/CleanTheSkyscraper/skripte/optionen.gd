@@ -39,6 +39,8 @@ const AKTIONEN := [
 	["penthouse", KEY_P, "Penthouse / Erfolge"],
 	["radio", KEY_R, "Gondel-Radio an/aus"],
 	["sender", KEY_T, "Radio: nächster Sender"],
+	["chat", KEY_ENTER, "Mehrspieler: Chat"],
+	["emote", KEY_G, "Mehrspieler: Emote-Rad"],
 ]
 
 static var d := {}
