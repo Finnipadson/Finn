@@ -30,6 +30,9 @@ var szenen := PackedByteArray()        # Szenen-Typ je Fenster (0 = keine)
 var sauber_zahl := 0
 var atlas_neu := false
 var zustand_neu := false
+# Mehrspieler (7c): Dreck-Änderungen (Helfer, Tauben, Sandsturm) sammelt der Gastgeber und schickt sie 5× pro Sekunde
+var protokollieren := false
+var protokoll := {}                    # Fenster-Nummer -> [f, spalte, wert, art] (art 0 = dreck_setzen, 1 = verschmutzen)
 
 func _init(t: Turm) -> void:
 	turm = t
@@ -78,7 +81,8 @@ func ist_sauber(f: int, spalte: int) -> bool:
 
 # Wischt eine Ellipse ins Fenster (spalte, f). mx/my = Mitte in Fenster-Anteilen (0..1, y nur Glasbereich),
 # rx/ry = Radius in Anteilen. Gibt true zurück, wenn das Fenster dadurch sauber geworden ist.
-func wische(f: int, spalte: int, mx: float, my: float, rx: float, ry: float) -> bool:
+# fertig_erlaubt = false: Stempel eines Mitspielers – nur zeigen; ob das Fenster fertig ist, entscheidet der Gastgeber.
+func wische(f: int, spalte: int, mx: float, my: float, rx: float, ry: float, fertig_erlaubt := true) -> bool:
 	if f < 0 or f >= Turm.STOCKWERKE or spalte < 0 or spalte >= turm.fenster_pro_stock[f]:
 		return false
 	var id := turm.fenster_basis[f] + spalte
@@ -100,7 +104,7 @@ func wische(f: int, spalte: int, mx: float, my: float, rx: float, ry: float) -> 
 				slot_dreck[slot] -= 1
 	atlas_neu = true
 	slot_zeit[slot] = Time.get_ticks_msec()
-	if slot_dreck[slot] <= int(SLOT_W * SLOT_H * (1.0 - SAUBER_AB)):
+	if fertig_erlaubt and slot_dreck[slot] <= int(SLOT_W * SLOT_H * (1.0 - SAUBER_AB)):
 		_fertig(id, f, spalte, slot)
 		return true
 	return false
@@ -187,6 +191,8 @@ func verschmutzen(f: int, spalte: int, menge: float) -> bool:
 	sauber_zahl -= 1
 	zustand.set_pixel(spalte, f, Color(menge, 0, szenen[id] / 255.0, 1))
 	zustand_neu = true
+	if protokollieren:
+		protokoll[id] = [f, spalte, menge, 1]
 	return true
 
 # ---------------------------------------------------------------- Helfer (putzen ein ganzes Fenster auf einmal)
@@ -200,6 +206,8 @@ func dreck_setzen(f: int, spalte: int, wert: float) -> void:
 		return
 	zustand.set_pixel(spalte, f, Color(wert, 0, szenen[id] / 255.0, 1))
 	zustand_neu = true
+	if protokollieren and not (protokoll.has(id) and int(protokoll[id][3]) == 1):
+		protokoll[id] = [f, spalte, wert, 0]
 
 # Fenster ganz sauber machen. true, wenn es vorher dreckig war.
 func sauber_machen(f: int, spalte: int) -> bool:

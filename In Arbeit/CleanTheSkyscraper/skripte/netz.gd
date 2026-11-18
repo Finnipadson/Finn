@@ -146,6 +146,12 @@ func trennen() -> void:
 	_feld_hash = {}
 	_sd_hash = {}
 	_eigen_hash = 0
+	_reserviert = {}
+	if _w():
+		spiel.spieler.mitschreiben = false
+		spiel.spieler.stempel_neu = PackedFloat32Array()
+		spiel.zustand.protokollieren = false
+		spiel.zustand.protokoll = {}
 	_anwesend_setzen()
 	spieler_geaendert.emit()
 
@@ -370,7 +376,7 @@ signal befehl_fertig(name: String, ergebnis: Dictionary)   # Gast: Antwort ist d
 
 const FELDER := ["geld", "besitz", "stufen", "album", "hoechster_abschnitt", "einstellungen", "kosmetik_besitz", "helfer",
 	"fahrzeuge", "gondeln", "moebel", "erfolge", "besucht", "angeln", "fischkiste", "fisch_index", "yacht", "turm_nr",
-	"tuerme_fertig", "abspann", "koop_max"]
+	"tuerme_fertig", "abspann", "koop_max", "fenster_je"]
 # Änderung eines dieser Felder → Spiel._ausruestung beim Gast (Helfer, Gondeln, Seil-Grenze, Ereignis-Schalter)
 const FELDER_AUSRUESTUNG := ["besitz", "stufen", "helfer", "fahrzeuge", "gondeln", "moebel", "einstellungen", "koop_max", "kosmetik_besitz"]
 const EIGENE := ["aktiv", "kosmetik_aktiv", "fahrzeug", "aktive_gondel", "radio"]   # meldet der Gast selbst
@@ -471,6 +477,26 @@ func _ausfuehren(name: String, d: Dictionary, pid: String) -> Dictionary:
 		"fische_alle":
 			e["erloes"] = w.verkaufe_alle_fische()
 			e["ok"] = int(e.erloes) > 0
+		"hoehe":   # neue Höhe erreicht: einmaliger Bonus (wer zuerst kommt)
+			var a := int(d.get("abschnitt", 0))
+			if a > w.hoechster_abschnitt:
+				w.hoechster_abschnitt = a
+				var bonus := 25 * w.lohn(int(d.get("stock", 0)))
+				w.geld += bonus
+				e["bonus"] = bonus
+				e["ok"] = true
+			else:
+				e["grund"] = ""
+		"gondel_nehmen":   # 7c: eine Gondel, in der ein anderer sitzt, ist gesperrt
+			var k := int(d.get("seite", -1))
+			var fahrer := _gondel_fahrer(k, pid)
+			if k < 0 or k > 2 or not w.gondeln[k].gekauft:
+				e["grund"] = "Diese Gondel ist noch nicht gekauft."
+			elif fahrer != "":
+				e["grund"] = "Gondel %s fährt gerade %s." % [Turm.SEITEN_NAMEN[k], fahrer]
+			else:
+				e["ok"] = true
+				_reserviert[k] = [pid, Time.get_ticks_msec() + 4000]   # bis die eigene Meldung des Gasts da ist
 		_:
 			e["grund"] = "Unbekannter Befehl „%s“." % name
 	w.als("")
@@ -524,8 +550,8 @@ func befehl_antwort(nr: int, e: Dictionary, eigen: Dictionary) -> void:
 		for k in eigen:
 			if k in Wirtschaft.JE_SPIELER:
 				meine[k] = eigen[k]
-		if not e.get("ok", false):
-			spiel.hud.meldung(str(e.get("grund", "Das geht gerade nicht.")), 3.0)
+		if not e.get("ok", false) and str(e.get("grund", "")) != "":
+			spiel.hud.meldung(str(e.grund), 3.0)
 	befehl_fertig.emit(str(nr), e)
 	var f: Callable = _warten.get(nr, Callable())
 	_warten.erase(nr)
@@ -618,12 +644,135 @@ func _felder_anwenden(b: PackedByteArray, gz: bool) -> void:
 			ausruestung = true
 	spiel.netz_aktualisiert(menues, ausruestung)
 
+# Wer sitzt in Gondel k (Name, "" = frei)? Zählt alle Spieler in der Runde außer pid, dazu frische Zusagen.
+var _reserviert := {}            # Gastgeber: Seite -> [profil_id, bis (ms)]
+func _gondel_fahrer(k: int, pid: String) -> String:
+	var w := _w()
+	if w == null or not aktiv():
+		return ""
+	for id in spieler:
+		var p: String = w.ich if id == meine_id() else str(spieler[id].profil_id)
+		if p != pid and int((w.spieler_daten.get(p, {}) as Dictionary).get("aktive_gondel", -1)) == k:
+			return name_von(id)
+	var r: Array = _reserviert.get(k, [])
+	if not r.is_empty() and str(r[0]) != pid and Time.get_ticks_msec() < int(r[1]):
+		for id in spieler:
+			if str(spieler[id].profil_id) == str(r[0]) or (id == meine_id() and w.ich == str(r[0])):
+				return name_von(id)
+	return ""
+
+# ---------------------------------------------------------------- Gemeinsam putzen (Phase 7c)
+# Jeder wischt sofort bei sich (Spieler sammelt die Stempel in stempel_neu), die Stempel gehen jedes Bild an die anderen
+# (Gast → Gastgeber → übrige Gäste) und werden dort nur gezeigt (wische mit fertig_erlaubt = false). Ob ein Fenster fertig
+# ist, entscheidet nur der Gastgeber: ein Gast meldet „fertig“ (fertig_wunsch), der Gastgeber zahlt mit den Boosts des
+# Putzers und schickt „fertig“ an alle (zählt einmal, auch wenn zwei dasselbe Fenster wischen). Dreck-Änderungen der
+# Helfer/Tauben/Sandsturm sammelt FensterZustand.protokoll, der Gastgeber schickt sie 5× pro Sekunde.
+const STEMPEL_JE_PAKET := 36     # 6 Werte × 4 Byte × 36 = 864 Byte (EOS-Paketgrenze)
+const DRECK_JE_PAKET := 56
+
+func _stempel_takt() -> void:
+	var sp: Spieler = spiel.spieler
+	sp.mitschreiben = true
+	if sp.stempel_neu.is_empty():
+		return
+	var alle := sp.stempel_neu
+	sp.stempel_neu = PackedFloat32Array()
+	var n := STEMPEL_JE_PAKET * 6
+	var i := 0
+	while i < alle.size():
+		var teil := alle.slice(i, mini(i + n, alle.size()))
+		i += n
+		if ist_host():
+			for g in _bereite:
+				_spaeter(func(): stempel.rpc_id(g, 1, teil))
+		else:
+			_spaeter(func(): stempel.rpc_id(1, 0, teil))
+
+# Stempel empfangen. Gastgeber: von einem Gast → zeigen + an die übrigen Gäste weiter; Gast: von (von) → zeigen
+@rpc("any_peer", "call_remote", "reliable")
+func stempel(von: int, s: PackedFloat32Array) -> void:
+	if spiel == null or not is_instance_valid(spiel) or spiel.zustand == null:
+		return
+	var sender := multiplayer.get_remote_sender_id()
+	if ist_host():
+		if not _bereite.has(sender):
+			return
+		for g in _bereite:
+			if g != sender:
+				_spaeter(func(): stempel.rpc_id(g, sender, s))
+	elif not _bereit or sender != 1:
+		return
+	var z := spiel.zustand
+	for j in range(0, s.size() - 5, 6):
+		z.wische(int(s[j]), int(s[j + 1]), s[j + 2], s[j + 3], s[j + 4], s[j + 5], false)
+
+func fertig_melden(f: int, spalte: int) -> void:
+	_spaeter(func(): fertig_wunsch.rpc_id(1, f, spalte))
+
+@rpc("any_peer", "call_remote", "reliable")
+func fertig_wunsch(f: int, spalte: int) -> void:
+	var w := _w()
+	if not ist_host() or w == null:
+		return
+	var id := multiplayer.get_remote_sender_id()
+	if not spieler.has(id) or f < 0 or f >= Turm.STOCKWERKE:
+		return
+	if not spiel.zustand.sauber_machen(f, spalte):
+		return   # schon sauber (jemand war schneller) – zählt nur einmal
+	var r := spiel.fenster_bezahlen(f, spalte, str(spieler[id].profil_id))
+	spiel.netz_fertig(f, spalte, id, r)
+	fertig_senden(f, spalte, id, r)
+
+# Gastgeber: Fenster fertig an alle Gäste (wer = Peer des Putzers, 0 = Helfer)
+func fertig_senden(f: int, spalte: int, wer: int, r: Dictionary) -> void:
+	if not ist_host():
+		return
+	for g in _bereite:
+		_spaeter(func(): fertig.rpc_id(g, f, spalte, wer, r))
+
+@rpc("authority", "call_remote", "reliable")
+func fertig(f: int, spalte: int, wer: int, r: Dictionary) -> void:
+	if _bereit and _w():
+		spiel.netz_fertig(f, spalte, wer, r)
+
+func _dreck_takt() -> void:
+	var z := spiel.zustand
+	z.protokollieren = not _bereite.is_empty()
+	if z.protokoll.is_empty():
+		return
+	var d := PackedFloat32Array()
+	for id in z.protokoll:
+		d.append_array(PackedFloat32Array(z.protokoll[id]))
+	z.protokoll = {}
+	var n := DRECK_JE_PAKET * 4
+	var i := 0
+	while i < d.size():
+		var teil := d.slice(i, mini(i + n, d.size()))
+		i += n
+		for g in _bereite:
+			_spaeter(func(): dreck.rpc_id(g, teil))
+
+@rpc("authority", "call_remote", "reliable")
+func dreck(d: PackedFloat32Array) -> void:
+	if not _bereit or _w() == null:
+		return
+	var z := spiel.zustand
+	for j in range(0, d.size() - 3, 4):
+		var f := int(d[j])
+		var s := int(d[j + 1])
+		if int(d[j + 3]) == 1 and z.verschmutzen(f, s, d[j + 2]):
+			continue
+		z.dreck_setzen(f, s, d[j + 2])
+
 # Gast: Welt fertig geladen (Spiel.starten) → Gastgeber schickt den aktuellen Stand aller Felder
 func gast_bereit() -> void:
 	var w := _w()
 	if not ist_gast() or w == null:
 		return
 	_bereit = true
+	if spiel.helfer:   # Helfer laufen nur beim Gastgeber (Positionen kommen in 7d)
+		spiel.helfer.aktiv = false
+		spiel.helfer.visible = false
 	_kasse = w.geld
 	_anwesend_setzen()
 	_spaeter(func(): bereit.rpc_id(1))
@@ -669,12 +818,15 @@ func _netz_takt(dt: float) -> void:
 	var w := _w()
 	if w == null:
 		return
+	if ist_host() or (ist_gast() and _bereit):
+		_stempel_takt()
 	if ist_host():
 		_feld_zeit += dt
 		_stat_zeit += dt
 		if _feld_zeit >= FELD_TAKT:
 			_feld_zeit = 0.0
 			_felder_pruefen()
+			_dreck_takt()
 	elif ist_gast() and _bereit:
 		if w.geld != _kasse:
 			w.geld = _kasse   # die Kasse liegt beim Gastgeber (eigener Lohn zählt erst mit 7c)

@@ -61,6 +61,8 @@ var arm_mat: StandardMaterial3D
 var schwamm_farbe := "ffd84a"
 var _gesperrt_zeit := 0.0
 var seite := -1                # Turmseite dieser Gondel (-1 = überall)
+var mitschreiben := false      # Mehrspieler: Wisch-Stempel sammeln (holt Netz jedes Bild ab)
+var stempel_neu := PackedFloat32Array()   # je Stempel 6 Werte: f, spalte, mx, my, rx, ry
 
 func setup(t: Turm, z: FensterZustand, start_stock: int, start_weg: float, oberste_hoehe: float) -> void:
 	turm = t
@@ -359,6 +361,8 @@ func _stempel(o: Vector2) -> void:
 			var mx: float = lx - ds
 			if mx < -rx or mx > 1.0 + rx:
 				continue
+			if mitschreiben:   # Mehrspieler: Stempel gehen an die anderen (Netz.stempel)
+				stempel_neu.append_array([f, spalte + ds, mx, gy, rx, ry])
 			if zustand.wische(f, spalte + ds, mx, gy, rx, ry):
 				fenster_sauber.emit(f, spalte + ds)
 

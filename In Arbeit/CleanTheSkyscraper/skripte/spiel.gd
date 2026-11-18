@@ -318,37 +318,82 @@ func _werte() -> void:
 		t += "%s %d:%02d\n" % [Wirtschaft.BOOSTS[id].name, rest / 60, rest % 60]
 	hud.boosts(t.strip_edges())
 
-# Lohn eines Fensters mit Goldpolitur, Spezial-Boosts und Penthouse-Bonus
-func lohn_mit_boni(f: int) -> int:
+# Lohn eines Fensters mit Goldpolitur, Spezial-Boosts und Penthouse-Bonus. wer = Profil-ID des Putzers ("" = ich):
+# Boosts zählen nur für den, der das Fenster geputzt hat (Mehrspieler 7c)
+func lohn_mit_boni(f: int, wer := "") -> int:
 	var l := wirtschaft.lohn(f)
-	return int(round(l * (1.0 + wirtschaft.bonus("lohn") + wirtschaft.boost_wirkung("lohn"))))
+	return int(round(l * (1.0 + wirtschaft.bonus("lohn") + wirtschaft.boost_wirkung("lohn", wer))))
 
+# Eigenes Fenster fertig. Mehrspieler-Gast: der Gastgeber entscheidet und zahlt (Netz.fertig_melden) – Glanz und Ton gleich,
+# „+ €“ und Album-Meldung, sobald seine Antwort da ist (netz_fertig).
 func _fenster_sauber(f: int, spalte: int) -> void:
-	var lohn := lohn_mit_boni(f)
+	if Netz.ist_gast():
+		Netz.fertig_melden(f, spalte)
+		_fertig_effekte(f, spalte, 0, true)
+		return
+	var r := fenster_bezahlen(f, spalte, wirtschaft.ich)
+	_fertig_effekte(f, spalte, int(r.lohn), true)
+	_album_meldung(r)
+	Netz.fertig_senden(f, spalte, Netz.meine_id(), r)
+
+# Gastgeber/Einzelspieler: Lohn (mit den Boosts des Putzers), Statistik, Album für ein fertiges Fenster
+func fenster_bezahlen(f: int, spalte: int, wer: String) -> Dictionary:
+	var lohn := lohn_mit_boni(f, wer)
 	wirtschaft.verdienen(lohn)
 	wirtschaft.statistik.fenster_selbst = int(wirtschaft.statistik.fenster_selbst) + 1
+	wirtschaft.fenster_je[wer] = int(wirtschaft.fenster_je.get(wer, 0)) + 1
 	extras.fenster_geputzt()
-	hud.pop("+%d €" % lohn)
-	Ton.gedrosselt("quietschen", 0.12, -5.0, randf_range(0.9, 1.12))
-	Ton.gedrosselt("glanz", 0.25, -9.0, randf_range(0.95, 1.08))
-	Ton.gedrosselt("geld", 0.15, -12.0)
-	_funkeln(spieler.fenster_mitte(f, spalte))
-	effekte.fenster_glanz(f, spalte)
-	effekte.muenzen(3)
+	var r := {"lohn": lohn, "szene": "", "neu": false, "bonus": 0}
 	var szene := zustand.szene(f, spalte)
 	if szene > 0:
 		var k := str(szene)
-		var neu := not wirtschaft.album.has(k)
+		r.neu = not wirtschaft.album.has(k)
 		wirtschaft.album[k] = int(wirtschaft.album.get(k, 0)) + 1
-		var name: String = FensterZustand.SZENEN[szene]
-		if neu:
-			var bonus := 10 * lohn
-			wirtschaft.geld += bonus
-			Ton.spielen("erfolg", -5.0)
-			hud.meldung("Neu im Sammelalbum: %s!  +%d €
-(B öffnet das Album)" % [name, bonus], 4.0)
+		r.szene = FensterZustand.SZENEN[szene]
+		if r.neu:
+			r.bonus = 10 * lohn
+			wirtschaft.geld += int(r.bonus)
+	return r
+
+func _album_meldung(r: Dictionary, finder := "") -> void:
+	if str(r.get("szene", "")) == "":
+		return
+	if r.get("neu", false):
+		Ton.spielen("erfolg", -5.0)
+		if finder == "":
+			hud.meldung("Neu im Sammelalbum: %s!  +%d €\n(B öffnet das Album)" % [r.szene, int(r.bonus)], 4.0)
 		else:
-			hud.meldung(name, 1.5)
+			hud.meldung("Neu im Sammelalbum: %s – gefunden von %s!  +%d €" % [r.szene, finder, int(r.bonus)], 4.0)
+	elif finder == "":
+		hud.meldung(str(r.szene), 1.5)
+
+# Glanz am Fenster; eigen = selbst geputzt (Ton, „+ €“, Münzen)
+func _fertig_effekte(f: int, spalte: int, lohn: int, eigen: bool) -> void:
+	if eigen:
+		if lohn > 0:
+			hud.pop("+%d €" % lohn)
+		Ton.gedrosselt("quietschen", 0.12, -5.0, randf_range(0.9, 1.12))
+		Ton.gedrosselt("glanz", 0.25, -9.0, randf_range(0.95, 1.08))
+		if lohn > 0:
+			Ton.gedrosselt("geld", 0.15, -12.0)
+	_funkeln(spieler.fenster_mitte(f, spalte))
+	effekte.fenster_glanz(f, spalte)
+	if eigen and lohn > 0:
+		effekte.muenzen(3)
+
+# Mehrspieler: der Gastgeber meldet ein fertiges Fenster (wer = Peer, 0 = Helfer). Gastgeber: ein Gast war es.
+func netz_fertig(f: int, spalte: int, wer: int, r: Dictionary) -> void:
+	zustand.sauber_machen(f, spalte)
+	if wer == 0:
+		return
+	if wer == Netz.meine_id():   # mein Fenster: jetzt kommt der Lohn
+		hud.pop("+%d €" % int(r.get("lohn", 0)))
+		Ton.gedrosselt("geld", 0.15, -12.0)
+		effekte.muenzen(3)
+		_album_meldung(r)
+	else:
+		_fertig_effekte(f, spalte, 0, false)
+		_album_meldung(r, Netz.name_von(wer))
 
 # ---------------------------------------------------------------- Fahrzeuge + Hotbar
 func _fahrzeug_liste() -> Array:
@@ -395,6 +440,7 @@ func _helfer_geputzt(f: int, _spalte: int, art: String) -> void:
 	var anteil: float = Wirtschaft.HELFER[art].anteil
 	wirtschaft.verdienen(maxi(1, int(round(lohn_mit_boni(f) * (1.0 - anteil)))))
 	wirtschaft.statistik.fenster_helfer = int(wirtschaft.statistik.fenster_helfer) + 1
+	Netz.fertig_senden(f, _spalte, 0, {})   # Gäste: Fenster sauber
 
 func _oben_gesperrt() -> void:
 	hud.meldung("Das Seil ist zu kurz! Mit Tab in der Werkstatt eine längere Seilwinde kaufen.", 3.0)
@@ -490,6 +536,7 @@ var gondeln: Gondeln
 var helfer: Helfer
 var express_ziel := 0.0   # Express-Fahrt: dorthin (y)
 var express_aussteigen := false   # nach der Fahrt nach unten aussteigen
+var _hoehe_gemeldet := 0          # Mehrspieler-Gast: Höhenbonus schon beim Gastgeber angefragt
 
 func _ein_aus() -> void:
 	if spieler.aktiv:
@@ -541,19 +588,29 @@ func _ein_aus() -> void:
 					else:
 						hud.meldung("Die Gondel %s kostet %s € – dir fehlen noch %s €." % [Turm.SEITEN_NAMEN[andere], Hud.punkte(preis), Hud.punkte(maxi(0, preis - wirtschaft.geld))], 3.0))
 				return
-			_gondel_wechseln(andere)
+			# Mehrspieler: eine Gondel, in der ein anderer sitzt, ist gesperrt (Gastgeber prüft)
+			Netz.befehl("gondel_nehmen", {"seite": andere}, func(e: Dictionary):
+				if e.get("ok", false) and not spieler.aktiv:
+					_gondel_wechseln(andere)
+					_einsteigen()
+				elif not e.get("ok", false) and not Netz.ist_gast():
+					hud.meldung(str(e.get("grund", "")), 3.0))
+			return
 		elif _abstand_gondel() > EINSTEIG_WEIT:
 			hud.meldung("Geh zu einer Gondel am Turm, um einzusteigen.", 2.0)
 			return
-		laeufer.deaktivieren()
-		spieler.aktiv = true
-		spieler.cam.current = true
-		hud.steuerung(false)
-		if letzte_hoehe > UNTEN + 1.0:
-			express_ziel = letzte_hoehe
-			express = true
-			spieler.gesperrt = true
-			hud.meldung("Die Gondel fährt zurück auf %d m …" % int(letzte_hoehe), 3.0)
+		_einsteigen()
+
+func _einsteigen() -> void:
+	laeufer.deaktivieren()
+	spieler.aktiv = true
+	spieler.cam.current = true
+	hud.steuerung(false)
+	if letzte_hoehe > UNTEN + 1.0:
+		express_ziel = letzte_hoehe
+		express = true
+		spieler.gesperrt = true
+		hud.meldung("Die Gondel fährt zurück auf %d m …" % int(letzte_hoehe), 3.0)
 
 # In eine andere (geparkte) Gondel umsteigen: die bisherige parkt an ihrer Stelle
 func _gondel_wechseln(k: int) -> void:
@@ -697,8 +754,10 @@ func _neues_spiel() -> void:
 # Mehrspieler: eigene Lage für die anderen (Netz schickt sie 20× pro Sekunde), siehe Mitspieler.lage
 func lage_daten() -> Array:
 	if spieler.aktiv:
+		# 7c: dazu Drehung der Gondel, Seite, Werkzeug und wo es gerade ist (für die Gondel-Figur bei den anderen)
 		var g := spieler.gondel.global_position
-		return [1, g.x, g.y, g.z, spieler.yaw, "", ""]
+		var wp := spieler.werkzeug.global_position if spieler.werkzeug else g
+		return [1, g.x, g.y, g.z, spieler.yaw, "", "", spieler.winkel, spieler.seite, spieler.wz_id, wp.x, wp.y, wp.z, spieler.strahl.visible]
 	if strand.yacht and strand.yacht.an_bord:
 		return [2, 0.0, 0.0, 0.0, 0.0, "", ""]
 	return [0, laeufer.position.x, laeufer.position.y + laeufer.hoch, laeufer.position.z, laeufer.yaw, extras.ort, laeufer.fahrzeug]
@@ -745,17 +804,18 @@ func _process(dt: float) -> void:
 		22: _fahrzeug_test(dt)
 		23: _menue_bilder(dt)
 		19: _werkzeug_test(dt)
-	if ansicht == 0 or ansicht == 12:
+	if (ansicht == 0 or ansicht == 12) and not Netz.ist_gast():   # Gast: Ereignisse kommen ab 7d vom Gastgeber
 		ereignisse.takt(dt)
 	# Neue Höhe erreicht (je 6 Stockwerke = ein Abschnitt): einmaliger Bonus + Aussicht feiern
 	var abschnitt := spieler.stock / Wirtschaft.ABSCHNITT
-	if abschnitt > wirtschaft.hoechster_abschnitt:
-		wirtschaft.hoechster_abschnitt = abschnitt
-		var bonus := 25 * wirtschaft.lohn(spieler.stock)
-		wirtschaft.geld += bonus
-		Ton.spielen("glanz", -4.0, 0.8)
-		hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [int(spieler.y), bonus], 3.5)
-		_speichern()
+	if abschnitt > wirtschaft.hoechster_abschnitt and not (Netz.ist_gast() and abschnitt <= _hoehe_gemeldet):
+		_hoehe_gemeldet = abschnitt   # Gast: nur einmal fragen (Antwort braucht etwas)
+		var meter := int(spieler.y)
+		Netz.befehl("hoehe", {"abschnitt": abschnitt, "stock": spieler.stock}, func(e: Dictionary):
+			if e.get("ok", false):
+				Ton.spielen("glanz", -4.0, 0.8)
+				hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [meter, int(e.bonus)], 3.5)
+				_speichern())
 	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv, strand.ort_name() if strand.ort_name() != "" else extras.ort_name())
 	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen() or strand.blockiert() or karte.offen
 	laeufer.set_process(not menue)

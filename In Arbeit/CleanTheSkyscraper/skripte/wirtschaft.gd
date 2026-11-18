@@ -390,6 +390,7 @@ var besucht: Array = []                                 # besuchte Orte (lounge,
 var statistik := {"spielzeit": 0.0, "fenster_selbst": 0, "fenster_helfer": 0, "verdient": 0, "hoechste": 0.0, "rekord_minute": 0,
 	"sitzung_rekord": 0.0, "gelaufen": 0.0, "casino_spiele": 0, "casino_bilanz": 0, "casino_rekord": 0, "arcade_spiele": 0,
 	"arcade_gewinne": 0, "boosts": 0, "erfolg_geld": 0, "fische": 0, "fisch_geld": 0, "angel_zeit": 0.0}
+var fenster_je := {}                                    # Mehrspieler: selbst geputzte Fenster je Profil-ID
 var angeln: Array = []                                  # gekaufte Angeln (ANGELN-ids)
 var fischkiste := {}                                    # Fisch-ID -> Anzahl (noch nicht verkauft)
 var fisch_index := {}                                   # Fisch-ID -> {n = so oft gefangen, max = größte Länge in m}
@@ -776,7 +777,7 @@ func speichern() -> Dictionary:
 	var d := {"geld": geld, "besitz": besitz, "aktiv": e.aktiv, "stufen": stufen, "album": album, "hoechster_abschnitt": hoechster_abschnitt, "einstellungen": einstellungen, "boosts": e.boosts, "kosmetik_besitz": kosmetik_besitz, "kosmetik_aktiv": e.kosmetik_aktiv, "helfer": helfer, "fahrzeuge": fahrzeuge, "fahrzeug": e.fahrzeug, "gondeln": gondeln, "aktive_gondel": e.aktive_gondel, "moebel": moebel, "erfolge": erfolge, "besucht": besucht, "statistik": statistik,
 		"angeln": angeln, "fischkiste": fischkiste, "fisch_index": fisch_index, "yacht": yacht,
 		"radio": e.radio, "tageszeit": tageszeit, "turm_nr": turm_nr, "tuerme_fertig": tuerme_fertig, "abspann": abspann,
-		"spieler_id": ich, "koop_max": koop_max, "koop_rest": {"2": koop_rest[2], "3": koop_rest[3]}}
+		"spieler_id": ich, "koop_max": koop_max, "fenster_je": fenster_je, "koop_rest": {"2": koop_rest[2], "3": koop_rest[3]}}
 	var andere := {}
 	for pid in spieler_daten:
 		if pid != ich:
@@ -882,6 +883,11 @@ func laden(d: Dictionary, als_gast := false) -> void:
 		tuerme_fertig.append(int(t))
 	abspann = bool(d.get("abspann", false))
 	koop_max = clampi(int(d.get("koop_max", 1)), 1, 3)
+	fenster_je = {}
+	var fj = d.get("fenster_je", {})
+	if fj is Dictionary:
+		for k in fj:
+			fenster_je[str(k)] = int(fj[k])
 	var kr = d.get("koop_rest", {})
 	for k in [2, 3]:
 		koop_rest[k] = float((kr as Dictionary).get(str(k), 0.0)) if kr is Dictionary else 0.0

@@ -4,6 +4,9 @@ extends Node3D
 # Namensschild, in der Gondel nur das Namensschild an der Gondel (Gondel-Figur kommt in 7c). Die Lage kommt
 # 20× pro Sekunde über Netz.lage(); dazwischen wird weich nachgeführt. Dazu die Spielerliste oben rechts.
 # Lage-Array (Spiel.lage_daten): [modus 0 = zu Fuß / 1 = Gondel / 2 = Yacht, x, y, z, yaw, innen, fahrzeug]
+# In der Gondel (7c) zusätzlich: [.., winkel der Gondel, seite, werkzeug-id, werkzeug x, y, z, strahl an]. Die Gondel des
+# anderen wird mit seinem Lack/Zubehör (spieler_daten) gebaut, mit Figur und Werkzeug; seine geparkte Gondel (Gondeln)
+# wird solange ausgeblendet. Steigt er aus, bleibt seine Gondel an der letzten Stelle stehen.
 
 const FIGUREN := ["character-male-b", "character-female-a", "character-male-e", "character-female-c", "character-worker"]
 const MASS := 2.8                 # wie die Leute an der Küste (≈ 1,55 m)
@@ -125,7 +128,63 @@ func _figur_bauen(id: int) -> void:
 	schild.position.y = 2.45
 	k.add_child(schild)
 	var ap := figur.find_child("AnimationPlayer", true, false) as AnimationPlayer
-	figuren[id] = {"knoten": k, "figur": figur, "ring": ring, "schild": schild, "ap": ap, "anim": "", "lage": [], "pos": Vector3.ZERO, "ziel": Vector3.ZERO, "yaw": 0.0, "tempo": 0.0}
+	figuren[id] = {"knoten": k, "figur": figur, "ring": ring, "schild": schild, "ap": ap, "anim": "", "lage": [], "pos": Vector3.ZERO, "ziel": Vector3.ZERO, "yaw": 0.0, "tempo": 0.0,
+		"gondel": null, "g_pos": Vector3.ZERO, "g_ziel": Vector3.ZERO, "g_winkel": 0.0, "seite": -1, "wz_id": "", "wz": null, "wz_ziel": Vector3.ZERO, "deko_hash": 0, "deko_zeit": 0.0}
+
+# Gondel eines Mitspielers: Rumpf wie die eigene (GondelDeko), Figur in Spielerfarbe, Werkzeug
+func _gondel_bauen(id: int, f: Dictionary) -> void:
+	var g := Node3D.new()
+	g.name = "mitspieler_gondel_%d" % id
+	add_child(g)
+	var mat := Bau.matt("ffc531", 0.5)
+	GondelDeko.rumpf(g, mat, Bau.metall("6b7078", 0.4, 0.6))
+	var deko := Node3D.new()
+	g.add_child(deko)
+	var fa := int((Netz.spieler.get(id, {}) as Dictionary).get("farbe", 0))
+	var figur := RaumBau.modell(g, "leute/" + FIGUREN[fa % FIGUREN.size()], Vector3(0.0, 0.06, 0.15), MASS, PI)   # schaut zum Glas (−Z)
+	figur.name = "figur"
+	var ap := figur.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if ap:
+		for a in ap.get_animation_list():
+			if "idle" in a.to_lower():
+				ap.get_animation(a).loop_mode = Animation.LOOP_LINEAR
+				ap.play(a)
+				break
+	f["gondel"] = g
+	f["g_mat"] = mat
+	f["g_deko"] = deko
+
+func _werkzeug_setzen(f: Dictionary, wz_id: String, schwamm_hex: String) -> void:
+	if f.wz != null:
+		(f.wz as Node3D).queue_free()
+	var w: Dictionary = spiel.wirtschaft.werkzeug(wz_id)
+	var n := Spieler.werkzeug_modell(w, schwamm_hex)
+	add_child(n)
+	f["wz"] = n
+	f["wz_id"] = wz_id + "|" + schwamm_hex
+
+# Lack + Zubehör aus den Werten des Spielers (ändert sich selten → einmal pro Sekunde vergleichen)
+func _deko(id: int, f: Dictionary) -> void:
+	var pid := str((Netz.spieler.get(id, {}) as Dictionary).get("profil_id", ""))
+	var e: Dictionary = spiel.wirtschaft.spieler_daten.get(pid, {})
+	if e.is_empty():
+		return
+	var ka: Dictionary = e.kosmetik_aktiv
+	var h := hash(ka)
+	if h == int(f.deko_hash):
+		return
+	f["deko_hash"] = h
+	var w := spiel.wirtschaft
+	GondelDeko.lack(f.g_mat, w.kosmetik(str(ka.get("gondel", "gondel_gelb"))).farbe, str(ka.get("lack", "lack_uni")))
+	GondelDeko.zubehoer(f.g_deko, str(ka.get("aufkleber", "kleber_keine")), str(ka.get("blumen", "blumen_keine")), str(ka.get("schirm", "schirm_keiner")), str(ka.get("radio", "gradio_keins")))
+	f["schwamm"] = w.kosmetik(str(ka.get("schwamm", "schwamm_gelb"))).farbe
+
+# Für Tests: Gondel des Mitspielers
+func gondel_von(id: int) -> Node3D:
+	return figuren[id].gondel if figuren.has(id) else null
+
+func werkzeug_von(id: int) -> String:
+	return str(figuren[id].wz_id).get_slice("|", 0) if figuren.has(id) else ""
 
 func _anim(f: Dictionary, art: String) -> void:
 	var ap: AnimationPlayer = f.ap
@@ -144,7 +203,13 @@ func _process(dt: float) -> void:
 	for id in figuren.keys():
 		if not Netz.spieler.has(id) or not Netz.aktiv():
 			(figuren[id].knoten as Node3D).queue_free()
+			if figuren[id].gondel != null:
+				(figuren[id].gondel as Node3D).queue_free()
+			if figuren[id].wz != null:
+				(figuren[id].wz as Node3D).queue_free()
 			figuren.erase(id)
+			if spiel.gondeln:
+				spiel.gondeln.aktualisieren(spiel.wirtschaft.aktive_gondel)   # geparkte wieder zeigen
 	if figuren.is_empty():
 		return
 	var cam := get_viewport().get_camera_3d()
@@ -174,3 +239,45 @@ func _process(dt: float) -> void:
 		if modus == 0:
 			k.rotation.y = float(f.yaw)
 			_anim(f, "sprint" if f.tempo > 6.5 else ("walk" if f.tempo > 0.6 else "idle"))
+		_gondel_takt(id, f, l, modus, dt)
+
+func _gondel_takt(id: int, f: Dictionary, l: Array, modus: int, dt: float) -> void:
+	if modus == 1 and l.size() >= 14:
+		if f.gondel == null:
+			_gondel_bauen(id, f)
+			f["g_pos"] = Vector3(float(l[1]), float(l[2]), float(l[3]))
+			f["g_winkel"] = float(l[7])
+		f["g_ziel"] = Vector3(float(l[1]), float(l[2]), float(l[3]))
+		f["seite"] = int(l[8])
+		f["wz_ziel"] = Vector3(float(l[10]), float(l[11]), float(l[12]))
+		var neu_wz := str(l[9]) + "|" + str(f.get("schwamm", "ffd84a"))
+		if neu_wz != str(f.wz_id):
+			_werkzeug_setzen(f, str(l[9]), str(f.get("schwamm", "ffd84a")))
+	if f.gondel == null:
+		return
+	var g: Node3D = f.gondel
+	f["deko_zeit"] = float(f.deko_zeit) - dt
+	if f.deko_zeit <= 0.0:
+		f["deko_zeit"] = 1.0
+		_deko(id, f)
+	var gp: Vector3 = f.g_pos
+	if modus == 1 and gp.distance_to(f.g_ziel) > 40.0:
+		gp = f.g_ziel   # Express/Sprung
+	f["g_pos"] = gp.lerp(f.g_ziel, minf(1.0, dt * 12.0))
+	if modus == 1 and l.size() >= 14:
+		f["g_winkel"] = lerp_angle(float(f.g_winkel), float(l[7]), minf(1.0, dt * 10.0))
+	g.position = f.g_pos
+	g.rotation = Vector3(0.0, float(f.g_winkel), 0.0)
+	g.visible = true
+	var drin := modus == 1
+	(g.get_node("figur") as Node3D).visible = drin
+	if f.wz != null:
+		var wz: Node3D = f.wz
+		wz.visible = drin
+		if drin:
+			wz.global_position = wz.global_position.lerp(f.wz_ziel, minf(1.0, dt * 14.0)) if wz.global_position.distance_to(f.wz_ziel) < 3.0 else f.wz_ziel
+			wz.global_basis = g.global_basis
+	# die geparkte Gondel dieser Seite ausblenden, solange die des Mitspielers zu sehen ist
+	var k := int(f.seite)
+	if k >= 0 and k < 3 and spiel.gondeln and k != spiel.wirtschaft.aktive_gondel:
+		(spiel.gondeln.modelle[k] as Node3D).visible = false

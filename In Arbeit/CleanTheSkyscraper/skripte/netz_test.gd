@@ -244,9 +244,94 @@ func _process(dt: float) -> void:
 		67:
 			if _berichte.has("ABGELEHNT"):
 				_p("Kauf ohne Geld: nichts gekauft, Kasse unverändert", s.wirtschaft.stufen.arm == 0 and s.wirtschaft.geld == 10, "Arm %d, %d €" % [s.wirtschaft.stufen.arm, s.wirtschaft.geld])
-				schritt = 55
+				schritt = 70
 			elif zeit >= frist:
 				_p("Kauf ohne Geld", false, "keine Antwort")
+				schritt = 70
+		70:   # 7c: zweite Gondel für den Gast
+			var w := s.wirtschaft
+			w.geld = 50000
+			s.helfer.aktiv = false   # Zähler/Geld sollen sich nur durchs Putzen der Spieler ändern
+			_kh = w.aktive_gondel
+			_k2 = (_kh + 1) % 3
+			var e := Netz.befehl("gondel", {"seite": _k2})
+			_p("Gastgeber kauft zweite Gondel", e.ok and w.gondeln[_k2].gekauft, "Seite %d" % _k2)
+			schritt = 71
+			warte_bis = zeit + 1.5
+		71:
+			Netz.test_nachricht.rpc_id(ids.testgast1, "GONDEL %d %d" % [_kh, _k2])
+			schritt = 72
+			frist = zeit + 30.0
+		72:
+			if _berichte.has("IN_GONDEL"):
+				schritt = 73
+				warte_bis = zeit + 1.2
+			elif zeit >= frist:
+				_p("Gast steigt in Gondel", false, "keine Antwort")
+				schritt = 55
+		73:   # Gondel des Gasts beim Gastgeber zu sehen (mit Figur + Werkzeug), seine geparkte ausgeblendet
+			var b: Dictionary = _berichte.IN_GONDEL
+			var soll := Vector3(float(b.x), float(b.y), float(b.z))
+			var g := s.mitspieler.gondel_von(ids.testgast1)
+			var pid := _profil_id("testgast1")
+			_p("Gondel des Gasts beim Gastgeber an der richtigen Stelle", g != null and g.is_visible_in_tree() and g.global_position.distance_to(soll) < 0.6 and (g.get_node("figur") as Node3D).visible,
+				"Abstand %.2f m" % (g.global_position.distance_to(soll) if g else -1.0))
+			_p("Werkzeug des Gasts an seiner Gondel", s.mitspieler.werkzeug_von(ids.testgast1) == "abzieher", s.mitspieler.werkzeug_von(ids.testgast1))
+			_p("Geparkte Gondel dieser Seite ausgeblendet", not (s.gondeln.modelle[_k2] as Node3D).visible and int((s.wirtschaft.spieler_daten.get(pid, {}) as Dictionary).get("aktive_gondel", -1)) == _k2, "")
+			_vor = {"zahl": s.zustand.sauber_zahl, "verdient": int(s.wirtschaft.statistik.verdient), "je": int(s.wirtschaft.fenster_je.get(pid, 0))}
+			Netz.test_nachricht.rpc_id(ids.testgast1, "WISCHEN")
+			schritt = 74
+			frist = zeit + 40.0
+		74:
+			if _berichte.has("GEWISCHT"):
+				var b: Dictionary = _berichte.GEWISCHT
+				var pid := _profil_id("testgast1")
+				var n := int(b.n)
+				var w := s.wirtschaft
+				var dz: int = s.zustand.sauber_zahl - int(_vor.zahl)
+				var dv: int = int(w.statistik.verdient) - int(_vor.verdient)
+				var dj: int = int(w.fenster_je.get(pid, 0)) - int(_vor.je)
+				_p("Gast putzt Fenster → beim Gastgeber sauber", n > 0 and dz == n and int(b.zahl) == s.zustand.sauber_zahl, "%d Fenster, Gastgeber +%d, Zähler %s / %d" % [n, dz, b.zahl, s.zustand.sauber_zahl])
+				_p("Lohn einmal in der Kasse, mit Goldpolitur des Gasts", dj == n and dv == 2 * n and lohn_ohne_boost() == 1, "verdient +%d bei %d Fenstern" % [dv, n])
+				# Zwei wischen dasselbe Fenster
+				_w2 = _drei_dreckige(3)
+				_vor = {"zahl": s.zustand.sauber_zahl, "verdient": int(w.statistik.verdient), "je": int(w.fenster_je.get(pid, 0))}
+				Netz.test_nachricht.rpc_id(ids.testgast1, "DOPPEL %d %d" % [_w2.y, _w2.x])
+				if s.zustand.wische(_w2.y, _w2.x, 0.5, 0.5, 3.0, 3.0):
+					s._fenster_sauber(_w2.y, _w2.x)
+				schritt = 75
+				frist = zeit + 30.0
+			elif zeit >= frist:
+				_p("Gast putzt", false, "keine Antwort")
+				schritt = 55
+		75:
+			if _berichte.has("DOPPELT"):
+				var b: Dictionary = _berichte.DOPPELT
+				var pid := _profil_id("testgast1")
+				var w := s.wirtschaft
+				_p("Zwei wischen dasselbe Fenster → zählt einmal", s.zustand.sauber_zahl - int(_vor.zahl) == 1 and int(b.zahl) == s.zustand.sauber_zahl and int(w.statistik.verdient) - int(_vor.verdient) == lohn_ohne_boost(3) and int(w.fenster_je.get(pid, 0)) == int(_vor.je),
+					"+%d Fenster, verdient +%d, Gast-Zähler %s" % [s.zustand.sauber_zahl - int(_vor.zahl), int(w.statistik.verdient) - int(_vor.verdient), b.zahl])
+				# Dreck-Updates: Taube auf dem eben geputzten, ein Helfer wischt am nächsten, ein Helfer macht das dritte fertig
+				s.zustand.verschmutzen(_w2.y, _w2.x, 0.4)
+				s.zustand.dreck_setzen(_w2.y, _w2.x + 1, 0.12)
+				if s.zustand.sauber_machen(_w2.y, _w2.x + 2):
+					s._helfer_geputzt(_w2.y, _w2.x + 2, "putzkraft")
+				schritt = 76
+				warte_bis = zeit + 1.5
+			elif zeit >= frist:
+				_p("Zwei wischen dasselbe", false, "keine Antwort")
+				schritt = 55
+		76:
+			Netz.test_nachricht.rpc_id(ids.testgast1, "DRECK? %d %d %d" % [_w2.y, _w2.x, s.zustand.sauber_zahl])
+			Netz.test_nachricht.rpc_id(ids.testgast1, "HOEHE")
+			schritt = 77
+			frist = zeit + 30.0
+		77:
+			if _berichte.has("HOEHE_OK"):
+				_p("Höhenbonus beim Gastgeber eingetragen", s.wirtschaft.hoechster_abschnitt == 2, "Abschnitt %d" % s.wirtschaft.hoechster_abschnitt)
+				schritt = 55
+			elif zeit >= frist:
+				_p("Höhenbonus", false, "keine Antwort")
 				schritt = 55
 		55:   # Geld ändern, Gast 2 tritt mitten im Spiel bei
 			if DisplayServer.get_name() != "headless":
@@ -312,6 +397,25 @@ func _process(dt: float) -> void:
 
 var _ende_start := 0.0
 var _preise := {}
+var _kh := 0
+var _k2 := 1
+var _vor := {}
+var _w2 := Vector2i.ZERO   # (spalte, stockwerk) für „zwei wischen dasselbe“ + Dreck
+
+func lohn_ohne_boost(f := 0) -> int:
+	return s.lohn_mit_boni(f)
+
+# drei dreckige Fenster nebeneinander in Stockwerk f (ohne Wisch-Slot)
+func _drei_dreckige(f: int) -> Vector2i:
+	for sp in range(5, s.turm.fenster_pro_stock[f] - 3):
+		var ok := true
+		for d in 3:
+			var id: int = s.turm.fenster_basis[f] + sp + d
+			if s.zustand.ist_sauber(f, sp + d) or s.zustand.slots.has(id):
+				ok = false
+		if ok:
+			return Vector2i(sp, f)
+	return Vector2i(5, f)
 var _berichte := {}        # Gast-Berichte „NAME k=v …“
 var _profil_ids := {}
 func _profil_id(n: String) -> String:
@@ -335,12 +439,19 @@ func _nachricht(id: int, t: String) -> void:
 		_p("Figur von %s an der richtigen Stelle" % wer, ist.distance_to(soll) < 0.6 and s.mitspieler.figur_sichtbar(id), "Abstand %.2f m" % ist.distance_to(soll))
 	elif t.begins_with("GELD "):
 		_p("Geld bei %s wie beim Gastgeber" % wer, int(t.substr(5)) == s.wirtschaft.geld, "%s / %d €" % [t.substr(5), s.wirtschaft.geld])
+	elif t.begins_with("ZAHL "):
+		_p("Saubere Fenster bei %s wie beim Gastgeber" % wer, int(t.substr(5)) == s.zustand.sauber_zahl and s.zustand.sauber_zahl >= SAUBER, "%s / %d" % [t.substr(5), s.zustand.sauber_zahl])
 	elif t.begins_with("PHASE "):
 		var d := absf(wrapf(float(t.substr(6)) - s.welt.zeit.phase, -0.5, 0.5))
 		_p("Tageszeit bei %s wie beim Gastgeber" % wer, d < 0.003, "Unterschied %.4f (= %.1f s)" % [d, d * Tageszeit.TAG])
 	elif t.begins_with("PROFIL "):
 		_profil_ids[wer.to_lower().replace(" ", "")] = t.substr(7)
-	elif t.begins_with("GEKAUFT ") or t.begins_with("ABGELEHNT"):
+	elif t.begins_with("STEMPEL "):
+		var w2 := t.split(" ")
+		await get_tree().create_timer(0.8).timeout
+		var fo := s.zustand.fortschritt(int(w2[1]), int(w2[2]))
+		_p("Wisch-Stempel des Gasts kommen beim Gastgeber an", fo > 0.0 and fo < 1.0, "Fenster %s/%s, Fortschritt %.2f" % [w2[1], w2[2], fo])
+	elif t.get_slice(" ", 0) in ["GEKAUFT", "ABGELEHNT", "IN_GONDEL", "GEWISCHT", "DOPPELT", "HOEHE_OK"]:
 		var teile := t.split(" ")
 		var b := {}
 		for x in teile.slice(1):
@@ -387,7 +498,7 @@ func _gast_takt(dt: float) -> void:
 		var h := 1
 		Netz.test_nachricht.rpc_id(h, "PROFIL " + str(Netz.profil.id))
 		Netz.test_nachricht.rpc_id(h, "GELD %d" % s.wirtschaft.geld)
-		_melden(s.zustand.sauber_zahl == SAUBER, "Saubere Fenster übernommen", "%d" % s.zustand.sauber_zahl)
+		Netz.test_nachricht.rpc_id(h, "ZAHL %d" % s.zustand.sauber_zahl)   # Gastgeber vergleicht (7c: es werden mehr)
 		_melden(Netz.spieler.size() >= 2 and Netz.spieler.has(1), "Spielerliste da", "%d Spieler" % Netz.spieler.size())
 		_melden(s.welt.zeit.phase >= 0.0 and s.welt.zeit.laeuft, "Tageszeit läuft beim Gast", "Phase %.3f" % s.welt.zeit.phase)
 		Netz.test_nachricht.rpc_id(h, "PHASE %f" % s.welt.zeit.phase)
@@ -428,6 +539,29 @@ func _gast_nachricht(_id: int, t: String) -> void:
 			"Offene Werkstatt beim Gast aktualisiert (Putzkraft vom Gastgeber)", "%d Putzkraft, Knopf '%s', soll %d €" % [s.wirtschaft.helfer.putzkraft, k.text if k else "-", soll])
 	elif t == "OHNEGELD":
 		_gast_ohne_geld()
+	elif t.begins_with("GONDEL "):
+		_gast_gondel(int(t.get_slice(" ", 1)), int(t.get_slice(" ", 2)))
+	elif t == "WISCHEN":
+		_gast_wischen()
+	elif t.begins_with("DOPPEL "):
+		var f := int(t.get_slice(" ", 1))
+		var sp := int(t.get_slice(" ", 2))
+		if s.zustand.wische(f, sp, 0.5, 0.5, 3.0, 3.0):
+			s._fenster_sauber(f, sp)
+		await get_tree().create_timer(2.0).timeout
+		Netz.test_nachricht.rpc_id(1, "DOPPELT zahl=%d" % s.zustand.sauber_zahl)
+	elif t.begins_with("DRECK? "):
+		var f := int(t.get_slice(" ", 1))
+		var sp := int(t.get_slice(" ", 2))
+		var z := s.zustand
+		_melden(not z.ist_sauber(f, sp) and absf(z.dreck(f, sp) - 0.4) < 0.01, "Taube beim Gastgeber → Fenster beim Gast wieder dreckig", "Dreck %.2f" % z.dreck(f, sp))
+		_melden(absf(z.dreck(f, sp + 1) - 0.12) < 0.01, "Helfer wischt beim Gastgeber → Dreck beim Gast weniger", "Dreck %.2f" % z.dreck(f, sp + 1))
+		_melden(z.ist_sauber(f, sp + 2) and z.sauber_zahl == int(t.get_slice(" ", 3)), "Helfer-Fenster beim Gast sauber, Zähler gleich", "%d / %s" % [z.sauber_zahl, t.get_slice(" ", 3)])
+	elif t == "HOEHE":
+		var e1 := await _befehl("hoehe", {"abschnitt": 2, "stock": 12})
+		var e2 := await _befehl("hoehe", {"abschnitt": 2, "stock": 12})
+		_melden(e1.get("ok", false) and int(e1.get("bonus", 0)) == 75 and not e2.get("ok", true), "Höhenbonus einmal, vom Gastgeber gezahlt", "%s / %s" % [e1, e2])
+		Netz.test_nachricht.rpc_id(1, "HOEHE_OK")
 	elif t.begins_with("FAKTOR? "):
 		var k: Button = s.shop.find_child("up_arm", true, false)
 		_melden(s.wirtschaft.koop_faktor() == 2.0 and s.wirtschaft.upgrade_preis("arm") == 120 and k != null and k.text == "120 €", "Preis-Faktor zu dritt beim Gast (Knopf zeigt 120 €)", "×%.2f, Knopf '%s'" % [s.wirtschaft.koop_faktor(), k.text if k else "-"])
@@ -437,6 +571,52 @@ func _gast_nachricht(_id: int, t: String) -> void:
 		_melden(w.boosts.is_empty() and w.aktiv == "schwamm" and w.boost_wirkung("tempo") == 0.0, "Gast 2: kein fremder Boost, eigenes Werkzeug", "boosts %s, aktiv %s" % [w.boosts.keys(), w.aktiv])
 		_melden(w.koop_faktor() == 2.0, "Gast 2: Preis-Faktor ×2", "×%.2f" % w.koop_faktor())
 
+func _befehl(name: String, d: Dictionary) -> Dictionary:
+	Netz.befehl(name, d)
+	var r: Array = await Netz.befehl_fertig
+	return r[1]
+
+# Gast 1: besetzte Gondel des Gastgebers abgelehnt, freie genommen, eingestiegen
+func _gast_gondel(kh: int, k2: int) -> void:
+	var e1 := await _befehl("gondel_nehmen", {"seite": kh})
+	_melden(not e1.get("ok", true) and "fährt gerade" in str(e1.get("grund", "")), "Besetzte Gondel abgelehnt", str(e1.get("grund", "")))
+	var e2 := await _befehl("gondel_nehmen", {"seite": k2})
+	_melden(e2.get("ok", false), "Freie Gondel genommen", str(e2))
+	if e2.get("ok", false):
+		s._gondel_wechseln(k2)
+		s._einsteigen()
+	await get_tree().create_timer(1.2).timeout
+	var g := s.spieler.gondel.global_position
+	_melden(s.spieler.aktiv and s.wirtschaft.aktive_gondel == k2, "Gast sitzt in Gondel %d" % k2, "")
+	Netz.test_nachricht.rpc_id(1, "IN_GONDEL x=%f y=%f z=%f" % [g.x, g.y, g.z])
+
+# Gast 1: Goldpolitur kaufen, ein kleiner Stempel (kommt beim Gastgeber an?), dann ein großer (Fenster fertig → Gastgeber zahlt)
+func _gast_wischen() -> void:
+	var e := await _befehl("boost", {"id": "goldpolitur"})
+	_melden(e.get("ok", false) and s.wirtschaft.boost_aktiv("goldpolitur"), "Gast kauft Goldpolitur", str(e))
+	var sp := s.spieler
+	var o := Vector2(0.0, 1.6)
+	sp._stempel(o)
+	var f0 := -1
+	var s0 := -1
+	for j in range(0, sp.stempel_neu.size() - 5, 6):
+		if sp.stempel_neu[j + 2] >= 0.0 and sp.stempel_neu[j + 2] <= 1.0 and sp.stempel_neu[j + 3] >= 0.0 and sp.stempel_neu[j + 3] <= 1.0:
+			f0 = int(sp.stempel_neu[j])
+			s0 = int(sp.stempel_neu[j + 1])
+			break
+	Netz.test_nachricht.rpc_id(1, "STEMPEL %d %d" % [f0, s0])
+	await get_tree().create_timer(1.6).timeout
+	var vor := s.zustand.sauber_zahl
+	var rx := sp.wz_rx
+	var ry := sp.wz_ry
+	sp.wz_rx = 4.0   # riesig: deckt die Fenster vor der Gondel ganz ab
+	sp.wz_ry = 4.0
+	sp._stempel(o)
+	sp.wz_rx = rx
+	sp.wz_ry = ry
+	var n := s.zustand.sauber_zahl - vor
+	await get_tree().create_timer(2.5).timeout
+	Netz.test_nachricht.rpc_id(1, "GEWISCHT n=%d zahl=%d geld=%d" % [n, s.zustand.sauber_zahl, s.wirtschaft.geld])
 # Gast 1: über die echten Knöpfe kaufen (Werkstatt, Kiosk Werkzeuge, Snacks, Sky-Bar) – jeder Kauf wartet auf die Antwort
 func _gast_kaufen() -> void:
 	var w := s.wirtschaft
