@@ -151,6 +151,8 @@ func _process(dt: float) -> void:
 	if gast:
 		_gast_takt(dt)
 		return
+	if schritt == 79 or schritt == 80:
+		s.ereignisse.takt(dt)   # im echten Spiel (ansicht 0) läuft der Takt immer; im Test nur hier (sonst zufällige Tauben)
 	if zeit < warte_bis:
 		return
 	match schritt:
@@ -329,10 +331,52 @@ func _process(dt: float) -> void:
 		77:
 			if _berichte.has("HOEHE_OK"):
 				_p("Höhenbonus beim Gastgeber eingetragen", s.wirtschaft.hoechster_abschnitt == 2, "Abschnitt %d" % s.wirtschaft.hoechster_abschnitt)
-				schritt = 55
+				schritt = 78
 			elif zeit >= frist:
 				_p("Höhenbonus", false, "keine Antwort")
-				schritt = 55
+				schritt = 78
+		78:   # 7d: Helfer wieder an; Taube (Gastgeber hat Limo → fliegt zur Gondel des Gasts), Böe, Sandsturm
+			s.helfer.aktiv = true
+			var orte: Array = s.mitspieler.gondel_orte()
+			var nah := false
+			if orte.size() == 1:
+				var o: Dictionary = orte[0]
+				nah = s.helfer._spieler_nah(int(o.stock), int(float(o.weg) / Turm.FENSTER_B), int(o.seite))
+			_p("Helfer lassen die Gondel des Gasts aus", orte.size() == 1 and int(orte[0].seite) == _k2 and nah and s.helfer.weitere.size() == 1, str(orte))
+			s.ereignisse.limo = true
+			var ok := s.ereignisse.taube_jetzt()
+			var tb: Dictionary = s.ereignisse.tauben.back() if ok else {}
+			_taube = Vector2i(int(tb.get("spalte", -1)), int(tb.get("f", -1)))
+			_p("Taube fliegt zur Gondel des Gasts", ok and orte.size() == 1 and absi(_taube.y - int(orte[0].stock)) <= 1, "Fenster %d/%d" % [_taube.y, _taube.x])
+			s.ereignisse.boe_jetzt(0.6)
+			s.ereignisse.sturm_jetzt()
+			schritt = 79
+			warte_bis = zeit + 6.5
+		79:
+			var hp := []
+			for h in s.helfer.liste:
+				var p: Vector3 = (h.node as Node3D).position
+				hp.append("%d:%d=%f,%f,%f" % [Helfer.ARTEN.find(h.art), int(h.nr), p.x, p.y, p.z])
+			Netz.test_nachricht.rpc_id(ids.testgast1, "WELT? %d %d %s" % [_taube.y, _taube.x, ";".join(hp)])
+			schritt = 80
+			warte_bis = zeit + 2.0
+		80:   # Ereignisse beenden
+			var e := s.ereignisse
+			e.limo = false
+			e.wind_ziel = 0.0
+			e.ereignis.emit("wind", {"ziel": 0.0})
+			e.sturm_phase = 0
+			e.sturm_zeit = 600.0
+			e.ereignis.emit("sturm", {"phase": 0})
+			schritt = 55
+		101:   # 7d: Abspann startet der Gastgeber für alle
+			s.abspann_starten()
+			schritt = 102
+			warte_bis = zeit + 2.0
+		102:
+			Netz.test_nachricht.rpc_id(ids.testgast1, "ABSPANN?")
+			schritt = 11
+			warte_bis = zeit + 1.5
 		55:   # Geld ändern, Gast 2 tritt mitten im Spiel bei
 			if DisplayServer.get_name() != "headless":
 				print("NETZTEST BILD frame=%d" % Engine.get_frames_drawn())
@@ -355,6 +399,7 @@ func _process(dt: float) -> void:
 			_p("Preis-Faktor zu dritt ×2", w.koop_max == 3 and w.koop_faktor() == 2.0 and w.upgrade_preis("arm") == 120, "×%.2f, Arm %d €" % [w.koop_faktor(), w.upgrade_preis("arm")])
 			_p("koop_max im Spielstand", int(s.stand_daten().wirtschaft.koop_max) == 3, "")
 			Netz.test_nachricht.rpc_id(ids.testgast1, "FAKTOR? 2.0")
+			Netz.befehl("fahrzeug", {"id": "scooter"})   # Gast 2 soll damit fahren (7d: Fahrzeuge der anderen)
 			Netz.test_nachricht.rpc_id(ids.testgast2, "BESITZ?")
 			_gast_starten("testgast3")
 			schritt = 8
@@ -376,7 +421,7 @@ func _process(dt: float) -> void:
 			if t != "" and Netz.spieler.size() == 2:
 				_p("Gast 2 hat verlassen, Liste wieder 2", true, t.strip_edges())
 				_p("Ort von Gast 2 gemerkt", Netz.orte.has(_profil_id("testgast2")) or Netz.orte.size() >= 2, "%d Orte" % Netz.orte.size())
-				schritt = 11
+				schritt = 101
 				warte_bis = zeit + 1.0
 			elif zeit >= frist:
 				_p("Gast 2 hat verlassen", false, "Datei '%s', %d Spieler" % [t.strip_edges(), Netz.spieler.size()])
@@ -397,6 +442,7 @@ func _process(dt: float) -> void:
 
 var _ende_start := 0.0
 var _preise := {}
+var _taube := Vector2i(-1, -1)
 var _kh := 0
 var _k2 := 1
 var _vor := {}
@@ -446,6 +492,9 @@ func _nachricht(id: int, t: String) -> void:
 		_p("Tageszeit bei %s wie beim Gastgeber" % wer, d < 0.003, "Unterschied %.4f (= %.1f s)" % [d, d * Tageszeit.TAG])
 	elif t.begins_with("PROFIL "):
 		_profil_ids[wer.to_lower().replace(" ", "")] = t.substr(7)
+	elif t == "FAHRZEUG":
+		await get_tree().create_timer(1.5).timeout
+		_p("Fahrzeug von %s beim Gastgeber zu sehen" % wer, s.mitspieler.fahrzeug_von(id) == "scooter", s.mitspieler.fahrzeug_von(id))
 	elif t.begins_with("STEMPEL "):
 		var w2 := t.split(" ")
 		await get_tree().create_timer(0.8).timeout
@@ -570,6 +619,34 @@ func _gast_nachricht(_id: int, t: String) -> void:
 		_melden(w.stufen.motor == 1 and "abzieher" in w.besitz and w.helfer.putzkraft == 1, "Gast 2: alles Gekaufte da", "Motor %d, %s" % [w.stufen.motor, w.besitz])
 		_melden(w.boosts.is_empty() and w.aktiv == "schwamm" and w.boost_wirkung("tempo") == 0.0, "Gast 2: kein fremder Boost, eigenes Werkzeug", "boosts %s, aktiv %s" % [w.boosts.keys(), w.aktiv])
 		_melden(w.koop_faktor() == 2.0, "Gast 2: Preis-Faktor ×2", "×%.2f" % w.koop_faktor())
+		await get_tree().create_timer(1.5).timeout   # Scooter des Gastgebers ist jetzt in fahrzeuge
+		if "scooter" in w.fahrzeuge:
+			s._fahrzeug_waehlen("scooter")
+		Netz.test_nachricht.rpc_id(1, "FAHRZEUG")
+	elif t == "ABSPANN?":
+		_melden(s.abspann != null and is_instance_valid(s.abspann), "Abspann beim Gast gestartet (vom Gastgeber)", "")
+	elif t.begins_with("WELT? "):
+		var teile := t.split(" ")
+		var f := int(teile[1])
+		var sp := int(teile[2])
+		var e := s.ereignisse
+		_melden(e.gast and e.tauben.size() >= 1 and f >= 0 and not s.zustand.ist_sauber(f, sp), "Taube vom Gastgeber beim Gast zu sehen, Fenster bekleckert", "%d Tauben" % e.tauben.size())
+		_melden(absf(e.wind_ziel - 0.6) < 0.01 and s.spieler.wind > 0.3, "Böe vom Gastgeber schaukelt die Gondel des Gasts", "wind %.2f" % s.spieler.wind)
+		_melden(e.sturm_phase == 1, "Sandsturm-Warnung beim Gast", "Phase %d" % e.sturm_phase)
+		var gut := 0
+		var alle := 0
+		var info := ""
+		for it in (teile[3] if teile.size() > 3 else "").split(";", false):
+			alle += 1
+			var k := it.get_slice("=", 0)
+			var p := it.get_slice("=", 1).split_floats(",")
+			for h in s.helfer.liste:
+				if "%d:%d" % [Helfer.ARTEN.find(h.art), int(h.nr)] == k:
+					var d := (h.node as Node3D).position.distance_to(Vector3(p[0], p[1], p[2]))
+					info += "%s %.2f m " % [k, d]
+					if d < 2.5 and (h.node as Node3D).visible:
+						gut += 1
+		_melden(alle > 0 and gut == alle and not s.helfer.aktiv and s.helfer.gast, "Helfer des Gastgebers beim Gast an derselben Stelle", info)
 
 func _befehl(name: String, d: Dictionary) -> Dictionary:
 	Netz.befehl(name, d)

@@ -28,6 +28,12 @@ var zeit := 0.0
 var verlauf: Array = []         # Zeitpunkte geputzter Fenster (für „Fenster/Minute“)
 var aktiv := true
 var tempo := 1.0                # Penthouse-Bonus + Boosts: schneller putzen
+# Mehrspieler (7d): Helfer laufen nur beim Gastgeber. Er lässt auch die Fenster um die Gondeln der Mitspieler aus (weitere)
+# und schickt 10× pro Sekunde lage_daten(); ein Gast (gast = true) stellt nur die Modelle dorthin (lage_setzen).
+const ARTEN := ["putzkraft", "roboter", "drohne"]
+var gast := false
+var weitere: Array = []         # Gastgeber: Gondeln der Mitspieler [{seite, stock, weg}]
+var _ziele := {}                # Gast: "art:nr" -> [pos, yaw, putzt]
 
 func setup(t: Turm, z: FensterZustand, w: Wirtschaft, s: Spieler) -> void:
 	turm = t
@@ -77,6 +83,9 @@ func _neu(art: String, i: int) -> void:
 
 # ---------------------------------------------------------------- Ablauf
 func _process(dt: float) -> void:
+	if gast:
+		_gast_takt(dt)
+		return
 	if not aktiv:
 		return
 	zeit += dt
@@ -169,7 +178,11 @@ func _platzieren(h: Dictionary) -> void:
 	var n: Node3D = h.node
 	n.position = p.pos + p.normal * (GONDEL_ABSTAND if h.art == "putzkraft" else 0.32)
 	n.basis = Basis.looking_at(-p.normal, Vector3.UP)
-	# kleine Bewegungen beim Putzen
+	_arbeit(h)
+
+# kleine Bewegungen beim Putzen (Schwamm der Putzkraft, Walze des Roboters)
+func _arbeit(h: Dictionary) -> void:
+	var n: Node3D = h.node
 	var arbeit := n.get_node_or_null("arbeit") as Node3D
 	if arbeit:
 		var an: bool = h.phase == "putzen"
@@ -293,13 +306,50 @@ func _suche(seite: int, nahe_weg: float) -> Vector2i:
 	return Vector2i(-1, -1)
 
 func _spieler_nah(f: int, c: int, seite: int) -> bool:
+	var u := turm.umfaenge[f]
+	for g in weitere:   # Gondeln der Mitspieler
+		if int(g.seite) == seite and absi(f - int(g.stock)) <= 2 and absf(wrapf((c + 0.5) * Turm.FENSTER_B - float(g.weg), -u * 0.5, u * 0.5)) < 6.0:
+			return true
 	if spieler == null or not spieler.aktiv or seite != spieler.seite:
 		return false
 	if absi(f - spieler.stock) > 2:
 		return false
-	var u := turm.umfaenge[f]
 	var d := absf(wrapf((c + 0.5) * Turm.FENSTER_B - spieler.weg, -u * 0.5, u * 0.5))
 	return d < 6.0
+
+# ---------------------------------------------------------------- Mehrspieler
+# je Helfer 7 Werte: Art, Nummer, x, y, z, Drehung, putzt (1/0)
+func lage_daten() -> PackedFloat32Array:
+	var d := PackedFloat32Array()
+	for h in liste:
+		var n: Node3D = h.node
+		d.append_array([ARTEN.find(h.art), int(h.nr), n.position.x, n.position.y, n.position.z, n.rotation.y, 1.0 if h.phase == "putzen" else 0.0])
+	return d
+
+func lage_setzen(d: PackedFloat32Array) -> void:
+	for j in range(0, d.size() - 6, 7):
+		_ziele["%d:%d" % [int(d[j]), int(d[j + 1])]] = [Vector3(d[j + 2], d[j + 3], d[j + 4]), d[j + 5], d[j + 6] > 0.5]
+
+func _gast_takt(dt: float) -> void:
+	zeit += dt
+	for h in liste:
+		var k := "%d:%d" % [ARTEN.find(h.art), int(h.nr)]
+		var n: Node3D = h.node
+		if not _ziele.has(k):
+			n.visible = false   # noch keine Lage vom Gastgeber
+			continue
+		n.visible = true
+		var z: Array = _ziele[k]
+		var p: Vector3 = z[0]
+		n.position = p if n.position.distance_to(p) > 30.0 else n.position.lerp(p, minf(1.0, dt * 10.0))
+		n.rotation = Vector3(0.0, lerp_angle(n.rotation.y, float(z[1]), minf(1.0, dt * 8.0)), 0.0)
+		h.phase = "putzen" if z[2] else "fahren"
+		if h.art == "drohne":
+			for r in n.get_meta("rotoren"):
+				(r as Node3D).rotation.y += 40.0 * dt
+			(n.get_node("spray") as Node3D).visible = z[2]
+		else:
+			_arbeit(h)
 
 # ---------------------------------------------------------------- Modelle
 func _putzkraft_modell() -> Node3D:

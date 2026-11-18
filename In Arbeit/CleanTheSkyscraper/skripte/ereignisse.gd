@@ -30,6 +30,12 @@ var sturm_staerke := 0.0
 var sand: CPUParticles3D
 var erlaubt := {"tauben": true, "sandsturm": true, "wind": true}   # aus den Einstellungen
 var limo := false            # Zitronenlimo vom Snackstand: keine Tauben
+# Mehrspieler (7d): Tauben, Böen und Sandsturm würfelt nur der Gastgeber und meldet sie über das Signal ereignis
+# (Netz schickt sie an die Gäste); ein Gast (gast = true) spielt sie nur ab (netz_ereignis) – Dreck kommt über die
+# Dreck-Updates. Tauben fliegen auch zu den Gondeln der Mitspieler (weitere: {seite, stock, weg, limo}).
+signal ereignis(art: String, daten: Dictionary)
+var gast := false
+var weitere: Array = []
 
 func setup(s: Spieler, z: FensterZustand, t: Turm, w: Welt, h: Hud) -> void:
 	spieler = s
@@ -50,13 +56,23 @@ func takt(dt: float) -> void:
 
 # ---------------------------------------------------------------- Tauben
 func taube_jetzt() -> bool:
-	# sucht ein sauberes Fenster nahe der Gondel und schickt eine Taube hin
+	# sucht ein sauberes Fenster nahe einer Gondel (eigene oder die eines Mitspielers, Zitronenlimo hält sie fern)
+	var ziele := []
+	if not limo:
+		ziele.append({"stock": spieler.stock, "weg": spieler.weg, "eigen": true})
+	for g in weitere:
+		if not g.get("limo", false):
+			ziele.append({"stock": int(g.stock), "weg": float(g.weg), "eigen": false})
+	if ziele.is_empty():
+		return false
+	var zl: Dictionary = ziele[0] if ziele.size() == 1 else ziele[rng.randi() % ziele.size()]
+	var z_stock: int = zl.stock
 	var kandidaten := []
 	for df in [-1, 0, 1]:
-		var f: int = spieler.stock + df
-		if f < 0 or f >= Turm.STOCKWERKE or not turm.gleicher_grundriss(f, spieler.stock):
+		var f: int = z_stock + df
+		if f < 0 or f >= Turm.STOCKWERKE or not turm.gleicher_grundriss(f, z_stock):
 			continue
-		var mitte := int(spieler.weg / Turm.FENSTER_B)
+		var mitte := int(float(zl.weg) / Turm.FENSTER_B)
 		for ds in range(-6, 7):
 			var sp := mitte + ds
 			if sp >= 0 and sp < turm.fenster_pro_stock[f] and zustand.ist_sauber(f, sp):
@@ -66,6 +82,8 @@ func taube_jetzt() -> bool:
 	# Fenster im Blickfeld bevorzugen – vorher landete die Taube oft knapp außerhalb des Bildes (±6 Spalten ≈ ±9 m)
 	var im_bild := []
 	for kk in kandidaten:
+		if not zl.eigen:
+			break
 		var pk := turm.fassaden_punkt(kk.y, (kk.x + 0.5) * Turm.FENSTER_B, kk.y * Turm.STOCK_H + Turm.STOCK_H * Turm.BAND_ANTEIL)
 		var q: Vector3 = pk.pos + pk.normal * 0.22
 		if spieler.cam.is_position_in_frustum(q) and spieler.cam.is_position_in_frustum(q + Vector3.UP * 0.4) 				and spieler.cam.is_position_in_frustum(q + pk.tangente * 0.5) and spieler.cam.is_position_in_frustum(q - pk.tangente * 0.5):
@@ -73,20 +91,30 @@ func taube_jetzt() -> bool:
 	if not im_bild.is_empty():
 		kandidaten = im_bild
 	var k: Vector2i = kandidaten[rng.randi() % kandidaten.size()]
+	ereignis.emit("taube", {"f": k.y, "s": k.x})
+	_taube_starten(k, false)
+	return true
+
+# Taube zu Fenster k schicken; nur_zeigen = Gast (gekleckert wird beim Gastgeber, der Dreck kommt per Netz)
+func _taube_starten(k: Vector2i, nur_zeigen: bool) -> void:
 	var fy := k.y * Turm.STOCK_H + Turm.STOCK_H * Turm.BAND_ANTEIL
 	var p := turm.fassaden_punkt(k.y, (k.x + 0.5) * Turm.FENSTER_B, fy)
 	var ziel: Vector3 = p.pos + p.normal * 0.22
 	var start: Vector3 = ziel + p.normal * 18.0 + Vector3.UP * 9.0 + p.tangente * rng.randf_range(-15.0, 15.0)
 	var t := _taube_bauen()
 	t.position = start
-	tauben.append({"knoten": t, "phase": 0, "t": 0.0, "start": start, "ziel": ziel, "f": k.y, "spalte": k.x, "normal": p.normal})
-	return true
+	tauben.append({"knoten": t, "phase": 0, "t": 0.0, "start": start, "ziel": ziel, "f": k.y, "spalte": k.x, "normal": p.normal, "nur_zeigen": nur_zeigen})
+
+# Meldungen nur, wenn es in der Nähe passiert (im Mehrspieler auch an fremden Gondeln)
+func _nah(p: Vector3) -> bool:
+	var c := get_viewport().get_camera_3d()
+	return c == null or c.global_position.distance_to(p) < 60.0
 
 func _tauben(dt: float) -> void:
 	taube_zeit -= dt
-	if taube_zeit <= 0.0:
+	if taube_zeit <= 0.0 and not gast:
 		taube_zeit = rng.randf_range(TAUBE_ABSTAND.x, TAUBE_ABSTAND.y)
-		if erlaubt.tauben and not limo:
+		if erlaubt.tauben:
 			taube_jetzt()
 	for tb in tauben.duplicate():
 		var n: Node3D = tb.knoten
@@ -108,7 +136,7 @@ func _tauben(dt: float) -> void:
 				n.rotation.x = sin(tb.t * 6.0) * 0.08
 				if tb.t > 1.2 and not tb.has("geklecks"):
 					tb.geklecks = true
-					if zustand.verschmutzen(tb.f, tb.spalte, 0.4):
+					if (tb.nur_zeigen or zustand.verschmutzen(tb.f, tb.spalte, 0.4)) and _nah(n.global_position):
 						hud.meldung("Eine Taube hat ein Fenster bekleckert!", 2.5)
 				if tb.t > 4.0:
 					tb.phase = 2
@@ -180,13 +208,15 @@ func boe_jetzt(staerke := -1.0) -> void:
 	wind_ziel = staerke if staerke >= 0.0 else rng.randf_range(0.35, 0.7) + 0.3 * hoehe
 	wind_zeit = rng.randf_range(WIND_BOE.x, WIND_BOE.y)
 	hud.meldung("Windböe! Die Gondel schaukelt.", 2.0)
+	ereignis.emit("wind", {"ziel": wind_ziel})
 
 func _wind(dt: float) -> void:
 	wind_zeit -= dt
-	if wind_zeit <= 0.0:
+	if wind_zeit <= 0.0 and not gast:
 		if wind_ziel > 0.0:
 			wind_ziel = 0.0
 			wind_zeit = rng.randf_range(WIND_RUHE.x, WIND_RUHE.y)
+			ereignis.emit("wind", {"ziel": 0.0})
 		elif erlaubt.wind:
 			boe_jetzt()
 		else:
@@ -201,32 +231,14 @@ func sturm_jetzt() -> void:
 	sturm_phase = 1
 	sturm_zeit = STURM_WARNUNG
 	hud.meldung("Ein Sandsturm zieht auf! Keine Sorge – danach sind nur ein paar Fenster staubig.", 4.0)
+	ereignis.emit("sturm", {"phase": 1})
 
 func _sturm(dt: float) -> void:
 	sturm_zeit -= dt
-	match sturm_phase:
-		0:
-			if sturm_zeit <= 0.0:
-				if erlaubt.sandsturm:
-					sturm_jetzt()
-				else:
-					sturm_zeit = 30.0
-		1:
-			if sturm_zeit <= 0.0:
-				sturm_phase = 2
-				sturm_zeit = STURM_DAUER
-		2:
-			if sturm_zeit <= 0.0:
-				sturm_phase = 0
-				sturm_zeit = rng.randf_range(STURM_ABSTAND.x, STURM_ABSTAND.y)
-				var n := _einstauben()
-				if n > 0:
-					hud.meldung("Der Sandsturm ist vorbei. %d Fenster in deiner Nähe sind eingestaubt." % n, 4.0)
-				else:
-					hud.meldung("Der Sandsturm ist vorbei.", 3.0)
-	if not erlaubt.sandsturm and sturm_phase != 0:
-		sturm_phase = 0   # abgeschaltet: Sturm sofort beenden, nichts einstauben
-		sturm_zeit = 30.0
+	if gast:
+		pass   # Phasen kommen vom Gastgeber (netz_ereignis)
+	else:
+		_sturm_ablauf()
 	var ziel := 1.0 if sturm_phase == 2 else 0.0
 	sturm_staerke = move_toward(sturm_staerke, ziel, dt * 0.15)
 	welt.sandsturm(sturm_staerke)
@@ -238,10 +250,59 @@ func _sturm(dt: float) -> void:
 		wind = maxf(wind, sturm_staerke * 0.8)
 		spieler.wind = wind
 
+func _sturm_ablauf() -> void:
+	match sturm_phase:
+		0:
+			if sturm_zeit <= 0.0:
+				if erlaubt.sandsturm:
+					sturm_jetzt()
+				else:
+					sturm_zeit = 30.0
+		1:
+			if sturm_zeit <= 0.0:
+				sturm_phase = 2
+				sturm_zeit = STURM_DAUER
+				ereignis.emit("sturm", {"phase": 2})
+		2:
+			if sturm_zeit <= 0.0:
+				sturm_phase = 0
+				sturm_zeit = rng.randf_range(STURM_ABSTAND.x, STURM_ABSTAND.y)
+				var n := _einstauben()
+				ereignis.emit("sturm", {"phase": 0})
+				if n > 0:
+					hud.meldung("Der Sandsturm ist vorbei. %d Fenster in deiner Nähe sind eingestaubt." % n, 4.0)
+				else:
+					hud.meldung("Der Sandsturm ist vorbei.", 3.0)
+	if not erlaubt.sandsturm and sturm_phase != 0:
+		sturm_phase = 0   # abgeschaltet: Sturm sofort beenden, nichts einstauben
+		sturm_zeit = 30.0
+		ereignis.emit("sturm", {"phase": 0})
+
+# Mehrspieler-Gast: Ereignis vom Gastgeber abspielen
+func netz_ereignis(art: String, d: Dictionary) -> void:
+	match art:
+		"taube":
+			_taube_starten(Vector2i(int(d.s), int(d.f)), true)
+		"wind":
+			wind_ziel = float(d.ziel)
+			if wind_ziel > 0.0:
+				hud.meldung("Windböe! Die Gondel schaukelt.", 2.0)
+		"sturm":
+			var ph := int(d.phase)
+			if ph == 1 and sturm_phase == 0:
+				hud.meldung("Ein Sandsturm zieht auf! Keine Sorge – danach sind nur ein paar Fenster staubig.", 4.0)
+			elif ph == 0 and sturm_phase == 2:
+				hud.meldung("Der Sandsturm ist vorbei.", 3.0)
+			sturm_phase = ph
+
+# Einstauben in der Nähe jeder Gondel (eigene + Mitspieler)
 func _einstauben() -> int:
 	var n := 0
-	for df in range(-4, 5):
-		var f: int = spieler.stock + df
+	var stockwerke := {}
+	for g in [{"stock": spieler.stock}] + weitere:
+		for df in range(-4, 5):
+			stockwerke[int(g.stock) + df] = true
+	for f in stockwerke:
 		if f < 0 or f >= Turm.STOCKWERKE:
 			continue
 		for sp in turm.fenster_pro_stock[f]:

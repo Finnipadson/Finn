@@ -168,6 +168,18 @@ func laden(b64: String) -> void:
 				sauber_zahl += 1
 	zustand_neu = true
 
+# Mehrspieler (7d): sauber-Stand des Gastgebers übernehmen (nach dem Beitritt – was während des Ladens fertig wurde)
+func abgleichen(daten: PackedByteArray) -> void:
+	if daten.size() != sauber.size():
+		return
+	for f in Turm.STOCKWERKE:
+		for s in turm.fenster_pro_stock[f]:
+			var id := turm.fenster_basis[f] + s
+			if daten[id] == 1 and sauber[id] == 0:
+				sauber_machen(f, s)
+			elif daten[id] == 0 and sauber[id] == 1:
+				verschmutzen(f, s, 0.4)
+
 # ---------------------------------------------------------------- Szenen + Verschmutzen
 func szene(f: int, spalte: int) -> int:
 	if f < 0 or f >= Turm.STOCKWERKE or spalte < 0 or spalte >= turm.fenster_pro_stock[f]:

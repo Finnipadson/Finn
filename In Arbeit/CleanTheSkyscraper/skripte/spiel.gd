@@ -119,6 +119,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	add_child(ereignisse)
 	ereignisse.setup(spieler, zustand, turm, welt, hud)
 	ereignisse.erlaubt = wirtschaft.einstellungen
+	ereignisse.ereignis.connect(Netz.ereignis_senden)   # Mehrspieler: Gastgeber meldet Tauben/Böen/Sandsturm
 	laeufer = Laeufer.new()
 	add_child(laeufer)
 	laeufer.setup(turm, welt)
@@ -385,6 +386,8 @@ func _fertig_effekte(f: int, spalte: int, lohn: int, eigen: bool) -> void:
 func netz_fertig(f: int, spalte: int, wer: int, r: Dictionary) -> void:
 	zustand.sauber_machen(f, spalte)
 	if wer == 0:
+		if helfer:
+			helfer.verlauf.append(helfer.zeit)   # für „Fenster/min“ im HUD
 		return
 	if wer == Netz.meine_id():   # mein Fenster: jetzt kommt der Lohn
 		hud.pop("+%d €" % int(r.get("lohn", 0)))
@@ -760,7 +763,7 @@ func lage_daten() -> Array:
 		return [1, g.x, g.y, g.z, spieler.yaw, "", "", spieler.winkel, spieler.seite, spieler.wz_id, wp.x, wp.y, wp.z, spieler.strahl.visible]
 	if strand.yacht and strand.yacht.an_bord:
 		return [2, 0.0, 0.0, 0.0, 0.0, "", ""]
-	return [0, laeufer.position.x, laeufer.position.y + laeufer.hoch, laeufer.position.z, laeufer.yaw, extras.ort, laeufer.fahrzeug]
+	return [0, laeufer.position.x, laeufer.position.y + laeufer.hoch, laeufer.position.z, laeufer.yaw, extras.ort, laeufer.fahrzeug, laeufer.hoch]
 
 # ---------------------------------------------------------------- Ablauf
 func _process(dt: float) -> void:
@@ -804,7 +807,7 @@ func _process(dt: float) -> void:
 		22: _fahrzeug_test(dt)
 		23: _menue_bilder(dt)
 		19: _werkzeug_test(dt)
-	if (ansicht == 0 or ansicht == 12) and not Netz.ist_gast():   # Gast: Ereignisse kommen ab 7d vom Gastgeber
+	if ansicht == 0 or ansicht == 12 or Netz.ist_gast():   # Gast: spielt nur ab, was der Gastgeber würfelt (ereignisse.gast)
 		ereignisse.takt(dt)
 	# Neue Höhe erreicht (je 6 Stockwerke = ein Abschnitt): einmaliger Bonus + Aussicht feiern
 	var abschnitt := spieler.stock / Wirtschaft.ABSCHNITT
@@ -856,8 +859,8 @@ func _process(dt: float) -> void:
 	else:
 		hud.fortschritt(0.0, false)
 	# Alle Fenster sauber → einmal der Abspann (danach frei weiterspielen)
-	if not wirtschaft.abspann and zustand.sauber_zahl >= turm.fenster_gesamt and ((ansicht == 0 and not durchlauf) or ansicht == 33):
-		abspann_starten()
+	if not wirtschaft.abspann and zustand.sauber_zahl >= turm.fenster_gesamt and ((ansicht == 0 and not durchlauf) or ansicht == 33) and not Netz.ist_gast():
+		abspann_starten()   # im Mehrspieler startet ihn der Gastgeber für alle
 	# Tageszeit: speichern, Innenräume hell halten, Uhr anzeigen, Leuchtfeuer auf der Spitze blinkt nachts
 	if welt.zeit.phase >= 0.0:
 		if welt.zeit.laeuft:
@@ -873,6 +876,7 @@ func _process(dt: float) -> void:
 
 var abspann: Abspann
 func abspann_starten() -> void:
+	Netz.abspann_senden()
 	wirtschaft.abspann = true
 	if not wirtschaft.turm_nr in wirtschaft.tuerme_fertig:
 		wirtschaft.tuerme_fertig.append(wirtschaft.turm_nr)

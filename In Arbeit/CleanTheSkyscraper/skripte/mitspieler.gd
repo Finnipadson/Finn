@@ -7,6 +7,7 @@ extends Node3D
 # In der Gondel (7c) zusätzlich: [.., winkel der Gondel, seite, werkzeug-id, werkzeug x, y, z, strahl an]. Die Gondel des
 # anderen wird mit seinem Lack/Zubehör (spieler_daten) gebaut, mit Figur und Werkzeug; seine geparkte Gondel (Gondeln)
 # wird solange ausgeblendet. Steigt er aus, bleibt seine Gondel an der letzten Stelle stehen.
+# Zu Fuß (7d) zusätzlich [.., hoch über dem Boden]: Fahrzeug (Fahrzeuge.modell) unter der Figur, Jetpack-Flamme beim Fliegen.
 
 const FIGUREN := ["character-male-b", "character-female-a", "character-male-e", "character-female-c", "character-worker"]
 const MASS := 2.8                 # wie die Leute an der Küste (≈ 1,55 m)
@@ -183,6 +184,27 @@ func _deko(id: int, f: Dictionary) -> void:
 func gondel_von(id: int) -> Node3D:
 	return figuren[id].gondel if figuren.has(id) else null
 
+# Gastgeber: wo stehen die Gondeln der Mitspieler (für Helfer + Tauben)? [{seite, stock, weg, pid}] – nur wer gerade drin sitzt
+var _orte_zeit := 0.0
+var _orte: Array = []
+func gondel_orte() -> Array:
+	var jetzt := Time.get_ticks_msec() / 1000.0
+	if jetzt - _orte_zeit < 0.3:
+		return _orte
+	_orte_zeit = jetzt
+	_orte = []
+	for id in figuren:
+		var l: Array = figuren[id].lage
+		if l.size() >= 14 and int(l[0]) == 1:
+			var t := spiel.turm
+			var st := t.stockwerk_bei(float(l[2]) + 1.2)
+			_orte.append({"seite": int(l[8]), "stock": st, "weg": t.naechster_weg(st, Vector2(float(l[1]), float(l[3]))),
+				"pid": str((Netz.spieler.get(id, {}) as Dictionary).get("profil_id", ""))})
+	return _orte
+
+func fahrzeug_von(id: int) -> String:
+	return str(figuren[id].get("fz_id", "")) if figuren.has(id) else ""
+
 func werkzeug_von(id: int) -> String:
 	return str(figuren[id].wz_id).get_slice("|", 0) if figuren.has(id) else ""
 
@@ -238,8 +260,32 @@ func _process(dt: float) -> void:
 			schild.visible = cam.global_position.distance_to(k.global_position) < SCHILD_BIS
 		if modus == 0:
 			k.rotation.y = float(f.yaw)
-			_anim(f, "sprint" if f.tempo > 6.5 else ("walk" if f.tempo > 0.6 else "idle"))
+			var fz := str(l[6])
+			if fz != str(f.get("fz_id", "")):
+				_fahrzeug_setzen(f, fz)
+			_anim(f, "idle" if fz != "" else ("sprint" if f.tempo > 6.5 else ("walk" if f.tempo > 0.6 else "idle")))
+			if f.get("fz") != null:
+				var hoch := float(l[7]) if l.size() > 7 else 0.0
+				for n in ["flamme0", "flamme1"]:
+					var fl := (f.fz as Node3D).get_node_or_null(n) as Node3D
+					if fl:
+						fl.visible = hoch > 0.05
+						fl.scale = Vector3.ONE * (0.8 + randf() * 0.4)
 		_gondel_takt(id, f, l, modus, dt)
+
+# Fahrzeug unter der Figur (wie beim Läufer: vorne −Z); Figur steht auf Scooter/Hoverboard etwas höher
+func _fahrzeug_setzen(f: Dictionary, id: String) -> void:
+	if f.get("fz") != null:
+		(f.fz as Node3D).queue_free()
+	f["fz"] = null
+	f["fz_id"] = id
+	var fig: Node3D = f.figur
+	fig.position.y = {"scooter": 0.17, "hoverboard": 0.24}.get(id, 0.0)
+	if id != "":
+		var m := Fahrzeuge.modell(id)
+		m.position.y = 0.1 if id == "hoverboard" else 0.0
+		(f.knoten as Node3D).add_child(m)
+		f["fz"] = m
 
 func _gondel_takt(id: int, f: Dictionary, l: Array, modus: int, dt: float) -> void:
 	if modus == 1 and l.size() >= 14:

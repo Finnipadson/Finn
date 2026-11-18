@@ -152,6 +152,10 @@ func trennen() -> void:
 		spiel.spieler.stempel_neu = PackedFloat32Array()
 		spiel.zustand.protokollieren = false
 		spiel.zustand.protokoll = {}
+		if spiel.helfer:
+			spiel.helfer.weitere = []
+		if spiel.ereignisse:
+			spiel.ereignisse.weitere = []
 	_anwesend_setzen()
 	spieler_geaendert.emit()
 
@@ -290,6 +294,8 @@ func stueck(kennung: String, art: String, i: int, n: int, teil: PackedByteArray)
 		_stand_da(alles)
 	elif art == "felder":
 		_felder_anwenden(alles, true)
+	elif art == "sauber" and _bereit and _w():
+		spiel.zustand.abgleichen(alles.decompress_dynamic(-1, FileAccess.COMPRESSION_GZIP))
 
 func _stand_da(gz: PackedByteArray) -> void:
 	var roh := gz.decompress_dynamic(-1, FileAccess.COMPRESSION_GZIP)
@@ -764,15 +770,70 @@ func dreck(d: PackedFloat32Array) -> void:
 			continue
 		z.dreck_setzen(f, s, d[j + 2])
 
+# ---------------------------------------------------------------- Welt vom Gastgeber (Phase 7d)
+# Helfer laufen nur beim Gastgeber (lassen die Gondeln aller Spieler aus), Lage 10× pro Sekunde an die Gäste.
+# Tauben/Böen/Sandsturm würfelt der Gastgeber (Ereignisse.ereignis → ereignis_rpc), Tauben fliegen auch zu den Gondeln
+# der Gäste (außer sie haben Zitronenlimo). Abspann bei 100 % startet der Gastgeber für alle.
+const HELFER_HZ := 10.0
+var _helfer_zeit := 0.0
+
+func _welt_takt(dt: float) -> void:
+	var orte: Array = spiel.mitspieler.gondel_orte() if spiel.mitspieler else []
+	spiel.helfer.weitere = orte
+	var w := spiel.wirtschaft
+	var tw := []
+	for o in orte:
+		var o2: Dictionary = (o as Dictionary).duplicate()
+		o2["limo"] = w.boost_wirkung("tauben", str(o.pid)) > 0.0
+		tw.append(o2)
+	spiel.ereignisse.weitere = tw
+	_helfer_zeit += dt
+	if _helfer_zeit >= 1.0 / HELFER_HZ and not _bereite.is_empty() and spiel.helfer.anzahl() > 0:
+		_helfer_zeit = 0.0
+		var d := spiel.helfer.lage_daten()
+		for g in _bereite:
+			_spaeter(func(): helfer_lage.rpc_id(g, d))
+
+@rpc("authority", "call_remote", "unreliable_ordered")
+func helfer_lage(d: PackedFloat32Array) -> void:
+	if verlust > 0.0 and randf() < verlust:
+		return
+	if _bereit and _w() and spiel.helfer:
+		spiel.helfer.lage_setzen(d)
+
+func ereignis_senden(art: String, d: Dictionary) -> void:
+	if not ist_host():
+		return
+	for g in _bereite:
+		_spaeter(func(): ereignis_rpc.rpc_id(g, art, d))
+
+@rpc("authority", "call_remote", "reliable")
+func ereignis_rpc(art: String, d: Dictionary) -> void:
+	if _bereit and _w() and spiel.ereignisse:
+		spiel.ereignisse.netz_ereignis(art, d)
+
+func abspann_senden() -> void:
+	if not ist_host():
+		return
+	for g in _bereite:
+		_spaeter(func(): abspann_rpc.rpc_id(g))
+
+@rpc("authority", "call_remote", "reliable")
+func abspann_rpc() -> void:
+	if _bereit and _w() and (spiel.abspann == null or not is_instance_valid(spiel.abspann)):
+		spiel.abspann_starten()
+
 # Gast: Welt fertig geladen (Spiel.starten) → Gastgeber schickt den aktuellen Stand aller Felder
 func gast_bereit() -> void:
 	var w := _w()
 	if not ist_gast() or w == null:
 		return
 	_bereit = true
-	if spiel.helfer:   # Helfer laufen nur beim Gastgeber (Positionen kommen in 7d)
+	if spiel.helfer:   # Helfer laufen nur beim Gastgeber, hier nur die Modelle an seinen Positionen (7d)
 		spiel.helfer.aktiv = false
-		spiel.helfer.visible = false
+		spiel.helfer.gast = true
+	if spiel.ereignisse:   # Tauben, Böen, Sandsturm kommen vom Gastgeber (7d)
+		spiel.ereignisse.gast = true
 	_kasse = w.geld
 	_anwesend_setzen()
 	_spaeter(func(): bereit.rpc_id(1))
@@ -786,6 +847,11 @@ func bereit() -> void:
 		_bereite[id] = true
 		_anwesend_setzen()
 		_felder_pruefen(true, id)
+		# saubere Fenster noch einmal (was während des Ladens fertig wurde, hat der Gast verpasst)
+		_gross_senden(id, "sauber", spiel.zustand.sauber.compress(FileAccess.COMPRESSION_GZIP))
+		var e := spiel.ereignisse   # laufende Böe / Sandsturm gleich mitteilen
+		_spaeter(func(): ereignis_rpc.rpc_id(id, "wind", {"ziel": e.wind_ziel}))
+		_spaeter(func(): ereignis_rpc.rpc_id(id, "sturm", {"phase": e.sturm_phase}))
 
 # Gastgeber: eigene Werte eines Gasts (Werkzeug in der Hand, Fahrzeug, Aussehen, Gondel, Radio) – Boosts bleiben beim Gastgeber
 @rpc("any_peer", "call_remote", "reliable")
@@ -821,6 +887,7 @@ func _netz_takt(dt: float) -> void:
 	if ist_host() or (ist_gast() and _bereit):
 		_stempel_takt()
 	if ist_host():
+		_welt_takt(dt)
 		_feld_zeit += dt
 		_stat_zeit += dt
 		if _feld_zeit >= FELD_TAKT:

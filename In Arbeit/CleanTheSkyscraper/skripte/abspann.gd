@@ -127,6 +127,13 @@ func _statistik_karte() -> PanelContainer:
 		["Fische im Index", "%d von %d" % [w.fisch_index.size(), Wirtschaft.FISCHE.size()]],
 		["Zu Fuß unterwegs", "%s km" % str(snappedf(float(st.gelaufen) / 1000.0, 0.1)).replace(".", ",")],
 	]
+	if Netz.aktiv():   # Mehrspieler (7d): wer hat wie viele Fenster geputzt
+		var ids := Netz.spieler.keys()
+		ids.sort()
+		for i in ids.size():
+			var id: int = ids[i]
+			var pid: String = w.ich if id == Netz.meine_id() else str(Netz.spieler[id].get("profil_id", ""))
+			zeilen.insert(2 + i,["  davon %s" % Netz.name_von(id), Hud.punkte(int(w.fenster_je.get(pid, 0)))])
 	for z in zeilen:
 		var hb := HBoxContainer.new()
 		var a := UiGlas.text(z[0], 16, UiGlas.TEXT_LEISE)
