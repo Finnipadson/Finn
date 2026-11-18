@@ -4,6 +4,9 @@ extends Node
 # 34 = Testbilder (BILD n frame=…) + FPS, 35 = Hauptmenü (Prüfungen + Bilder). Mit Grafik starten (headless gibt es keinen Ton).
 #   --nur=ton,tasten,…  nur diese Teile
 
+static var ort_stufe := 0      # Test 36: Stufe über mehrere Neustarts der Szene
+static var ort_fehler := 0
+
 var s: Spiel
 var w: Wirtschaft
 var fehler := 0
@@ -54,6 +57,9 @@ func _ablauf() -> void:
 		33: await _test()
 		34: await _bilder()
 		35: await _menue()
+		36:
+			await _ort_test()
+			return
 	print("TEST fertig: fehler=%d" % fehler)
 	get_tree().quit()
 
@@ -301,6 +307,73 @@ func _radio() -> void:
 	await _taste(KEY_R)
 	await _warte(0.3)
 	_pruefe("R schaltet aus", not Ton.i.radio.an)
+
+# ---------------------------------------------------------------- Ort merken (36): speichern, Szene neu laden, prüfen
+func _neu_laden() -> void:
+	s._speichern()
+	ort_stufe += 1
+	ort_fehler += fehler
+	get_tree().reload_current_scene()
+
+func _ort_test() -> void:
+	await _warte(0.6)
+	match ort_stufe:
+		0:   # in der Gondel auf 40 m, schräger Blick
+			if not s.spieler.aktiv:
+				s._ein_aus()
+				await _warte(0.5)
+			s.spieler.y = 15.0   # unter der Seil-Grenze des Teststands (22,6 m)
+			s.spieler.yaw = 1.0
+			await _warte(0.3)
+			print("TEST Ort: Gondel auf %.1f m, weg %.1f" % [s.spieler.y, s.spieler.weg])
+			ProjectSettings.set_setting("test/ort_weg", s.spieler.weg)
+			_neu_laden()
+		1:
+			var weg0 := float(ProjectSettings.get_setting("test/ort_weg", -1.0))
+			_pruefe("Neustart: wieder in der Gondel", s.spieler.aktiv and s.spieler.cam.current)
+			_pruefe("… auf derselben Höhe und Stelle", absf(s.spieler.y - 15.0) < 0.5 and absf(s.spieler.weg - weg0) < 0.5, "y=%.1f weg=%.1f (%.1f)" % [s.spieler.y, s.spieler.weg, weg0])
+			_pruefe("… mit demselben Blick", absf(s.spieler.yaw - 1.0) < 0.01)
+			# zu Fuß auf den Platz (wie mit E: Gondel merkt sich die Höhe)
+			s.letzte_hoehe = s.spieler.y
+			s.spieler.y = 0.3
+			s._ein_aus()
+			await _warte(0.5)
+			s.laeufer.position = Vector3(62.0, 0.0, 18.0)
+			s.laeufer.yaw = 2.0
+			await _warte(0.2)
+			_neu_laden()
+		2:
+			await _warte(0.3)
+			var p := Vector2(s.laeufer.position.x, s.laeufer.position.z)
+			_pruefe("Neustart: zu Fuß auf dem Platz", not s.spieler.aktiv and s.laeufer.aktiv and p.distance_to(Vector2(62, 18)) < 0.2 and absf(s.laeufer.yaw - 2.0) < 0.01, "%s" % p)
+			_pruefe("… Gondel merkt sich die Höhe", s.letzte_hoehe > 14.0, "%.1f" % s.letzte_hoehe)
+			# ins Penthouse
+			s.extras._teleport("penthouse")
+			var ziel := s.extras.penthouse.ankunft() + Vector2(-1.0, 0.5)
+			s.laeufer.position.x = ziel.x
+			s.laeufer.position.z = ziel.y
+			ProjectSettings.set_setting("test/ort_ziel", ziel)
+			await _warte(0.2)
+			_neu_laden()
+		3:
+			await _warte(0.3)
+			var ziel2: Vector2 = ProjectSettings.get_setting("test/ort_ziel", Vector2.ZERO)
+			var p2 := Vector2(s.laeufer.position.x, s.laeufer.position.z)
+			_pruefe("Neustart: im Penthouse", s.extras.ort == "penthouse" and not s.laeufer.raum.is_empty() and p2.distance_to(ziel2) < 0.2, "ort=%s %s" % [s.extras.ort, p2])
+			_pruefe("… Penthouse sichtbar, Boden oben", s.extras.penthouse.innen.visible and s.laeufer.position.y > 20.0, "y=%.1f" % s.laeufer.position.y)
+			# auf die Yacht
+			s.extras._teleport("unten")
+			await _warte(0.2)
+			s.strand.einsteigen()
+			await _warte(0.3)
+			_neu_laden()
+		4:
+			await _warte(0.3)
+			var st: Vector2 = s.strand.k.stationen[2].pos
+			var p3 := Vector2(s.laeufer.position.x, s.laeufer.position.z)
+			_pruefe("Neustart nach Yacht: zu Fuß am Steg", s.laeufer.aktiv and not s.strand.yacht.an_bord and p3.distance_to(st) < 0.5, "%s" % p3)
+			print("TEST fertig: fehler=%d" % (fehler + ort_fehler))
+			get_tree().quit()
 
 # ---------------------------------------------------------------- Hauptmenü (35)
 func _menue_finden() -> Hauptmenue:

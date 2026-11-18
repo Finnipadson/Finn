@@ -59,7 +59,9 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	turm.glas.set_shader_parameter("mit_zustand", true)
 	if ansicht == 10 and test_geld >= 0 and FileAccess.file_exists(pfad):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(pfad))
-	var stand: Dictionary = _lesen() if (ansicht == 0 or ansicht == 10) else {}
+	if ansicht == 36 and Phase5Test.ort_stufe == 0 and FileAccess.file_exists(pfad):   # Test „Ort merken“: frisch anfangen
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(pfad))
+	var stand: Dictionary = _lesen() if (ansicht == 0 or ansicht == 10 or ansicht == 36) else {}
 	wirtschaft.laden(stand.get("wirtschaft", {}))
 	if stand.has("sauber"):
 		zustand.laden(str(stand.sauber))
@@ -148,7 +150,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		var et := ExtrasTest.new()
 		add_child(et)
 		et.setup(self)
-	if ansicht >= 33 and ansicht <= 35:   # Phase 5: Ton, Einstellungen, Tageszeit, Effekte, Abspann
+	if ansicht >= 33 and ansicht <= 36:   # Phase 5: Ton, Einstellungen, Tageszeit, Effekte, Abspann
 		var p5 := Phase5Test.new()
 		add_child(p5)
 		p5.setup(self)
@@ -169,8 +171,17 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		spieler.gesperrt = true
 		spieler.yaw = 0.25
 		spieler.pitch = 0.05
+	# Weiter am gespeicherten Ort (Phase 5, Wunsch des Users): in der Gondel an derselben Stelle bzw. zu Fuß dort, wo man
+	# war (auch in Lounge, Penthouse, Arcade). Ohne gespeicherten Ort (alte Stände) wie früher zu Fuß neben der Gondel.
+	var ort: Dictionary = stand.get("ort", {}) if ((ansicht == 0 and not durchlauf) or ansicht == 36) else {}
+	if str(ort.get("modus", "")) == "gondel":
+		spieler.yaw = float(ort.get("yaw", 0.0))
+		spieler.pitch = float(ort.get("pitch", -0.08))
+		letzte_hoehe = 0.0
 	# Man startet zu Fuß neben der Gondel (unten). Die Gondel merkt sich die letzte Höhe und fährt beim Einsteigen dorthin zurück.
-	if ansicht == 0 or ansicht == 18:
+	elif ansicht == 0 or ansicht == 18 or ansicht == 36:
+		if str(ort.get("modus", "")) == "fuss":
+			_start_ort = ort
 		if ansicht == 18:
 			spieler.y = 20.0      # Test: so tun, als wäre man zuletzt auf 20 m gewesen
 		letzte_hoehe = spieler.y if spieler.y > UNTEN + 1.0 else 0.0
@@ -181,7 +192,11 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		welt.zeit.phase = wirtschaft.tageszeit
 		welt.zeit.laeuft = true
 	_leuchtfeuer()
-	if ansicht == 0 and stand.is_empty():
+	if ansicht == 0 and str(ort.get("modus", "")) == "gondel":
+		hud.meldung("Willkommen zurück! Weiter geht's in deiner Gondel auf %d m." % int(spieler.y), 5.0)
+	elif ansicht == 0 and str(ort.get("modus", "")) == "fuss":
+		hud.meldung("Willkommen zurück!", 3.0)
+	elif ansicht == 0 and stand.is_empty():
 		hud.meldung("Willkommen! Geh zur Gondel am Turm und drück E zum Einsteigen.\nDann mit der linken Maustaste das Fenster sauber reiben – Tab öffnet die Werkstatt.", 8.0)
 	elif ansicht == 0 and letzte_hoehe > 0.0:
 		hud.meldung("Willkommen zurück! Steig mit E in die Gondel – sie fährt dich zurück auf %d m." % int(letzte_hoehe), 6.0)
@@ -511,8 +526,34 @@ func _lesen() -> Dictionary:
 	var d = JSON.parse_string(FileAccess.get_file_as_string(pfad))
 	return d if d is Dictionary else {}
 
+# Wo ist man gerade? (für den Start an derselben Stelle). Auf der Yacht: zu Fuß am Steg.
+var _start_ort := {}
+func _ort_daten() -> Dictionary:
+	if spieler.aktiv:
+		return {"modus": "gondel", "yaw": spieler.yaw, "pitch": spieler.pitch}
+	if strand.yacht and strand.yacht.an_bord:
+		var st: Vector2 = strand.k.stationen[2].pos
+		return {"modus": "fuss", "x": st.x, "z": st.y, "yaw": 0.0, "pitch": 0.0, "innen": ""}
+	return {"modus": "fuss", "x": laeufer.position.x, "z": laeufer.position.z, "yaw": laeufer.yaw, "pitch": laeufer.pitch, "innen": extras.ort}
+
+func _ort_herstellen(o: Dictionary) -> void:
+	var p := Vector2(float(o.get("x", 0.0)), float(o.get("z", 0.0)))
+	var innen := str(o.get("innen", ""))
+	if innen != "":
+		if not (innen in ["arcade", "penthouse"] or extras.sky.etagen.has(innen)):
+			return
+		extras._teleport(innen)   # Raum, Sichtbarkeit, Aufzug-Ort wie mit dem Aufzug
+	if not laeufer.frei(p):
+		return   # Stelle inzwischen versperrt: an der Ankunft bzw. neben der Gondel bleiben
+	laeufer.position.x = p.x
+	laeufer.position.z = p.y
+	if innen == "" and laeufer.boden_fn.is_valid():
+		laeufer.position.y = laeufer.boden_fn.call(p)
+	laeufer.yaw = float(o.get("yaw", 0.0))
+	laeufer.pitch = float(o.get("pitch", 0.0))
+
 func _speichern() -> void:
-	if ansicht != 0 and ansicht != 10:
+	if ansicht != 0 and ansicht != 10 and ansicht != 36:
 		return
 	wirtschaft.gondeln[wirtschaft.aktive_gondel].weg = spieler.weg
 	wirtschaft.gondeln[wirtschaft.aktive_gondel].hoehe = maxf(spieler.y, letzte_hoehe)
@@ -521,6 +562,7 @@ func _speichern() -> void:
 		"wirtschaft": wirtschaft.speichern(),
 		"sauber": zustand.speichern(),
 		"stock": spieler.stock, "weg": spieler.weg, "y": maxf(spieler.y, letzte_hoehe),
+		"ort": _ort_daten(),
 	}
 	var f := FileAccess.open(pfad, FileAccess.WRITE)
 	if f:
@@ -561,6 +603,9 @@ func _process(dt: float) -> void:
 		start_zu_fuss -= 1
 		if start_zu_fuss == 0 and spieler.aktiv:
 			_ein_aus()
+			if not _start_ort.is_empty():
+				_ort_herstellen(_start_ort)
+				_start_ort = {}
 	if express:
 		var ziel_y := minf(express_ziel, spieler.max_y)
 		spieler.y = move_toward(spieler.y, ziel_y, EXPRESS * dt)
