@@ -559,12 +559,14 @@ func _steg() -> void:
 		RaumBau.box(n, Vector3(0.04, 0.04, absf(gw_l)), Vector3(GANGWAY_X + sx, 0.95, gw_z), gel)
 		for j in 3:
 			RaumBau.box(n, Vector3(0.04, 0.9, 0.04), Vector3(GANGWAY_X + sx, 0.5, gw_z - absf(gw_l) * 0.5 + 0.1 + j * (absf(gw_l) - 0.2) * 0.5), gel)
-	# Laternen
+	# Laternen (ein gemeinsames Material: Tageszeit macht es nachts heller)
+	var lampe := RaumBau.leuchte("fff2d8", 0.6)
+	Tageszeit.lampen.append([lampe, 0.6])
 	x = UFER_X - 20.0
 	while x > STEG_ENDE:
 		for s in [-1.0, 1.0]:
 			RaumBau.zyl(n, 0.07, 4.0, Vector3(x, 2.0, STEG_Z + s * (STEG_HALB - 0.3)), gel, 8)
-			RaumBau.box(n, Vector3(0.35, 0.25, 0.35), Vector3(x, 4.1, STEG_Z + s * (STEG_HALB - 0.3)), RaumBau.leuchte("fff2d8", 0.6))
+			RaumBau.box(n, Vector3(0.35, 0.25, 0.35), Vector3(x, 4.1, STEG_Z + s * (STEG_HALB - 0.3)), lampe)
 		x -= 30.0
 	RaumBau.verschmelzen(n)
 	_fischladen()

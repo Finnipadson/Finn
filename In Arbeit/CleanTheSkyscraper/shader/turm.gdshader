@@ -15,6 +15,7 @@ uniform float dreckig = 0.45;
 uniform float raum_fenster = 3.0;
 uniform float raum_tiefe = 6.0;
 uniform float innen_hell = 0.55;
+global uniform float nacht;          // Tageszeit (Phase 5): Räume leuchten nachts heller
 // Spielzustand (FensterZustand): Dreck pro Fenster + feine Wisch-Masken
 uniform bool mit_zustand = false;
 uniform sampler2D zustand : filter_nearest;
@@ -271,7 +272,7 @@ void fragment() {
 	METALLIC = band * 0.6;
 	ROUGHNESS = mix(mix(0.03, 0.85, d), 0.35, band);
 	SPECULAR = 0.65;
-	EMISSION = innen * mix(vec3(1.0), glas_tint * 1.6, 0.55) * innen_hell * (1.0 - band) * (1.0 - d * 0.85) * (1.0 - fern * 0.7);
+	EMISSION = innen * mix(vec3(1.0), glas_tint * 1.6, 0.55 * (1.0 - nacht * 0.6)) * innen_hell * (1.0 + nacht * 1.2) * (1.0 - band) * (1.0 - d * 0.85) * (1.0 - fern * 0.7 * (1.0 - nacht * 0.5));
 	if (szene == 7.0) {   // Liebesbrief: Herz auf dem Glas
 		float h = herz(vec2(f.x, rp.y)) * (1.0 - band) * (1.0 - fern);
 		ALBEDO = mix(ALBEDO, vec3(0.9, 0.2, 0.35), h * (1.0 - d));

@@ -170,6 +170,11 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 		letzte_hoehe = spieler.y if spieler.y > UNTEN + 1.0 else 0.0
 		spieler.y = 0.3
 		start_zu_fuss = 2
+	# Tag und Nacht (Phase 5): nur im echten Spiel läuft die Zeit; Tests behalten die feste Sonne (außer --uhr=HH)
+	if ansicht == 0:
+		welt.zeit.phase = wirtschaft.tageszeit
+		welt.zeit.laeuft = true
+	_leuchtfeuer()
 	if ansicht == 0 and stand.is_empty():
 		hud.meldung("Willkommen! Geh zur Gondel am Turm und drück E zum Einsteigen.\nDann mit der linken Maustaste das Fenster sauber reiben – Tab öffnet die Werkstatt.", 8.0)
 	elif ansicht == 0 and letzte_hoehe > 0.0:
@@ -610,10 +615,32 @@ func _process(dt: float) -> void:
 		hud.fortschritt(zustand.fortschritt(f, int(u)), true)
 	else:
 		hud.fortschritt(0.0, false)
+	# Tageszeit: speichern, Innenräume hell halten, Uhr anzeigen, Leuchtfeuer auf der Spitze blinkt nachts
+	if welt.zeit.phase >= 0.0:
+		if welt.zeit.laeuft:
+			wirtschaft.tageszeit = welt.zeit.phase
+		welt.zeit.innen = extras.drinnen() or (laeufer.aktiv and not laeufer.raum.is_empty()) or (laeufer.aktiv and welt.casino_rect.has_point(Vector2(laeufer.position.x, laeufer.position.z)) and extras.ort == "")
+		hud.uhr(Tageszeit.uhr_text(welt.zeit.phase))
+		var n: float = welt.zeit.werte.get("nacht", 0.0)
+		_feuer_mat.emission_energy_multiplier = (0.4 + 6.0 * n) * (1.0 if fmod(Time.get_ticks_msec() / 1000.0, 1.6) < 0.25 else 0.15)
 	speicher_zeit += dt
 	if speicher_zeit > AUTOSAVE:
 		speicher_zeit = 0.0
 		_speichern()
+
+# Rotes Flug-Warnlicht auf der Turmspitze (leuchtet nachts kräftig und blinkt)
+var _feuer_mat: StandardMaterial3D
+func _leuchtfeuer() -> void:
+	_feuer_mat = RaumBau.leuchte("ff2a1a", 0.4)
+	var k := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 0.9
+	sm.height = 1.8
+	k.mesh = sm
+	k.material_override = _feuer_mat
+	k.position = Vector3(0, turm.spitze + 0.6, 0)
+	k.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(k)
 
 # ---------------------------------------------------------------- Funkeln
 var _funkel_tex: Texture2D

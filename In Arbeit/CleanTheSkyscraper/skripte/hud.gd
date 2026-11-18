@@ -17,6 +17,7 @@ var status_l: Label
 var boost_l: Label
 var hotbar_box: HBoxContainer
 var hotbar_zeichen := ""
+var uhr_l: Label
 
 func _ready() -> void:
 	wurzel = Control.new()
@@ -31,7 +32,7 @@ func _ready() -> void:
 	var links := _karte(0.0, 0.0, 16, 16)
 	var vb2 := VBoxContainer.new()
 	links.add_child(vb2)
-	_label(vb2, "Höhe", 15, "123a6b")
+	uhr_l = _label(vb2, "Höhe", 15, "123a6b")
 	hoehe = _label(vb2, "", 22, "1f5fae")
 	bis = _label(vb2, "", 13, "2b5b8f")
 	var rechts := _karte(1.0, 0.0, -16, 16)
@@ -152,6 +153,10 @@ func zeige(sauber: int, gesamt: int, euro: int, meter: float, stockwerk: int, zu
 		hoehe.text = ort
 	else:
 		hoehe.text = "Am Boden · zu Fuß" if zu_fuss else "%d m · Stockwerk %d" % [int(meter), stockwerk + 1]
+
+# Uhrzeit (Phase 5, Tag und Nacht) in der Kopfzeile der Höhen-Karte
+func uhr(t: String) -> void:
+	uhr_l.text = "Höhe" if t == "" else "Höhe  ·  %s Uhr" % t
 
 func boosts(t: String) -> void:
 	boost_l.text = t

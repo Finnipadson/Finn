@@ -5,11 +5,14 @@ shader_type spatial;
 // wenn deren Alpha > 0,5 ist (Taxi und Polizei behalten ihre Farben).
 uniform sampler2D farben : source_color, filter_linear_mipmap;
 uniform vec2 zelle = vec2(-1.0);
+global uniform float nacht;   // Tageszeit (Phase 5): Scheinwerfer + Rücklichter
 
 varying vec4 lack;
+varying vec3 ln;
 
 void vertex() {
 	lack = COLOR;
+	ln = NORMAL;
 }
 
 void fragment() {
@@ -24,4 +27,11 @@ void fragment() {
 		ROUGHNESS = 0.6;
 	}
 	ALBEDO = c;
+	// Nachts: helle Flächen vorn leuchten weiß (Scheinwerfer), rote Flächen hinten rot (Rücklichter)
+	if (nacht > 0.01) {
+		float hell = smoothstep(0.7, 0.85, dot(c, vec3(0.333)));
+		float rot = smoothstep(0.25, 0.45, c.r - max(c.g, c.b));
+		EMISSION = vec3(1.0, 0.95, 0.8) * hell * smoothstep(0.6, 0.9, ln.z) * 3.0 * nacht
+			+ vec3(1.0, 0.1, 0.05) * rot * smoothstep(0.6, 0.9, -ln.z) * 2.5 * nacht;
+	}
 }

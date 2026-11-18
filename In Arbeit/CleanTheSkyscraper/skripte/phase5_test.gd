@@ -176,5 +176,76 @@ func _radio() -> void:
 	_pruefe("R schaltet aus", not Ton.i.radio.an)
 
 # ---------------------------------------------------------------- Bilder
+var _bild := 0
+func _bild_machen(name: String, warten := 8) -> void:
+	for k in warten:   # Himmel-Licht (Radiance) wird über mehrere Bilder nachgeführt
+		await get_tree().process_frame
+	_bild += 1
+	print("BILD %d frame=%d %s" % [_bild, Engine.get_frames_drawn(), name])
+
 func _bilder() -> void:
-	pass
+	if _teil("tag"):
+		await _tag_bilder()
+	if _teil("flimmern"):
+		await _flimmern()
+
+# Flimmert die wandernde Sonne? Je Ort 16 Bilder mit laufender Zeit (echtes Tempo) und 16 mit stehender Zeit.
+# Auswertung: tools/flimmern_zeit.py (zweite zeitliche Ableitung je Bildpunkt).
+func _flimmern() -> void:
+	var cam := Camera3D.new()
+	cam.far = 40000.0
+	cam.fov = 70.0
+	add_child(cam)
+	cam.current = true
+	s.hud.visible = false
+	var p := s.turm.fassaden_punkt(25, 120.0, 25 * Turm.STOCK_H)
+	var orte := {
+		"turm_nah": [p.pos + p.normal * 7.0 + Vector3.UP * -1.0, p.pos + Vector3.UP * 1.0],
+		"strasse": [Vector3(262.5, 1.8, 41.5), Vector3(120, 8, 37.5)],
+		"platz": [Vector3(60, 1.8, 70), Vector3(0, 30, 0)],
+	}
+	for k in orte:
+		for lauf in [true, false]:
+			s.welt.zeit.phase = Tageszeit.phase_zu(15.0)
+			s.welt.zeit.laeuft = lauf
+			cam.position = orte[k][0]
+			cam.look_at(orte[k][1])
+			for i in 10:
+				await get_tree().process_frame
+			print("FLIMMER %s %s von=%d" % [k, "laeuft" if lauf else "steht", Engine.get_frames_drawn()])
+			for i in 16:
+				await get_tree().process_frame
+	s.welt.zeit.laeuft = false
+
+# Tag und Nacht: dieselben Orte zu verschiedenen Uhrzeiten (--uhren=9,13,… und --orte=fern,see,…)
+func _tag_bilder() -> void:
+	var cam := Camera3D.new()
+	cam.far = 40000.0
+	cam.fov = 60.0
+	add_child(cam)
+	cam.current = true
+	s.hud.visible = false
+	var sm := s.welt.see_mitte()
+	var orte := {
+		"fern": [Vector3(-668, 262, 1020), Vector3(0, 440, 0)],
+		"see": [Vector3(sm.x + 70.0, 3.0, sm.y + 120.0), Vector3(0, 120, 0)],
+		"oben": [Vector3(160, 330, 120), Vector3(700, 0, 600)],
+		"strasse": [Vector3(262.5, 1.8, 37.5 + 4.0), Vector3(120, 8, 37.5)],
+		"strand": [Vector3(-560, 6, -150), Vector3(-760, 0, -175)],
+	}
+	var uhren := [9.0, 13.0, 16.5, 18.6, 19.4, 20.2, 22.0, 5.8]
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--uhren="):
+			uhren = Array(a.split("=")[1].split_floats(","))
+		if a.begins_with("--orte="):
+			var nur_orte := a.split("=")[1].split(",")
+			for k in orte.keys():
+				if not k in nur_orte:
+					orte.erase(k)
+	for u in uhren:
+		s.welt.zeit.phase = Tageszeit.phase_zu(float(u))
+		s.welt.zeit.laeuft = false
+		for k in orte:
+			cam.position = orte[k][0]
+			cam.look_at(orte[k][1])
+			await _bild_machen("%s %s Uhr nacht=%.2f" % [k, str(u), float(s.welt.zeit.werte.get("nacht", 0.0))])

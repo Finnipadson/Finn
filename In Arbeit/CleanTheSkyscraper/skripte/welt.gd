@@ -44,10 +44,17 @@ const KREUZ_SEE := 14.0         # … und so weit hinter der See-Promenade
 const KREUZ_CASINO := 15.0      # … und nicht in der Nähe des Casinos
 var boden_mat: ShaderMaterial
 var kueste: Kueste              # Meer, Strand, Palmen-Boulevard, Steg (kueste.gd)
+var zeit: Tageszeit             # Tag und Nacht (Phase 5); zeit.phase < 0 = feste Sonne
+var sturm_k := 0.0
+var _werte := {}                # letzte Werte der Tageszeit
 
 func _ready() -> void:
 	rng.seed = 11
+	Tageszeit.lampen.clear()
 	_umgebung()
+	zeit = Tageszeit.new()
+	zeit.welt = self
+	add_child(zeit)
 	_boden()
 	_stellplaetze()   # zuerst, damit die Stadt das Casino-Grundstück frei lässt
 	var sp := []
@@ -139,12 +146,39 @@ func _process(_dt: float) -> void:
 
 # Sandsturm: 0 = klar, 1 = voll. Nebel wird dicht und orange, Sonne und Himmel trüb.
 func sandsturm(k: float) -> void:
+	sturm_k = k
+	if zeit.phase < 0.0:
+		licht({})
+
+# Licht, Himmel und Nebel aus Tageszeit-Werten (leer = feste Sonne wie vor Phase 5) + Sandsturm darüber
+func licht(w: Dictionary) -> void:
+	_werte = w
+	var k := sturm_k
+	var oben: Color = w.get("oben", Color(0.165, 0.47, 0.84))
+	var horiz: Color = w.get("horizont", HORIZONT)
+	var kraft: float = w.get("licht_kraft", 1.4)
+	var sturm_farbe := STURM_FARBE * lerpf(0.25, 1.0, float(w.get("tag", 1.0)))
 	env.fog_density = lerpf(0.00011, 0.012, k * k)
-	env.fog_light_color = HORIZONT.lerp(STURM_FARBE, k)
+	env.fog_light_color = horiz.lerp(sturm_farbe, k)
 	env.fog_sky_affect = lerpf(0.0, 0.9, k)
-	sonne.light_energy = lerpf(1.4, 0.55, k)
-	himmel.set_shader_parameter("horizont", HORIZONT.lerp(STURM_FARBE, k))
-	himmel.set_shader_parameter("oben", Color(0.165, 0.47, 0.84).lerp(Color("b49b78"), k * 0.85))
+	sonne.light_energy = kraft * lerpf(1.0, 0.4, k)
+	himmel.set_shader_parameter("horizont", horiz.lerp(sturm_farbe, k))
+	himmel.set_shader_parameter("oben", oben.lerp(Color("b49b78") * lerpf(0.25, 1.0, float(w.get("tag", 1.0))), k * 0.85))
+	if w.is_empty():
+		return
+	var d: Vector3 = w.licht_dir
+	if absf(d.dot(Vector3.UP)) > 0.999:
+		d = (d + Vector3(0.01, 0, 0.01)).normalized()
+	sonne.basis = Basis.looking_at(-d, Vector3.UP)
+	sonne.light_color = w.licht_farbe
+	himmel.set_shader_parameter("sonne", w.sonne)
+	himmel.set_shader_parameter("mond", w.mond)
+	himmel.set_shader_parameter("nacht", w.nacht)
+	himmel.set_shader_parameter("wolken_farbe", w.wolken)
+	env.ambient_light_energy = w.ambient
+	env.tonemap_exposure = w.belichtung
+	env.glow_intensity = w.glow
+	RenderingServer.global_shader_parameter_set("nacht", w.nacht)
 
 func _boden() -> void:
 	var sand := Bau.matt("d9b47a", 1.0)

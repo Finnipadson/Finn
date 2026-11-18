@@ -329,6 +329,7 @@ func _lampen_mm() -> void:
 	km.emission_enabled = true
 	km.emission = Color("fff2d8")
 	km.emission_energy_multiplier = 0.6
+	Tageszeit.lampen.append([km, 0.6])   # nachts heller
 	mmi2.material_override = km
 	add_child(mmi2)
 

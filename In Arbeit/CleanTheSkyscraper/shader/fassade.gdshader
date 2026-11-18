@@ -13,6 +13,7 @@ uniform float rahmen_x = 0.05;
 uniform float dreckig = 0.7;        // Anteil dreckiger Fenster
 uniform float licht = 0.08;         // Anteil Fenster mit Licht dahinter
 uniform float metall = 0.65;
+global uniform float nacht;          // Tageszeit (Phase 5): nachts sind viele Fenster hell
 
 float hs(vec2 p) { vec3 q = fract(vec3(p.xyx) * 0.1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
 float vn(vec2 p) {
@@ -67,6 +68,9 @@ void fragment() {
 	METALLIC = mix(mix(0.25, metall * (1.0 - d * 0.9), ist_glas), metall * 0.6, sehr_fern);
 	ROUGHNESS = mix(mix(0.45, mix(0.08, 0.9, d), ist_glas), 0.3, sehr_fern);
 	// Licht hinter dem Fenster: in der Ferne als gleichmäßiger, schwacher Schein statt einzelner Punkte
-	float an = mix(step(1.0 - licht, hs(id + 41.7)), licht, fern) * ist_glas * (1.0 - d);
-	EMISSION = vec3(1.0, 0.82, 0.55) * an * 0.6 * (1.0 - sehr_fern);
+	float li = mix(licht, 0.42, nacht);
+	float an = mix(step(1.0 - li, hs(id + 41.7)), li, fern) * ist_glas * (1.0 - d);
+	vec3 lf = mix(vec3(1.0, 0.82, 0.55), mix(vec3(1.0, 0.78, 0.5), vec3(0.75, 0.88, 1.0), step(0.7, hs(id + 7.7))), nacht * (1.0 - fern));
+	// in der Ferne nur ein schwacher Schimmer (sonst glühen ganze Häuser), nah kräftig
+	EMISSION = lf * an * mix(0.6, mix(1.6, 0.45, fern), nacht) * (1.0 - sehr_fern * (1.0 - nacht * 0.5));
 }

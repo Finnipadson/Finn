@@ -5,6 +5,7 @@ render_mode blend_mix, depth_draw_never, cull_disabled, shadows_disabled;
 // INSTANCE_CUSTOM: x = Lage entlang der Reihe (0..1), y = Gruppe (0 Bogen, 1 Ring, 2 Mitte), z = größte Höhe (m), w = Zufall
 // art: 0 = Wasserstrahl (Zylinder), 1 = Gischt-Wolke oben (Kugel), 2 = Schaum auf dem Wasser (Fläche)
 uniform int art = 0;
+global uniform float nacht;   // Tageszeit (Phase 5): nachts beleuchtet
 
 varying float hy;      // 0 unten … 1 oben (nur Strahl)
 varying float staerke; // 0 = Fontäne aus
@@ -78,7 +79,7 @@ void fragment() {
 		a = (0.18 + 0.32 * streifen) * pow(rand, 1.5) * (1.0 - smoothstep(0.55, 1.0, hy)) * smoothstep(0.0, 0.08, hy);
 	}
 	ALBEDO = vec3(0.93, 0.97, 1.0);
-	EMISSION = vec3(0.25, 0.27, 0.3);
+	EMISSION = mix(vec3(0.25, 0.27, 0.3), vec3(0.7, 0.85, 1.0) * 1.4, nacht);
 	ROUGHNESS = 0.3;
 	ALPHA = clamp(a * staerke, 0.0, 1.0);
 }
