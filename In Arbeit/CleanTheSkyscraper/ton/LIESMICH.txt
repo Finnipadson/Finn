@@ -1,0 +1,53 @@
+Echte Geräusche statt der erzeugten (Phase 5)
+================================================
+
+Lege hier eine Datei mit dem passenden Namen ab (.ogg, .wav oder .mp3), z. B. moewe.ogg.
+Beim nächsten Start ersetzt sie den aus Code erzeugten Klang. Datei löschen = wieder der erzeugte Klang.
+Für die fertige .exe: einen Ordner „ton“ neben die CleanTheSkyscraper.exe legen (gleiche Namen).
+
+Hörproben aller erzeugten Klänge zum Vergleichen: ../export/ton_erzeugt/ (neu erzeugen mit
+  Godot --headless --path . --script tools/ton_export.gd)
+
+Musik: musik_1.ogg, musik_2.ogg … (Hintergrund, wird der Reihe nach gespielt)
+Radio: radio_lounge_1.ogg, radio_funk_1.ogg, radio_retro_1.ogg, radio_klassik_1.ogg … (je Sender)
+Nur Dateien ohne Namensnennungspflicht (CC0) verwenden.
+
+Name            Wofür
+wisch_nass      Wischen mit Schwamm (Schleife)
+wisch_gummi     Abzieher auf Glas (Schleife)
+spruehen        Hochdruck/Dampf/Lanze (Schleife)
+quietschen      Quietschen, wenn ein Fenster fertig ist
+glanz           Funkel-„Pling“ beim fertigen Fenster
+geld            Münzen/Geld
+kaufen          Kasse beim Kaufen
+klick           Menü-Klick
+erfolg          Erfolg/Fanfare
+ding            Aufzug-Gong
+motor           Gondel-Motor (Schleife)
+wind            Wind (Schleife)
+sandsturm       Sandsturm (Schleife)
+stadt           Stadt und Verkehr (Schleife)
+hupe            Autohupe
+brunnen         Brunnen/Fontänen (Schleife)
+meer            Meeresrauschen (Schleife)
+moewe           Möwe
+gurren          Taube gurrt
+fluegel         Taube flattert
+casino          Casino-Hintergrund (Schleife)
+automat         Einarmiger Bandit
+karte           Spielkarte
+jackpot         Jackpot
+tick            Glücksrad-Ticken / Radio-Schalter
+chips           Casino-Chips
+arcade          Arcade-Hintergrund (Schleife)
+piep            Arcade-Piep
+arcade_gewinn   Arcade-Gewinn
+wurf            Angel auswerfen
+platsch         Platschen
+biss            Fisch beißt
+rolle           Angelrolle (Schleife)
+yacht           Yacht-Motor (Schleife)
+scooter         E-Scooter (Schleife)
+hover           Hoverboard (Schleife)
+jetpack         Jetpack (Schleife)
+knall           Feuerwerk (Abspann)
