@@ -303,13 +303,15 @@ func _stellplaetze() -> void:
 	add_child(flaeche)
 	# Das Gebäude selbst baut casino.gd (im Spiel), hier liegt nur der helle Vorplatz.
 
+var _haus_mats: Array = []
+var _haus_dach: Material
 func _stadt() -> void:
-	var mats := [
+	_haus_mats = [
 		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("6d8aa3"), "rahmen": Color("e6dccb"), "bruestung": Color("d8c9b0"), "stock": 3.5, "fenster_breite": 2.2, "dreckig": 0.0, "band_anteil": 0.35, "metall": 0.4}),
 		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("5c7f8f"), "rahmen": Color("c9b79a"), "bruestung": Color("bba78a"), "stock": 3.5, "fenster_breite": 2.6, "dreckig": 0.0, "band_anteil": 0.4, "metall": 0.3}),
 		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("8fb1c9"), "rahmen": Color("9aa3ad"), "bruestung": Color("8a929c"), "stock": 3.5, "fenster_breite": 1.8, "dreckig": 0.0, "metall": 0.7}),
 	]
-	var dach := Bau.matt("7f7d78")   # Grafik 19.11.2026: grauer (vorher bdb3a3), damit sich die Dachaufbauten abheben
+	_haus_dach = Bau.matt("7f7d78")   # Grafik 19.11.2026: grauer (vorher bdb3a3), damit sich die Dachaufbauten abheben
 	var x := -1500.0
 	while x <= 1500.0:
 		var z := -1500.0
@@ -320,34 +322,40 @@ func _stadt() -> void:
 			if not bauen and d > 100.0 and d < stadt_r:
 				leere_felder.append(Vector2(x, z))
 			if bauen:
-				var bx := 25.0 + rng.randf() * 30.0
-				var bz := 25.0 + rng.randf() * 30.0
-				var hoch := int((4.0 + rng.randf() * 22.0) * (1.75 - d / 1600.0))
-				if rng.randf() < (0.2 if d < 600.0 else 0.08):
-					hoch += 25
-				if x < -400.0:   # zur Küste hin niedriger, damit der Strand nachmittags nicht im Schatten liegt
-					hoch = mini(hoch, 6 + int((x + 600.0) / 15.0))
-				var poly := Bau.rechteck(bx, bz, x + (rng.randf() - 0.5) * 10.0, z + (rng.randf() - 0.5) * 10.0)
-				var r := Rect2(poly[0], Vector2(bx, bz))
-				r = _kuesten_haus(r)   # am Boulevard gekürzt, an der Küste weg
-				if r.size.x < 1.0:
-					z += 75.0
-					continue
-				poly = Bau.rechteck(r.size.x, r.size.y, r.get_center().x, r.get_center().y)
-				# nicht auf den Platz um den Turm bauen
-				var naechster := Vector2(clampf(0.0, r.position.x, r.end.x), clampf(0.0, r.position.y, r.end.y))
-				var am_see := see_abstand(r.get_center()) - r.size.length() * 0.5 < PROMENADE + 2.0
-				if naechster.length() < PLATZ_R + 6.0 or _trifft_gebaeude(r, 6.0) or am_see:
-					z += 75.0
-					continue
-				haeuser.append(r)
-				haeuser_hoehe.append(maxi(hoch, 2) * 3.5)
-				var stw := []
-				for k in maxi(hoch, 2):
-					stw.append({"poly": poly, "y0": k * 3.5, "h": 3.5})
-				add_child(Bau.baue(stw, mats[rng.randi() % 3], dach))
+				haus_bauen(Vector2(x, z), rng)
 			z += 75.0
 		x += 75.0
+
+# Ein Stadthaus im Feld mit Mitte c (zufällige Größe/Höhe aus g). false = an dieser Stelle kein Haus (Küste, Platz …).
+func haus_bauen(c: Vector2, g: RandomNumberGenerator) -> bool:
+	var x := c.x
+	var z := c.y
+	var d := c.length()
+	var bx := 25.0 + g.randf() * 30.0
+	var bz := 25.0 + g.randf() * 30.0
+	var hoch := int((4.0 + g.randf() * 22.0) * (1.75 - d / 1600.0))
+	if g.randf() < (0.2 if d < 600.0 else 0.08):
+		hoch += 25
+	if x < -400.0:   # zur Küste hin niedriger, damit der Strand nachmittags nicht im Schatten liegt
+		hoch = mini(hoch, 6 + int((x + 600.0) / 15.0))
+	var poly := Bau.rechteck(bx, bz, x + (g.randf() - 0.5) * 10.0, z + (g.randf() - 0.5) * 10.0)
+	var r := Rect2(poly[0], Vector2(bx, bz))
+	r = _kuesten_haus(r)   # am Boulevard gekürzt, an der Küste weg
+	if r.size.x < 1.0:
+		return false
+	poly = Bau.rechteck(r.size.x, r.size.y, r.get_center().x, r.get_center().y)
+	# nicht auf den Platz um den Turm bauen
+	var naechster := Vector2(clampf(0.0, r.position.x, r.end.x), clampf(0.0, r.position.y, r.end.y))
+	var am_see := see_abstand(r.get_center()) - r.size.length() * 0.5 < PROMENADE + 2.0
+	if naechster.length() < PLATZ_R + 6.0 or _trifft_gebaeude(r, 6.0) or am_see:
+		return false
+	haeuser.append(r)
+	haeuser_hoehe.append(maxi(hoch, 2) * 3.5)
+	var stw := []
+	for k in maxi(hoch, 2):
+		stw.append({"poly": poly, "y0": k * 3.5, "h": 3.5})
+	add_child(Bau.baue(stw, _haus_mats[g.randi() % 3], _haus_dach))
+	return true
 
 # Häuser am Palmen-Boulevard kürzen (Seite zum Boulevard), an der Strandpromenade weglassen. Leeres Rect2 = weg.
 const HAUS_MIN := 14.0

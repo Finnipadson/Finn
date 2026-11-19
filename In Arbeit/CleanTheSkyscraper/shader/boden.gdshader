@@ -68,36 +68,78 @@ float kreuz_ok(vec2 k) {
 
 
 // ---------------- Leere Grundstücke (Grundstuecke.gd, 19.11.2026): Bodenbelag je Nutzung. l = Ort im Grundstück
-// (schon gedreht, |l| <= 28), zuf = Variante (0/1), c = Boden darunter. Alle Linien über band_k gefiltert (kein Flimmern).
-uniform sampler2D felder : filter_nearest, hint_default_black;   // je Feld: R = Typ, G = Drehung, B = Variante
+// (schon gedreht, |l| <= 28), vr = Variante (0–3), c = Boden darunter. Alle Linien über band_k gefiltert (kein Flimmern).
+uniform sampler2D felder : filter_nearest, hint_default_black;   // je Feld: R = Typ, G = Drehung, B = Variante × 60
 vec3 lin(vec3 c) { return pow(c, vec3(2.2)); }   // Farbwerte wie Hex/sRGB angeben (die Uniforms tun das per source_color)
-vec3 grundstueck(int typ, vec2 l, vec2 p, float aa, float zuf, float nah, vec3 c) {
+// Blumenbeet wie am Platz: einzelne Blüten in 0,4-m-Zellen, in der Ferne Mischfarbe
+vec3 blumen_feld(vec2 p, float aa, float nah04, vec3 rasen) {
+	vec2 zelle = floor(p * 2.5);
+	vec2 mb = (zelle + 0.25 + 0.5 * vec2(hs(zelle), hs(zelle + 7.7))) / 2.5;
+	float punkt = (1.0 - sst(0.08, length(p - mb), aa * 0.7)) * step(0.45, hs(zelle + 3.3));
+	float wahl = hs(zelle + 1.9);
+	vec3 bluete = wahl < 0.33 ? vec3(0.86, 0.2, 0.32) : (wahl < 0.66 ? vec3(0.97, 0.82, 0.25) : vec3(0.95, 0.95, 0.97));
+	vec3 erde = vec3(0.32, 0.4, 0.2) * (0.8 + 0.3 * mix(0.5, vn(p * 3.0), nah04));
+	return mix(mix(erde, bluete, punkt), mix(erde, vec3(0.93, 0.66, 0.51), 0.07), 1.0 - nah04);
+}
+vec3 grundstueck(int typ, int vr, vec2 l, vec2 p, float aa, float nah, vec3 c) {
 	float rand_d = 28.0 - max(abs(l.x), abs(l.y));       // Abstand zum Grundstücksrand (innen positiv)
 	vec3 kante = vec3(0.86, 0.85, 0.82);
 	float rk = band_k(rand_d - 0.2, 0.2, aa);              // 0,4-m-Bordstein ringsum
 	vec3 rasen = gruen * (0.82 + 0.28 * mix(0.5, vn(p * 0.4), nah) + 0.06 * vn(p * 0.05));
 	vec3 kies = lin(vec3(0.84, 0.8, 0.72)) * (0.95 + 0.06 * mix(0.5, vn(p * 2.0), nah));
+	vec3 asph = asphalt * (1.04 + 0.07 * mix(0.5, vn(p * 0.7), nah));
+	float nah04 = 1.0 - smoothstep(0.04, 0.15, aa);
 	vec3 g = c;
-	if (typ == 1) {   // Parkplatz: Asphalt, weiße Stellplatz-Striche, Grünstreifen hinten, Einfahrt rechts
-		g = asphalt * (1.04 + 0.07 * mix(0.5, vn(p * 0.7), nah));
-		g *= 1.0 - 0.07 * smoothstep(0.6, 0.85, vn(p * 0.4 + 17.0));   // Ölflecken
+	if (typ == 1) {   // Parkplatz: 0 = Reihen, 1 = Schrägparker 60°, 2 = Reihen mit Baum-Inseln
+		g = asph * (1.0 - 0.07 * smoothstep(0.6, 0.85, vn(p * 0.4 + 17.0)));   // Ölflecken
 		float reihe = max(max(band_k(l.y + 25.0, 2.5, aa), band_k(l.y + 11.0, 5.0, aa)), max(band_k(l.y - 5.5, 5.0, aa), band_k(l.y - 19.5, 2.5, aa)));
-		float in_x = band_k(l.x + 3.9, 22.16, aa);
-		float strich = band_k((fract((l.x + 26.0) / 2.6 + 0.5) - 0.5) * 2.6, 0.06, aa);
+		float in_x;
+		float strich;
+		if (vr == 1) {
+			in_x = band_k(l.x + 3.5, 22.5, aa);
+			float rc = l.y < -20.0 ? -25.0 : (l.y < -11.0 ? -13.5 : (l.y < -2.0 ? -8.5 : (l.y < 5.5 ? 3.0 : (l.y < 14.0 ? 8.0 : 19.5))));
+			float sx = (l.x + 26.0 - (l.y - rc) * 0.5774) / 3.0;
+			strich = band_k((fract(sx + 0.5) - 0.5) * 2.598, 0.06, aa);
+		} else {
+			in_x = band_k(l.x + 3.9, 22.16, aa);
+			strich = band_k((fract((l.x + 26.0) / 2.6 + 0.5) - 0.5) * 2.6, 0.06, aa);
+		}
 		float mitte = band_k(l.y + 11.0, 0.06, aa) + band_k(l.y - 5.5, 0.06, aa);
 		g = mix(g, vec3(0.93), clamp(strich * reihe + mitte, 0.0, 1.0) * in_x * 0.9);
+		if (vr == 2) {   // jeder 6. Stellplatz ist eine Insel mit Baum
+			float k = floor((l.x + 26.0) / 2.6);
+			float lx = fract((l.x + 26.0) / 2.6) * 2.6;
+			float ist = step(4.5, mod(k, 6.0)) * reihe * in_x;
+			g = mix(g, kante, ist);
+			g = mix(g, rasen, ist * sst(0.3, min(lx, 2.6 - lx), aa));
+		}
 		float gs = band_k(l.y - 25.2, 2.6, aa) * band_k(l.x + 1.0, 25.0, aa);
 		g = mix(g, rasen, gs);
 		g = mix(g, kante, band_k(l.y - 22.45, 0.15, aa) * band_k(l.x + 1.0, 25.15, aa));
 		rk *= 1.0 - band_k(l.y + 2.75, 3.25, aa) * step(0.0, l.x);
-	} else if (typ == 2) {   // Park: Rasen, Kieswege (Kreuz oder Diagonalen), runder Platz mit Brunnen, Weg ringsum
+	} else if (typ == 2) {   // Park: 0 = Wegekreuz, 1 = Diagonalen, 2 = Blumenpark mit Ringweg, 3 = Picknickwiese
 		g = rasen;
-		float weg = zuf < 0.5 ? max(band_k(l.x, 1.3, aa), band_k(l.y, 1.3, aa))
-			: max(band_k((l.x - l.y) * 0.7071, 1.3, aa), band_k((l.x + l.y) * 0.7071, 1.3, aa));
-		weg = max(weg, 1.0 - sst(7.0, length(l), aa));
-		weg = max(weg, band_k(rand_d - 2.6, 1.1, aa));
+		float weg = 0.0;
+		if (vr == 0 || vr == 1) {
+			weg = vr == 0 ? max(band_k(l.x, 1.3, aa), band_k(l.y, 1.3, aa))
+				: max(band_k((l.x - l.y) * 0.7071, 1.3, aa), band_k((l.x + l.y) * 0.7071, 1.3, aa));
+			weg = max(weg, 1.0 - sst(7.0, length(l), aa));
+			weg = max(weg, band_k(rand_d - 2.6, 1.1, aa));
+		} else if (vr == 2) {
+			float r = length(l);
+			float beet = (1.0 - sst(12.6, r, aa)) * sst(7.6, r, aa);
+			g = mix(g, blumen_feld(p, aa, nah04, rasen), beet);
+			weg = max(1.0 - sst(7.0, r, aa), band_k(r - 14.0, 1.3, aa));
+			weg = max(weg, max(band_k((l.x - l.y) * 0.7071, 1.2, aa), band_k((l.x + l.y) * 0.7071, 1.2, aa)) * (1.0 - sst(14.0, r, aa)));
+			weg = max(weg, max(band_k(l.x, 1.3, aa) * sst(14.0, abs(l.y), aa), band_k(l.y, 1.3, aa) * sst(14.0, abs(l.x), aa)));
+			weg = max(weg, band_k(rand_d - 2.6, 1.1, aa));
+			g = mix(g, kante, band_k(r - 7.0, 0.15, aa) + band_k(r - 12.75, 0.15, aa) * (1.0 - weg));
+		} else {
+			weg = band_k(l.y - 6.0 * sin(l.x * 0.12), 1.3, aa);
+			weg = max(weg, 1.0 - sst(5.5, length(l - vec2(16.0, -16.0)), aa));
+		}
 		g = mix(g, kies, weg);
-		g = mix(g, kante, band_k(length(l) - 7.0, 0.15, aa));
+		if (vr == 0 || vr == 1) g = mix(g, kante, band_k(length(l) - 7.0, 0.15, aa));
 	} else if (typ == 7) {   // Park mit Teich: Rasen, Weg um den Teich, Zugänge von zwei Seiten
 		g = rasen;
 		float r = length(l / vec2(19.5, 16.5));
@@ -108,9 +150,8 @@ vec3 grundstueck(int typ, vec2 l, vec2 p, float aa, float zuf, float nah, vec3 c
 		g = mix(g, rasen * 0.8, 1.0 - sst(1.06, length(l / vec2(14.0, 11.0)), aa / 12.0));   // Ufer unter dem Wasser
 	} else if (typ == 3) {   // Baustelle: festgefahrene Erde, Reifenspuren, Schotter vor dem Tor
 		g = mix(lin(vec3(0.66, 0.56, 0.42)), sand * 0.92, vn(p * 0.08)) * (0.92 + 0.1 * mix(0.5, vn(p * 1.3), nah));
-		float sp = l.y - 9.0 - 4.0 * sin(l.x * 0.11 + zuf * 3.0);
-		float spur = band_k(abs(sp) - 0.9, 0.25, aa);
-		g *= 1.0 - 0.18 * spur;
+		float sp = l.y - 9.0 - 4.0 * sin(l.x * 0.11);
+		g *= 1.0 - 0.18 * band_k(abs(sp) - 0.9, 0.25, aa);
 		g = mix(g, lin(vec3(0.66, 0.65, 0.62)) * (0.9 + 0.15 * mix(0.5, hs(floor(p * 3.0)), nah)), band_k(l.y, 5.0, aa) * sst(17.0, l.x, aa));
 		rk *= 0.6;
 	} else if (typ == 4) {   // Sandbrache: Sand, trockene Grasflecken, Reifenspuren
@@ -118,18 +159,39 @@ vec3 grundstueck(int typ, vec2 l, vec2 p, float aa, float zuf, float nah, vec3 c
 		g = mix(g, lin(vec3(0.66, 0.64, 0.42)) * (0.9 + 0.2 * mix(0.5, vn(p * 0.9), nah)), smoothstep(0.58, 0.78, vn(p * 0.12 + 40.0)) * 0.85);
 		float sp = l.x + 6.0 - 5.0 * sin(l.y * 0.09 + 1.0);
 		g *= 1.0 - 0.1 * band_k(abs(sp) - 0.9, 0.25, aa);
-	} else if (typ == 5) {   // Sportplatz: zwei Basketballfelder (blau, weiße Linien) auf grünem Kunststoffbelag
+	} else if (typ == 5) {   // Sportplatz: 0 = 2 Basketballfelder, 1 = 2 Tennisplätze (Sand), 2 = Kleinfeld-Fußball
 		g = lin(vec3(0.42, 0.56, 0.47)) * (0.95 + 0.06 * mix(0.5, vn(p * 0.6), nah));
-		vec2 q = vec2(l.x - sign(l.x) * 9.0, l.y);
-		float feld = (1.0 - sst(7.0, abs(q.x), aa)) * (1.0 - sst(13.0, abs(q.y), aa));
-		g = mix(g, lin(vec3(0.33, 0.52, 0.7)) * (0.96 + 0.05 * mix(0.5, vn(p * 0.8), nah)), feld);
-		float lin = band_k(max(abs(q.x) - 7.0, abs(q.y) - 13.0), 0.05, aa);
-		lin = max(lin, band_k(q.y, 0.05, aa) * feld);
-		lin = max(lin, band_k(length(q) - 1.8, 0.05, aa));
-		lin = max(lin, band_k(max(abs(q.x) - 2.45, abs(abs(q.y) - 10.1) - 2.9), 0.05, aa));
-		lin = max(lin, band_k(length(vec2(q.x, abs(q.y) - 11.4)) - 6.6, 0.05, aa) * (1.0 - sst(11.4, abs(q.y), aa)));
-		lin = max(lin, band_k(abs(q.x) - 6.6, 0.05, aa) * sst(11.4, abs(q.y), aa) * feld);
-		g = mix(g, vec3(0.94), lin);
+		float lin_w = 0.0;
+		if (vr == 0) {
+			vec2 q = vec2(l.x - sign(l.x) * 9.0, l.y);
+			float feld = (1.0 - sst(7.0, abs(q.x), aa)) * (1.0 - sst(13.0, abs(q.y), aa));
+			g = mix(g, lin(vec3(0.33, 0.52, 0.7)) * (0.96 + 0.05 * mix(0.5, vn(p * 0.8), nah)), feld);
+			lin_w = band_k(max(abs(q.x) - 7.0, abs(q.y) - 13.0), 0.05, aa);
+			lin_w = max(lin_w, band_k(q.y, 0.05, aa) * feld);
+			lin_w = max(lin_w, band_k(length(q) - 1.8, 0.05, aa));
+			lin_w = max(lin_w, band_k(max(abs(q.x) - 2.45, abs(abs(q.y) - 10.1) - 2.9), 0.05, aa));
+			lin_w = max(lin_w, band_k(length(vec2(q.x, abs(q.y) - 11.4)) - 6.6, 0.05, aa) * (1.0 - sst(11.4, abs(q.y), aa)));
+			lin_w = max(lin_w, band_k(abs(q.x) - 6.6, 0.05, aa) * sst(11.4, abs(q.y), aa) * feld);
+		} else if (vr == 1) {
+			g = lin(vec3(0.27, 0.42, 0.33)) * (0.95 + 0.06 * mix(0.5, vn(p * 0.6), nah));
+			vec2 q = vec2(l.x - sign(l.x) * 7.0, l.y);
+			float feld = (1.0 - sst(6.4, abs(q.x), aa)) * (1.0 - sst(13.6, abs(q.y), aa));
+			g = mix(g, lin(vec3(0.74, 0.42, 0.27)) * (0.93 + 0.1 * mix(0.5, vn(p * 1.5), nah)), feld);
+			float innen = (1.0 - sst(11.885, abs(q.y), aa));
+			lin_w = band_k(max(abs(q.x) - 5.485, abs(q.y) - 11.885), 0.05, aa);
+			lin_w = max(lin_w, band_k(abs(q.x) - 4.115, 0.05, aa) * innen);
+			lin_w = max(lin_w, band_k(abs(q.y) - 6.4, 0.05, aa) * (1.0 - sst(4.115, abs(q.x), aa)));
+			lin_w = max(lin_w, band_k(q.x, 0.05, aa) * (1.0 - sst(6.4, abs(q.y), aa)));
+		} else {
+			float feld = (1.0 - sst(15.0, abs(l.x), aa)) * (1.0 - sst(23.0, abs(l.y), aa));
+			vec3 rasen_k = lin(vec3(0.36, 0.62, 0.3)) * (0.95 + 0.07 * streifen(l.y / 5.0, 0.5, aa / 5.0));
+			g = mix(g, rasen_k, feld);
+			lin_w = band_k(max(abs(l.x) - 15.0, abs(l.y) - 23.0), 0.06, aa);
+			lin_w = max(lin_w, band_k(l.y, 0.06, aa) * feld);
+			lin_w = max(lin_w, band_k(length(l) - 4.5, 0.06, aa));
+			lin_w = max(lin_w, band_k(max(abs(l.x) - 8.0, abs(abs(l.y) - 20.0) - 3.0), 0.06, aa));
+		}
+		g = mix(g, vec3(0.94), lin_w);
 	} else if (typ == 6) {   // Riesenrad: helle 1,5-m-Steinplatten, Rasenbeete in den Ecken
 		vec2 kp = l / 1.5;
 		float kf = max(fuge(kp.x, 0.025, aa / 1.5), fuge(kp.y, 0.025, aa / 1.5));
@@ -138,6 +200,36 @@ vec3 grundstueck(int typ, vec2 l, vec2 p, float aa, float zuf, float nah, vec3 c
 		g = mix(g, rasen, beet);
 		g = mix(g, kante, band_k(length(abs(l) - vec2(25.0)) - 6.5, 0.15, aa));
 		g = mix(g, stein_dunkel * 0.95, band_k(l.y, 0.5, aa) * band_k(l.x, 14.0, aa));   // Granitband unter dem Rad
+	} else if (typ == 8) {   // Foodtruck-Markt: warme 1-m-Platten, dunkler Rand
+		vec2 kp = l;
+		float kf = max(fuge(kp.x, 0.03, aa), fuge(kp.y, 0.03, aa));
+		vec3 warm = lin(vec3(0.86, 0.76, 0.62));
+		g = mix(stein_hell, warm, 0.55 * mix(0.5, hs(floor(kp) + 9.0), nah)) * (1.0 - 0.15 * kf);
+		g = mix(g, stein_dunkel, band_k(rand_d - 2.0, 0.6, aa));
+	} else if (typ == 9) {   // Tankstelle: Asphalt, Betonfläche unter dem Dach, Gehweg vor dem Shop, Grünstreifen vorn
+		g = asph;
+		float pad = (1.0 - sst(15.0, abs(l.x), aa)) * (1.0 - sst(9.0, abs(l.y), aa));
+		vec2 kp = l / 4.0;
+		vec3 beton = lin(vec3(0.74, 0.74, 0.72)) * (0.95 + 0.05 * mix(0.5, hs(floor(kp)), nah)) * (1.0 - 0.15 * max(fuge(kp.x, 0.01, aa / 4.0), fuge(kp.y, 0.01, aa / 4.0)));
+		g = mix(g, beton, pad);
+		g = mix(g, gehweg, (1.0 - sst(-15.0, l.y, aa)) * (1.0 - sst(14.0, abs(l.x), aa)) * sst(-27.0, l.y, aa));
+		float ein = band_k(abs(l.x) - 16.0, 5.5, aa);
+		g = mix(g, rasen, sst(23.5, l.y, aa) * (1.0 - ein));
+		rk *= 1.0 - ein * sst(23.0, l.y, aa);
+	} else if (typ == 10) {   // Parkhaus: Asphalt, Einfahrt vorn
+		g = asph;
+		rk *= 1.0 - band_k(l.x, 4.0, aa) * sst(20.0, l.y, aa);
+	} else if (typ == 11) {   // Spielplatz: Rasen, Kiesweg ringsum, Sand und roter Fallschutz unter den Geräten
+		g = rasen;
+		g = mix(g, kies, band_k(rand_d - 2.6, 1.1, aa));
+		vec3 sandf = mix(sand, gehweg, 0.3) * (0.95 + 0.06 * mix(0.5, vn(p * 1.5), nah));
+		vec3 gummi = lin(vec3(0.71, 0.4, 0.3)) * (0.95 + 0.05 * mix(0.5, vn(p * 2.0), nah));
+		vec3 gummi_b = lin(vec3(0.35, 0.55, 0.75)) * (0.95 + 0.05 * mix(0.5, vn(p * 2.0), nah));
+		g = mix(g, sandf, (1.0 - sst(7.0, abs(l.x + 11.0), aa)) * (1.0 - sst(6.0, abs(l.y + 14.0), aa)));
+		g = mix(g, gummi, 1.0 - sst(7.0, length(l - vec2(11.0, -12.0)), aa));
+		g = mix(g, sandf, (1.0 - sst(4.5, abs(l.x + 11.0), aa)) * (1.0 - sst(4.5, abs(l.y - 11.0), aa)));
+		g = mix(g, gummi, (1.0 - sst(5.0, abs(l.x - 12.0), aa)) * (1.0 - sst(3.0, abs(l.y - 12.0), aa)));
+		g = mix(g, gummi_b, 1.0 - sst(4.2, length(l - vec2(0.0, 1.0)), aa));
 	}
 	g = mix(g, kante, rk);
 	return mix(c, g, sst(0.0, rand_d, aa));
@@ -220,7 +312,7 @@ void fragment() {
 			if (dreh == 1) l = vec2(fl.y, -fl.x);
 			else if (dreh == 2) l = -fl;
 			else if (dreh == 3) l = vec2(-fl.y, fl.x);
-			c = grundstueck(typ, l, p, aa, fd.b, nah_2, c);
+			c = grundstueck(typ, int(fd.b * 255.0 / 60.0 + 0.5), l, p, aa, nah_2, c);
 		}
 	}
 

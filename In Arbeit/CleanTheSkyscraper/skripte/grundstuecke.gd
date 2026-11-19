@@ -9,8 +9,14 @@ extends Node3D
 # und Kugeln in wenigen MultiMeshes (Farbe je Instanz, Farben aus der Stadt), Kleinteile in Kacheln mit Sichtweite.
 # Palmen, Büsche, Bänke und Mülleimer zeichnet StadtDetails mit (gleiche Modelle, Palmen bekommen dort ihre Bodenleuchte).
 
-enum Typ {LEER, PARKPLATZ, PARK, BAUSTELLE, BRACHE, SPORT, RIESENRAD, TEICH}
-const NAMEN := ["leer", "Parkplatz", "Park", "Baustelle", "Brache", "Sportplatz", "Riesenrad", "Teich"]
+enum Typ {LEER, PARKPLATZ, PARK, BAUSTELLE, BRACHE, SPORT, RIESENRAD, TEICH, MARKT, TANKSTELLE, PARKHAUS, SPIELPLATZ}
+const NAMEN := ["leer", "Parkplatz", "Park", "Baustelle", "Brache", "Sportplatz", "Riesenrad", "Teich", "Markt", "Tankstelle", "Parkhaus", "Spielplatz"]
+# Weniger Wiederholung (Wunsch des Users 19.11.2026): nur bis INNEN_D besondere Nutzungen, außen meist normale Häuser;
+# Varianten je Art werden gleichmäßig verteilt, manche Arten haben eine Höchstzahl.
+const INNEN_D := 900.0
+const AUSSEN_HAUS := 0.85      # Anteil der äußeren freien Felder, die ein normales Haus bekommen
+const VARIANTEN := {Typ.PARKPLATZ: 3, Typ.PARK: 4, Typ.SPORT: 3}
+const HOECHSTENS := {Typ.TEICH: 5, Typ.MARKT: 6, Typ.TANKSTELLE: 5, Typ.PARKHAUS: 5, Typ.RIESENRAD: 1}
 const HALB := 28.0            # nutzbare halbe Breite (Feld 75 m − Straße − Bordstein − 2,3 m Gehweg)
 const RASTER := 75.0
 const N := 41                 # Datentextur: Felder −1500 … 1500 m je Achse
@@ -142,11 +148,17 @@ func baue(w: Welt) -> void:
 		var c: Vector2 = m
 		var r := Rect2(c - Vector2.ONE * HALB, Vector2.ONE * HALB * 2.0)
 		var naechster := Vector2(clampf(0.0, r.position.x, r.end.x), clampf(0.0, r.position.y, r.end.y))
-		if c.length() > minf(MAX_D, w.stadt_r - 250.0) or naechster.length() < Welt.PLATZ_R + 6.0 or w._trifft_gebaeude(r, 6.0):
+		if naechster.length() < Welt.PLATZ_R + 6.0 or w._trifft_gebaeude(r, 6.0):
 			continue
 		if w.see_abstand(c) - r.size.length() * 0.5 < Welt.PROMENADE + 2.0 or w._kuesten_haus(r) != r:
 			continue
-		felder.append({"mitte": c, "typ": Typ.LEER, "dreh": rng.randi() % 4, "var": rng.randi() % 2, "d": c.length()})
+		if c.length() >= INNEN_D and rng.randf() < AUSSEN_HAUS:
+			if w.haus_bauen(c, rng):
+				zahl[Typ.LEER] = zahl.get(Typ.LEER, 0) + 1
+				continue
+		if c.length() > minf(MAX_D, w.stadt_r - 250.0):
+			continue
+		felder.append({"mitte": c, "typ": Typ.LEER, "dreh": rng.randi() % 4, "var": 0, "d": c.length()})
 	_typen_waehlen()
 	_mat = StandardMaterial3D.new()
 	_mat.vertex_color_use_as_albedo = true
@@ -165,6 +177,11 @@ func baue(w: Welt) -> void:
 			Typ.BRACHE: _brache(f)
 			Typ.SPORT: _sport(f)
 			Typ.RIESENRAD: _riesenrad(f)
+			Typ.MARKT: _markt(f)
+			Typ.TANKSTELLE: _tankstelle(f)
+			Typ.PARKHAUS: _parkhaus(f)
+			Typ.SPIELPLATZ: _spielplatz(f)
+	_licht_punkte_bauen()
 	if not "teile" in _ohne:
 		_teile_bauen()
 	if not "autos" in _ohne:
@@ -177,16 +194,16 @@ func baue(w: Welt) -> void:
 	var t := []
 	for k in range(1, NAMEN.size()):
 		t.append("%s %d" % [NAMEN[k], zahl.get(k, 0)])
-	print("Grundstücke: %d (%s), %d Kräne" % [felder.size(), ", ".join(t), _kraene.size()])
+	print("Grundstücke: %d (%s), %d Kräne, %d neue Häuser außen" % [felder.size(), ", ".join(t), _kraene.size(), zahl.get(Typ.LEER, 0)])
 
 # Farbe auf der Karte (M) je Nutzung
-const KARTEN_FARBE := ["d6d0c4", "a3a6aa", "8fc06c", "c9a46c", "e3cf9e", "6f9fb8", "e9e2d2", "8fc06c"]
+const KARTEN_FARBE := ["d6d0c4", "a3a6aa", "8fc06c", "c9a46c", "e3cf9e", "6f9fb8", "e9e2d2", "8fc06c", "e8b86b", "8c96a0", "9aa0a8", "a8d08a"]
 
 # Erstes Feld einer Art (nächstes am Turm) – für Testbilder
-func erstes(typ: int) -> Dictionary:
+func erstes(typ: int, variante := -1) -> Dictionary:
 	var best := {}
 	for f in felder:
-		if f.typ == typ and f.d > 180.0 and (best.is_empty() or f.d < best.d):
+		if f.typ == typ and (variante < 0 or int(f.var) == variante) and f.d > 180.0 and (best.is_empty() or f.d < best.d):
 			best = f
 	return best
 
@@ -225,19 +242,22 @@ func _typen_waehlen() -> void:
 			kand.append(i)
 	if not kand.is_empty():
 		felder[kand[rng.randi() % kand.size()]].typ = Typ.RIESENRAD
-	var teiche := 0
+	var anzahl := {Typ.RIESENRAD: 1 if not kand.is_empty() else 0}
 	for f in felder:
 		if f.typ != Typ.LEER:
 			continue
 		var d: float = f.d
-		var gew := {
-			Typ.PARKPLATZ: 3.0 if d < 1000.0 else 1.5,
-			Typ.PARK: 3.0 if d < 800.0 else (1.2 if d < 1000.0 else 0.3),
-			Typ.BAUSTELLE: 2.0 if d < 1000.0 else 2.5,
-			Typ.BRACHE: 1.0 if d < 500.0 else (3.0 if d < 1000.0 else 4.5),
-			Typ.SPORT: 1.3 if d < 1000.0 else 0.2,
-			Typ.TEICH: 1.0 if d < 900.0 and teiche < 6 else 0.0,
-		}
+		var gew := {}
+		if d >= INNEN_D:   # außen nur Brachen und Baustellen (die Stadt wächst)
+			gew = {Typ.BRACHE: 3.0, Typ.BAUSTELLE: 2.0}
+		else:
+			gew = {
+				Typ.PARKPLATZ: 2.2, Typ.PARK: 2.4, Typ.BAUSTELLE: 1.6, Typ.BRACHE: 0.8 if d < 500.0 else 1.4,
+				Typ.SPORT: 1.5, Typ.TEICH: 0.8, Typ.MARKT: 1.1, Typ.TANKSTELLE: 1.0, Typ.PARKHAUS: 1.0, Typ.SPIELPLATZ: 1.3,
+			}
+		for k in HOECHSTENS:
+			if gew.has(k) and anzahl.get(k, 0) >= HOECHSTENS[k]:
+				gew[k] = 0.0
 		for nb in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1)]:
 			var j: int = index.get(_ij(f.mitte) + nb, -1)
 			if j >= 0 and gew.has(felder[j].typ):
@@ -253,8 +273,27 @@ func _typen_waehlen() -> void:
 				wahl = k
 				break
 		f.typ = wahl
-		if wahl == Typ.TEICH:
-			teiche += 1
+		anzahl[wahl] = anzahl.get(wahl, 0) + 1
+	# Varianten gleichmäßig verteilen: jeweils die bisher seltenste (bei Gleichstand zufällig)
+	var benutzt := {}
+	for f in felder:
+		var nv: int = VARIANTEN.get(int(f.typ), 1)
+		if nv <= 1:
+			continue
+		if not benutzt.has(f.typ):
+			var leer := []
+			leer.resize(nv)
+			leer.fill(0)
+			benutzt[f.typ] = leer
+		var zl: Array = benutzt[f.typ]
+		var wenig: int = zl.min()
+		var wahl_v: Array = []
+		for i in nv:
+			if zl[i] == wenig:
+				wahl_v.append(i)
+		var v: int = wahl_v[rng.randi() % wahl_v.size()]
+		zl[v] += 1
+		f.var = v
 
 func _textur() -> void:
 	var img := Image.create(N, N, false, Image.FORMAT_RGBA8)
@@ -262,7 +301,7 @@ func _textur() -> void:
 	for f in felder:
 		var ij := _ij(f.mitte)
 		if ij.x >= 0 and ij.y >= 0 and ij.x < N and ij.y < N:
-			img.set_pixel(ij.x, ij.y, Color8(int(f.typ), int(f.dreh), 255 if int(f.var) == 1 else 0, 255))
+			img.set_pixel(ij.x, ij.y, Color8(int(f.typ), int(f.dreh), int(f.var) * 60, 255))
 	welt.boden_mat.set_shader_parameter("felder", ImageTexture.create_from_image(img))
 
 # ---------------------------------------------------------------- Lage im Feld (Layout-Koordinaten wie im Boden-Shader)
@@ -300,8 +339,8 @@ func _zyl(kat: String, f: Dictionary, l: Vector2, y: float, r: float, h: float, 
 func _kugel(kat: String, f: Dictionary, l: Vector2, y: float, g: Vector3, farbe: Color) -> void:
 	_teil("kugel", kat, Transform3D(Basis(Vector3.UP, rng.randf() * TAU) * Basis.from_scale(g), _pos(f, l, y)), farbe)
 
-func _baum(f: Dictionary, l: Vector2) -> void:
-	var s := rng.randf_range(0.8, 1.25)
+func _baum(f: Dictionary, l: Vector2, gross := 1.0) -> void:
+	var s := rng.randf_range(0.8, 1.25) * gross
 	_zyl("baum", f, l, 0.0, 0.22 * s, 3.2 * s, Color("7a5a3c"))
 	var gr: Color = BAUM_GRUEN[rng.randi() % BAUM_GRUEN.size()]
 	_kugel("baum", f, l, 4.6 * s, Vector3(4.4, 4.0, 4.4) * s, gr)
@@ -332,40 +371,57 @@ func _eimer(f: Dictionary, l: Vector2) -> void:
 	welt.hindernisse.append(_rect(f, l, Vector2(0.6, 0.6)))
 
 # ---------------------------------------------------------------- Parkplatz
-# Sechs Reihen à 17 Stellplätze (2,6 × 5 m) wie im Shader, Einfahrt rechts, hinten ein Grünstreifen mit Büschen.
+# Drei Varianten (gleich im Boden-Shader): 0 = Reihen, 1 = Schrägparker (60°), 2 = Reihen mit Baum-Inseln.
+# Sechs Reihen wie im Shader, Einfahrt rechts, hinten ein Grünstreifen mit Büschen.
 const REIHEN := [[-25.0, -1.0], [-13.5, 1.0], [-8.5, -1.0], [3.0, 1.0], [8.0, -1.0], [19.5, 1.0]]   # [Mitte z, Nase ±z]
+var _auto_summe := 0
+func _auto_neu(f: Dictionary, l: Vector2, gl: float, y := 0.0) -> void:
+	if _auto_summe == 0:
+		for a in AUTO_ANTEIL:
+			_auto_summe += a
+	var wahl := rng.randi_range(0, _auto_summe - 1)
+	var m := 0
+	while wahl >= AUTO_ANTEIL[m]:
+		wahl -= AUTO_ANTEIL[m]
+		m += 1
+	var farbe := Color(Verkehr.LACKE[rng.randi() % Verkehr.LACKE.size()]) if AUTO_MODELLE[m] != "taxi" else Color(1, 1, 1, 0)
+	var xf := Transform3D(Basis(Vector3.UP, _gier(f, gl)).scaled(Vector3.ONE * Verkehr.MASS), _pos(f, l, y))
+	var kk := Vector2i(floori(xf.origin.x / AUTO_KACHEL), floori(xf.origin.z / AUTO_KACHEL))
+	if not _autos.has(kk):
+		var leer := []
+		for i in AUTO_MODELLE.size():
+			leer.append([])
+		_autos[kk] = leer
+	_autos[kk][m].append([xf, farbe])
+
 func _parkplatz(f: Dictionary) -> void:
+	var v := int(f.var)
 	var belegt := rng.randf_range(0.3, 0.75)
-	var summe := 0
-	for a in AUTO_ANTEIL:
-		summe += a
+	var breite := 3.0 if v == 1 else 2.6
+	var anzahl := 15 if v == 1 else 17
 	for r in REIHEN:
+		var rz := float(r[0])
+		var nase := float(r[1])
 		var x0 := INF
 		var x1 := -INF
-		for k in 17:
+		for k in anzahl:
+			var x := -26.0 + breite * 0.5 + k * breite
+			if v == 2 and k % 6 == 5:   # Baum-Insel (Doppelreihen bekommen einen Baum in der Mitte)
+				if rz == -25.0 or rz == 19.5:
+					_baum(f, Vector2(x, rz), 0.8)
+				elif nase > 0.0:
+					_baum(f, Vector2(x, rz + 2.5), 0.9)
+				continue
 			if rng.randf() > belegt:
 				continue
-			var x := -26.0 + 1.3 + k * 2.6
-			var l := Vector2(x + rng.randf_range(-0.12, 0.12), float(r[0]) + float(r[1]) * rng.randf_range(0.0, 0.35))
-			var wahl := rng.randi_range(0, summe - 1)
-			var m := 0
-			while wahl >= AUTO_ANTEIL[m]:
-				wahl -= AUTO_ANTEIL[m]
-				m += 1
-			var farbe := Color(Verkehr.LACKE[rng.randi() % Verkehr.LACKE.size()]) if AUTO_MODELLE[m] != "taxi" else Color(1, 1, 1, 0)
-			var gl := (0.0 if float(r[1]) > 0.0 else PI) + rng.randf_range(-0.04, 0.04)
-			var xf := Transform3D(Basis(Vector3.UP, _gier(f, gl)).scaled(Vector3.ONE * Verkehr.MASS), _pos(f, l))
-			var kk := Vector2i(floori(xf.origin.x / AUTO_KACHEL), floori(xf.origin.z / AUTO_KACHEL))
-			if not _autos.has(kk):
-				var leer := []
-				for i in AUTO_MODELLE.size():
-					leer.append([])
-				_autos[kk] = leer
-			_autos[kk][m].append([xf, farbe])
-			x0 = minf(x0, x - 1.3)
-			x1 = maxf(x1, x + 1.3)
+			if v == 1:
+				_auto_neu(f, Vector2(x, rz), (PI / 6.0 if nase > 0.0 else PI + PI / 6.0))
+			else:
+				_auto_neu(f, Vector2(x + rng.randf_range(-0.12, 0.12), rz + nase * rng.randf_range(0.0, 0.35)), (0.0 if nase > 0.0 else PI) + rng.randf_range(-0.04, 0.04))
+			x0 = minf(x0, x - breite * 0.5)
+			x1 = maxf(x1, x + breite * 0.5)
 		if x1 > x0:   # eine Kollisions-Box je Reihe (statt je Auto)
-			welt.hindernisse.append(_rect(f, Vector2((x0 + x1) * 0.5, float(r[0])), Vector2(x1 - x0, 4.6)))
+			welt.hindernisse.append(_rect(f, Vector2((x0 + x1) * 0.5, rz), Vector2(x1 - x0, 4.6)))
 	# Kassenautomat + „P“-Schild an der Einfahrt, Büsche + Leuchten im Grünstreifen
 	_box("klein", f, Vector2(24.5, -8.0), 0.0, Vector3(0.7, 1.7, 0.5), Color("8a929c"))
 	_box("klein", f, Vector2(24.5, -8.0), 1.2, Vector3(0.5, 0.3, 0.52), Color("2f5f9e"))
@@ -381,51 +437,384 @@ func _parkplatz(f: Dictionary) -> void:
 		x += 4.0
 
 # ---------------------------------------------------------------- Park
+# Varianten: 0 = Wegekreuz + Brunnen, 1 = Diagonalen + Brunnen, 2 = Blumenpark mit Ringweg + Skulptur, 3 = Picknickwiese
 func _auf_weg(f: Dictionary, l: Vector2) -> bool:
+	var v := int(f.var)
+	if v == 3:
+		return absf(l.y - 6.0 * sin(l.x * 0.12)) < 3.0 or l.distance_to(Vector2(16.0, -16.0)) < 7.0 or HALB - maxf(absf(l.x), absf(l.y)) < 2.0
 	if l.length() < 9.5 or HALB - maxf(absf(l.x), absf(l.y)) < 5.2:
 		return true
-	if int(f.var) == 0:
+	if v == 0:
 		return absf(l.x) < 3.0 or absf(l.y) < 3.0
-	return absf(l.x - l.y) * 0.7071 < 3.0 or absf(l.x + l.y) * 0.7071 < 3.0
+	if v == 1:
+		return absf(l.x - l.y) * 0.7071 < 3.0 or absf(l.x + l.y) * 0.7071 < 3.0
+	return l.length() < 17.0 or absf(l.x) < 3.0 or absf(l.y) < 3.0   # Blumenpark: Bäume nur außen
 
 func _park(f: Dictionary) -> void:
-	# Brunnen in der Mitte: Steinbecken, Wasser, Säule mit Schale
-	_zyl("gross", f, Vector2.ZERO, 0.0, 3.2, 0.55, STEIN)
-	_zyl("klein", f, Vector2.ZERO, 0.0, 2.85, 0.5, Color("5b9bb0"))
-	_zyl("klein", f, Vector2.ZERO, 0.0, 0.35, 1.6, STEIN)
-	_zyl("klein", f, Vector2.ZERO, 1.45, 0.95, 0.22, STEIN)
-	welt.hindernisse.append(_rect(f, Vector2.ZERO, Vector2(6.4, 6.4)))
-	# Bänke rund um den Platz (zwischen den Wegen), Blick zum Brunnen
-	var w0 := PI * 0.25 if int(f.var) == 0 else 0.0
-	for k in 4:
-		var a := w0 + k * PI * 0.5
-		var d := Vector2(cos(a), sin(a))
-		_bank(f, d * 8.2, -d)
-		if k % 2 == 0:
-			_eimer(f, d * 8.4 + Vector2(-d.y, d.x) * 1.6)
-	# Bäume und Palmen auf dem Rasen, Büsche am Rand
+	var v := int(f.var)
+	if v <= 1:
+		# Brunnen in der Mitte: Steinbecken, Wasser, Säule mit Schale; Bänke dazwischen
+		_zyl("gross", f, Vector2.ZERO, 0.0, 3.2, 0.55, STEIN)
+		_zyl("klein", f, Vector2.ZERO, 0.0, 2.85, 0.5, Color("5b9bb0"))
+		_zyl("klein", f, Vector2.ZERO, 0.0, 0.35, 1.6, STEIN)
+		_zyl("klein", f, Vector2.ZERO, 1.45, 0.95, 0.22, STEIN)
+		welt.hindernisse.append(_rect(f, Vector2.ZERO, Vector2(6.4, 6.4)))
+		var w0 := PI * 0.25 if v == 0 else 0.0
+		for k in 4:
+			var a := w0 + k * PI * 0.5
+			var d := Vector2(cos(a), sin(a))
+			_bank(f, d * 8.2, -d)
+			if k % 2 == 0:
+				_eimer(f, d * 8.4 + Vector2(-d.y, d.x) * 1.6)
+			bodenlicht.leuchte(_pos(f, Vector2(cos(a + PI * 0.25), sin(a + PI * 0.25)) * 7.6), 1.6)
+	elif v == 2:
+		# Skulptur: Sockel + drei gedrehte Würfel (weiß/gold); Bänke außen am Ringweg mit Blick auf die Beete
+		_box("gross", f, Vector2.ZERO, 0.0, Vector3(2.4, 0.7, 2.4), STEIN)
+		_box("gross", f, Vector2.ZERO, 0.7, Vector3(1.6, 1.6, 1.6), Color("ece8de"), 0.4)
+		_box("gross", f, Vector2.ZERO, 2.3, Vector3(1.2, 1.2, 1.2), Color("d4a93c"), 1.1)
+		_box("gross", f, Vector2.ZERO, 3.5, Vector3(0.8, 0.8, 0.8), Color("ece8de"), 0.2)
+		welt.hindernisse.append(_rect(f, Vector2.ZERO, Vector2(2.6, 2.6)))
+		for k in 8:
+			var a := PI / 8.0 + k * PI * 0.25
+			var d := Vector2(cos(a), sin(a))
+			if k % 2 == 0:
+				_bank(f, d * 15.7, -d)
+			bodenlicht.leuchte(_pos(f, d * 14.0), 1.4)
+		_eimer(f, Vector2(15.6, 2.2))
+		_eimer(f, Vector2(-15.6, -2.2))
+	else:
+		# Picknickwiese: großer offener Rasen, Decken, ein Pavillon in der Ecke, wenige große Bäume
+		var pv := Vector2(16.0, -16.0)
+		_zyl("gross", f, pv, 0.0, 4.6, 0.25, STEIN)
+		for k in 8:
+			var a := TAU * k / 8.0
+			_zyl("klein", f, pv + Vector2(cos(a), sin(a)) * 3.9, 0.25, 0.14, 2.9, Color("f2f2f0"))
+		_teil("kegel", "gross", Transform3D(Basis.from_scale(Vector3(10.6, 2.2, 10.6)), _pos(f, pv, 3.15 + 1.1)), Color("d9644f"))
+		_bank(f, pv + Vector2(-1.6, 0), Vector2(1, 0))
+		_bank(f, pv + Vector2(1.6, 0), Vector2(-1, 0))
+		var decken := [Color("d9644f"), Color("4f93c4"), Color("e8b33c"), Color("f2f2ee"), Color("62a85b")]
+		for k in rng.randi_range(4, 7):
+			var l := Vector2(rng.randf_range(-20.0, 10.0), rng.randf_range(-20.0, 20.0))
+			if _auf_weg(f, l):
+				continue
+			var gl := rng.randf() * PI
+			_box("klein", f, l, 0.0, Vector3(2.0, 0.03, 1.6), decken[rng.randi() % decken.size()], gl)
+			if rng.randf() < 0.6:
+				_box("klein", f, l + Vector2(0.5, 0.3), 0.03, Vector3(0.45, 0.3, 0.3), Color("a8744a"), gl)
+	# Bäume und Palmen auf dem Rasen (Mindestabstand), Büsche
 	var n := 0
 	var versuche := 0
 	_baum_orte.clear()
-	while n < 16 and versuche < 160:
+	var ziel := 16 if v <= 1 else (9 if v == 2 else 6)
+	while n < ziel and versuche < 160:
 		versuche += 1
 		var l := Vector2(rng.randf_range(-22.0, 22.0), rng.randf_range(-22.0, 22.0))
-		if _auf_weg(f, l) or not _platz_frei(l, 6.5):   # Mindestabstand (Bild des Users: Palme wuchs durch einen Baum)
+		if _auf_weg(f, l) or not _platz_frei(l, 6.5 if v != 3 else 9.0):   # Mindestabstand (Bild des Users: Palme wuchs durch einen Baum)
 			continue
 		_baum_orte.append(l)
-		if rng.randf() < 0.15:   # wenige Palmen (teuer), meist runde Bäume
+		if v == 3:
+			_baum(f, l, rng.randf_range(1.4, 1.7))
+		elif rng.randf() < 0.15:   # wenige Palmen (teuer), meist runde Bäume
 			_palme(f, l)
 		else:
 			_baum(f, l)
 		n += 1
-	for k in 10:
+	for k in (10 if v <= 2 else 4):
 		var l := Vector2(rng.randf_range(-21.0, 21.0), rng.randf_range(-21.0, 21.0))
 		if not _auf_weg(f, l) and _platz_frei(l, 3.5):
 			_busch(f, l, rng.randf_range(2.6, 4.0))
-	# Leuchten an den Wegen
+
+# ---------------------------------------------------------------- Sportplatz
+# Varianten: 0 = zwei Basketballfelder, 1 = zwei Tennisplätze (Sand), 2 = Kleinfeld-Fußball
+func _sport(f: Dictionary) -> void:
+	var v := int(f.var)
+	if v == 0:
+		for cx in [-9.0, 9.0]:
+			for s in [-1.0, 1.0]:   # Korb: Mast hinter der Grundlinie, Ausleger, Brett, Ring
+				_box("klein", f, Vector2(cx, s * 14.0), 0.0, Vector3(0.2, 3.5, 0.2), DUNKEL)
+				_box("klein", f, Vector2(cx, s * 13.4), 3.3, Vector3(0.12, 0.12, 1.2), DUNKEL)
+				_box("klein", f, Vector2(cx, s * 12.8), 2.75, Vector3(1.8, 1.05, 0.06), Color("f2f2f0"))
+				_box("klein", f, Vector2(cx, s * 12.5), 3.05, Vector3(0.46, 0.04, 0.46), Color("e0652a"))
+				welt.hindernisse.append(_rect(f, Vector2(cx, s * 14.0), Vector2(0.5, 0.5)))
+	elif v == 1:
+		for cx in [-7.0, 7.0]:   # Netz quer über den Platz: Pfosten, dunkles Netz, weißes Band
+			for s in [-1.0, 1.0]:
+				_box("klein", f, Vector2(cx + s * 6.4, 0.0), 0.0, Vector3(0.1, 1.07, 0.1), DUNKEL)
+				welt.hindernisse.append(_rect(f, Vector2(cx + s * 6.4, 0.0), Vector2(0.3, 0.3)))
+			_box("klein", f, Vector2(cx, 0.0), 0.1, Vector3(12.8, 0.82, 0.03), Color("2a3440"))
+			_box("klein", f, Vector2(cx, 0.0), 0.9, Vector3(12.8, 0.07, 0.05), Color("f2f2f0"))
+			welt.hindernisse.append(_rect(f, Vector2(cx, 0.0), Vector2(12.8, 0.3)))
+	else:
+		for s in [-1.0, 1.0]:   # Tore: weiße Pfosten + Latte, Netz hinten
+			for px in [-2.5, 2.5]:
+				_box("klein", f, Vector2(px, s * 23.0), 0.0, Vector3(0.12, 2.2, 0.12), Color("f2f2f0"))
+				welt.hindernisse.append(_rect(f, Vector2(px, s * 23.0), Vector2(0.3, 0.3)))
+			_box("klein", f, Vector2(0.0, s * 23.0), 2.14, Vector3(5.12, 0.12, 0.12), Color("f2f2f0"))
+			_box("klein", f, Vector2(0.0, s * 24.0), 0.0, Vector3(5.0, 2.1, 0.03), Color("dfe3e0"))
+	# Zaun: Pfosten alle 3 m und zwei Holme (dünn → nur nah sichtbar)
+	var gruen := Color("2f4a3a")
+	var hoehe := 3.6 if v != 2 else 4.6
+	for seite in 4:
+		var k := -27.0
+		while k <= 27.01:
+			var l := Vector2(k, -27.2) if seite == 0 else (Vector2(k, 27.2) if seite == 1 else (Vector2(-27.2, k) if seite == 2 else Vector2(27.2, k)))
+			if not (seite == 3 and absf(k) < 2.0):
+				_box("fein", f, l, 0.0, Vector3(0.09, hoehe, 0.09), gruen)
+			k += 3.0
+		var quer := seite >= 2
+		for hy in [1.2, hoehe - 0.1]:
+			var g := Vector3(0.06, 0.08, 54.4) if quer else Vector3(54.4, 0.08, 0.06)
+			var lm := Vector2(0, -27.2) if seite == 0 else (Vector2(0, 27.2) if seite == 1 else (Vector2(-27.2, 0) if seite == 2 else Vector2(27.2, 0)))
+			_box("fein", f, lm, hy, g, gruen)
+	_rand_kollision(f, 27.2, 2.0)
+	if v == 2:
+		_bank(f, Vector2(-19.0, 0.0), Vector2(1, 0))
+		_bank(f, Vector2(19.0, 0.0), Vector2(-1, 0))
+		_eimer(f, Vector2(-19.0, 2.5))
+	else:
+		_bank(f, Vector2(0.0, -6.0), Vector2(1, 0))
+		_bank(f, Vector2(0.0, 6.0), Vector2(-1, 0))
+		_eimer(f, Vector2(0.0, 0.0))
+	for s in [-1.0, 1.0]:
+		bodenlicht.leuchte(_pos(f, Vector2(s * 25.5, 25.5)), 2.0)
+
+# ---------------------------------------------------------------- Foodtruck-Markt
+const TRUCK_FARBEN := [Color("d9644f"), Color("e8b33c"), Color("4f93c4"), Color("62a85b"), Color("9b7cc4"), Color("e58aa0"), Color("f2f2ee")]
+const TRUCK_NAMEN := ["Tacos", "Falafel", "Eis", "Burger", "Crêpes", "Kaffee", "Pizza", "Saft", "Waffeln", "Sushi", "Döner", "Smoothies"]
+var _licht_punkte: Array = []   # [Vector3, Color] – Lichterketten (nachts)
+func _box_rot(kat: String, f: Dictionary, l: Vector2, y: float, g: Vector3, farbe: Color, gl: float, b: Basis) -> void:
+	_teil("box", kat, Transform3D(Basis(Vector3.UP, _gier(f, gl)) * b * Basis.from_scale(g), _pos(f, l, y)), farbe)
+
+func _rad_zyl(f: Dictionary, l: Vector2, y: float, r: float, breite: float, gl: float) -> void:   # Reifen, Achse quer
+	_teil("zyl", "klein", Transform3D(Basis(Vector3.UP, _gier(f, gl)) * Basis(Vector3.RIGHT, PI * 0.5) * Basis.from_scale(Vector3(r * 2.0, breite, r * 2.0)), _pos(f, l, y)), Color("26282c"))
+
+# Foodtruck mit der Länge entlang Layout-x, Klappe zur Seite s (±1 in z)
+func _foodtruck(f: Dictionary, l: Vector2, s: float, farbe: Color, name: String) -> void:
+	_box("klein", f, l, 0.55, Vector3(5.6, 2.5, 2.3), farbe)
+	_box("klein", f, l + Vector2(3.65, 0), 0.55, Vector3(1.7, 1.9, 2.2), farbe.darkened(0.12))
+	_box("klein", f, l + Vector2(4.48, 0), 1.45, Vector3(0.05, 0.75, 1.9), Color("2a3440"))
+	for wx in [-1.9, 1.9, 3.7]:
+		for wz in [-1.0, 1.0]:
+			_rad_zyl(f, l + Vector2(wx, wz), 0.45, 0.45, 0.3, 0.0)
+	_box("klein", f, l + Vector2(-0.3, s * 1.16), 1.45, Vector3(2.8, 1.15, 0.05), Color("2a3440"))
+	_box("klein", f, l + Vector2(-0.3, s * 1.42), 1.4, Vector3(2.9, 0.08, 0.5), Color("e6e6e2"))
+	_box_rot("klein", f, l + Vector2(-0.3, s * 1.75), 2.85, Vector3(3.2, 0.07, 1.2), Color("f2f2ee"), 0.0, Basis(Vector3.RIGHT, s * 0.28))
+	_box("klein", f, l + Vector2(-0.3, 0), 3.05, Vector3(2.6, 0.7, 0.12), Color("f2f2ee"))
+	_schrift(f, l + Vector2(-0.3, s * 0.08), 3.4, name, 0.0 if s > 0.0 else PI, 72, Color("27313d"))
+	welt.hindernisse.append(_rect(f, l + Vector2(0.6, 0), Vector2(7.6, 2.5)))
+
+func _lichterkette(f: Dictionary, a: Vector2, b: Vector2, h: float, durch: float) -> void:
+	var lang := a.distance_to(b)
+	var n := int(lang / 1.1)
+	for i in range(1, n):
+		var t := float(i) / n
+		var c: Color = Color(1.0, 0.82, 0.55) if i % 3 != 0 else RAD_FARBEN[i % RAD_FARBEN.size()].lightened(0.35)
+		_licht_punkte.append([_pos(f, a.lerp(b, t), h - durch * sin(PI * t)), c])
+
+func _markt(f: Dictionary) -> void:
+	var namen := TRUCK_NAMEN.duplicate()
+	for i in range(namen.size() - 1, 0, -1):   # mischen (mit eigenem Zufall, gleich für alle)
+		var j := rng.randi_range(0, i)
+		var t: String = namen[i]
+		namen[i] = namen[j]
+		namen[j] = t
+	var orte := [[Vector2(-15.0, -21.5), 1.0], [Vector2(0.5, -21.5), 1.0], [Vector2(15.5, -21.5), 1.0], [Vector2(-12.0, 21.5), -1.0], [Vector2(8.0, 21.5), -1.0]]
+	for i in orte.size():
+		_foodtruck(f, orte[i][0], orte[i][1], TRUCK_FARBEN[rng.randi() % TRUCK_FARBEN.size()], namen[i])
+	# Tische mit Sonnenschirmen in der Mitte
+	var schirm := [Color("d9644f"), Color("f2f2ee"), Color("4f93c4"), Color("e8b33c")]
+	for ix in 3:
+		for iz in 2:
+			var l := Vector2(-10.0 + ix * 10.0 + rng.randf_range(-1.0, 1.0), -5.0 + iz * 10.0 + rng.randf_range(-1.0, 1.0))
+			_zyl("klein", f, l, 0.0, 0.07, 0.75, DUNKEL)
+			_zyl("klein", f, l, 0.75, 0.65, 0.05, Color("f2f2f0"))
+			_zyl("klein", f, l, 0.8, 0.04, 1.7, Color("9aa3ad"))
+			_teil("kegel", "klein", Transform3D(Basis.from_scale(Vector3(3.0, 0.55, 3.0)), _pos(f, l, 2.45)), schirm[(ix + iz) % schirm.size()])
+			for k in 4:
+				var a := TAU * k / 4.0 + 0.4
+				_zyl("klein", f, l + Vector2(cos(a), sin(a)) * 1.0, 0.0, 0.2, 0.45, Color("a8744a"))
+			welt.hindernisse.append(_rect(f, l, Vector2(2.4, 2.4)))
+	# Masten mit Lichterketten über dem Platz (nachts bunt)
+	var ecken := [Vector2(-17.0, -15.0), Vector2(17.0, -15.0), Vector2(17.0, 15.0), Vector2(-17.0, 15.0)]
+	for e in ecken:
+		_box("klein", f, e, 0.0, Vector3(0.18, 4.8, 0.18), DUNKEL)
+		welt.hindernisse.append(_rect(f, e, Vector2(0.4, 0.4)))
+	for i in 4:
+		_lichterkette(f, ecken[i], ecken[(i + 1) % 4], 4.6, 0.6)
+	_lichterkette(f, ecken[0], ecken[2], 4.6, 1.0)
+	_lichterkette(f, ecken[1], ecken[3], 4.6, 1.0)
+	_eimer(f, Vector2(-17.0, 0.0))
+	_eimer(f, Vector2(17.0, 0.0))
+	for s in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
+		_baum(f, s * 25.0, 0.9)
+
+# ---------------------------------------------------------------- Tankstelle
+func _tankstelle(f: Dictionary) -> void:
+	var marke: Color = [Color("2f5f9e"), Color("2e8b57"), Color("d9644f")][rng.randi() % 3]
+	# Dach auf vier Stützen, farbige Blende ringsum
+	_box("gross", f, Vector2(0, 0), 5.4, Vector3(28.0, 0.9, 16.0), Color("f2f2f0"))
+	_box("gross", f, Vector2(0, 8.05), 5.35, Vector3(28.2, 1.0, 0.1), marke)
+	_box("gross", f, Vector2(0, -8.05), 5.35, Vector3(28.2, 1.0, 0.1), marke)
+	_box("gross", f, Vector2(14.05, 0), 5.35, Vector3(0.1, 1.0, 16.2), marke)
+	_box("gross", f, Vector2(-14.05, 0), 5.35, Vector3(0.1, 1.0, 16.2), marke)
+	for px in [-9.0, 9.0]:
+		for pz in [-4.0, 4.0]:
+			_box("gross", f, Vector2(px, pz), 0.0, Vector3(0.6, 5.4, 0.6), Color("d6d0c4"))
+			welt.hindernisse.append(_rect(f, Vector2(px, pz), Vector2(0.8, 0.8)))
+	# drei Zapfinseln mit je zwei Säulen
+	for ix in 3:
+		var x := -9.0 + ix * 9.0
+		_box("klein", f, Vector2(x, 0), 0.0, Vector3(1.4, 0.2, 6.0), BETON)
+		for s in [-1.0, 1.0]:
+			_box("klein", f, Vector2(x, s * 1.6), 0.2, Vector3(0.6, 1.7, 0.9), Color("f2f2f0"))
+			_box("klein", f, Vector2(x, s * 1.6), 1.6, Vector3(0.62, 0.3, 0.92), marke)
+			_box("klein", f, Vector2(x + 0.31, s * 1.6), 1.1, Vector3(0.02, 0.35, 0.5), Color("2a3440"))
+		welt.hindernisse.append(_rect(f, Vector2(x, 0), Vector2(1.6, 6.2)))
+		if rng.randf() < 0.6:
+			_auto_neu(f, Vector2(x + 2.6, rng.randf_range(-1.5, 1.5)), 0.0 if rng.randf() < 0.5 else PI)
+		if rng.randf() < 0.4:
+			_auto_neu(f, Vector2(x - 2.6, rng.randf_range(-1.5, 1.5)), 0.0 if rng.randf() < 0.5 else PI)
+	# Shop hinten mit Glasfront
+	_box("gross", f, Vector2(0, -21.0), 0.0, Vector3(20.0, 4.4, 10.0), Color("e6e6e2"))
+	_box("gross", f, Vector2(0, -15.95), 0.4, Vector3(16.0, 3.0, 0.1), Color("3d5872"))
+	_box("gross", f, Vector2(0, -16.0), 4.2, Vector3(20.2, 0.6, 0.2), marke)
+	_schrift(f, Vector2(0, -15.88), 4.5, "SHOP", 0.0, 96, Color.WHITE)
+	_haeuser.append([_rect(f, Vector2(0, -21.0), Vector2(20.0, 10.0)), 4.6])
+	# Preismast vorn an der Straße
+	_box("gross", f, Vector2(-24.0, 24.0), 0.0, Vector3(2.4, 8.0, 0.6), marke)
+	_box("klein", f, Vector2(-24.0, 24.32), 2.0, Vector3(2.0, 4.0, 0.05), Color("f2f2f0"))
+	_schrift(f, Vector2(-24.0, 24.36), 6.9, "TANKE", 0.0, 80, Color.WHITE)
+	_schrift(f, Vector2(-24.0, 24.36), 5.1, "Super  1,79", 0.0, 44, Color("27313d"))
+	_schrift(f, Vector2(-24.0, 24.36), 4.2, "Diesel 1,69", 0.0, 44, Color("27313d"))
+	_schrift(f, Vector2(-24.0, 24.36), 3.3, "E-Laden 0,49", 0.0, 44, Color("27313d"))
+	welt.hindernisse.append(_rect(f, Vector2(-24.0, 24.0), Vector2(2.6, 0.8)))
+	# Luft/Wasser-Säule, Leuchten unter dem Dach, Büsche im Grünstreifen
+	_box("klein", f, Vector2(20.0, -12.0), 0.0, Vector3(0.6, 1.3, 0.6), marke)
 	for k in 4:
-		var a := w0 + PI * 0.25 + k * PI * 0.5
-		bodenlicht.leuchte(_pos(f, Vector2(cos(a), sin(a)) * 7.6), 1.6)
+		bodenlicht.leuchte(_pos(f, Vector2(-10.5 + k * 7.0, 0.0)), 3.0)
+	for x in [-8.0, -4.0, 0.0, 4.0, 8.0]:
+		_busch(f, Vector2(x, 25.6), 2.6)
+
+# ---------------------------------------------------------------- Parkhaus
+func _parkhaus(f: Dictionary) -> void:
+	var decks := rng.randi_range(3, 5)
+	var bx := 44.0
+	var bz := 36.0
+	var dh := 3.1
+	var beton := Color("c9c4ba")
+	for e in decks + 1:
+		var y := e * dh
+		if e > 0:
+			_box("gross", f, Vector2.ZERO, y - 0.35, Vector3(bx, 0.35, bz), beton.darkened(0.05))
+		# Brüstung ringsum (auf jeder Ebene, vorn unten Einfahrt)
+		if e > 0:   # Brüstung ringsum (Erdgeschoss offen)
+			for s in [-1.0, 1.0]:
+				_box("gross", f, Vector2(0, s * (bz * 0.5 - 0.1)), y, Vector3(bx, 1.0, 0.2), beton)
+				_box("gross", f, Vector2(s * (bx * 0.5 - 0.1), 0), y, Vector3(0.2, 1.0, bz), beton)
+		# Autos auf dieser Ebene (zwei Doppelreihen, auch auf dem Dach – von oben sichtbar)
+		var belegt := rng.randf_range(0.3, 0.8)
+		for rz in [-12.5, -7.5, 7.5, 12.5]:
+			for k in 15:
+				if rng.randf() > belegt:
+					continue
+				_auto_neu(f, Vector2(-19.5 + k * 2.6, rz), 0.0 if (rz == -12.5 or rz == 7.5) else PI, y)
+		if e == decks:
+			break
+		for ix in 6:
+			for iz in 5:
+				_box("gross", f, Vector2(-bx * 0.5 + 0.5 + ix * (bx - 1.0) / 5.0, -bz * 0.5 + 0.5 + iz * (bz - 1.0) / 4.0), y, Vector3(0.6, dh - 0.35, 0.6), beton)
+	# Treppenhaus mit P-Schild
+	var th := (decks + 1) * dh + 2.0
+	_box("gross", f, Vector2(bx * 0.5 - 3.0, -bz * 0.5 + 3.0), 0.0, Vector3(6.0, th, 6.0), Color("b9b4aa"))
+	_box("gross", f, Vector2(bx * 0.5 - 3.0, -bz * 0.5 + 6.06), th - 3.0, Vector3(3.0, 3.0, 0.12), Color("2f5f9e"))
+	_schrift(f, Vector2(bx * 0.5 - 3.0, -bz * 0.5 + 6.14), th - 1.5, "P", 0.0, 220, Color.WHITE)
+	_haeuser.append([_rect(f, Vector2.ZERO, Vector2(bx, bz)), th])
+	for x in [-20.0, -10.0, 10.0, 20.0]:
+		_baum(f, Vector2(x, 24.5), 0.85)
+
+# ---------------------------------------------------------------- Spielplatz
+func _spielplatz(f: Dictionary) -> void:
+	var holz := Color("a8744a")
+	var blau := Color("4f93c4")
+	var rot := Color("d9644f")
+	var gelb := Color("e8b33c")
+	# Schaukel: zwei A-Gestelle, Querbalken, drei Sitze an Ketten (Ketten dünn → nah)
+	var sm := Vector2(-11.0, -14.0)
+	for s in [-1.0, 1.0]:
+		for t in [-1.0, 1.0]:
+			_box_rot("klein", f, sm + Vector2(s * 4.5, t * 0.8), 1.25, Vector3(0.14, 2.7, 0.14), blau, 0.0, Basis(Vector3.RIGHT, -t * 0.33))
+		welt.hindernisse.append(_rect(f, sm + Vector2(s * 4.5, 0), Vector2(0.5, 2.0)))
+	_box("klein", f, sm, 2.5, Vector3(9.2, 0.16, 0.16), blau)
+	for k in 3:
+		var x := -2.8 + k * 2.8
+		_box("klein", f, sm + Vector2(x, 0), 0.5, Vector3(0.5, 0.06, 0.25), [rot, gelb, Color("62a85b")][k])
+		for kx in [-0.22, 0.22]:
+			_box("fein", f, sm + Vector2(x + kx, 0), 0.55, Vector3(0.025, 1.95, 0.025), Color("9aa3ad"))
+	# Turm mit Rutsche: Plattform auf Pfosten, Dach, Leiter, Rutsche
+	var tm := Vector2(11.0, -12.0)
+	for e in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
+		_box("klein", f, tm + e * 1.1, 0.0, Vector3(0.16, 3.4, 0.16), holz)
+	_box("klein", f, tm, 1.5, Vector3(2.5, 0.12, 2.5), holz)
+	for s in [-1.0, 1.0]:
+		_box("klein", f, tm + Vector2(s * 1.2, 0), 1.62, Vector3(0.06, 0.7, 2.4), blau)
+	_teil("kegel", "klein", Transform3D(Basis.from_scale(Vector3(3.4, 1.2, 3.4)), _pos(f, tm, 3.4 + 0.6)), rot)
+	_box_rot("klein", f, tm + Vector2(0, 2.0), 0.75, Vector3(0.7, 0.08, 2.0), holz, 0.0, Basis(Vector3.RIGHT, 0.85))
+	_box_rot("klein", f, tm + Vector2(0, -2.9), 0.8, Vector3(0.8, 0.08, 3.6), gelb, 0.0, Basis(Vector3.RIGHT, -0.42))
+	welt.hindernisse.append(_rect(f, tm + Vector2(0, -0.5), Vector2(2.8, 6.0)))
+	# Sandkasten mit Holzrand
+	var km := Vector2(-11.0, 11.0)
+	for s in [-1.0, 1.0]:
+		_box("klein", f, km + Vector2(0, s * 4.3), 0.0, Vector3(8.8, 0.35, 0.3), holz)
+		_box("klein", f, km + Vector2(s * 4.3, 0), 0.0, Vector3(0.3, 0.35, 8.8), holz)
+	_kugel("klein", f, km + Vector2(1.2, -0.8), 0.0, Vector3(1.6, 0.5, 1.4), Color("d9c08a"))
+	_box("klein", f, km + Vector2(-1.5, 1.0), 0.05, Vector3(0.4, 0.25, 0.4), rot, 0.3)
+	# Wippe
+	var wm := Vector2(12.0, 12.0)
+	_box("klein", f, wm, 0.0, Vector3(0.4, 0.5, 0.6), DUNKEL)
+	_box_rot("klein", f, wm, 0.55, Vector3(5.0, 0.12, 0.35), gelb, 0.0, Basis(Vector3.BACK, 0.18))
+	welt.hindernisse.append(_rect(f, wm, Vector2(5.0, 0.8)))
+	# Karussell
+	var cm := Vector2(0.0, 1.0)
+	_zyl("klein", f, cm, 0.0, 1.8, 0.2, blau)
+	_zyl("klein", f, cm, 0.2, 0.08, 1.1, Color("9aa3ad"))
+	for k in 4:
+		var a := TAU * k / 4.0
+		_box("klein", f, cm + Vector2(cos(a), sin(a)) * 0.9, 0.2, Vector3(0.06, 0.8, 0.06), Color("9aa3ad"))
+	_zyl("klein", f, cm, 1.0, 1.0, 0.06, rot)
+	welt.hindernisse.append(_rect(f, cm, Vector2(3.6, 3.6)))
+	# Bänke für die Eltern, Mülleimer, Bäume am Rand, Leuchten
+	_bank(f, Vector2(-22.5, 0.0), Vector2(1, 0))
+	_bank(f, Vector2(22.5, 0.0), Vector2(-1, 0))
+	_bank(f, Vector2(0.0, 22.5), Vector2(0, -1))
+	_eimer(f, Vector2(-22.5, 2.6))
+	for l in [Vector2(-22.0, -22.0), Vector2(22.0, -22.0), Vector2(-22.0, 22.0), Vector2(22.0, 22.0), Vector2(0.0, -22.5)]:
+		_baum(f, l, rng.randf_range(0.9, 1.2))
+	for l in [Vector2(-22.5, -8.0), Vector2(22.5, 8.0), Vector2(8.0, 22.5)]:
+		bodenlicht.leuchte(_pos(f, l), 1.6)
+
+func _licht_punkte_bauen() -> void:
+	if _licht_punkte.is_empty():
+		return
+	var q := QuadMesh.new()
+	q.size = Vector2.ONE
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = true
+	mm.mesh = q
+	mm.instance_count = _licht_punkte.size()
+	for i in _licht_punkte.size():
+		mm.set_instance_transform(i, Transform3D(Basis(), _licht_punkte[i][0]))
+		mm.set_instance_color(i, _licht_punkte[i][1])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	var sh := Shader.new()
+	sh.code = RAD_LICHT_SHADER
+	var sm := ShaderMaterial.new()
+	sm.shader = sh
+	mmi.material_override = sm
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.custom_aabb = AABB(Vector3(-3000, -100, -3000), Vector3(6000, 1200, 6000))
+	add_child(mmi)
 
 # ---------------------------------------------------------------- Park mit Teich
 func _teich(f: Dictionary) -> void:
@@ -730,36 +1119,6 @@ func _schrift(f: Dictionary, l: Vector2, y: float, text: String, gl: float, groe
 	lab.visibility_range_end = 220.0
 	add_child(lab)
 
-# ---------------------------------------------------------------- Sportplatz
-func _sport(f: Dictionary) -> void:
-	for cx in [-9.0, 9.0]:
-		for s in [-1.0, 1.0]:   # Korb: Mast hinter der Grundlinie, Ausleger, Brett, Ring
-			_box("klein", f, Vector2(cx, s * 14.0), 0.0, Vector3(0.2, 3.5, 0.2), DUNKEL)
-			_box("klein", f, Vector2(cx, s * 13.4), 3.3, Vector3(0.12, 0.12, 1.2), DUNKEL)
-			_box("klein", f, Vector2(cx, s * 12.8), 2.75, Vector3(1.8, 1.05, 0.06), Color("f2f2f0"))
-			_box("klein", f, Vector2(cx, s * 12.5), 3.05, Vector3(0.46, 0.04, 0.46), Color("e0652a"))
-			welt.hindernisse.append(_rect(f, Vector2(cx, s * 14.0), Vector2(0.5, 0.5)))
-	# Zaun: Pfosten alle 3 m, Gitter als halbdurchsichtige Fläche wirkt teuer → nur Pfosten + zwei Holme (dünn → nah)
-	var gruen := Color("2f4a3a")
-	for seite in 4:
-		var k := -27.0
-		while k <= 27.01:
-			var l := Vector2(k, -27.2) if seite == 0 else (Vector2(k, 27.2) if seite == 1 else (Vector2(-27.2, k) if seite == 2 else Vector2(27.2, k)))
-			if not (seite == 3 and absf(k) < 2.0):
-				_box("fein", f, l, 0.0, Vector3(0.09, 3.6, 0.09), gruen)
-			k += 3.0
-		var quer := seite >= 2
-		for hy in [1.2, 3.5]:
-			var g := Vector3(0.06, 0.08, 54.4) if quer else Vector3(54.4, 0.08, 0.06)
-			var lm := Vector2(0, -27.2) if seite == 0 else (Vector2(0, 27.2) if seite == 1 else (Vector2(-27.2, 0) if seite == 2 else Vector2(27.2, 0)))
-			_box("fein", f, lm, hy, g, gruen)
-	_rand_kollision(f, 27.2, 2.0)
-	_bank(f, Vector2(0.0, -6.0), Vector2(1, 0))
-	_bank(f, Vector2(0.0, 6.0), Vector2(-1, 0))
-	_eimer(f, Vector2(0.0, 0.0))
-	for s in [-1.0, 1.0]:
-		bodenlicht.leuchte(_pos(f, Vector2(0.0, s * 20.0)), 2.0)
-
 # ---------------------------------------------------------------- Riesenrad
 const RAD_R := 22.0
 const RAD_NABE := 26.0
@@ -920,6 +1279,14 @@ func _form(name: String) -> Mesh:
 			c.radial_segments = 14
 			c.rings = 1
 			m = c
+		"kegel":
+			var k := CylinderMesh.new()
+			k.top_radius = 0.0
+			k.bottom_radius = 0.5
+			k.height = 1.0
+			k.radial_segments = 12
+			k.rings = 1
+			m = k
 		"kugel":
 			var s := SphereMesh.new()
 			s.radius = 0.5
