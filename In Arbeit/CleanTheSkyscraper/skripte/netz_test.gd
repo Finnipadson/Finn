@@ -55,6 +55,12 @@ func _menue_bild() -> void:
 	Netz.status_geaendert.emit("Verbinde mit 192.168.1.23:24680 …")
 	await get_tree().create_timer(1.0).timeout
 	print("NETZTEST BILD frame=%d" % Engine.get_frames_drawn())
+	if "--nur-code" in OS.get_cmdline_user_args():   # 7g: Code-Fenster nach „Spiel erstellen“ übers Internet
+		Netz.code = "K7MP2Q"
+		m._code_fenster()
+		await get_tree().create_timer(0.6).timeout
+		print("NETZTEST BILD frame=%d" % Engine.get_frames_drawn())
+		Netz.code = ""
 	await get_tree().create_timer(0.3).timeout
 	get_tree().quit()
 
@@ -147,6 +153,8 @@ func _gast_starten(n: String) -> void:
 	var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--ansicht=37", "--rolle=gast", "--profil=" + n, "--join=127.0.0.1:%d" % TEST_PORT]
 	if eos:
 		args = ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--ansicht=39", "--rolle=gast", "--profil=" + n, "--join-code=" + Netz.code]
+	if not OS.has_feature("editor"):   # aus der exportierten .exe: Gäste sind auch die .exe (Spiel steckt drin), eigenes Log
+		args = ["--headless", "--log-file", OS.get_user_data_dir().path_join("netztest_%s.log" % n)] + args.slice(args.find("--"))
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--netz-") or a.begins_with("--relay="):
 			args.append(a)

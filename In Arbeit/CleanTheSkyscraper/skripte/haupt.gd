@@ -53,16 +53,21 @@ func _ready() -> void:
 		var host_arg := ""
 		var join_arg := ""
 		for a in OS.get_cmdline_user_args():
-			if a == "--host" or a.begins_with("--host="):
+			if a == "--host-internet":
+				host_arg = "internet"
+			elif a == "--host" or a.begins_with("--host="):
 				host_arg = a.substr(7) if a.length() > 6 else "-"
 			elif a.begins_with("--join="):
 				join_arg = a.substr(7)
 			elif a.begins_with("--join-code="):
 				join_arg = "code:" + a.substr(12)
 		if host_arg != "" and Netz.modus == "":
-			var fehler := Netz.host_starten(int(host_arg) if host_arg.is_valid_int() else Netz.PORT)
-			if fehler != "":
-				print("NETZ ", fehler)
+			if host_arg == "internet":   # 7g: Internet-Spiel (EOS) erstellen, Code steht dann im Log und in der Spielerliste
+				_internet_host()
+			else:
+				var fehler := Netz.host_starten(int(host_arg) if host_arg.is_valid_int() else Netz.PORT)
+				if fehler != "":
+					print("NETZ ", fehler)
 		if join_arg != "" and Netz.modus == "" and Netz.gast_stand.is_empty() and Netz.menue_meldung == "":
 			if join_arg.begins_with("code:"):
 				Netz.beitreten_code(join_arg.substr(5))   # Internet (EOS)
@@ -88,6 +93,10 @@ func hauptmenue_zeigen() -> Hauptmenue:
 	add_child(m)
 	m.setup(spiel_knoten)
 	return m
+
+func _internet_host() -> void:
+	var f: String = await Netz.host_starten_internet()
+	print("NETZ Internet-Spiel: ", f if f != "" else "Code " + Netz.code)
 
 func _startansicht() -> void:
 	var text := ""

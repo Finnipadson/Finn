@@ -10,7 +10,7 @@ extends Node
 # Schalter: --host[=PORT]  sofort als Gastgeber starten · --join=ADRESSE[:PORT]  sofort beitreten
 #           --profil=NAME  eigenes Profil (user://profil_NAME.json, für mehrere Instanzen auf einem PC)
 #           --netz-verzoegerung=MS --netz-verlust=PROZENT  künstlich schlechtes Netz (nur Lage-Pakete werden verworfen)
-#           --join-code=CODE  sofort per Internet-Code beitreten · --relay=erzwingen  EOS nur über Epic-Relay (Test)
+#           --host-internet  sofort Internet-Spiel erstellen · --join-code=CODE  sofort per Internet-Code beitreten · --relay=erzwingen  EOS nur über Epic-Relay (Test)
 
 signal spieler_geaendert                 # Liste geändert (Beitritt, Verlassen, Farbe)
 signal status_geaendert(text: String)    # für das Mehrspieler-Menü (Verbinden …, Fehler)
