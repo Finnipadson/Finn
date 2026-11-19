@@ -741,6 +741,14 @@ func _tag_bilder() -> void:
 		"strasse": [Vector3(262.5, 1.8, 37.5 + 4.0), Vector3(120, 8, 37.5)],
 		"strand": [Vector3(-560, 6, -150), Vector3(-760, 0, -175)],
 	}
+	if "--alles-sauber" in OS.get_cmdline_user_args():   # Grafik-Test: sauberes Glas (Spiegelungen)
+		for f in Turm.STOCKWERKE:
+			for c in s.turm.fenster_pro_stock[f]:
+				s.zustand.sauber_machen(f, c)
+	var gp := s.turm.fassaden_punkt(30, 60.0, 30 * Turm.STOCK_H)
+	orte["glas"] = [gp.pos + gp.normal * 30.0 + gp.tangente * -25.0 + Vector3.UP * 6.0, gp.pos + gp.tangente * 45.0 + Vector3.UP * 25.0]
+	var gp2 := s.turm.fassaden_punkt(4, 100.0, 4 * Turm.STOCK_H)
+	orte["fuss"] = [gp2.pos + gp2.normal * 45.0 + Vector3.UP * -10.0, gp2.pos + Vector3.UP * 60.0]
 	var uhren := [9.0, 13.0, 16.5, 18.6, 19.4, 20.2, 22.0, 5.8]
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--uhren="):
@@ -753,6 +761,11 @@ func _tag_bilder() -> void:
 	for u in uhren:
 		s.welt.zeit.phase = Tageszeit.phase_zu(float(u))
 		s.welt.zeit.laeuft = false
+		if not s.welt.spiegel.is_empty():
+			await get_tree().process_frame
+			s.welt.spiegel_aktualisieren()
+			for i in 12:
+				await get_tree().process_frame
 		for k in orte:
 			cam.position = orte[k][0]
 			cam.look_at(orte[k][1])

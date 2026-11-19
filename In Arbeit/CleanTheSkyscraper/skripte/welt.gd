@@ -46,6 +46,8 @@ var boden_mat: ShaderMaterial
 var kueste: Kueste              # Meer, Strand, Palmen-Boulevard, Steg (kueste.gd)
 var zeit: Tageszeit             # Tag und Nacht (Phase 5); zeit.phase < 0 = feste Sonne
 var sturm_k := 0.0
+var belichtung_faktor := 1.0    # Grafik-Test: z. B. AgX braucht mehr Belichtung als ACES
+var spiegel: Array = []         # Grafik-Test: ReflectionProbes am Turm (Stadt spiegelt sich im sauberen Glas)
 var _werte := {}                # letzte Werte der Tageszeit
 
 func _ready() -> void:
@@ -176,7 +178,7 @@ func licht(w: Dictionary) -> void:
 	himmel.set_shader_parameter("nacht", w.nacht)
 	himmel.set_shader_parameter("wolken_farbe", w.wolken)
 	env.ambient_light_energy = w.ambient
-	env.tonemap_exposure = w.belichtung
+	env.tonemap_exposure = w.belichtung * belichtung_faktor
 	env.glow_intensity = w.glow
 	RenderingServer.global_shader_parameter_set("nacht", w.nacht)
 
@@ -430,3 +432,31 @@ func arme(k: Vector2) -> Array:
 func querverkehr(k: Vector2, achse: int) -> bool:
 	var a := arme(k)
 	return (a[0] or a[1]) if achse == 0 else (a[2] or a[3])
+
+# ---------------------------------------------------------------- Grafik-Test: Spiegelungen der Stadt im Turmglas
+# Drei ReflectionProbes übereinander um den Turm (unten / Mitte / oben, Aufnahme aus der Turmmitte). Der Turm selbst liegt auf
+# Ebene 2 und wird von den Probes nicht aufgenommen – so zeigt jede Glasseite die Stadt rundum statt die eigenen Wände.
+func spiegel_bauen(turm: Node3D, hoehe: float) -> void:
+	for n in turm.find_children("*", "VisualInstance3D", true, false):
+		(n as VisualInstance3D).layers = 2
+	var stufen := [[0.0, 220.0, 45.0], [180.0, 560.0, 330.0], [520.0, hoehe + 40.0, 700.0]]   # von, bis, Aufnahmehöhe
+	for st in stufen:
+		var p := ReflectionProbe.new()
+		var y0: float = st[0]
+		var y1: float = st[1]
+		p.size = Vector3(520.0, y1 - y0, 520.0)
+		p.position = Vector3(0.0, (y0 + y1) * 0.5, 0.0)
+		p.origin_offset = Vector3(0.0, float(st[2]) - (y0 + y1) * 0.5, 0.0)
+		p.max_distance = 6000.0
+		p.cull_mask = 0xFFFFF & ~2
+		p.update_mode = ReflectionProbe.UPDATE_ONCE
+		p.blend_distance = 40.0
+		p.ambient_mode = ReflectionProbe.AMBIENT_DISABLED
+		p.intensity = 1.0
+		add_child(p)
+		spiegel.append(p)
+
+# neu aufnehmen (andere Tageszeit): kleine Änderung an origin_offset markiert die Probe als veraltet
+func spiegel_aktualisieren() -> void:
+	for p in spiegel:
+		(p as ReflectionProbe).origin_offset.x = 0.01 if (p as ReflectionProbe).origin_offset.x == 0.0 else 0.0

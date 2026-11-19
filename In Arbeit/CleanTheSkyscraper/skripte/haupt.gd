@@ -28,7 +28,7 @@ func _ready() -> void:
 			frei = true
 		if a.begins_with("--geld="):
 			test_geld = int(a.split("=")[1])
-		for k in ["taa", "ssr", "ssil", "msaa", "smaa", "scale", "fsr", "fpstest", "ssao", "schatten", "glow"]:
+		for k in ["taa", "ssr", "ssil", "msaa", "smaa", "scale", "fsr", "fpstest", "ssao", "schatten", "glow", "agx", "volnebel", "spiegel"]:
 			if a.begins_with("--%s=" % k):
 				schalter[k] = int(a.split("=")[1])
 	# Globale Einstellungen (Phase 5): in Tests und beim Bot eigene Datei + Standardtasten
@@ -215,6 +215,23 @@ func _grafik() -> void:
 		welt.sonne.shadow_enabled = schalter.schatten == 1
 	if schalter.has("glow"):
 		welt.env.glow_enabled = schalter.glow == 1
+	# Grafik-Test (19.11.2026, Vorschläge für den User): --agx=1 --volnebel=1 --spiegel=1 (--ssil=1 gibt es schon)
+	if schalter.get("agx", 0) == 1:
+		welt.env.tonemap_mode = Environment.TONE_MAPPER_AGX
+		welt.belichtung_faktor = 1.55
+	if schalter.get("volnebel", 0) == 1 and not welt.env.volumetric_fog_enabled:
+		var e := welt.env
+		e.volumetric_fog_enabled = true
+		e.volumetric_fog_density = 0.0009
+		e.volumetric_fog_albedo = Color(1.0, 0.93, 0.82)
+		e.volumetric_fog_anisotropy = 0.75
+		e.volumetric_fog_length = 600.0
+		e.volumetric_fog_detail_spread = 2.5
+		e.volumetric_fog_ambient_inject = 0.15
+		e.volumetric_fog_sky_affect = 0.0
+		welt.sonne.light_volumetric_fog_energy = 1.4
+	if schalter.get("spiegel", 0) == 1 and welt.spiegel.is_empty():
+		welt.spiegel_bauen(turm, turm.spitze)
 
 func _hud() -> void:
 	var cl := CanvasLayer.new()
