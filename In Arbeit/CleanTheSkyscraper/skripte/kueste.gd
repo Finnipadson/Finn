@@ -590,8 +590,10 @@ func _fischladen() -> void:
 	for sx in [r.position.x + 0.1, r.end.x - 0.1]:
 		RaumBau.box(n, Vector3(0.2, h, r.size.y), Vector3(sx, h * 0.5, c.y), weiss)
 	# blaue Streifen außen (Fischerhütte) + innen eine blaue Holzvertäfelung bis 1,2 m
+	# Streifen sitzen nur außen vor der Rückwand (vorher 0,24 m tief → Rückseite genau in der Innenwand, blaue Streifen
+	# blitzten beim Gehen innen am Netz auf; Video des Users 19.11.2026)
 	for i in 5:
-		RaumBau.box(n, Vector3(r.size.x + 0.05, 0.22, 0.24), Vector3(c.x, 0.4 + i * 0.7, r.position.y + 0.08), blau)
+		RaumBau.box(n, Vector3(r.size.x + 0.05, 0.22, 0.1), Vector3(c.x, 0.4 + i * 0.7, r.position.y - 0.03), blau)
 	RaumBau.box(n, Vector3(r.size.x - 0.4, 1.2, 0.04), Vector3(c.x, 0.6, hinten + 0.02), Bau.matt("5f97c6", 0.7))
 	for sx in [-1.0, 1.0]:
 		RaumBau.box(n, Vector3(0.04, 1.2, r.size.y - 0.3), Vector3(c.x + sx * (r.size.x * 0.5 - 0.22), 0.6, c.y), Bau.matt("5f97c6", 0.7))

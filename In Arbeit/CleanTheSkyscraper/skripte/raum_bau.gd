@@ -59,7 +59,9 @@ static func schrift(eltern: Node3D, t: String, p: Vector3, dreh: float, groesse:
 	var f := SystemFont.new()
 	f.font_names = PackedStringArray(["Segoe UI Black", "Arial Black", "Segoe UI"] if dick else ["Segoe UI Semibold", "Segoe UI"])
 	f.font_weight = 900 if dick else 600
+	f.generate_mipmaps = true   # Schrift aus der Entfernung gefiltert (vorher flimmerte z. B. die Kreidetafel im Fischladen)
 	l.font = f
+	l.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	eltern.add_child(l)
 	return l
 

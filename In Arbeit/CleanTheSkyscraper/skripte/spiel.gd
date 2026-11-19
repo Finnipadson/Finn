@@ -619,7 +619,9 @@ func _ein_aus() -> void:
 					hud.meldung(str(e.get("grund", "")), 3.0))
 			return
 		elif _abstand_gondel() > EINSTEIG_WEIT:
-			hud.meldung("Geh zu einer Gondel am Turm, um einzusteigen.", 2.0)
+			# Wunsch des Users (19.11.2026): E irgendwo in der Stadt zeigt keinen Gondel-Text mehr – nur kurz davor ein Hinweis
+			if _abstand_gondel() < 25.0:
+				hud.meldung("Noch ein paar Schritte bis zur Gondel – dann E.", 2.0)
 			return
 		# 7h: Gast ohne eigene Gondel (beim Beitritt war keine frei) – die des Gastgebers bzw. eines anderen ist gesperrt
 		if Netz.ist_gast():

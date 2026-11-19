@@ -27,6 +27,9 @@ ORTE = {
     "schmutz_25": (4, None, "tempo0 --abstand=25", 0),                    # Turmglas mit Schmutz, Kamera steht, 25 m
     "schmutz_60": (4, None, "tempo0 --abstand=60", 0),                    # dito 60 m
     "hochschauen":(1, "22,1.9,-40,13.5,40,-36", "0,0.09,0", 0),          # zu Fuß am Turmfuß steil nach oben, Kamera schwebt wie auf dem Hoverboard
+    "fischladen": (1, "-695,1.7,-198.4,-695,0.95,-201.6", "0.25,0,0", 0),  # vor der Kühltheke im Fischladen (Video 19.11.2026)
+    "theke_nah":  (1, "-695,1.5,-199.8,-694.3,0.95,-200.75", "0.02,0,0", 0),    # dicht an der Theke, Blick schräg auf die Fische (wie im Video)
+    "theke_geh":  (1, "-695,1.6,-199.3,-694.0,0.95,-200.75", "0.08,0,0", 0),    # dito beim langsamen Vorbeigehen (Glanzpunkte auf Eis/Edelstahl)
     "still":      (1, "0,120,190,0,60,600", None, 0),                  # Kamera steht (zeigt TAA-Zittern)
     "drehen":     (1, "0,120,190,0,60,600", None, 0.3),                  # Gondel dreht sich (Boden + Häuser)
 }
