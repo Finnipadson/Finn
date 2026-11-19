@@ -15,6 +15,7 @@ uniform float dreckig = 0.45;
 uniform float raum_fenster = 3.0;
 uniform float raum_tiefe = 6.0;
 uniform float innen_hell = 0.55;
+uniform float spiegel = 0.0;          // 0 = wie früher, 1 = sauberes Glas verspiegelt (Grafik 19.11.2026, mit ReflectionProbes)
 global uniform float nacht;          // Tageszeit (Phase 5): Räume leuchten nachts heller
 // Spielzustand (FensterZustand): Dreck pro Fenster + feine Wisch-Masken
 uniform bool mit_zustand = false;
@@ -268,11 +269,18 @@ void fragment() {
 	// In der Ferne Mittelwerte statt Details
 	float fern = smoothstep(0.2, 0.8, max(fwidth(c.x), fwidth(c.y) * 2.0)) * 0.85;
 	vec3 glas = mix(glas_tint * 0.12, schmutz_farbe, clamp(d * 0.9, 0.0, 0.75));
+	// Verspiegelung: sauberes Glas hat eine getönte Beschichtung (Metallic mit Glasfarbe), zum Rand hin (Fresnel) mehr Spiegel,
+	// weniger Raum. Dreck nimmt sie weg – geputztes Glas glänzt sichtbar. In der Ferne etwas rauer (keine funkelnden Spiegelungen).
+	float sauber_glas = (1.0 - clamp(d * 1.6, 0.0, 1.0)) * (1.0 - band) * spiegel;
+	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
+	float sp = sauber_glas * mix(0.42, 0.85, fres);
+	glas = mix(glas, glas_tint * 0.85 + vec3(0.06), sauber_glas * 0.8);
 	ALBEDO = mix(mix(glas, paneel, band), mix(glas_tint * 0.3, paneel, band_anteil), fern);
-	METALLIC = band * 0.6;
-	ROUGHNESS = mix(mix(0.03, 0.85, d), 0.35, band);
+	METALLIC = max(band * 0.6, sp * (1.0 - fern * 0.5));
+	ROUGHNESS = mix(mix(mix(0.03, 0.85, d), 0.35, band), 0.16, fern * spiegel) + sauber_glas * smoothstep(0.02, 0.2, gw) * 0.06;
 	SPECULAR = 0.65;
-	EMISSION = innen * mix(vec3(1.0), glas_tint * 1.6, 0.55 * (1.0 - nacht * 0.6)) * innen_hell * (1.0 + nacht * 1.2) * (1.0 - band) * (1.0 - d * 0.85) * (1.0 - fern * 0.7 * (1.0 - nacht * 0.5));
+	EMISSION = innen * mix(vec3(1.0), glas_tint * 1.6, 0.55 * (1.0 - nacht * 0.6)) * innen_hell * (1.0 + nacht * 1.2) * (1.0 - band) * (1.0 - d * 0.85) * (1.0 - fern * 0.7 * (1.0 - nacht * 0.5))
+		* (1.0 - sp * (1.0 - nacht * 0.7) * 0.75);
 	if (szene == 7.0) {   // Liebesbrief: Herz auf dem Glas
 		float h = herz(vec2(f.x, rp.y)) * (1.0 - band) * (1.0 - fern);
 		ALBEDO = mix(ALBEDO, vec3(0.9, 0.2, 0.35), h * (1.0 - d));

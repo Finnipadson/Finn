@@ -46,6 +46,7 @@ var boden_mat: ShaderMaterial
 var kueste: Kueste              # Meer, Strand, Palmen-Boulevard, Steg (kueste.gd)
 var zeit: Tageszeit             # Tag und Nacht (Phase 5); zeit.phase < 0 = feste Sonne
 var sturm_k := 0.0
+var daecher: Daecher
 var belichtung_faktor := 1.0    # Grafik-Test: z. B. AgX braucht mehr Belichtung als ACES
 var spiegel: Array = []         # Grafik-Test: ReflectionProbes am Turm (Stadt spiegelt sich im sauberen Glas)
 var _werte := {}                # letzte Werte der Tageszeit
@@ -76,6 +77,10 @@ func _ready() -> void:
 	var verkehr := Verkehr.new()
 	add_child(verkehr)
 	verkehr.baue(self)
+	daecher = Daecher.new()   # Dachaufbauten der Stadthäuser (Grafik 19.11.2026; Vergleichs-Schalter --ohne-daecher)
+	add_child(daecher)
+	if not "--ohne-daecher" in OS.get_cmdline_user_args():
+		daecher.baue(self)
 
 func _umgebung() -> void:
 	env = Environment.new()
@@ -137,6 +142,7 @@ func _schatten_nah(nah: bool) -> void:
 		sonne.directional_shadow_split_3 = 0.5
 
 func _process(_dt: float) -> void:
+	_spiegel_takt(_dt)
 	var cam := get_viewport().get_camera_3d()
 	if cam == null or sonne == null or "--schatten-fern" in OS.get_cmdline_user_args():   # Vergleichs-Schalter
 		return
@@ -291,7 +297,7 @@ func _stadt() -> void:
 		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("5c7f8f"), "rahmen": Color("c9b79a"), "bruestung": Color("bba78a"), "stock": 3.5, "fenster_breite": 2.6, "dreckig": 0.0, "band_anteil": 0.4, "metall": 0.3}),
 		Bau.shader_mat(Bau.FASSADE_SHADER, {"glas": Color("8fb1c9"), "rahmen": Color("9aa3ad"), "bruestung": Color("8a929c"), "stock": 3.5, "fenster_breite": 1.8, "dreckig": 0.0, "metall": 0.7}),
 	]
-	var dach := Bau.matt("bdb3a3")
+	var dach := Bau.matt("7f7d78")   # Grafik 19.11.2026: grauer (vorher bdb3a3), damit sich die Dachaufbauten abheben
 	var x := -1500.0
 	while x <= 1500.0:
 		var z := -1500.0
@@ -436,6 +442,18 @@ func querverkehr(k: Vector2, achse: int) -> bool:
 # ---------------------------------------------------------------- Grafik-Test: Spiegelungen der Stadt im Turmglas
 # Drei ReflectionProbes übereinander um den Turm (unten / Mitte / oben, Aufnahme aus der Turmmitte). Der Turm selbst liegt auf
 # Ebene 2 und wird von den Probes nicht aufgenommen – so zeigt jede Glasseite die Stadt rundum statt die eigenen Wände.
+func spiegel_an(an: bool, turm: Node3D, hoehe: float) -> void:
+	if an == not spiegel.is_empty():
+		return
+	if an:
+		spiegel_bauen(turm, hoehe)
+	else:
+		for p in spiegel:
+			(p as Node).queue_free()
+		spiegel = []
+	if turm.get("glas") is ShaderMaterial:
+		(turm.glas as ShaderMaterial).set_shader_parameter("spiegel", 1.0 if an else 0.0)
+
 func spiegel_bauen(turm: Node3D, hoehe: float) -> void:
 	for n in turm.find_children("*", "VisualInstance3D", true, false):
 		(n as VisualInstance3D).layers = 2
@@ -457,6 +475,31 @@ func spiegel_bauen(turm: Node3D, hoehe: float) -> void:
 		spiegel.append(p)
 
 # neu aufnehmen (andere Tageszeit): kleine Änderung an origin_offset markiert die Probe als veraltet
-func spiegel_aktualisieren() -> void:
-	for p in spiegel:
-		(p as ReflectionProbe).origin_offset.x = 0.01 if (p as ReflectionProbe).origin_offset.x == 0.0 else 0.0
+func spiegel_aktualisieren(nur := -1) -> void:
+	for i in spiegel.size():
+		if nur >= 0 and i != nur:
+			continue
+		var p: ReflectionProbe = spiegel[i]
+		p.origin_offset.x = 0.01 if p.origin_offset.x == 0.0 else 0.0
+
+# Im Spiel: wandert die Sonne (alle ~12 s Spielzeit eine Stufe) oder ändert sich der Sandsturm, je Schritt eine der drei
+# Probes neu aufnehmen (verteilt, damit es nicht ruckelt)
+var _spiegel_phase := -10.0
+var _spiegel_sturm := 0.0
+var _spiegel_naechste := 0
+var _spiegel_warte := 0.0
+func _spiegel_takt(dt: float) -> void:
+	if spiegel.is_empty():
+		return
+	_spiegel_warte -= dt
+	if _spiegel_warte > 0.0:
+		return
+	var ph: float = zeit.phase if zeit else 0.0
+	var dp := absf(wrapf(ph - _spiegel_phase, -0.5, 0.5))
+	if dp > 0.01 or absf(sturm_k - _spiegel_sturm) > 0.12 or _spiegel_naechste != 0:
+		if _spiegel_naechste == 0:
+			_spiegel_phase = ph
+			_spiegel_sturm = sturm_k
+		spiegel_aktualisieren(_spiegel_naechste)
+		_spiegel_naechste = (_spiegel_naechste + 1) % spiegel.size()
+		_spiegel_warte = 0.6

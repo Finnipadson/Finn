@@ -230,8 +230,8 @@ func _grafik() -> void:
 		e.volumetric_fog_ambient_inject = 0.15
 		e.volumetric_fog_sky_affect = 0.0
 		welt.sonne.light_volumetric_fog_energy = 1.4
-	if schalter.get("spiegel", 0) == 1 and welt.spiegel.is_empty():
-		welt.spiegel_bauen(turm, turm.spitze)
+	# Spiegelglas (19.11.2026, Wunsch des Users): ab Qualität „Mittel“ spiegelt sich die Stadt im sauberen Turmglas
+	welt.spiegel_an(schalter.get("spiegel", 1 if q >= 1 else 0) == 1, turm, turm.spitze)
 
 func _hud() -> void:
 	var cl := CanvasLayer.new()

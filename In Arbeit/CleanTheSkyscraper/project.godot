@@ -32,6 +32,7 @@ anti_aliasing/quality/msaa_3d=2
 anti_aliasing/quality/use_taa=false
 lights_and_shadows/directional_shadow/size=4096
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
+reflections/reflection_atlas/reflection_size=512
 
 [shader_globals]
 

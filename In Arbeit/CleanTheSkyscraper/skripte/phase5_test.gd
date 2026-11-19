@@ -653,11 +653,18 @@ func _fps() -> void:
 			var summe := 0.0
 			var n := 0
 			var t0 := Time.get_ticks_usec()
+			var max_us := 0
+			var vorher := t0
+			if "--spiegel-neu" in OS.get_cmdline_user_args():   # Ruckel-Test: während der Messung alle Spiegel neu aufnehmen
+				s.welt.spiegel_aktualisieren()
 			while Time.get_ticks_usec() - t0 < 2000000:
 				await get_tree().process_frame
+				var jetzt := Time.get_ticks_usec()
+				max_us = maxi(max_us, jetzt - vorher)
+				vorher = jetzt
 				n += 1
 			summe = n / ((Time.get_ticks_usec() - t0) / 1000000.0)
-			print("FPS %s %02d Uhr: %d bei %s" % [k, int(uhr), int(summe), get_viewport().get_visible_rect().size])
+			print("FPS %s %02d Uhr: %d bei %s (längstes Bild %.1f ms)" % [k, int(uhr), int(summe), get_viewport().get_visible_rect().size, max_us / 1000.0])
 
 # Putzen mit Schwamm (Seifenblasen, Glanz, Münzen) und Wasserlanze (Sprühnebel)
 func _effekt_bilder() -> void:
@@ -745,6 +752,15 @@ func _tag_bilder() -> void:
 		for f in Turm.STOCKWERKE:
 			for c in s.turm.fenster_pro_stock[f]:
 				s.zustand.sauber_machen(f, c)
+	if "--halb-sauber" in OS.get_cmdline_user_args():   # Grafik-Test: sauber/dreckig im Wechsel (Stockwerk 34–46)
+		for f in range(34, 47):
+			for c in s.turm.fenster_pro_stock[f]:
+				if (c / 2 + f) % 2 == 0:
+					s.zustand.sauber_machen(f, c)
+	orte["dach"] = [Vector3(230, 150, 260), Vector3(420, 0, 470)]   # Grafik 19.11.2026: Dachaufbauten von oben
+	var np := s.turm.fassaden_punkt(40, 120.0, 40 * Turm.STOCK_H)
+	orte["nah"] = [np.pos + np.normal * 7.0 + Vector3.UP * -1.0, np.pos + Vector3.UP * 0.5]
+	orte["nah2"] = [np.pos + np.normal * 12.0 + np.tangente * -8.0 + Vector3.UP * 2.0, np.pos + np.tangente * 6.0 + Vector3.UP * -1.0]
 	var gp := s.turm.fassaden_punkt(30, 60.0, 30 * Turm.STOCK_H)
 	orte["glas"] = [gp.pos + gp.normal * 30.0 + gp.tangente * -25.0 + Vector3.UP * 6.0, gp.pos + gp.tangente * 45.0 + Vector3.UP * 25.0]
 	var gp2 := s.turm.fassaden_punkt(4, 100.0, 4 * Turm.STOCK_H)
