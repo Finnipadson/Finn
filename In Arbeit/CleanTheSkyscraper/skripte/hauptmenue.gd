@@ -153,10 +153,9 @@ func _einstellungen() -> void:
 
 func _beenden() -> void:
 	spiel._speichern()
-	Netz.trennen()
-	get_tree().quit()
+	Netz.beenden()   # mit EOS: erst abmelden (sonst hängt das Spiel beim Beenden)
 
-# ---------------------------------------------------------------- Mehrspieler (7a: LAN/IP, Code über Epic folgt in 7g)
+# ---------------------------------------------------------------- Mehrspieler (7a Heimnetz per IP, 7g Internet per Code über Epic)
 func _mehrspieler() -> void:
 	if mehr:
 		mehr.queue_free()
@@ -172,9 +171,11 @@ func _mehrspieler() -> void:
 	zu.name = "mp_zurueck"
 	zu.custom_minimum_size = Vector2(120, 38)
 	zu.pressed.connect(func():
+		Netz.abbrechen()
 		mehr.queue_free()
 		mehr = null)
 	kopf.add_child(zu)
+	_netz_knoepfe = []
 	vb.add_child(UiGlas.text("Bis zu %d Spieler putzen gemeinsam deinen Turm. Der Spielstand liegt beim Gastgeber." % Netz.MAX_SPIELER, 14, UiGlas.TEXT_LEISE))
 	# Profil
 	vb.add_child(UiGlas.ueberschrift("Dein Name und deine Farbe"))
@@ -205,44 +206,148 @@ func _mehrspieler() -> void:
 			Netz.profil_speichern()
 			_mehrspieler())
 		farben.add_child(fb)
-	# Spiel erstellen
-	vb.add_child(UiGlas.ueberschrift("Spiel erstellen (du bist Gastgeber)"))
+	# Übers Internet mit Code (7g, Epic Online Services)
+	vb.add_child(UiGlas.ueberschrift("Übers Internet (mit Code)"))
+	if Netz.internet_moeglich():
+		var erst_i := UiGlas.knopf("Spiel erstellen und Code bekommen", "kaufen")
+		erst_i.name = "erstellen_internet"
+		erst_i.custom_minimum_size = Vector2(0, 44)
+		erst_i.pressed.connect(_erstellen_internet)
+		vb.add_child(erst_i)
+		_netz_knoepfe.append(erst_i)
+		var zeile_c := HBoxContainer.new()
+		zeile_c.add_theme_constant_override("separation", 8)
+		vb.add_child(zeile_c)
+		var code_feld := LineEdit.new()
+		code_feld.name = "code_feld"
+		code_feld.placeholder_text = "Code vom Gastgeber, z. B. K7MP2Q"
+		code_feld.max_length = 9
+		code_feld.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		code_feld.custom_minimum_size = Vector2(0, 40)
+		code_feld.add_theme_font_size_override("font_size", 17)
+		zeile_c.add_child(code_feld)
+		var bei_c := UiGlas.knopf("Beitreten", "kaufen")
+		bei_c.name = "beitreten_code"
+		bei_c.custom_minimum_size = Vector2(140, 40)
+		bei_c.pressed.connect(func(): _beitreten_code(code_feld.text))
+		code_feld.text_submitted.connect(func(_t): _beitreten_code(code_feld.text))
+		zeile_c.add_child(bei_c)
+		_netz_knoepfe.append(bei_c)
+	else:
+		var hw := UiGlas.text(Netz.eos_grund + " Im Heimnetz könnt ihr trotzdem zusammen spielen.", 13, UiGlas.TEXT_LEISE)
+		hw.name = "internet_hinweis"
+		hw.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vb.add_child(hw)
+	# Heimnetz (7a: ENet per IP)
+	vb.add_child(UiGlas.ueberschrift("Im Heimnetz (gleiches WLAN)"))
 	var adr := Netz.lan_adressen()
 	vb.add_child(UiGlas.text("Freunde im selben Netz treten mit dieser Adresse bei: %s" % (", ".join(adr) if adr.size() > 0 else "(keine Netzwerk-Adresse gefunden)"), 14, UiGlas.AKZENT))
-	var erst := UiGlas.knopf("Spiel erstellen", "kaufen")
-	erst.name = "erstellen"
-	erst.custom_minimum_size = Vector2(0, 44)
-	erst.pressed.connect(_erstellen)
-	vb.add_child(erst)
-	# Beitreten
-	vb.add_child(UiGlas.ueberschrift("Beitreten"))
 	var zeile := HBoxContainer.new()
 	zeile.add_theme_constant_override("separation", 8)
 	vb.add_child(zeile)
+	var erst := UiGlas.knopf("Spiel erstellen", "nehmen")
+	erst.name = "erstellen"
+	erst.custom_minimum_size = Vector2(170, 40)
+	erst.pressed.connect(_erstellen)
+	zeile.add_child(erst)
 	var adr_feld := LineEdit.new()
 	adr_feld.name = "adresse_feld"
-	adr_feld.placeholder_text = "Adresse des Gastgebers, z. B. 192.168.1.23"
+	adr_feld.placeholder_text = "Adresse, z. B. 192.168.1.23"
 	adr_feld.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	adr_feld.custom_minimum_size = Vector2(0, 40)
 	adr_feld.add_theme_font_size_override("font_size", 17)
 	zeile.add_child(adr_feld)
-	var bei := UiGlas.knopf("Beitreten", "kaufen")
+	var bei := UiGlas.knopf("Beitreten", "nehmen")
 	bei.name = "beitreten"
-	bei.custom_minimum_size = Vector2(140, 40)
+	bei.custom_minimum_size = Vector2(120, 40)
 	bei.pressed.connect(func(): Netz.beitreten(adr_feld.text))
 	adr_feld.text_submitted.connect(func(_t): Netz.beitreten(adr_feld.text))
 	zeile.add_child(bei)
+	_netz_knoepfe.append_array([erst, bei])
+	var zeile_s := HBoxContainer.new()
+	zeile_s.add_theme_constant_override("separation", 8)
+	vb.add_child(zeile_s)
 	mehr_status = UiGlas.text("", 14, Color("ffb35c"))
 	mehr_status.name = "mp_status"
 	mehr_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vb.add_child(mehr_status)
-	vb.add_child(UiGlas.text("Übers Internet mit Code (über Epic Online Services) kommt in einem späteren Schritt.", 12, UiGlas.TEXT_LEISE))
+	mehr_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	zeile_s.add_child(mehr_status)
+	mp_abbrechen = UiGlas.knopf("Abbrechen", "nehmen")
+	mp_abbrechen.name = "mp_abbrechen"
+	mp_abbrechen.custom_minimum_size = Vector2(120, 36)
+	mp_abbrechen.pressed.connect(Netz.abbrechen)
+	zeile_s.add_child(mp_abbrechen)
 	if not Netz.status_geaendert.is_connected(_netz_status):
 		Netz.status_geaendert.connect(_netz_status)
+	_knoepfe_netz()
+
+# Knöpfe sperren, solange eine Verbindung aufgebaut wird; Abbrechen nur dann sichtbar
+var _netz_knoepfe: Array = []
+var mp_abbrechen: Button
+func _knoepfe_netz() -> void:
+	var laeuft := Netz.modus in ["erstelle", "suche", "verbinde"]
+	for b in _netz_knoepfe:
+		if is_instance_valid(b):
+			(b as Button).disabled = laeuft
+	if is_instance_valid(mp_abbrechen):
+		mp_abbrechen.visible = laeuft
+
+func _beitreten_code(t: String) -> void:
+	Netz.beitreten_code(t)
+	_knoepfe_netz()
+
+func _erstellen_internet() -> void:
+	var fehler: String = await Netz.host_starten_internet()   # Knöpfe sperrt schon die Status-Meldung
+	if not is_instance_valid(self) or _weg:
+		return
+	_knoepfe_netz()
+	if fehler != "":
+		_netz_status(fehler)
+		return
+	_code_fenster()
+
+# Nach „Spiel erstellen“ übers Internet: großer Code zum Weitergeben, Kopieren-Knopf, dann ins Spiel
+var code_fenster: Control
+func _code_fenster() -> void:
+	if mehr:
+		mehr.queue_free()
+		mehr = null
+	var teile := UiGlas.fenster(self, 560)
+	code_fenster = teile[0]
+	var vb: VBoxContainer = teile[1]
+	vb.add_child(UiGlas.text("Spiel erstellt!", 26, UiGlas.TEXT, true))
+	vb.add_child(UiGlas.text("Gib deinen Freunden diesen Code. Sie wählen „Mehrspieler“ und geben ihn bei „Übers Internet“ ein.", 14, UiGlas.TEXT_LEISE))
+	(vb.get_child(-1) as Label).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var c := UiGlas.text(Netz.code, 64, UiGlas.AKZENT, true)
+	c.name = "code_gross"
+	c.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vb.add_child(c)
+	var zeile := HBoxContainer.new()
+	zeile.add_theme_constant_override("separation", 10)
+	zeile.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_child(zeile)
+	var kop := UiGlas.knopf("Code kopieren", "nehmen")
+	kop.name = "code_kopieren"
+	kop.custom_minimum_size = Vector2(200, 44)
+	kop.pressed.connect(func():
+		DisplayServer.clipboard_set(Netz.code)
+		kop.text = "Kopiert ✓")
+	zeile.add_child(kop)
+	var los := UiGlas.knopf("Ins Spiel", "kaufen")
+	los.name = "ins_spiel"
+	los.custom_minimum_size = Vector2(200, 44)
+	los.pressed.connect(func():
+		code_fenster.queue_free()
+		code_fenster = null
+		schliessen()
+		spiel.hud.meldung("Internet-Spiel läuft · Code %s (steht auch oben rechts und im Pausenmenü)" % Netz.code, 8.0))
+	zeile.add_child(los)
+	vb.add_child(UiGlas.text("Der Code gilt, solange dein Spiel läuft. Höchstens %d Spieler." % Netz.MAX_SPIELER, 12, UiGlas.TEXT_LEISE))
 
 func _netz_status(t: String) -> void:
 	if is_instance_valid(mehr_status):
 		mehr_status.text = t
+	_knoepfe_netz()
 
 func _exit_tree() -> void:
 	if Netz.status_geaendert.is_connected(_netz_status):

@@ -48,7 +48,22 @@ func _mehrspieler(vb: VBoxContainer) -> void:
 	if hm and Netz.ist_gast():
 		hm.text = "Runde verlassen"
 	vb.add_child(UiGlas.ueberschrift("MEHRSPIELER"))
-	if Netz.ist_host():
+	if Netz.code != "":   # Internet-Spiel (7g): Code zum Weitergeben
+		var zc := HBoxContainer.new()
+		zc.add_theme_constant_override("separation", 8)
+		vb.add_child(zc)
+		var cl := UiGlas.text("Code: %s" % Netz.code, 20, UiGlas.AKZENT, true)
+		cl.name = "code_text"
+		cl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		zc.add_child(cl)
+		var kop := UiGlas.knopf("Kopieren", "nehmen")
+		kop.name = "code_kopieren"
+		kop.custom_minimum_size = Vector2(120, 36)
+		kop.pressed.connect(func():
+			DisplayServer.clipboard_set(Netz.code)
+			kop.text = "Kopiert ✓")
+		zc.add_child(kop)
+	elif Netz.ist_host():
 		var ad := Netz.lan_adressen()
 		if not ad.is_empty():
 			vb.add_child(UiGlas.text("Beitreten im Heimnetz mit: %s" % ", ".join(ad), 13, UiGlas.TEXT_LEISE))
@@ -135,8 +150,7 @@ func _hauptmenue() -> void:
 
 func _beenden() -> void:
 	spiel._speichern()
-	Netz.trennen()
-	get_tree().quit()
+	Netz.beenden()   # mit EOS: erst abmelden (sonst hängt das Spiel beim Beenden)
 
 func schliessen() -> void:
 	_weg()

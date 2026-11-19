@@ -55,7 +55,10 @@ func _liste() -> void:
 	liste_ebene.visible = Netz.aktiv()
 	if not Netz.aktiv():
 		return
-	liste_box.add_child(UiGlas.text("Mehrspieler · %d/%d" % [Netz.spieler.size(), Netz.MAX_SPIELER], 13, UiGlas.TEXT_LEISE))
+	var kopf := "Mehrspieler · %d/%d" % [Netz.spieler.size(), Netz.MAX_SPIELER]
+	if Netz.code != "":
+		kopf += " · Code %s" % Netz.code   # Internet-Spiel (7g): Code immer sichtbar
+	liste_box.add_child(UiGlas.text(kopf, 13, UiGlas.TEXT_LEISE))
 	var ids := Netz.spieler.keys()
 	ids.sort()
 	for id in ids:

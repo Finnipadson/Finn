@@ -1,13 +1,16 @@
 extends Node
 # Mehrspieler (Phase 7a): Autoload „Netz“ – Verbindung, Spielerliste, Profil, Beitritt mit Voll-Zustand, Lage der Mitspieler,
-# Tageszeit vom Gastgeber. Transport jetzt ENet (LAN/IP, Tests auf 127.0.0.1); in 7g kommt Epic Online Services dazu
-# (EOSGMultiplayerPeer, gleiche RPCs). Bis zu 3 Spieler; der Gastgeber (Peer 1) hat den echten Spielstand und speichert.
+# Tageszeit vom Gastgeber. Zwei Transporte, gleiche RPCs (der Spiel-Code merkt keinen Unterschied):
+#   "enet" Heimnetz/IP und alte Tests (127.0.0.1) · "eos" Internet per 6-stelligem Code über Epic Online Services (7g,
+#   skripte/netz_eos.gd, nur geladen, wenn EOSG + eos_zugang.cfg da sind). Bis zu 3 Spieler; der Gastgeber (Peer 1) hat den
+#   echten Spielstand und speichert. Beenden mit EOS immer über Netz.beenden() (meldet ab, sonst hängt der Prozess).
 # Große Daten gehen in Stücken à 1.000 Byte (EOS-Paketgrenze ~1.170 Byte, Vorab-Test 18.11.2026).
 # Einzelspieler: modus "" → nichts davon läuft, das Spiel verhält sich wie vorher.
 #
 # Schalter: --host[=PORT]  sofort als Gastgeber starten · --join=ADRESSE[:PORT]  sofort beitreten
 #           --profil=NAME  eigenes Profil (user://profil_NAME.json, für mehrere Instanzen auf einem PC)
 #           --netz-verzoegerung=MS --netz-verlust=PROZENT  künstlich schlechtes Netz (nur Lage-Pakete werden verworfen)
+#           --join-code=CODE  sofort per Internet-Code beitreten · --relay=erzwingen  EOS nur über Epic-Relay (Test)
 
 signal spieler_geaendert                 # Liste geändert (Beitritt, Verlassen, Farbe)
 signal status_geaendert(text: String)    # für das Mehrspieler-Menü (Verbinden …, Fehler)
@@ -34,6 +37,13 @@ var _stuecke := {}               # Empfang: kennung -> {n, teile{}}
 var _lage_zeit := 0.0
 var _uhr_zeit := 0.0
 var _adresse := ""
+var transport := ""              # "enet" | "eos" (solange verbunden)
+var code := ""                   # Internet-Code des laufenden Spiels (Gastgeber und Gäste)
+var eos: Node = null             # netz_eos.gd, null = Internet nicht möglich (Grund in eos_grund)
+var eos_grund := ""
+var _rtt := {}                   # EOS: peer_id -> Laufzeit hin+zurück in ms (eigene Messung)
+var _ping_zeit := 0.0
+var _beendet := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -48,6 +58,7 @@ func _ready() -> void:
 		elif a.begins_with("--netz-verlust="):
 			verlust = clampf(float(a.substr(15)) / 100.0, 0.0, 1.0)
 	profil_laden()
+	_eos_laden()
 	multiplayer.peer_connected.connect(_peer_da)
 	multiplayer.peer_disconnected.connect(_peer_weg)
 	multiplayer.connected_to_server.connect(_verbunden)
@@ -56,6 +67,25 @@ func _ready() -> void:
 
 func aktiv() -> bool:
 	return modus == "host" or modus == "gast"
+
+# Internet-Teil nur laden, wenn EOSG (gdextension + Autoloads) und die Zugangsdaten da sind – sonst bleibt das Spiel normal
+func _eos_laden() -> void:
+	if not ClassDB.class_exists("EOSGMultiplayerPeer") or get_node_or_null("/root/HAuth") == null or get_node_or_null("/root/EOSGRuntime") == null:
+		eos_grund = "Internet-Spiel nicht verfügbar: das EOS-Paket (EOSG) fehlt in diesem Spiel."
+		return
+	var sk = load("res://skripte/netz_eos.gd")
+	if sk == null:
+		eos_grund = "Internet-Spiel nicht verfügbar (EOS-Teil ließ sich nicht laden)."
+		return
+	if not sk.zugang_ok():
+		eos_grund = "Internet-Spiel nicht verfügbar: die Epic-Zugangsdaten (eos_zugang.cfg) fehlen."
+		return
+	eos = sk.new()
+	eos.name = "Eos"
+	add_child(eos)
+
+func internet_moeglich() -> bool:
+	return eos != null
 
 func ist_host() -> bool:
 	return modus == "host"
@@ -104,12 +134,84 @@ func host_starten(port := PORT) -> String:
 	var e := p.create_server(port, MAX_SPIELER)   # ein Platz mehr als Gäste, damit ein Vierter höflich „voll“ hört
 	if e != OK:
 		return "Spiel konnte nicht erstellt werden (Port %d belegt?)" % port
+	_host_fertig(p, "enet")
+	return ""
+
+func _host_fertig(p: MultiplayerPeer, t: String) -> void:
 	multiplayer.multiplayer_peer = p
 	modus = "host"
+	transport = t
 	spieler = {1: {"name": profil.name, "farbe": profil.farbe, "profil_id": profil.id}}
 	_anwesend_setzen()
 	spieler_geaendert.emit()
+
+# Internet (EOS): Lobby mit Code anlegen. Gibt "" (Code in Netz.code) oder eine Fehlermeldung zurück.
+func host_starten_internet() -> String:
+	if eos == null:
+		return eos_grund
+	trennen()
+	modus = "erstelle"
+	status_geaendert.emit("Verbinde mit Epic Online Services …")
+	var r: Dictionary = await eos.erstellen(profil.name, MAX_SPIELER + 1)   # ein Platz mehr: ein Vierter hört höflich „voll“
+	if modus != "erstelle":   # inzwischen abgebrochen
+		if r.has("peer"):
+			(r.peer as MultiplayerPeer).close()
+			eos.lobby_weg()
+		return "Abgebrochen."
+	modus = ""
+	if r.has("fehler"):
+		status_geaendert.emit(str(r.fehler))
+		return str(r.fehler)
+	code = str(r.code)
+	_host_fertig(r.peer, "eos")
 	return ""
+
+# Internet (EOS): per Code beitreten. Fortschritt und Fehler kommen über status_geaendert.
+func beitreten_code(roh: String) -> void:
+	if eos == null:
+		status_geaendert.emit(eos_grund)
+		return
+	var c: String = eos.code_pruefen(roh)
+	if c == "":
+		status_geaendert.emit("Der Code hat 6 Zeichen (Buchstaben und Ziffern, ohne O, I, 0 und 1).")
+		return
+	if modus == "" and spiel and is_instance_valid(spiel) and spiel.zustand:
+		spiel._speichern()   # eigener Einzelspieler-Stand: vorher sichern (danach speichert nur der Gastgeber)
+	trennen()
+	modus = "suche"
+	status_geaendert.emit("Verbinde mit Epic Online Services …")
+	var zeigen := func(t: String) -> void:
+		if modus == "suche":
+			status_geaendert.emit(t)
+	var r: Dictionary = await eos.beitreten(profil.name, c, zeigen)
+	if modus != "suche":   # inzwischen abgebrochen
+		if r.has("peer"):
+			(r.peer as MultiplayerPeer).close()
+			eos.lobby_weg()
+		return
+	if r.has("fehler"):
+		modus = ""
+		status_geaendert.emit(str(r.fehler))
+		return
+	code = c
+	_adresse = "Code " + c
+	transport = "eos"
+	multiplayer.multiplayer_peer = r.peer
+	modus = "verbinde"
+	status_geaendert.emit("Spiel gefunden – verbinde mit dem Gastgeber …")
+	# EOS meldet einen Fehlschlag nicht immer: nach 25 s ohne Verbindung aufgeben
+	var t0 := Time.get_ticks_msec()
+	while modus == "verbinde" and code == c and Time.get_ticks_msec() - t0 < 25000:
+		await get_tree().process_frame
+	if modus == "verbinde" and code == c:
+		trennen()
+		status_geaendert.emit("Keine Verbindung zum Gastgeber. Bitte nochmal versuchen – hilft das nicht, den Code neu erstellen lassen.")
+
+# Menü: laufendes Erstellen/Suchen/Verbinden abbrechen
+func abbrechen() -> void:
+	if modus in ["erstelle", "suche", "verbinde"]:
+		trennen()
+		status_geaendert.emit("")
 
 func beitreten(adresse: String) -> void:
 	if modus == "" and spiel and is_instance_valid(spiel) and spiel.zustand:
@@ -130,6 +232,7 @@ func beitreten(adresse: String) -> void:
 		return
 	multiplayer.multiplayer_peer = p
 	modus = "verbinde"
+	transport = "enet"
 	status_geaendert.emit("Verbinde mit %s …" % _adresse)
 
 # Verbindung beenden (ohne Szenenwechsel). Gastgeber: alle Gäste fliegen raus und bekommen eine Meldung.
@@ -137,7 +240,13 @@ func trennen() -> void:
 	if multiplayer.multiplayer_peer and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 		multiplayer.multiplayer_peer.close()
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
+	if eos:
+		eos.lobby_weg()   # Gastgeber löst die Lobby auf (der Code gilt nicht mehr), Gast verlässt sie
 	modus = ""
+	transport = ""
+	code = ""
+	_rtt = {}
+	_lage_letzte = {}
 	spieler = {}
 	_stuecke = {}
 	_bereite = {}
@@ -187,14 +296,28 @@ func _notification(what: int) -> void:
 	# Beim Beenden die Verbindung sauber schließen, damit die anderen es sofort merken
 	if (what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE) and aktiv():
 		multiplayer.multiplayer_peer.close()
+	# Mit EOS fängt Netz das Fenster-X ab (auto_accept_quit aus): erst abmelden, dann beenden
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and eos and eos.plattform:
+		beenden()
+
+# Spiel beenden – immer hierüber (mit EOS: Lobby weg, abmelden, release() + shutdown(), sonst hängt der Prozess)
+func beenden(rueckgabe := 0) -> void:
+	if _beendet:
+		return
+	_beendet = true
+	trennen()
+	if eos and eos.plattform:
+		await eos.herunterfahren()
+	get_tree().quit(rueckgabe)
 
 func _verbunden() -> void:
 	status_geaendert.emit("Verbunden – lade die Welt des Gastgebers …")
 	anmelden.rpc_id(1, profil.duplicate())
 
 func _fehlgeschlagen() -> void:
+	var war_eos := transport == "eos"
 	trennen()
-	status_geaendert.emit("Verbindung fehlgeschlagen. Stimmt die Adresse? Läuft beim Gastgeber das Spiel?")
+	status_geaendert.emit("Keine Verbindung zum Gastgeber. Bitte nochmal versuchen." if war_eos else "Verbindung fehlgeschlagen. Stimmt die Adresse? Läuft beim Gastgeber das Spiel?")
 
 func _server_weg() -> void:
 	var t := "Der Gastgeber hat das Spiel beendet."
@@ -216,6 +339,7 @@ func _peer_weg(id: int) -> void:
 			_moebel_sperre.erase(i)
 	spieler.erase(id)
 	_bereite.erase(id)
+	_rtt.erase(id)
 	_anwesend_setzen()
 	liste.rpc(spieler)
 	spieler_geaendert.emit()
@@ -255,8 +379,9 @@ func anmelden(p: Dictionary) -> void:
 
 func _rauswerfen_spaeter(id: int) -> void:
 	await get_tree().create_timer(0.5).timeout
-	if multiplayer.multiplayer_peer is ENetMultiplayerPeer:
-		(multiplayer.multiplayer_peer as ENetMultiplayerPeer).disconnect_peer(id)
+	var p := multiplayer.multiplayer_peer
+	if p and not (p is OfflineMultiplayerPeer) and id in multiplayer.get_peers():
+		p.disconnect_peer(id)
 
 # Gondeln, in denen gerade jemand sitzt (Gastgeber + andere Gäste; der Neue zählt nicht)
 func _belegte_gondeln(ausser := 0) -> Array:
@@ -338,6 +463,8 @@ func ort_melden(o: Dictionary) -> void:
 
 # ---------------------------------------------------------------- Laufend: Lage + Tageszeit
 func _process(dt: float) -> void:
+	if aktiv() and transport == "eos":
+		_ping_takt(dt)
 	if not aktiv() or spiel == null or not is_instance_valid(spiel) or spiel.zustand == null:
 		return
 	_netz_takt(dt)
@@ -348,7 +475,7 @@ func _process(dt: float) -> void:
 		if verzoegerung > 0.0:
 			_spaeter_lage(l)
 		else:
-			lage.rpc(l)
+			_lage_senden(l)
 	if ist_host():
 		_uhr_zeit += dt
 		if _uhr_zeit >= UHR_TAKT:
@@ -366,7 +493,28 @@ func _process(dt: float) -> void:
 func _spaeter_lage(l: Array) -> void:
 	await get_tree().create_timer(verzoegerung).timeout
 	if aktiv():
+		_lage_senden(l)
+
+# EOS kennt kein „unreliable ordered“ (EOSG stellt dann auf reliable um): dort „unreliable“ mit Laufnummer, ältere verwerfen
+var _lage_nr := 0
+var _lage_letzte := {}           # Absender (bzw. "h" Helfer) -> letzte Laufnummer
+func _lage_senden(l: Array) -> void:
+	if transport == "eos":
+		_lage_nr += 1
+		lage_eos.rpc(_lage_nr, l)
+	else:
 		lage.rpc(l)
+
+func _neuer(k, nr: int) -> bool:
+	if nr <= int(_lage_letzte.get(k, 0)):
+		return false
+	_lage_letzte[k] = nr
+	return true
+
+@rpc("any_peer", "call_remote", "unreliable")
+func lage_eos(nr: int, l: Array) -> void:
+	if _neuer(multiplayer.get_remote_sender_id(), nr):
+		lage(l)
 
 @rpc("any_peer", "call_remote", "unreliable_ordered")
 func lage(l: Array) -> void:
@@ -864,8 +1012,18 @@ func _welt_takt(dt: float) -> void:
 	if _helfer_zeit >= 1.0 / HELFER_HZ and not _bereite.is_empty() and spiel.helfer.anzahl() > 0:
 		_helfer_zeit = 0.0
 		var d := spiel.helfer.lage_daten()
+		_lage_nr += 1
+		var nr := _lage_nr
 		for g in _bereite:
-			_spaeter(func(): helfer_lage.rpc_id(g, d))
+			if transport == "eos":
+				_spaeter(func(): helfer_lage_eos.rpc_id(g, nr, d))
+			else:
+				_spaeter(func(): helfer_lage.rpc_id(g, d))
+
+@rpc("authority", "call_remote", "unreliable")
+func helfer_lage_eos(nr: int, d: PackedFloat32Array) -> void:
+	if _neuer("h", nr):
+		helfer_lage(d)
 
 @rpc("authority", "call_remote", "unreliable_ordered")
 func helfer_lage(d: PackedFloat32Array) -> void:
@@ -1074,7 +1232,11 @@ func rauswerfen(id: int) -> void:
 # Laufzeit hin und zurück in ms (-1 = unbekannt). Gastgeber: zu jedem Gast, Gast: zum Gastgeber
 func ping_ms(id: int) -> int:
 	var p := multiplayer.multiplayer_peer
-	if not (p is ENetMultiplayerPeer) or id == meine_id():
+	if id == meine_id() or not aktiv():
+		return -1
+	if transport == "eos":
+		return int(_rtt.get(id, -1))
+	if not (p is ENetMultiplayerPeer):
 		return -1
 	var pp := (p as ENetMultiplayerPeer).get_peer(id)
 	if pp == null:
@@ -1169,6 +1331,23 @@ func _netz_takt(dt: float) -> void:
 					for k in EIGENE:
 						q[k] = e[k]
 					_spaeter(func(): meine_daten.rpc_id(1, q))
+
+# EOS hat keine Laufzeit-Statistik wie ENet: alle 2 s selbst messen (Gastgeber ↔ jeder Gast)
+func _ping_takt(dt: float) -> void:
+	_ping_zeit += dt
+	if _ping_zeit < 2.0:
+		return
+	_ping_zeit = 0.0
+	for id in multiplayer.get_peers():
+		netz_ping.rpc_id(id, Time.get_ticks_msec())
+
+@rpc("any_peer", "call_remote", "unreliable")
+func netz_ping(t: int) -> void:
+	netz_pong.rpc_id(multiplayer.get_remote_sender_id(), t)
+
+@rpc("any_peer", "call_remote", "unreliable")
+func netz_pong(t: int) -> void:
+	_rtt[multiplayer.get_remote_sender_id()] = Time.get_ticks_msec() - t
 
 # Nur für Test 37 (NetzTest): Textnachrichten zwischen den Test-Prozessen
 signal test_nachricht_da(id: int, text: String)

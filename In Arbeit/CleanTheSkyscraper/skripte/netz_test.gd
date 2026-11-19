@@ -2,6 +2,9 @@ class_name NetzTest
 extends Node
 # Test 37 – Mehrspieler-Grundlage (Phase 7a), läuft headless mit mehreren Prozessen auf 127.0.0.1:
 #   godot --headless --path . -- --ansicht=37 [--netz-verzoegerung=150 --netz-verlust=5]
+# Test 39 (Phase 7g) = derselbe Ablauf über Epic Online Services statt ENet: Gastgeber erstellt ein Internet-Spiel, die Gäste
+# treten per Code bei (--join-code=…), alles läuft über EOS-P2P. Mit --relay=erzwingen nur über das Epic-Relay.
+#   godot --headless --path . -- --ansicht=39 [--relay=erzwingen]
 # Der Gastgeber-Prozess startet die Gäste selbst (OS.create_process, --rolle=gast --profil=testgastN --join=…).
 # Ablauf: Gast 1 tritt bei (Geld, Fenster, Tageszeit, Spielerliste gleich?) → beide laufen, jeder sieht die Figur des
 # anderen an der richtigen Stelle → Gastgeber ändert Geld, Gast 2 tritt mitten im Spiel bei → Gast 3 wird abgelehnt
@@ -28,11 +31,13 @@ var frist := 0.0          # Zeitlimit des aktuellen Schritts
 var ids := {}              # profil-name -> peer-id
 var gemeldet := false
 var _host_pos := Vector3.ZERO
+var eos := false           # Test 39: über Epic Online Services
 
 func setup(sp: Spiel) -> void:
 	s = sp
 	process_mode = Node.PROCESS_MODE_ALWAYS   # 7f: läuft auch, wenn der Gastgeber für alle pausiert
 	gast = "--rolle=gast" in OS.get_cmdline_user_args()
+	eos = "--ansicht=39" in OS.get_cmdline_user_args()
 	Netz.test_nachricht_da.connect(_nachricht)
 	if "--nur-menue" in OS.get_cmdline_user_args():   # Testbild: Hauptmenü → Mehrspieler-Fenster
 		_menue_bild()
@@ -75,7 +80,16 @@ func _host_setup() -> void:
 		var d := "user://netztest_%s.txt" % n
 		if FileAccess.file_exists(d):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(d))
-	var e := Netz.host_starten(TEST_PORT)
+	var e := ""
+	if eos:
+		var t0 := Time.get_ticks_msec()
+		e = await Netz.host_starten_internet()
+		_p("Internet-Spiel erstellt (EOS)", e == "" and Netz.transport == "eos" and Netz.code.length() == 6, "%s, Code %s, %d ms" % [e, Netz.code, Time.get_ticks_msec() - t0])
+		if e != "":
+			_ende()
+			return
+	else:
+		e = Netz.host_starten(TEST_PORT)
 	_p("Gastgeber gestartet", e == "", e)
 	s.wirtschaft.geld = 4321
 	for i in SAUBER:
@@ -131,8 +145,10 @@ func _einzel_pruefen() -> void:
 
 func _gast_starten(n: String) -> void:
 	var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--ansicht=37", "--rolle=gast", "--profil=" + n, "--join=127.0.0.1:%d" % TEST_PORT]
+	if eos:
+		args = ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--ansicht=39", "--rolle=gast", "--profil=" + n, "--join-code=" + Netz.code]
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--netz-"):
+		if a.begins_with("--netz-") or a.begins_with("--relay="):
 			args.append(a)
 	var pid := OS.create_process(OS.get_executable_path(), args)
 	print("NETZTEST INFO %s gestartet (pid %d)" % [n, pid])
@@ -149,6 +165,8 @@ func _datei(n: String) -> String:
 
 func _process(dt: float) -> void:
 	zeit += dt
+	if _beendet:
+		return
 	if gast:
 		_gast_takt(dt)
 		return
@@ -686,10 +704,13 @@ func _nachricht(id: int, t: String) -> void:
 				b[x.get_slice("=", 0)] = x.get_slice("=", 1)
 		_berichte[teile[0]] = b
 
+var _beendet := false
 func _ende() -> void:
+	if _beendet:   # Netz.beenden wartet mit EOS kurz aufs Abmelden – nur einmal auswerten
+		return
+	_beendet = true
 	print("NETZTEST ERGEBNIS ok=%d fehler=%d" % [ok, fehler])
-	Netz.trennen()
-	get_tree().quit(0 if fehler == 0 else 1)
+	Netz.beenden(0 if fehler == 0 else 1)   # mit EOS: abmelden, sonst hängt der Prozess
 
 # ================================================================ Gast
 var _geprueft := false
@@ -711,13 +732,13 @@ func _gast_takt(dt: float) -> void:
 	if Netz.menue_meldung != "" and not Netz.aktiv():
 		gemeldet = true
 		_gast_schreiben(Netz.menue_meldung)
-		get_tree().quit()
+		Netz.beenden()
 		return
 	if not Netz.ist_gast() or Netz.gast_stand.is_empty():
 		if zeit > 90.0:
 			gemeldet = true
 			_gast_schreiben("Zeitlimit beim Beitreten")
-			get_tree().quit()
+			Netz.beenden()
 		return
 	_gast_zeit += dt
 	if not _geprueft and _gast_zeit > 2.0 and s.laeufer.aktiv:

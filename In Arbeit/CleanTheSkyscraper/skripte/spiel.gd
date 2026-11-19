@@ -165,7 +165,7 @@ func starten(t: Turm, w: Welt, a: int, ohne_sperre: bool, geld_test: int) -> voi
 	miteinander = Miteinander.new()
 	add_child(miteinander)
 	miteinander.setup(self)
-	if ansicht == 37:   # Mehrspieler-Test (Gastgeber + Gäste als eigene Prozesse)
+	if ansicht == 37 or ansicht == 39:   # Mehrspieler-Test (Gastgeber + Gäste als eigene Prozesse; 39 = über EOS)
 		var nt := NetzTest.new()
 		add_child(nt)
 		nt.setup(self)

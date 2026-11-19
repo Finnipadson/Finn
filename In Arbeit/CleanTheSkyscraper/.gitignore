@@ -3,3 +3,7 @@
 
 # Phase 5: gebaute .exe + Hörproben (große Binärdateien)
 export/
+
+# Phase 7g: Epic Online Services (EOSG-Paket lädt der User herunter, Zugangsdaten trägt der User ein)
+addons/
+eos_zugang.cfg

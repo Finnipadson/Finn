@@ -1,5 +1,6 @@
 @echo off
-rem Baut die Windows-Version nach export\CleanTheSkyscraper.exe (eine Datei, Spielstand liegt im Godot-Benutzerordner).
+rem Baut die Windows-Version nach export\CleanTheSkyscraper.exe (Spielstand liegt im Godot-Benutzerordner).
+rem Mit Internet-Mehrspieler (EOS, Phase 7g) liegen 3 DLLs neben der .exe - zum Weitergeben export\CleanTheSkyscraper-Spiel.zip nehmen.
 rem Voraussetzung einmalig: Godot-Editor oeffnen (start.bat --editor) - Editor - Exportvorlagen verwalten - Herunterladen und installieren.
 set GODOT=%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe
 if not exist "%GODOT%" (
@@ -14,7 +15,26 @@ if not exist "%APPDATA%\Godot\export_templates\4.7.2.stable\windows_release_x86_
   exit /b 1
 )
 if not exist "%~dp0export" mkdir "%~dp0export"
+if not exist "%~dp0addons\epic-online-services-godot\eosg.gdextension" (
+  echo Hinweis: Das EOS-Paket fehlt in addons\ - die .exe hat dann kein Internet-Spiel, nur Heimnetz.
+)
+if not exist "%~dp0eos_zugang.cfg" (
+  echo Hinweis: eos_zugang.cfg fehlt - die .exe hat dann kein Internet-Spiel, nur Heimnetz.
+)
+del /q "%~dp0export\*.dll" 2>nul
 "%GODOT%" --headless --path "%~dp0." --export-release "Windows Desktop" "%~dp0export\CleanTheSkyscraper.exe"
+if not exist "%~dp0export\CleanTheSkyscraper.exe" (
+  echo Export fehlgeschlagen.
+  pause
+  exit /b 1
+)
+del /q "%~dp0export\CleanTheSkyscraper-Spiel.zip" 2>nul
+if exist "%~dp0export\EOSSDK-Win64-Shipping.dll" (
+  powershell -NoProfile -Command "Compress-Archive -Path '%~dp0export\CleanTheSkyscraper.exe','%~dp0export\*.dll' -DestinationPath '%~dp0export\CleanTheSkyscraper-Spiel.zip'"
+) else (
+  powershell -NoProfile -Command "Compress-Archive -Path '%~dp0export\CleanTheSkyscraper.exe' -DestinationPath '%~dp0export\CleanTheSkyscraper-Spiel.zip'"
+)
 echo.
 echo Fertig: export\CleanTheSkyscraper.exe
-pause
+echo Zum Weitergeben an Freunde: export\CleanTheSkyscraper-Spiel.zip (alles drin, nur entpacken und starten)
+if not "%1"=="leise" pause
