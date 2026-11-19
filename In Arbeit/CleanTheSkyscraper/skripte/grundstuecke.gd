@@ -9,14 +9,15 @@ extends Node3D
 # und Kugeln in wenigen MultiMeshes (Farbe je Instanz, Farben aus der Stadt), Kleinteile in Kacheln mit Sichtweite.
 # Palmen, Büsche, Bänke und Mülleimer zeichnet StadtDetails mit (gleiche Modelle, Palmen bekommen dort ihre Bodenleuchte).
 
-enum Typ {LEER, PARKPLATZ, PARK, BAUSTELLE, BRACHE, SPORT, RIESENRAD, TEICH, MARKT, TANKSTELLE, PARKHAUS, SPIELPLATZ}
-const NAMEN := ["leer", "Parkplatz", "Park", "Baustelle", "Brache", "Sportplatz", "Riesenrad", "Teich", "Markt", "Tankstelle", "Parkhaus", "Spielplatz"]
+enum Typ {LEER, PARKPLATZ, PARK, BAUSTELLE, BRACHE, SPORT, RIESENRAD, TEICH, MARKT, TANKSTELLE, PARKHAUS, SPIELPLATZ, WOCHENMARKT, SKATEPARK, GARTEN, HUNDEWIESE, ZIRKUS, STADION}
+const NAMEN := ["leer", "Parkplatz", "Park", "Baustelle", "Brache", "Sportplatz", "Riesenrad", "Teich", "Markt", "Tankstelle", "Parkhaus", "Spielplatz", "Wochenmarkt", "Skatepark", "Garten", "Hundewiese", "Zirkus", "Stadion"]
 # Weniger Wiederholung (Wunsch des Users 19.11.2026): nur bis INNEN_D besondere Nutzungen, außen meist normale Häuser;
 # Varianten je Art werden gleichmäßig verteilt, manche Arten haben eine Höchstzahl.
 const INNEN_D := 900.0
 const AUSSEN_HAUS := 0.85      # Anteil der äußeren freien Felder, die ein normales Haus bekommen
-const VARIANTEN := {Typ.PARKPLATZ: 3, Typ.PARK: 4, Typ.SPORT: 3}
-const HOECHSTENS := {Typ.TEICH: 5, Typ.MARKT: 6, Typ.TANKSTELLE: 5, Typ.PARKHAUS: 5, Typ.RIESENRAD: 1}
+const VARIANTEN := {Typ.PARKPLATZ: 3, Typ.PARK: 4, Typ.SPORT: 3, Typ.BAUSTELLE: 3, Typ.BRACHE: 3}
+const HOECHSTENS := {Typ.TEICH: 5, Typ.MARKT: 5, Typ.TANKSTELLE: 5, Typ.PARKHAUS: 5, Typ.RIESENRAD: 1, Typ.WOCHENMARKT: 4, Typ.SKATEPARK: 4, Typ.GARTEN: 5, Typ.HUNDEWIESE: 5, Typ.ZIRKUS: 1, Typ.STADION: 1}
+const HIGHLIGHTS := [Typ.ZIRKUS, Typ.STADION]   # je einmal, 250–850 m vom Turm, nicht neben einem anderen Highlight
 const HALB := 28.0            # nutzbare halbe Breite (Feld 75 m − Straße − Bordstein − 2,3 m Gehweg)
 const RASTER := 75.0
 const N := 41                 # Datentextur: Felder −1500 … 1500 m je Achse
@@ -167,8 +168,14 @@ func baue(w: Welt) -> void:
 	bodenlicht = Bodenlicht.new()
 	bodenlicht.name = "grundstueck_leuchten"
 	add_child(bodenlicht)
+	var ohne_typ: PackedStringArray = []   # Mess-Schalter --gs-ohne-typ=Garten,Stadion (Art nicht bauen)
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--gs-ohne-typ="):
+			ohne_typ = a.split("=")[1].split(",")
 	for f in felder:
 		zahl[f.typ] = zahl.get(f.typ, 0) + 1
+		if NAMEN[int(f.typ)] in ohne_typ:
+			continue
 		match int(f.typ):
 			Typ.PARKPLATZ: _parkplatz(f)
 			Typ.PARK: _park(f)
@@ -181,6 +188,12 @@ func baue(w: Welt) -> void:
 			Typ.TANKSTELLE: _tankstelle(f)
 			Typ.PARKHAUS: _parkhaus(f)
 			Typ.SPIELPLATZ: _spielplatz(f)
+			Typ.WOCHENMARKT: _wochenmarkt(f)
+			Typ.SKATEPARK: _skatepark(f)
+			Typ.GARTEN: _garten(f)
+			Typ.HUNDEWIESE: _hundewiese(f)
+			Typ.ZIRKUS: _zirkus(f)
+			Typ.STADION: _stadion(f)
 	_licht_punkte_bauen()
 	if not "teile" in _ohne:
 		_teile_bauen()
@@ -197,7 +210,7 @@ func baue(w: Welt) -> void:
 	print("Grundstücke: %d (%s), %d Kräne, %d neue Häuser außen" % [felder.size(), ", ".join(t), _kraene.size(), zahl.get(Typ.LEER, 0)])
 
 # Farbe auf der Karte (M) je Nutzung
-const KARTEN_FARBE := ["d6d0c4", "a3a6aa", "8fc06c", "c9a46c", "e3cf9e", "6f9fb8", "e9e2d2", "8fc06c", "e8b86b", "8c96a0", "9aa0a8", "a8d08a"]
+const KARTEN_FARBE := ["d6d0c4", "a3a6aa", "8fc06c", "c9a46c", "e3cf9e", "6f9fb8", "e9e2d2", "8fc06c", "e8b86b", "8c96a0", "9aa0a8", "a8d08a", "d9b98a", "c4c4c0", "9cc46a", "b0d48a", "e2483e", "5fae4a"]
 
 # Erstes Feld einer Art (nächstes am Turm) – für Testbilder
 func erstes(typ: int, variante := -1) -> Dictionary:
@@ -243,6 +256,22 @@ func _typen_waehlen() -> void:
 	if not kand.is_empty():
 		felder[kand[rng.randi() % kand.size()]].typ = Typ.RIESENRAD
 	var anzahl := {Typ.RIESENRAD: 1 if not kand.is_empty() else 0}
+	for hl in HIGHLIGHTS:   # Zirkus, Stadion: je einmal, mit Abstand zu Riesenrad und einander
+		var hk: Array = []
+		for i in felder.size():
+			var hf: Dictionary = felder[i]
+			if hf.typ != Typ.LEER or hf.d < 250.0 or hf.d > 850.0:
+				continue
+			var frei := true
+			for g in felder:
+				if g.typ != Typ.LEER and int(g.typ) in [Typ.RIESENRAD, Typ.ZIRKUS, Typ.STADION] and (g.mitte as Vector2).distance_to(hf.mitte) < 3.5 * RASTER:
+					frei = false
+					break
+			if frei:
+				hk.append(i)
+		if not hk.is_empty():
+			felder[hk[rng.randi() % hk.size()]].typ = hl
+			anzahl[hl] = 1
 	for f in felder:
 		if f.typ != Typ.LEER:
 			continue
@@ -253,7 +282,8 @@ func _typen_waehlen() -> void:
 		else:
 			gew = {
 				Typ.PARKPLATZ: 2.2, Typ.PARK: 2.4, Typ.BAUSTELLE: 1.6, Typ.BRACHE: 0.8 if d < 500.0 else 1.4,
-				Typ.SPORT: 1.5, Typ.TEICH: 0.8, Typ.MARKT: 1.1, Typ.TANKSTELLE: 1.0, Typ.PARKHAUS: 1.0, Typ.SPIELPLATZ: 1.3,
+				Typ.SPORT: 1.5, Typ.TEICH: 0.8, Typ.MARKT: 1.0, Typ.TANKSTELLE: 1.0, Typ.PARKHAUS: 1.0, Typ.SPIELPLATZ: 1.2,
+				Typ.WOCHENMARKT: 0.9, Typ.SKATEPARK: 0.9, Typ.GARTEN: 0.9, Typ.HUNDEWIESE: 0.9,
 			}
 		for k in HOECHSTENS:
 			if gew.has(k) and anzahl.get(k, 0) >= HOECHSTENS[k]:
@@ -722,7 +752,7 @@ func _parkhaus(f: Dictionary) -> void:
 			break
 		for ix in 6:
 			for iz in 5:
-				_box("gross", f, Vector2(-bx * 0.5 + 0.5 + ix * (bx - 1.0) / 5.0, -bz * 0.5 + 0.5 + iz * (bz - 1.0) / 4.0), y, Vector3(0.6, dh - 0.35, 0.6), beton)
+				_box("klein", f, Vector2(-bx * 0.5 + 0.5 + ix * (bx - 1.0) / 5.0, -bz * 0.5 + 0.5 + iz * (bz - 1.0) / 4.0), y, Vector3(0.6, dh - 0.35, 0.6), beton)
 	# Treppenhaus mit P-Schild
 	var th := (decks + 1) * dh + 2.0
 	_box("gross", f, Vector2(bx * 0.5 - 3.0, -bz * 0.5 + 3.0), 0.0, Vector3(6.0, th, 6.0), Color("b9b4aa"))
@@ -936,35 +966,19 @@ func _baustelle(f: Dictionary) -> void:
 			_box("klein", f, l, 0.15, Vector3(3.45, 1.85, 0.05), Color("4f6b57"), gl)
 			_box("klein", f, l, 0.0, Vector3(0.6, 0.15, 0.25), BETON, gl)
 	_rand_kollision(f, 27.4, 5.0)
-	# Rohbau: Betondecken, Stützen, Treppenkern; untere Geschosse schon verglast
-	var stock := rng.randi_range(2, 9)
+	# Varianten: 0 = Rohbau, 1 = Baugrube mit Fundament, 2 = fast fertig mit Gerüst
+	var v := int(f.var)
 	var bx := 30.0
 	var bz := 22.0
 	var bm := Vector2(-6.0, -5.0)
-	for e in stock + 1:
-		var y := e * 3.5
-		var teil := e == stock   # oberste Ebene: nur halbe Decke (wird gerade gebaut)
-		var dx := bx * (0.5 if teil else 1.0)
-		var dm := bm + Vector2(-bx * 0.25 if teil else 0.0, 0.0)
-		_box("gross", f, dm, y, Vector3(dx, 0.35, bz), BETON.darkened(0.04))
-		if e == stock:
-			break
-		var verglast := e < stock - 2
-		for ix in 5:
-			for iz in 4:
-				var l := bm + Vector2(-bx * 0.5 + 0.4 + ix * (bx - 0.8) / 4.0, -bz * 0.5 + 0.4 + iz * (bz - 0.8) / 3.0)
-				if verglast and ix > 0 and ix < 4 and iz > 0 and iz < 3:
-					continue
-				_box("gross", f, l, y + 0.35, Vector3(0.5, 3.15, 0.5), BETON)
-		if verglast:
-			var gc := Color("6d8aa3")
-			_box("gross", f, bm + Vector2(0, -bz * 0.5 + 0.1), y + 0.6, Vector3(bx - 1.0, 2.6, 0.1), gc)
-			_box("gross", f, bm + Vector2(0, bz * 0.5 - 0.1), y + 0.6, Vector3(bx - 1.0, 2.6, 0.1), gc)
-			_box("gross", f, bm + Vector2(-bx * 0.5 + 0.1, 0), y + 0.6, Vector3(0.1, 2.6, bz - 1.0), gc)
-			_box("gross", f, bm + Vector2(bx * 0.5 - 0.1, 0), y + 0.6, Vector3(0.1, 2.6, bz - 1.0), gc)
-	var kern := bm + Vector2(bx * 0.5 - 4.0, bz * 0.5 - 3.5)
-	_box("gross", f, kern, 0.0, Vector3(5.0, stock * 3.5 + 3.2, 4.5), BETON.darkened(0.12))
-	_haeuser.append([_rect(f, bm, Vector2(bx, bz)), stock * 3.5 + 3.2])
+	var stock := 0
+	if v == 1:
+		_baugrube(f, bm, bx, bz)
+	else:
+		stock = rng.randi_range(2, 9) if v == 0 else rng.randi_range(7, 12)
+		_rohbau(f, bm, bx, bz, stock, 2 if v == 0 else 1)
+		if v == 2:
+			_geruest(f, bm, bx, bz, stock)
 	# Container der Bauleitung, Toilette, Sandhaufen, Stahlträger
 	var cl := Vector2(16.0, 19.0)
 	_box("gross", f, cl, 0.0, Vector3(6.1, 2.6, 2.45), Color("e6e6e2"))
@@ -984,7 +998,7 @@ func _baustelle(f: Dictionary) -> void:
 	for k in 4:
 		_box("klein", f, Vector2(8.0, 16.0 + k * 0.45), 0.0 + (k % 2) * 0.0, Vector3(9.0, 0.35, 0.3), Color("8a5a44"))
 	welt.hindernisse.append(_rect(f, Vector2(8.0, 16.7), Vector2(9.2, 1.8)))
-	if rng.randf() < 0.6:
+	if v != 1 and rng.randf() < 0.6:
 		_bagger(f, Vector2(-8.0 + rng.randf_range(-4.0, 4.0), 13.5), rng.randf() * TAU)
 	if rng.randf() < 0.55:
 		_kran(f, bm + Vector2(bx * 0.5 + 4.5, -bz * 0.5 + 2.0), stock * 3.5 + rng.randf_range(16.0, 26.0))
@@ -1075,6 +1089,12 @@ func _kran(f: Dictionary, l: Vector2, hoehe: float) -> void:
 
 # ---------------------------------------------------------------- Sandbrache
 func _brache(f: Dictionary) -> void:
+	var v := int(f.var)
+	if v == 1:
+		_lagerplatz(f)
+		return
+	if v == 2:
+		_werbetafel(f)
 	for k in rng.randi_range(12, 22):   # trockene Büsche
 		var l := Vector2(rng.randf_range(-25.0, 25.0), rng.randf_range(-25.0, 25.0))
 		var s := rng.randf_range(1.0, 2.2)
@@ -1093,7 +1113,7 @@ func _brache(f: Dictionary) -> void:
 		if rng.randf() < 0.5:
 			_box("klein", f, l, 0.8, Vector3(1.6, 0.8, 0.8), BETON.lightened(0.05), gl + 0.2)
 		welt.hindernisse.append(_rect(f, l, Vector2(1.8, 1.8)))
-	if rng.randf() < 0.5:   # Bauschild „Hier entsteht …“ an der Straßenseite
+	if v == 0 and rng.randf() < 0.6:   # Bauschild „Hier entsteht …“ an der Straßenseite
 		var l := Vector2(rng.randf_range(-12.0, 12.0), 25.5)
 		for s in [-1.6, 1.6]:
 			_box("klein", f, l + Vector2(s, 0), 0.0, Vector3(0.16, 3.4, 0.16), Color("9aa3ad"))
@@ -1104,7 +1124,7 @@ func _brache(f: Dictionary) -> void:
 		_schrift(f, l + Vector2(0, 0.08), 2.75, nm, 0.0, 56, Color("27313d"))
 		welt.hindernisse.append(_rect(f, l, Vector2(3.6, 0.5)))
 
-func _schrift(f: Dictionary, l: Vector2, y: float, text: String, gl: float, groesse: int, farbe: Color) -> void:
+func _schrift(f: Dictionary, l: Vector2, y: float, text: String, gl: float, groesse: int, farbe: Color, weit := 220.0) -> void:
 	if "schrift" in _ohne:
 		return
 	var lab := Label3D.new()
@@ -1116,7 +1136,7 @@ func _schrift(f: Dictionary, l: Vector2, y: float, text: String, gl: float, groe
 	lab.double_sided = false
 	lab.position = _pos(f, l, y)
 	lab.rotation.y = _gier(f, gl)
-	lab.visibility_range_end = 220.0
+	lab.visibility_range_end = weit
 	add_child(lab)
 
 # ---------------------------------------------------------------- Riesenrad
@@ -1264,6 +1284,428 @@ func _rad_drehen() -> void:
 	for i in RAD_GONDELN:
 		var a := w + TAU * i / RAD_GONDELN
 		_rad_mm.set_instance_transform(i, Transform3D(Basis(), Vector3(cos(a) * RAD_R, RAD_NABE + sin(a) * RAD_R, 0)))
+
+# ---------------------------------------------------------------- Baustelle: Varianten (Runde 2, 19.11.2026)
+# 0 = Rohbau (untere Geschosse verglast), 1 = Baugrube mit Fundament + Betonmischer, 2 = fast fertig mit Gerüst
+func _rohbau(f: Dictionary, bm: Vector2, bx: float, bz: float, stock: int, offen: int) -> void:
+	for e in stock + 1:
+		var y := e * 3.5
+		var teil := e == stock   # oberste Ebene: nur halbe Decke (wird gerade gebaut)
+		var dx := bx * (0.5 if teil else 1.0)
+		var dm := bm + Vector2(-bx * 0.25 if teil else 0.0, 0.0)
+		_box("gross", f, dm, y, Vector3(dx, 0.35, bz), BETON.darkened(0.04))
+		if e == stock:
+			break
+		var verglast := e < stock - offen
+		for ix in 5:
+			for iz in 4:
+				var l := bm + Vector2(-bx * 0.5 + 0.4 + ix * (bx - 0.8) / 4.0, -bz * 0.5 + 0.4 + iz * (bz - 0.8) / 3.0)
+				if verglast and ix > 0 and ix < 4 and iz > 0 and iz < 3:
+					continue
+				_box("klein", f, l, y + 0.35, Vector3(0.5, 3.15, 0.5), BETON)   # Stützen ohne Schatten (Messung: viele Schattenteile kosten)
+		if verglast:
+			var gc := Color("6d8aa3")
+			_box("gross", f, bm + Vector2(0, -bz * 0.5 + 0.1), y + 0.6, Vector3(bx - 1.0, 2.6, 0.1), gc)
+			_box("gross", f, bm + Vector2(0, bz * 0.5 - 0.1), y + 0.6, Vector3(bx - 1.0, 2.6, 0.1), gc)
+			_box("gross", f, bm + Vector2(-bx * 0.5 + 0.1, 0), y + 0.6, Vector3(0.1, 2.6, bz - 1.0), gc)
+			_box("gross", f, bm + Vector2(bx * 0.5 - 0.1, 0), y + 0.6, Vector3(0.1, 2.6, bz - 1.0), gc)
+	var kern := bm + Vector2(bx * 0.5 - 4.0, bz * 0.5 - 3.5)
+	_box("gross", f, kern, 0.0, Vector3(5.0, stock * 3.5 + 3.2, 4.5), BETON.darkened(0.12))
+	_haeuser.append([_rect(f, bm, Vector2(bx, bz)), stock * 3.5 + 3.2])
+
+func _geruest(f: Dictionary, bm: Vector2, bx: float, bz: float, stock: int) -> void:
+	var z := bm.y + bz * 0.5 + 1.3
+	var h := stock * 3.5 + 1.5
+	var x := bm.x - bx * 0.5
+	while x <= bm.x + bx * 0.5 + 0.01:
+		for dz in [-0.5, 0.5]:
+			_box("fein", f, Vector2(x, z + dz), 0.0, Vector3(0.07, h, 0.07), Color("9aa3ad"))
+		x += 2.5
+	for e in range(1, stock + 1):
+		_box("klein", f, Vector2(bm.x, z), e * 3.5 - 0.1, Vector3(bx, 0.08, 1.0), Color("a8744a"))
+		_box("fein", f, Vector2(bm.x, z + 0.55), e * 3.5 + 0.9, Vector3(bx, 0.06, 0.06), Color("e0652a"))
+	welt.hindernisse.append(_rect(f, Vector2(bm.x, z), Vector2(bx + 0.4, 1.4)))
+
+func _baugrube(f: Dictionary, bm: Vector2, bx: float, bz: float) -> void:
+	var stahl := Color("6f757c")
+	# Spundwände ringsum (Lücke rechts = Rampe)
+	_box("gross", f, bm + Vector2(0, -bz * 0.5), 0.0, Vector3(bx, 0.9, 0.3), stahl)
+	_box("gross", f, bm + Vector2(0, bz * 0.5), 0.0, Vector3(bx, 0.9, 0.3), stahl)
+	_box("gross", f, bm + Vector2(-bx * 0.5, 0), 0.0, Vector3(0.3, 0.9, bz), stahl)
+	_box("gross", f, bm + Vector2(bx * 0.5, -bz * 0.25 - 1.5), 0.0, Vector3(0.3, 0.9, bz * 0.5 - 3.0), stahl)
+	_box("gross", f, bm + Vector2(bx * 0.5, bz * 0.25 + 1.5), 0.0, Vector3(0.3, 0.9, bz * 0.5 - 3.0), stahl)
+	for r in [[Vector2(0, -bz * 0.5), Vector2(bx, 0.5)], [Vector2(0, bz * 0.5), Vector2(bx, 0.5)], [Vector2(-bx * 0.5, 0), Vector2(0.5, bz)], [Vector2(bx * 0.5, -bz * 0.25 - 1.5), Vector2(0.5, bz * 0.5 - 3.0)], [Vector2(bx * 0.5, bz * 0.25 + 1.5), Vector2(0.5, bz * 0.5 - 3.0)]]:
+		welt.hindernisse.append(_rect(f, bm + r[0], r[1]))
+	# halbe Fundamentplatte mit Anschlusseisen, andere Hälfte: Bewehrungsmatten
+	var pm := bm + Vector2(-bx * 0.25, 0)
+	_box("gross", f, pm, 0.0, Vector3(bx * 0.5 - 1.0, 0.35, bz - 1.0), BETON)
+	var rost := Color("8a5a44")
+	var x := pm.x - bx * 0.25 + 1.5
+	while x < pm.x + bx * 0.25 - 1.0:
+		var z := -bz * 0.5 + 2.0
+		while z < bz * 0.5 - 1.5:
+			_box("fein", f, Vector2(x, bm.y + z), 0.35, Vector3(0.05, 1.3, 0.05), rost)
+			z += 3.0
+		x += 3.0
+	var mm := bm + Vector2(bx * 0.25, 0)
+	var k := -bz * 0.5 + 1.0
+	while k < bz * 0.5 - 0.9:
+		_box("fein", f, Vector2(mm.x, bm.y + k), 0.12, Vector3(bx * 0.5 - 2.0, 0.04, 0.04), rost)
+		k += 0.9
+	k = -bx * 0.25 + 1.0
+	while k < bx * 0.25 - 0.9:
+		_box("fein", f, Vector2(mm.x + k, bm.y), 0.16, Vector3(0.04, 0.04, bz - 2.0), rost)
+		k += 0.9
+	for i in 4:   # Schalungselemente gestapelt
+		_box("klein", f, Vector2(4.0, 13.0 + i * 0.25), 0.0, Vector3(2.6, 0.2, 1.3), Color("a8744a"), 0.1 * i)
+	_bagger(f, bm + Vector2(8.0, 4.0), rng.randf() * TAU)
+	# Betonmischer am Tor
+	var ml := Vector2(20.0, 0.0)
+	_box("klein", f, ml, 0.5, Vector3(7.0, 0.4, 2.3), DUNKEL)
+	_box("klein", f, ml + Vector2(3.0, 0), 0.9, Vector3(1.6, 2.0, 2.3), Color("f2f2ee"))
+	_box("klein", f, ml + Vector2(3.82, 0), 1.9, Vector3(0.05, 0.8, 2.0), Color("2a3440"))
+	_teil("zyl", "klein", Transform3D(Basis(Vector3.UP, _gier(f, 0.0)) * Basis(Vector3.BACK, PI * 0.5 - 0.25) * Basis.from_scale(Vector3(2.2, 4.4, 2.2)), _pos(f, ml + Vector2(-0.8, 0), 2.2)), Color("e0652a"))
+	for wx in [-2.5, -1.2, 3.0]:
+		for wz in [-1.0, 1.0]:
+			_rad_zyl(f, ml + Vector2(wx, wz), 0.5, 0.5, 0.35, 0.0)
+	welt.hindernisse.append(_rect(f, ml + Vector2(0.4, 0), Vector2(7.6, 2.6)))
+
+# ---------------------------------------------------------------- Brache: Varianten
+# 0 = Sand mit Büschen (+ halb Bauschild), 1 = Lagerplatz mit Containern, 2 = Werbetafel
+const CONTAINER_FARBEN := [Color("b5533c"), Color("3b5f86"), Color("2e7d5b"), Color("d9a43c"), Color("8a929c"), Color("f2f2ee")]
+const WERBUNG := [["SKY COLA", "Erfrischt bis ganz oben", "d9644f"], ["FENSTERKLAR", "Putzmittel für Profis", "4f93c4"], ["DÜNEN-BANK", "Ihr Geld in sicheren Händen", "2e7d5b"],
+	["OASIS AIR", "Täglich nonstop ans Meer", "4fa3c4"], ["GOLDSAND", "Schmuck seit 1987", "c9a258"], ["TURBO-WISCH", "Der Schwamm der Zukunft", "9b7cc4"]]
+
+func _lagerplatz(f: Dictionary) -> void:
+	# Zaun (Pfosten + Holme), Tor rechts
+	for seite in 4:
+		var k := -27.0
+		while k <= 27.01:
+			var l := Vector2(k, -27.3) if seite == 0 else (Vector2(k, 27.3) if seite == 1 else (Vector2(-27.3, k) if seite == 2 else Vector2(27.3, k)))
+			if not (seite == 3 and absf(k) < 4.0):
+				_box("fein", f, l, 0.0, Vector3(0.08, 2.2, 0.08), Color("8a929c"))
+			k += 3.0
+	_rand_kollision(f, 27.3, 4.0)
+	# Containerreihen, 1–3 hoch gestapelt
+	for zr in [-20.0, -11.0, 8.0, 17.0]:
+		var x := -22.0
+		while x < 14.0:
+			var lang := 6.1 if rng.randf() < 0.6 else 12.2
+			if x + lang > 16.0:
+				break
+			var hoch := rng.randi_range(1, 3)
+			var l := Vector2(x + lang * 0.5, zr)
+			for h in hoch:
+				_box("gross", f, l, h * 2.6, Vector3(lang, 2.6, 2.45), CONTAINER_FARBEN[rng.randi() % CONTAINER_FARBEN.size()])
+			_haeuser.append([_rect(f, l, Vector2(lang, 2.45)), hoch * 2.6])
+			x += lang + rng.randf_range(0.3, 1.5)
+	# Paletten, Gabelstapler
+	for i in rng.randi_range(3, 6):
+		var l := Vector2(rng.randf_range(-20.0, 12.0), rng.randf_range(-4.0, 3.0))
+		var n := rng.randi_range(1, 5)
+		for h in n:
+			_box("klein", f, l, h * 0.15, Vector3(1.2, 0.14, 0.8), Color("b08a5a"))
+		welt.hindernisse.append(_rect(f, l, Vector2(1.3, 1.3)))
+	var gl := rng.randf() * TAU
+	var sl := Vector2(19.0, rng.randf_range(-6.0, 6.0))
+	_box("klein", f, sl, 0.3, Vector3(1.2, 1.0, 2.2), GELB, gl)
+	_box("klein", f, sl, 1.3, Vector3(1.1, 0.9, 1.0), Color("2a3440"), gl)
+	_box("klein", f, sl + Vector2(sin(gl), cos(gl)) * 1.25, 0.0, Vector3(0.9, 2.6, 0.12), DUNKEL, gl)
+	welt.hindernisse.append(_rect(f, sl, Vector2(2.6, 2.6)))
+
+func _werbetafel(f: Dictionary) -> void:
+	var w: Array = WERBUNG[rng.randi() % WERBUNG.size()]
+	var l := Vector2(rng.randf_range(-8.0, 8.0), 23.5)
+	for s in [-4.5, 4.5]:
+		_box("gross", f, l + Vector2(s, 0), 0.0, Vector3(0.5, 7.2, 0.5), Color("8a929c"))
+		welt.hindernisse.append(_rect(f, l + Vector2(s, 0), Vector2(0.7, 0.7)))
+	_box("gross", f, l, 7.0, Vector3(14.4, 5.4, 0.35), DUNKEL)
+	_box("gross", f, l + Vector2(0, 0.2), 7.2, Vector3(14.0, 5.0, 0.05), Color(str(w[2])))
+	_box("klein", f, l + Vector2(0, 0.24), 7.3, Vector3(13.6, 1.3, 0.02), Color("f2f2ee"))
+	_schrift(f, l + Vector2(0, 0.25), 10.4, str(w[0]), 0.0, 200, Color.WHITE, 700.0)
+	_schrift(f, l + Vector2(0, 0.27), 7.95, str(w[1]), 0.0, 90, Color("27313d"), 700.0)
+	for s in [-4.0, 0.0, 4.0]:   # Strahler oben
+		_box("fein", f, l + Vector2(s, 0.9), 12.5, Vector3(0.3, 0.2, 0.5), DUNKEL)
+
+# ---------------------------------------------------------------- Wochenmarkt
+const OBST := [Color("d9483e"), Color("f0a03a"), Color("8fc04a"), Color("f2d24a"), Color("7a3f8f"), Color("5a8a3a")]
+func _wochenmarkt(f: Dictionary) -> void:
+	var dach_farben := [Color("d9644f"), Color("4f93c4"), Color("62a85b"), Color("e8b33c")]
+	for zr in [-14.0, 0.0, 14.0]:
+		for ix in 4:
+			var l := Vector2(-16.5 + ix * 11.0, zr)
+			if rng.randf() < 0.12:
+				continue
+			var df: Color = dach_farben[rng.randi() % dach_farben.size()]
+			var s := 1.0 if zr < 0.0 else -1.0   # Verkaufsseite zum nächsten Gang
+			if zr == 0.0:
+				s = 1.0 if ix % 2 == 0 else -1.0
+			_box("klein", f, l, 0.0, Vector3(4.0, 0.9, 1.6), Color("f2f2ee"))
+			for px in [-1.9, 1.9]:
+				for pz in [-0.9, 0.9]:
+					_box("klein", f, l + Vector2(px, pz), 0.0, Vector3(0.07, 2.4, 0.07), Color("9aa3ad"))
+			for k in 4:   # gestreifte Markise
+				_box_rot("klein", f, l + Vector2(-1.65 + k * 1.1, s * 0.35), 2.45, Vector3(1.1, 0.05, 2.6), df if k % 2 == 0 else Color("f2f2ee"), 0.0, Basis(Vector3.RIGHT, s * 0.18))
+			for k in 8:   # Kisten mit Obst und Gemüse
+				var kl := l + Vector2(-1.6 + (k % 4) * 1.05, -0.35 + int(k / 4.0) * 0.7)
+				_box("klein", f, kl, 0.9, Vector3(0.9, 0.18, 0.6), Color("b08a5a"))
+				_kugel("klein", f, kl, 1.02, Vector3(0.8, 0.22, 0.5), OBST[rng.randi() % OBST.size()])
+			welt.hindernisse.append(_rect(f, l, Vector2(4.2, 1.8)))
+	_bank(f, Vector2(-24.0, -7.0), Vector2(1, 0))
+	_bank(f, Vector2(24.0, 7.0), Vector2(-1, 0))
+	_eimer(f, Vector2(-24.0, 7.0))
+	for s in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
+		_baum(f, s * 24.5, 0.9)
+
+# ---------------------------------------------------------------- Skatepark
+func _skatepark(f: Dictionary) -> void:
+	var beton := Color("c9c6be")
+	# Quarterpipe an der hinteren Kante: gebogene Fläche aus 5 Streifen + Plattform + Kante
+	var r := 3.0
+	for i in 5:
+		var a0 := i * PI * 0.5 / 5.0
+		var a1 := (i + 1) * PI * 0.5 / 5.0
+		var am := (a0 + a1) * 0.5
+		var p := Vector2(-6.0, -21.0 - r * sin(am))
+		_box_rot("gross", f, p, r * (1.0 - cos(am)), Vector3(12.0, 0.25, r * (a1 - a0) + 0.05), beton, 0.0, Basis(Vector3.RIGHT, am))
+	_box("gross", f, Vector2(-6.0, -25.5), 0.0, Vector3(12.0, r, 3.0), beton.darkened(0.06))
+	_box("fein", f, Vector2(-6.0, -24.05), r - 0.05, Vector3(12.0, 0.1, 0.1), Color("9aa3ad"))
+	_haeuser.append([_rect(f, Vector2(-6.0, -24.0), Vector2(12.0, 6.0)), r])
+	# Funbox mit Schrägen, Rail, Ledge, Kicker
+	_box("gross", f, Vector2(-8.0, 2.0), 0.0, Vector3(5.0, 0.9, 3.0), beton)
+	for s in [-1.0, 1.0]:
+		_box_rot("gross", f, Vector2(-8.0 + s * 3.6, 2.0), 0.45, Vector3(2.4, 0.2, 3.0), beton, 0.0, Basis(Vector3.BACK, -s * 0.38))
+	welt.hindernisse.append(_rect(f, Vector2(-8.0, 2.0), Vector2(9.0, 3.2)))
+	for px in [-3.5, 3.5]:
+		_box("fein", f, Vector2(-8.0 + px, 9.0), 0.0, Vector3(0.08, 0.5, 0.08), Color("9aa3ad"))
+	_box("klein", f, Vector2(-8.0, 9.0), 0.5, Vector3(8.0, 0.07, 0.07), Color("e8b33c"))
+	_box("gross", f, Vector2(4.0, -6.0), 0.0, Vector3(6.0, 0.5, 1.2), beton.lightened(0.05))
+	welt.hindernisse.append(_rect(f, Vector2(4.0, -6.0), Vector2(6.2, 1.4)))
+	_box_rot("gross", f, Vector2(-16.0, 14.0), 0.35, Vector3(2.4, 0.2, 2.0), beton, 0.0, Basis(Vector3.BACK, 0.3))
+	# Graffiti-Wände: Beton mit bunten Flächen
+	for wl in [[Vector2(20.0, -14.0), PI * 0.5], [Vector2(-22.0, -4.0), PI * 0.5]]:
+		var l: Vector2 = wl[0]
+		_box("gross", f, l, 0.0, Vector3(10.0, 2.6, 0.3), beton.darkened(0.04), wl[1])
+		var seite := 1.0 if l.x < 0.0 else -1.0
+		for k in 6:
+			var gc: Color = [Color("e2483e"), Color("f0c43a"), Color("3fa0e0"), Color("8a4fc4"), Color("4fc46a"), Color("f07ab0")][rng.randi() % 6]
+			var dl := Vector2(seite * (0.16 + k * 0.004), rng.randf_range(-4.0, 4.0))
+			_box("klein", f, l + dl, rng.randf_range(0.2, 1.4), Vector3(rng.randf_range(1.0, 2.6), rng.randf_range(0.5, 1.2), 0.01), gc, wl[1])
+		welt.hindernisse.append(_rect(f, l, Vector2(0.5, 10.0)))
+	_bank(f, Vector2(24.0, 10.0), Vector2(-1, 0))
+	_bank(f, Vector2(24.0, 16.0), Vector2(-1, 0))
+	_eimer(f, Vector2(24.0, 13.0))
+	for l in [Vector2(-24.0, 24.0), Vector2(0.0, 24.5), Vector2(24.0, 24.0)]:
+		_baum(f, l, 0.9)
+
+# ---------------------------------------------------------------- Gemeinschaftsgarten
+func _garten(f: Dictionary) -> void:
+	var holz := Color("8a5f3c")
+	var pflanzen := [Color("7cbf4a"), Color("4f8a3a"), Color("a0cf5a"), Color("5f9f45")]
+	for ix in 5:
+		for iz in 7:
+			var l := Vector2(-20.5 + ix * 9.0, -19.25 + iz * 5.5)
+			for s in [-1.0, 1.0]:
+				_box("klein", f, l + Vector2(0, s * 1.1), 0.0, Vector3(6.2, 0.45, 0.12), holz)
+				_box("klein", f, l + Vector2(s * 3.05, 0), 0.0, Vector3(0.12, 0.45, 2.2), holz)
+			var art := rng.randi() % 4
+			for k in 5:
+				var pl := l + Vector2(-2.4 + k * 1.2, rng.randf_range(-0.3, 0.3))
+				if art == 3:   # Tomaten an Stäben
+					_box("fein", f, pl, 0.4, Vector3(0.04, 1.4, 0.04), Color("a8744a"))
+					_kugel("klein", f, pl, 0.95, Vector3(0.6, 0.9, 0.6), pflanzen[1])
+					_kugel("klein", f, pl + Vector2(0.15, 0.1), 1.0, Vector3(0.14, 0.14, 0.14), Color("d9483e"))
+				elif art == 2:   # Sonnenblumen
+					_box("fein", f, pl, 0.4, Vector3(0.05, 1.8, 0.05), Color("5f8a3a"))
+					_teil("zyl", "klein", Transform3D(Basis(Vector3.RIGHT, 1.2) * Basis.from_scale(Vector3(0.6, 0.06, 0.6)), _pos(f, pl, 2.2)), Color("f2c43a"))
+				else:
+					_kugel("klein", f, pl, 0.45, Vector3(0.75, 0.45, 0.75), pflanzen[(art + k) % pflanzen.size()])
+			welt.hindernisse.append(_rect(f, l, Vector2(6.3, 2.3)))
+	# Gewächshaus, Gartenhütte, Regentonnen, Bank mit Tisch
+	var gh := Vector2(23.5, -12.0)
+	_box("gross", f, gh, 0.0, Vector3(5.0, 2.2, 8.0), Color("cfe3ea"))
+	for s in [-1.0, 1.0]:
+		_box_rot("gross", f, gh + Vector2(s * 1.25, 0), 2.6, Vector3(2.8, 0.06, 8.0), Color("dcebf0"), 0.0, Basis(Vector3.BACK, -s * 0.55))
+	_haeuser.append([_rect(f, gh, Vector2(5.0, 8.0)), 3.4])
+	var hu := Vector2(23.5, 4.0)
+	_box("gross", f, hu, 0.0, Vector3(4.0, 2.4, 3.2), holz.lightened(0.1))
+	_box_rot("gross", f, hu, 2.55, Vector3(4.6, 0.12, 3.8), Color("6f4a32"), 0.0, Basis(Vector3.RIGHT, 0.12))
+	_haeuser.append([_rect(f, hu, Vector2(4.0, 3.2)), 2.8])
+	for k in 2:
+		_zyl("klein", f, hu + Vector2(-2.4, -1.0 + k * 1.1), 0.0, 0.4, 1.0, Color("2f6fae"))
+	_bank(f, Vector2(-14.0, 22.0), Vector2(0, -1))
+	_box("klein", f, Vector2(-11.0, 22.0), 0.0, Vector3(1.8, 0.75, 0.9), holz)
+	_bank(f, Vector2(-8.0, 22.0), Vector2(0, -1))
+	for l in [Vector2(10.0, 23.0), Vector2(22.5, 22.5)]:
+		_baum(f, l, 1.0)
+
+# ---------------------------------------------------------------- Hundewiese
+func _hund(f: Dictionary, l: Vector2, gl: float, farbe: Color) -> void:
+	var v := Vector2(sin(gl), cos(gl))
+	var q := Vector2(v.y, -v.x)
+	_box("klein", f, l, 0.32, Vector3(0.32, 0.3, 0.75), farbe, gl)
+	_box("klein", f, l + v * 0.45, 0.5, Vector3(0.26, 0.26, 0.3), farbe, gl)
+	_box("klein", f, l + v * 0.63, 0.5, Vector3(0.14, 0.12, 0.12), farbe.darkened(0.3), gl)
+	_box_rot("klein", f, l - v * 0.42, 0.55, Vector3(0.06, 0.06, 0.3), farbe, gl, Basis(Vector3.RIGHT, 0.7))
+	for a in [-0.25, 0.25]:
+		for b in [-0.08, 0.08]:
+			_box("klein", f, l + v * a + q * b * 1.4, 0.0, Vector3(0.07, 0.34, 0.07), farbe.darkened(0.1), gl)
+
+func _hundewiese(f: Dictionary) -> void:
+	# niedriger Zaun mit Tor
+	for seite in 4:
+		var k := -27.0
+		while k <= 27.01:
+			var l := Vector2(k, -27.3) if seite == 0 else (Vector2(k, 27.3) if seite == 1 else (Vector2(-27.3, k) if seite == 2 else Vector2(27.3, k)))
+			if not (seite == 3 and absf(k) < 2.0):
+				_box("fein", f, l, 0.0, Vector3(0.1, 1.2, 0.1), Color("6f4a32"))
+			k += 2.0
+		var lm := Vector2(0, -27.3) if seite == 0 else (Vector2(0, 27.3) if seite == 1 else (Vector2(-27.3, 0) if seite == 2 else Vector2(27.3, 0)))
+		var g := Vector3(0.06, 0.08, 54.6) if seite >= 2 else Vector3(54.6, 0.08, 0.06)
+		_box("fein", f, lm, 1.0, g, Color("6f4a32"))
+	_rand_kollision(f, 27.3, 2.0)
+	# Hürden, Tunnel, Slalom, A-Wand
+	for i in 3:
+		var hl := Vector2(-14.0 + i * 5.0, -14.0)
+		for s in [-0.8, 0.8]:
+			_box("klein", f, hl + Vector2(s, 0), 0.0, Vector3(0.08, 0.9, 0.08), Color("f2f2ee"))
+		_box("klein", f, hl, 0.55, Vector3(1.6, 0.06, 0.06), Color("d9483e"))
+	_teil("zyl", "klein", Transform3D(Basis(Vector3.UP, _gier(f, 0.0)) * Basis(Vector3.RIGHT, PI * 0.5) * Basis.from_scale(Vector3(1.2, 5.0, 1.2)), _pos(f, Vector2(10.0, -12.0), 0.6)), Color("3f8fd0"))
+	welt.hindernisse.append(_rect(f, Vector2(10.0, -12.0), Vector2(1.4, 5.0)))
+	for i in 6:
+		_box("fein", f, Vector2(-12.0 + i * 1.2, 6.0), 0.0, Vector3(0.05, 1.0, 0.05), Color("f2c43a") if i % 2 == 0 else Color("f2f2ee"))
+	for s in [-1.0, 1.0]:
+		_box_rot("klein", f, Vector2(10.0 + s * 1.3, 8.0), 0.85, Vector3(2.9, 0.1, 1.0), Color("e8b33c"), 0.0, Basis(Vector3.BACK, -s * 0.62))
+	welt.hindernisse.append(_rect(f, Vector2(10.0, 8.0), Vector2(5.0, 1.2)))
+	# Beutelspender, Bänke, Bäume, ein paar Hunde
+	_box("klein", f, Vector2(24.0, 4.0), 0.0, Vector3(0.1, 1.3, 0.1), DUNKEL)
+	_box("klein", f, Vector2(24.0, 4.0), 1.0, Vector3(0.35, 0.45, 0.2), Color("4f8a3a"))
+	_eimer(f, Vector2(24.0, 5.0))
+	_bank(f, Vector2(-23.0, 10.0), Vector2(1, 0))
+	_bank(f, Vector2(-23.0, -2.0), Vector2(1, 0))
+	_bank(f, Vector2(23.0, -10.0), Vector2(-1, 0))
+	for l in [Vector2(-22.0, -22.0), Vector2(22.0, 22.0), Vector2(-20.0, 21.0), Vector2(0.0, 20.0)]:
+		_baum(f, l, rng.randf_range(1.0, 1.3))
+	var fell := [Color("c9a46c"), Color("3a3330"), Color("f2f2ee"), Color("8a5a3c")]
+	for i in rng.randi_range(2, 4):
+		_hund(f, Vector2(rng.randf_range(-16.0, 16.0), rng.randf_range(-6.0, 16.0)), rng.randf() * TAU, fell[rng.randi() % fell.size()])
+
+# ---------------------------------------------------------------- Zirkus (einmal)
+# Gestreiftes Zelt als eigenes Mesh mit Vertexfarben (Wand + Kegeldach, rot/weiß), Wagen, Lichterketten von der Spitze
+func _streifen_zelt(f: Dictionary, l: Vector2, r: float, wand: float, dach: float, a: Color, b: Color) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var n := 24
+	var spitze := Vector3(0, wand + dach, 0)
+	for i in n:
+		var w0 := TAU * i / n
+		var w1 := TAU * (i + 1) / n
+		var p0 := Vector3(cos(w0) * r, 0, sin(w0) * r)
+		var p1 := Vector3(cos(w1) * r, 0, sin(w1) * r)
+		var c := a if i % 2 == 0 else b
+		var nw := Vector3(cos((w0 + w1) * 0.5), 0, sin((w0 + w1) * 0.5))
+		for v in [p0, p1 + Vector3.UP * wand, p1, p0, p0 + Vector3.UP * wand, p1 + Vector3.UP * wand]:
+			st.set_color(c)
+			st.set_normal(nw)
+			st.add_vertex(v)
+		var oben0 := p0 * 1.08 + Vector3.UP * wand
+		var oben1 := p1 * 1.08 + Vector3.UP * wand
+		var nd := (oben1 - oben0).cross(spitze - oben0).normalized()
+		if nd.y < 0.0:
+			nd = -nd
+		for v in [oben0, spitze, oben1]:
+			st.set_color(c)
+			st.set_normal(nd)
+			st.add_vertex(v)
+	var mi := MeshInstance3D.new()
+	var mesh := st.commit()
+	mi.mesh = mesh
+	var m := _mat.duplicate() as StandardMaterial3D
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED   # Wicklung egal (beide Seiten)
+	mi.material_override = m
+	mi.position = _pos(f, l)
+	add_child(mi)
+
+func _zirkus(f: Dictionary) -> void:
+	var rot := Color("d9483e")
+	var weiss := Color("f2f2ee")
+	_streifen_zelt(f, Vector2.ZERO, 11.0, 4.0, 8.0, rot, weiss)
+	_zyl("gross", f, Vector2.ZERO, 0.0, 0.25, 14.5, Color("9aa3ad"))
+	_box("klein", f, Vector2(0.6, 0.0), 13.6, Vector3(1.2, 0.7, 0.04), Color("f2c43a"))
+	_box("klein", f, Vector2(0.0, 11.4), 0.0, Vector3(3.2, 3.2, 1.0), Color("2a3440"))   # Eingang
+	_haeuser.append([_rect(f, Vector2.ZERO, Vector2(22.0, 22.0)), 12.0])
+	for i in 8:   # Lichterketten von der Spitze nach außen
+		var a := TAU * i / 8.0 + PI / 8.0
+		var aussen := Vector2(cos(a), sin(a)) * 21.0
+		_box("klein", f, aussen, 0.0, Vector3(0.15, 3.0, 0.15), DUNKEL)
+		var n := 14
+		for k in range(1, n):
+			var t := float(k) / n
+			var y := lerpf(12.0, 3.0, t) - 1.2 * sin(PI * t)
+			var c: Color = RAD_FARBEN[(i + k) % RAD_FARBEN.size()].lightened(0.3) if k % 2 == 0 else Color(1.0, 0.85, 0.6)
+			_licht_punkte.append([_pos(f, Vector2(cos(a), sin(a)) * lerpf(1.0, 21.0, t), y), c])
+	# Zirkuswagen mit Rädern
+	var wagen := [[Vector2(-20.0, -20.0), Color("2f5f9e")], [Vector2(-10.0, -23.5), Color("e8b33c")], [Vector2(12.0, -23.5), Color("62a85b")], [Vector2(21.0, -16.0), rot]]
+	for w in wagen:
+		var l: Vector2 = w[0]
+		_box("klein", f, l, 0.6, Vector3(6.0, 2.6, 2.4), w[1])
+		_box("klein", f, l, 3.2, Vector3(6.2, 0.2, 2.6), weiss)
+		_box("klein", f, l + Vector2(0, 1.21), 1.6, Vector3(1.0, 0.8, 0.02), Color("2a3440"))
+		for wx in [-2.0, 2.0]:
+			for wz in [-1.0, 1.0]:
+				_rad_zyl(f, l + Vector2(wx, wz), 0.55, 0.55, 0.15, 0.0)
+		welt.hindernisse.append(_rect(f, l, Vector2(6.2, 2.6)))
+	# Kassenhäuschen, Fahnen am Eingang
+	_box("klein", f, Vector2(-5.0, 20.0), 0.0, Vector3(2.4, 2.4, 2.0), rot)
+	_box("klein", f, Vector2(-5.0, 20.0), 2.4, Vector3(2.8, 0.3, 2.4), weiss)
+	welt.hindernisse.append(_rect(f, Vector2(-5.0, 20.0), Vector2(2.6, 2.2)))
+	for s in [-1.0, 1.0]:
+		_box("fein", f, Vector2(s * 3.0, 17.0), 0.0, Vector3(0.08, 5.0, 0.08), Color("9aa3ad"))
+		_box("klein", f, Vector2(s * 3.0 + 0.5, 17.0), 4.2, Vector3(1.0, 0.6, 0.03), Color("f2c43a") if s > 0.0 else rot)
+
+# ---------------------------------------------------------------- Stadion (einmal)
+func _stadion(f: Dictionary) -> void:
+	var beton := Color("c9c4ba")
+	var sitz := [Color("2f5f9e"), Color("f2f2ee")]
+	# Tribünen: lange Seiten 6 Stufen, kurze Seiten 3 Stufen (Sitzreihen abwechselnd blau/weiß)
+	for s in [-1.0, 1.0]:
+		for k in 6:
+			var x: float = s * (15.5 + k * 1.8)
+			_box("gross", f, Vector2(x, 0), 0.0, Vector3(1.8, 0.8 * (k + 1), 40.0), beton)
+			_box("klein", f, Vector2(x - s * 0.3, 0), 0.8 * (k + 1), Vector3(0.6, 0.35, 39.0), sitz[k % 2])
+		_haeuser.append([_rect(f, Vector2(s * 20.0, 0), Vector2(11.0, 40.0)), 4.8])
+		for k in 3:
+			var z: float = s * (21.8 + k * 1.8)
+			_box("gross", f, Vector2(0, z), 0.0, Vector3(28.0, 0.8 * (k + 1), 1.8), beton)
+			_box("klein", f, Vector2(0, z - s * 0.3), 0.8 * (k + 1), Vector3(27.0, 0.35, 0.6), sitz[(k + 1) % 2])
+		_haeuser.append([_rect(f, Vector2(0, s * 23.6), Vector2(28.0, 5.4)), 2.4])
+	# Dach über der einen Längsseite
+	_box("gross", f, Vector2(-21.0, 0), 8.0, Vector3(13.0, 0.4, 40.0), Color("e6e6e2"))
+	for z in [-18.0, -6.0, 6.0, 18.0]:
+		_box("gross", f, Vector2(-27.0, z), 0.0, Vector3(0.5, 8.0, 0.5), Color("9aa3ad"))
+	# Tore
+	for s in [-1.0, 1.0]:
+		for px in [-3.66, 3.66]:
+			_box("klein", f, Vector2(px, s * 19.5), 0.0, Vector3(0.12, 2.44, 0.12), Color("f2f2ee"))
+		_box("klein", f, Vector2(0.0, s * 19.5), 2.38, Vector3(7.44, 0.12, 0.12), Color("f2f2ee"))
+		_box("klein", f, Vector2(0.0, s * 20.6), 0.0, Vector3(7.3, 2.3, 0.03), Color("dfe3e0"))
+	# Flutlichtmasten in den Ecken (nachts helle Lampenfelder)
+	for e in [Vector2(-26.0, -26.0), Vector2(26.0, -26.0), Vector2(26.0, 26.0), Vector2(-26.0, 26.0)]:
+		_box("gross", f, e, 0.0, Vector3(0.7, 24.0, 0.7), Color("9aa3ad"))
+		var richtung: Vector2 = -(e as Vector2).normalized()
+		var gl := atan2(richtung.x, richtung.y)
+		_box_rot("gross", f, e + richtung * 0.4, 24.0, Vector3(3.6, 2.4, 0.3), DUNKEL, gl, Basis(Vector3.RIGHT, -0.5))
+		for ix in 3:
+			for iy in 2:
+				var q := Vector2(richtung.y, -richtung.x)
+				_licht_punkte.append([_pos(f, e + richtung * 0.75 + q * (ix - 1) * 1.1, 24.7 + iy * 0.9), Color(1.0, 0.97, 0.9)])
+		welt.hindernisse.append(_rect(f, e, Vector2(0.9, 0.9)))
+	# Anzeigetafel
+	_box("gross", f, Vector2(0.0, -27.2), 4.8, Vector3(9.0, 3.6, 0.4), DUNKEL)
+	_schrift(f, Vector2(0.0, -26.98), 7.0, "WÜSTENNADEL FC", 0.0, 70, Color("f2c43a"), 400.0)
+	_schrift(f, Vector2(0.0, -26.98), 5.8, "2 : 1", 0.0, 140, Color.WHITE, 400.0)
+	for l in [Vector2(-8.0, -21.0), Vector2(8.0, 21.0)]:
+		bodenlicht.leuchte(_pos(f, l), 2.0)
 
 # ---------------------------------------------------------------- Meshes
 func _form(name: String) -> Mesh:

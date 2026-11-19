@@ -78,6 +78,10 @@ func _orte_sammeln() -> void:
 	orte.append({"name": "Strand", "pos": Vector2(-630.0, -40.0), "farbe": "ffd84a", "art": "strand", "ebene": 1})
 	if w.grundstuecke and not w.grundstuecke.erstes(Grundstuecke.Typ.RIESENRAD).is_empty():
 		orte.append({"name": "Riesenrad", "pos": Vector2(w.grundstuecke._pos(w.grundstuecke.erstes(Grundstuecke.Typ.RIESENRAD), Vector2(0, 9.5)).x, w.grundstuecke._pos(w.grundstuecke.erstes(Grundstuecke.Typ.RIESENRAD), Vector2(0, 9.5)).z), "farbe": "e2483e", "art": "riesenrad"})
+	for hl in [[Grundstuecke.Typ.ZIRKUS, "Zirkus"], [Grundstuecke.Typ.STADION, "Stadion"]]:
+		if w.grundstuecke and not w.grundstuecke.erstes(hl[0]).is_empty():
+			var hp: Vector3 = w.grundstuecke._pos(w.grundstuecke.erstes(hl[0]), Vector2(0, 26.0))
+			orte.append({"name": hl[1], "pos": Vector2(hp.x, hp.z), "farbe": "e2483e" if hl[1] == "Zirkus" else "5fae4a", "art": "highlight"})
 	orte.append({"name": "Palmen-Boulevard", "pos": Vector2(k.kanal_start - 30.0, Kueste.BOUL_Z + 12.0), "farbe": "3fc29a", "art": "strand"})
 	# Straßen für die Zeichnung
 	for richtung in 2:
