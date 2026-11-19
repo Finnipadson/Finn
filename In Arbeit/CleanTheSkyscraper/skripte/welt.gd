@@ -49,6 +49,8 @@ var sturm_k := 0.0
 var daecher: Daecher
 var belichtung_faktor := 1.0    # Grafik-Test: z. B. AgX braucht mehr Belichtung als ACES
 var spiegel: Array = []         # Grafik-Test: ReflectionProbes am Turm (Stadt spiegelt sich im sauberen Glas)
+var leere_felder: Array = []    # Vector2: Feld-Mitten ohne Haus (Grundstuecke.gd belegt sie, 19.11.2026)
+var grundstuecke: Grundstuecke
 var _werte := {}                # letzte Werte der Tageszeit
 
 func _ready() -> void:
@@ -71,8 +73,13 @@ func _ready() -> void:
 	kueste = Kueste.new()
 	add_child(kueste)
 	kueste.baue(self)
+	grundstuecke = Grundstuecke.new()   # leere Grundstücke (19.11.2026; Vergleichs-Schalter --ohne-grundstuecke)
+	add_child(grundstuecke)
+	if not "--ohne-grundstuecke" in OS.get_cmdline_user_args():
+		grundstuecke.baue(self)
 	var details := StadtDetails.new()
 	add_child(details)
+	grundstuecke.an_details(details)   # Palmen, Büsche, Bänke, Mülleimer zeichnet die Stadt mit
 	details.baue(self)
 	var verkehr := Verkehr.new()
 	add_child(verkehr)
@@ -81,6 +88,7 @@ func _ready() -> void:
 	add_child(daecher)
 	if not "--ohne-daecher" in OS.get_cmdline_user_args():
 		daecher.baue(self)
+	grundstuecke.haeuser_eintragen()   # erst nach den Dächern (Rohbauten bekommen keine Dachaufbauten)
 
 func _umgebung() -> void:
 	env = Environment.new()
@@ -304,7 +312,10 @@ func _stadt() -> void:
 		while z <= 1500.0:
 			var d := Vector2(x, z).length()
 			var dichte := 0.85 if d < 600.0 else 0.55      # nah am Turm dichter bebaut
-			if d > 100.0 and d < 1600.0 and rng.randf() < dichte:
+			var bauen := d > 100.0 and d < 1600.0 and rng.randf() < dichte   # gleiche Zufallsfolge wie vorher
+			if not bauen and d > 100.0 and d < 1600.0:
+				leere_felder.append(Vector2(x, z))
+			if bauen:
 				var bx := 25.0 + rng.randf() * 30.0
 				var bz := 25.0 + rng.randf() * 30.0
 				var hoch := int((4.0 + rng.randf() * 22.0) * (1.75 - d / 1600.0))

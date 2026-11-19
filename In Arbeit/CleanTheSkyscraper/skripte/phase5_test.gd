@@ -773,6 +773,14 @@ func _tag_bilder() -> void:
 	orte["glas"] = [gp.pos + gp.normal * 30.0 + gp.tangente * -25.0 + Vector3.UP * 6.0, gp.pos + gp.tangente * 45.0 + Vector3.UP * 25.0]
 	var gp2 := s.turm.fassaden_punkt(4, 100.0, 4 * Turm.STOCK_H)
 	orte["fuss"] = [gp2.pos + gp2.normal * 45.0 + Vector3.UP * -10.0, gp2.pos + Vector3.UP * 60.0]
+	if s.welt.grundstuecke:   # leere Grundstücke (19.11.2026): von schräg oben und aus Augenhöhe
+		for t in range(1, Grundstuecke.NAMEN.size()):
+			var gf: Dictionary = s.welt.grundstuecke.erstes(t)
+			if gf.is_empty():
+				continue
+			var gc: Vector2 = gf.mitte
+			orte["gs_" + Grundstuecke.NAMEN[t]] = [Vector3(gc.x + 40.0, 24.0, gc.y + 48.0), Vector3(gc.x, 2.0, gc.y)]
+			orte["gs_" + Grundstuecke.NAMEN[t] + "_nah"] = [Vector3(gc.x + 33.0, 1.8, gc.y + 18.0), Vector3(gc.x - 5.0, 4.0, gc.y - 4.0)]
 	var uhren := [9.0, 13.0, 16.5, 18.6, 19.4, 20.2, 22.0, 5.8]
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--uhren="):

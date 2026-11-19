@@ -6,6 +6,7 @@ shader_type spatial;
 uniform sampler2D farben : source_color, filter_linear_mipmap;
 uniform vec2 zelle = vec2(-1.0);
 global uniform float nacht;   // Tageszeit (Phase 5): Scheinwerfer + Rücklichter
+uniform float lichter = 1.0;  // 0 = geparkt (Grundstuecke.gd): nachts keine Scheinwerfer
 
 varying vec4 lack;
 varying vec3 ln;
@@ -28,7 +29,7 @@ void fragment() {
 	}
 	ALBEDO = c;
 	// Nachts: helle Flächen vorn leuchten weiß (Scheinwerfer), rote Flächen hinten rot (Rücklichter)
-	if (nacht > 0.01) {
+	if (nacht > 0.01 && lichter > 0.5) {
 		float hell = smoothstep(0.7, 0.85, dot(c, vec3(0.333)));
 		float rot = smoothstep(0.25, 0.45, c.r - max(c.g, c.b));
 		EMISSION = vec3(1.0, 0.95, 0.8) * hell * smoothstep(0.6, 0.9, ln.z) * 3.0 * nacht

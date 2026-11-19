@@ -21,7 +21,7 @@ void vertex() {
 	float groesse = max(1.8, dist * 0.0042);
 	vec3 r = normalize(INV_VIEW_MATRIX[0].xyz);
 	vec3 u = normalize(INV_VIEW_MATRIX[1].xyz);
-	vec3 ecke = VERTEX - mitte;   // Quad-Ecke (Instanz ohne Drehung/Skalierung)
+	vec2 ecke = vec2(UV.x - 0.5, 0.5 - UV.y);   // Quad-Ecke aus UV (gilt auch an gedrehten Teilen, z. B. Kran-Ausleger)
 	VERTEX = mitte + (r * ecke.x + u * ecke.y) * groesse;
 	float ph = INSTANCE_CUSTOM.x;
 	blink = smoothstep(0.55, 0.62, fract(TIME * 0.5 + ph)) * (1.0 - smoothstep(0.86, 0.93, fract(TIME * 0.5 + ph)));

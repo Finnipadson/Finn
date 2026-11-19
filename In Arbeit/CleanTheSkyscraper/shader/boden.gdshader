@@ -66,6 +66,83 @@ float kreuz_ok(vec2 k) {
 	return 1.0;
 }
 
+
+// ---------------- Leere Grundstücke (Grundstuecke.gd, 19.11.2026): Bodenbelag je Nutzung. l = Ort im Grundstück
+// (schon gedreht, |l| <= 28), zuf = Variante (0/1), c = Boden darunter. Alle Linien über band_k gefiltert (kein Flimmern).
+uniform sampler2D felder : filter_nearest, hint_default_black;   // je Feld: R = Typ, G = Drehung, B = Variante
+vec3 lin(vec3 c) { return pow(c, vec3(2.2)); }   // Farbwerte wie Hex/sRGB angeben (die Uniforms tun das per source_color)
+vec3 grundstueck(int typ, vec2 l, vec2 p, float aa, float zuf, float nah, vec3 c) {
+	float rand_d = 28.0 - max(abs(l.x), abs(l.y));       // Abstand zum Grundstücksrand (innen positiv)
+	vec3 kante = vec3(0.86, 0.85, 0.82);
+	float rk = band_k(rand_d - 0.2, 0.2, aa);              // 0,4-m-Bordstein ringsum
+	vec3 rasen = gruen * (0.82 + 0.28 * mix(0.5, vn(p * 0.4), nah) + 0.06 * vn(p * 0.05));
+	vec3 kies = lin(vec3(0.84, 0.8, 0.72)) * (0.95 + 0.06 * mix(0.5, vn(p * 2.0), nah));
+	vec3 g = c;
+	if (typ == 1) {   // Parkplatz: Asphalt, weiße Stellplatz-Striche, Grünstreifen hinten, Einfahrt rechts
+		g = asphalt * (1.04 + 0.07 * mix(0.5, vn(p * 0.7), nah));
+		g *= 1.0 - 0.07 * smoothstep(0.6, 0.85, vn(p * 0.4 + 17.0));   // Ölflecken
+		float reihe = max(max(band_k(l.y + 25.0, 2.5, aa), band_k(l.y + 11.0, 5.0, aa)), max(band_k(l.y - 5.5, 5.0, aa), band_k(l.y - 19.5, 2.5, aa)));
+		float in_x = band_k(l.x + 3.9, 22.16, aa);
+		float strich = band_k((fract((l.x + 26.0) / 2.6 + 0.5) - 0.5) * 2.6, 0.06, aa);
+		float mitte = band_k(l.y + 11.0, 0.06, aa) + band_k(l.y - 5.5, 0.06, aa);
+		g = mix(g, vec3(0.93), clamp(strich * reihe + mitte, 0.0, 1.0) * in_x * 0.9);
+		float gs = band_k(l.y - 25.2, 2.6, aa) * band_k(l.x + 1.0, 25.0, aa);
+		g = mix(g, rasen, gs);
+		g = mix(g, kante, band_k(l.y - 22.45, 0.15, aa) * band_k(l.x + 1.0, 25.15, aa));
+		rk *= 1.0 - band_k(l.y + 2.75, 3.25, aa) * step(0.0, l.x);
+	} else if (typ == 2) {   // Park: Rasen, Kieswege (Kreuz oder Diagonalen), runder Platz mit Brunnen, Weg ringsum
+		g = rasen;
+		float weg = zuf < 0.5 ? max(band_k(l.x, 1.3, aa), band_k(l.y, 1.3, aa))
+			: max(band_k((l.x - l.y) * 0.7071, 1.3, aa), band_k((l.x + l.y) * 0.7071, 1.3, aa));
+		weg = max(weg, 1.0 - sst(7.0, length(l), aa));
+		weg = max(weg, band_k(rand_d - 2.6, 1.1, aa));
+		g = mix(g, kies, weg);
+		g = mix(g, kante, band_k(length(l) - 7.0, 0.15, aa));
+	} else if (typ == 7) {   // Park mit Teich: Rasen, Weg um den Teich, Zugänge von zwei Seiten
+		g = rasen;
+		float r = length(l / vec2(19.5, 16.5));
+		float weg = band_k((r - 1.0) * 18.0, 1.3, aa);
+		weg = max(weg, band_k(l.y, 1.3, aa) * sst(18.5, abs(l.x), aa));
+		weg = max(weg, band_k(l.x, 1.3, aa) * sst(15.5, abs(l.y), aa));
+		g = mix(g, kies, weg);
+		g = mix(g, rasen * 0.8, 1.0 - sst(1.06, length(l / vec2(14.0, 11.0)), aa / 12.0));   // Ufer unter dem Wasser
+	} else if (typ == 3) {   // Baustelle: festgefahrene Erde, Reifenspuren, Schotter vor dem Tor
+		g = mix(lin(vec3(0.66, 0.56, 0.42)), sand * 0.92, vn(p * 0.08)) * (0.92 + 0.1 * mix(0.5, vn(p * 1.3), nah));
+		float sp = l.y - 9.0 - 4.0 * sin(l.x * 0.11 + zuf * 3.0);
+		float spur = band_k(abs(sp) - 0.9, 0.25, aa);
+		g *= 1.0 - 0.18 * spur;
+		g = mix(g, lin(vec3(0.66, 0.65, 0.62)) * (0.9 + 0.15 * mix(0.5, hs(floor(p * 3.0)), nah)), band_k(l.y, 5.0, aa) * sst(17.0, l.x, aa));
+		rk *= 0.6;
+	} else if (typ == 4) {   // Sandbrache: Sand, trockene Grasflecken, Reifenspuren
+		g = mix(sand, gehweg, 0.3) * (0.95 + 0.08 * vn(p * 0.15) + 0.04 * mix(0.5, vn(p * 1.5), nah));
+		g = mix(g, lin(vec3(0.66, 0.64, 0.42)) * (0.9 + 0.2 * mix(0.5, vn(p * 0.9), nah)), smoothstep(0.58, 0.78, vn(p * 0.12 + 40.0)) * 0.85);
+		float sp = l.x + 6.0 - 5.0 * sin(l.y * 0.09 + 1.0);
+		g *= 1.0 - 0.1 * band_k(abs(sp) - 0.9, 0.25, aa);
+	} else if (typ == 5) {   // Sportplatz: zwei Basketballfelder (blau, weiße Linien) auf grünem Kunststoffbelag
+		g = lin(vec3(0.42, 0.56, 0.47)) * (0.95 + 0.06 * mix(0.5, vn(p * 0.6), nah));
+		vec2 q = vec2(l.x - sign(l.x) * 9.0, l.y);
+		float feld = (1.0 - sst(7.0, abs(q.x), aa)) * (1.0 - sst(13.0, abs(q.y), aa));
+		g = mix(g, lin(vec3(0.33, 0.52, 0.7)) * (0.96 + 0.05 * mix(0.5, vn(p * 0.8), nah)), feld);
+		float lin = band_k(max(abs(q.x) - 7.0, abs(q.y) - 13.0), 0.05, aa);
+		lin = max(lin, band_k(q.y, 0.05, aa) * feld);
+		lin = max(lin, band_k(length(q) - 1.8, 0.05, aa));
+		lin = max(lin, band_k(max(abs(q.x) - 2.45, abs(abs(q.y) - 10.1) - 2.9), 0.05, aa));
+		lin = max(lin, band_k(length(vec2(q.x, abs(q.y) - 11.4)) - 6.6, 0.05, aa) * (1.0 - sst(11.4, abs(q.y), aa)));
+		lin = max(lin, band_k(abs(q.x) - 6.6, 0.05, aa) * sst(11.4, abs(q.y), aa) * feld);
+		g = mix(g, vec3(0.94), lin);
+	} else if (typ == 6) {   // Riesenrad: helle 1,5-m-Steinplatten, Rasenbeete in den Ecken
+		vec2 kp = l / 1.5;
+		float kf = max(fuge(kp.x, 0.025, aa / 1.5), fuge(kp.y, 0.025, aa / 1.5));
+		g = stein_hell * (0.9 + 0.12 * mix(0.5, hs(floor(kp) + 5.0), nah)) * (1.0 - 0.14 * kf);
+		float beet = 1.0 - sst(6.5, length(abs(l) - vec2(25.0)), aa);
+		g = mix(g, rasen, beet);
+		g = mix(g, kante, band_k(length(abs(l) - vec2(25.0)) - 6.5, 0.15, aa));
+		g = mix(g, stein_dunkel * 0.95, band_k(l.y, 0.5, aa) * band_k(l.x, 14.0, aa));   // Granitband unter dem Rad
+	}
+	g = mix(g, kante, rk);
+	return mix(c, g, sst(0.0, rand_d, aa));
+}
+
 void vertex() {
 	wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
@@ -127,6 +204,23 @@ void fragment() {
 	c = mix(c, vec3(0.92), randlinie);
 	float zebra = sst(7.5, zur_kreuzung, aa) * (1.0 - sst(11.0, zur_kreuzung, aa)) * streifen(quer / 1.2 + 0.5, 0.5, aa / 1.2) * str * (1.0 - sst(5.5, naechste, aa));
 	c = mix(c, vec3(0.93), zebra * (1.0 - smoothstep(700.0, 900.0, d)));
+
+	// ---------------- Leere Grundstücke (Feld-Mitten bei k·raster, Datentextur 41 × 41 ab −1500 m)
+	vec2 fz = floor(p / raster + 0.5);
+	ivec2 fij = ivec2(fz) + ivec2(20);
+	vec2 fl = p - fz * raster;
+	if (fij.x >= 0 && fij.y >= 0 && fij.x < 41 && fij.y < 41 && max(abs(fl.x), abs(fl.y)) < 28.5) {
+		vec4 fd = texelFetch(felder, fij, 0);
+		int typ = int(fd.r * 255.0 + 0.5);
+		if (typ > 0) {
+			int dreh = int(fd.g * 255.0 + 0.5);
+			vec2 l = fl;
+			if (dreh == 1) l = vec2(fl.y, -fl.x);
+			else if (dreh == 2) l = -fl;
+			else if (dreh == 3) l = vec2(-fl.y, fl.x);
+			c = grundstueck(typ, l, p, aa, fd.b, nah_2, c);
+		}
+	}
 
 	// ---------------- Strandpromenade + Palmen-Boulevard: große helle Platten (1,5 m), dunkle Granitbänder längs,
 	// Rasenstreifen für die Palmenreihen (|dz| 8,5–10,5 m), zur Ufermauer hin ein breites dunkles Band
