@@ -451,8 +451,9 @@ func spiegel_an(an: bool, turm: Node3D, hoehe: float) -> void:
 		for p in spiegel:
 			(p as Node).queue_free()
 		spiegel = []
-	if turm.get("glas") is ShaderMaterial:
-		(turm.glas as ShaderMaterial).set_shader_parameter("spiegel", 1.0 if an else 0.0)
+	for g in ["glas", "spitze_glas"]:
+		if turm.get(g) is ShaderMaterial:
+			(turm.get(g) as ShaderMaterial).set_shader_parameter("spiegel", 1.0 if an else 0.0)
 
 func spiegel_bauen(turm: Node3D, hoehe: float) -> void:
 	for n in turm.find_children("*", "VisualInstance3D", true, false):

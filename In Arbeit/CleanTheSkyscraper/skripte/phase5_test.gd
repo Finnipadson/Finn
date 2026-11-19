@@ -758,7 +758,12 @@ func _tag_bilder() -> void:
 				if (c / 2 + f) % 2 == 0:
 					s.zustand.sauber_machen(f, c)
 	orte["dach"] = [Vector3(230, 150, 260), Vector3(420, 0, 470)]   # Grafik 19.11.2026: Dachaufbauten von oben
-	orte["turmfuss"] = [Vector3(-62, 2.0, 70), Vector3(0, 26, 0)]          # Bodenstrahler am Turm (19.11.2026)
+	orte["turmfuss"] = [Vector3(-62, 2.0, 70), Vector3(0, 26, 0)]
+	orte["spitze_fern"] = [Vector3(-1100, 420, 900), Vector3(0, 760, 0)]     # Turmspitze (19.11.2026)
+	orte["spitze_mittel"] = [Vector3(-330, 690, 260), Vector3(0, 800, 0)]
+	orte["spitze_nah"] = [Vector3(40, 812, 52), Vector3(0, 845, 0)]
+	orte["plattform"] = [Vector3(-55, 788, 48), Vector3(0, 808, 0)]
+	orte["hochschauen"] = [Vector3(230, 2.0, 300), Vector3(0, 720, 0)]          # Bodenstrahler am Turm (19.11.2026)
 	orte["boulevard"] = [Vector3(-300, 1.8, Kueste.BOUL_Z + 7.0), Vector3(-345, 0.4, Kueste.BOUL_Z + 2.0)]   # Leuchten an der Kanalkante
 	orte["promenade"] = [Vector3(-596, 1.8, 40.0), Vector3(-604, 0.3, 0.0)]   # Leuchtenreihe an der Ufermauer
 	var np := s.turm.fassaden_punkt(40, 120.0, 40 * Turm.STOCK_H)

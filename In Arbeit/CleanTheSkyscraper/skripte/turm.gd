@@ -22,6 +22,7 @@ var fenster_gesamt := 0
 var oben := 0.0                            # Dachhöhe ohne Spitze
 var spitze := 0.0                          # Höhe inkl. Spitze
 var glas: ShaderMaterial
+var spitze_glas: ShaderMaterial            # Glas der Spitze (gleicher Shader, ohne Spielzustand, sauber)
 # Drei Seiten (je ein Flügel, Grenzen in den Lücken bei −30°, 90°, 210°): je Stockwerk [Vector2(Start-Weg, Länge)] für Seite 0..2
 const SEITEN_WINKEL := [-90.0, 30.0, 150.0]
 const SEITEN_NAMEN := ["Nord", "Ost", "West"]
@@ -34,10 +35,9 @@ func _ready() -> void:
 	_seiten_berechnen()
 	glas = Bau.shader_mat(Bau.TURM_SHADER, {"glas_tint": Color("4d7397"), "paneel": Color("9aa4ae"), "stock": STOCK_H, "fenster_breite": FENSTER_B, "band_anteil": BAND_ANTEIL})
 	add_child(Bau.baue(stockwerke, glas, Bau.matt("c9c4bb")))
-	var alu := Bau.metall("c9ced4")
 	var rahmen_mat := Bau.shader_mat(load("res://shader/rahmen.gdshader"), {"farbe": Color("c9ced4"), "fern_farbe": Color("7d8c9c")})
 	add_child(Bau.rahmen(stockwerke, FENSTER_B, BAND_ANTEIL, rahmen_mat))
-	_spitze(alu)
+	_spitze(rahmen_mat)
 	if not "--ohne-bodenlicht" in OS.get_cmdline_user_args():   # Vergleichs-Schalter
 		_bodenstrahler([glas, rahmen_mat])
 
@@ -87,35 +87,41 @@ func _grundrisse() -> void:
 		stockwerke.append({"poly": poly, "y0": f * STOCK_H, "h": STOCK_H})
 	oben = STOCKWERKE * STOCK_H
 
-func _spitze(alu: Material) -> void:
+# Spitze (Wunsch des Users 19.11.2026, Variante A „Glas-Stufen“): die Fassade läuft in 4 weiteren runden Stufen weiter
+# (gleicher Glas-Shader mit Räumen, Brüstungsbändern und Rahmen – nur nicht putzbar), darüber ein schlanker Glas-Schaft
+# (dünner als der Aufzugskern der Aussichtsplattform bei 800 m, damit er nicht in den Raum ragt), oben eine Nadel in
+# Rahmenfarbe mit Ringen. Vorher: glänzende blaugraue Metall-Zylinder mit Rippen + Alu-Nadel (passte nicht zum Turm).
+const SPITZE_STUFEN := [[10.2, 6, 24], [8.4, 6, 24], [6.4, 5, 20], [4.4, 3, 16]]   # Radius, Stockwerke, Ecken
+const SCHAFT_R := 2.8
+const SCHAFT_BIS := 862.0
+const NADEL_BIS := 935.0
+func _spitze(rahmen_mat: Material) -> void:
+	spitze_glas = Bau.shader_mat(Bau.TURM_SHADER, {"glas_tint": Color("4d7397"), "paneel": Color("9aa4ae"), "stock": STOCK_H, "fenster_breite": FENSTER_B, "band_anteil": BAND_ANTEIL, "dreckig": 0.0})
+	var stw := []
 	var y := oben
-	var r := KERN * (1.0 - (STOCKWERKE - 1 - 140) / 120.0)
-	var segment_mat := Bau.metall("8fa3b8", 0.15, 0.6)
-	for i in 14:
-		var seg := 14.0 - i * 0.4
-		var r2 := r * 0.8
-		var mi := Bau.zylinder(r2, r, seg, segment_mat)
-		mi.position.y = y + seg * 0.5
-		add_child(mi)
-		var ring := Bau.zylinder(r2 + 0.35, r2 + 0.35, 0.6, alu)
-		ring.position.y = y + seg
-		add_child(ring)
-		for k in 6:
-			var fin := MeshInstance3D.new()
-			var bm := BoxMesh.new()
-			bm.size = Vector3(1.2, seg, 0.25)
-			fin.mesh = bm
-			fin.material_override = alu
-			var a := TAU * k / 6.0 + i * 0.2
-			fin.position = Vector3(cos(a) * (r * 0.85 + 0.4), y + seg * 0.5, sin(a) * (r * 0.85 + 0.4))
-			fin.rotation.y = -a
-			add_child(fin)
-		y += seg
-		r = r2
-	var nadel := Bau.zylinder(0.15, r, 70.0, alu)
-	nadel.position.y = y + 35.0
+	for st in SPITZE_STUFEN:
+		for k in int(st[1]):
+			stw.append({"poly": Bau.kreis(float(st[0]), int(st[2])), "y0": y, "h": STOCK_H})
+			y += STOCK_H
+	while y < SCHAFT_BIS:
+		stw.append({"poly": Bau.kreis(SCHAFT_R, 12), "y0": y, "h": STOCK_H})
+		y += STOCK_H
+	add_child(Bau.baue(stw, spitze_glas, Bau.matt("c9c4bb")))
+	add_child(Bau.rahmen(stw, FENSTER_B, BAND_ANTEIL, rahmen_mat))
+	# Nadel: Rahmen-Alu, matt wie die Fensterrahmen, mit Ringen in Brüstungsfarbe
+	var hoehe := NADEL_BIS - y
+	var nadel := Bau.zylinder(0.14, 1.15, hoehe, Bau.metall("c9ced4", 0.45, 0.45), 16)
+	nadel.position.y = y + hoehe * 0.5
 	add_child(nadel)
-	spitze = y + 70.0
+	var band := Bau.matt("9aa4ae", 0.6)
+	var t := 4.0
+	while t < hoehe - 3.0:
+		var r := lerpf(1.15, 0.14, t / hoehe) + 0.14
+		var ring := Bau.zylinder(r, r, 0.35, band, 16)
+		ring.position.y = y + t
+		add_child(ring)
+		t += 6.0
+	spitze = NADEL_BIS
 
 # ---------------------------------------------------------------- Fenster
 func _fenster_zaehlen() -> void:

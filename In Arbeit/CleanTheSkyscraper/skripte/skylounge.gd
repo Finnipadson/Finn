@@ -305,13 +305,15 @@ func _plattform(e: Dictionary) -> void:
 	var k := Node3D.new()
 	add_child(k)
 	var weiss := Bau.matt("f1ede6", 0.35)
-	var stahl := Bau.metall("c9ced4", 0.25, 0.85)
+	# Außenhülle im Look des Turms (19.11.2026, passend zur neuen Spitze): Brüstungsgrau, mattes Rahmen-Alu, getöntes Glas
+	var band := Bau.matt("9aa4ae", 0.55)
+	var stahl := Bau.metall("c9ced4", 0.45, 0.45)
 	var r := PLATT_R
-	RaumBau.zyl(k, r, 0.5, Vector3(0, boden - 0.25, 0), weiss, 48)
-	RaumBau.zyl(k, r, 5.0, Vector3(0, boden - 3.0, 0), stahl, 48, 3.0)        # Unterseite als Kegel
+	RaumBau.zyl(k, r, 0.5, Vector3(0, boden - 0.25, 0), band, 48)
+	RaumBau.zyl(k, r, 5.0, Vector3(0, boden - 3.0, 0), Bau.matt("7d8c9c", 0.5), 48, 3.0)        # Unterseite als Kegel
 	RaumBau.zyl(k, r + 0.3, 0.4, Vector3(0, decke + 0.2, 0), stahl, 48)
-	RaumBau.zyl(k, r - 1.0, 1.6, Vector3(0, decke + 1.2, 0), weiss, 48, r)     # Dach als flacher Kegel
-	var gl := Bau.zylinder(r - 0.05, r - 0.05, decke - boden, RaumBau.glas("cfe8ff", 0.1), 48)
+	RaumBau.zyl(k, r - 1.0, 1.6, Vector3(0, decke + 1.2, 0), band, 48, r)     # Dach als flacher Kegel
+	var gl := Bau.zylinder(r - 0.05, r - 0.05, decke - boden, RaumBau.glas("6d8fae", 0.28), 48)
 	(gl.mesh as CylinderMesh).cap_top = false
 	(gl.mesh as CylinderMesh).cap_bottom = false
 	gl.position.y = (boden + decke) * 0.5
