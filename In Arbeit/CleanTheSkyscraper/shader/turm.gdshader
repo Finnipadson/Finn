@@ -15,7 +15,8 @@ uniform float dreckig = 0.45;
 uniform float raum_fenster = 3.0;
 uniform float raum_tiefe = 6.0;
 uniform float innen_hell = 0.55;
-uniform float spiegel = 0.0;          // 0 = wie früher, 1 = sauberes Glas verspiegelt (Grafik 19.11.2026, mit ReflectionProbes)
+uniform float spiegel = 0.0;
+uniform float strahler_n = 0.0;       // Bodenstrahler am Turmfuß (Anzahl, 0 = aus)          // 0 = wie früher, 1 = sauberes Glas verspiegelt (Grafik 19.11.2026, mit ReflectionProbes)
 global uniform float nacht;          // Tageszeit (Phase 5): Räume leuchten nachts heller
 // Spielzustand (FensterZustand): Dreck pro Fenster + feine Wisch-Masken
 uniform bool mit_zustand = false;
@@ -36,6 +37,20 @@ float hs(vec2 p) { vec3 q = fract(vec3(p.xyx) * 0.1031); q += dot(q, q.yzx + 33.
 float vn(vec2 p) {
 	vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
 	return mix(mix(hs(i), hs(i + vec2(1, 0)), u.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), u.x), u.y);
+}
+
+
+// Bodenstrahler am Turmfuß (19.11.2026): N Strahler in gleichen Winkeln um den Turm, Lichtkegel unten schmal, oben breit,
+// nach oben schwächer. In der Ferne (Kegel kleiner als ein paar Bildpunkte) gemittelt – gegen Flimmern.
+float strahler_licht(vec3 p, float n) {
+	float an = smoothstep(0.25, 0.6, nacht);
+	if (an <= 0.0 || n < 1.0 || p.y > 70.0) return 0.0;
+	float th = atan(p.z, p.x) * n;
+	float breit = mix(18.0, 2.5, smoothstep(0.0, 28.0, p.y));
+	float kegel = pow(0.5 + 0.5 * cos(th), breit);
+	float mittel = 0.25 / sqrt(breit);
+	kegel = mix(kegel, mittel, smoothstep(0.08, 0.35, fwidth(th) / 6.2832));
+	return an * kegel * exp(-max(p.y, 0.0) / 13.0) * smoothstep(-0.5, 0.6, p.y);
 }
 
 void vertex() {
@@ -281,6 +296,8 @@ void fragment() {
 	SPECULAR = 0.65;
 	EMISSION = innen * mix(vec3(1.0), glas_tint * 1.6, 0.55 * (1.0 - nacht * 0.6)) * innen_hell * (1.0 + nacht * 1.2) * (1.0 - band) * (1.0 - d * 0.85) * (1.0 - fern * 0.7 * (1.0 - nacht * 0.5))
 		* (1.0 - sp * (1.0 - nacht * 0.7) * 0.75);
+	float sl = strahler_licht(wp, strahler_n);
+	EMISSION += vec3(1.0, 0.8, 0.55) * sl * (ALBEDO * 2.4 + vec3(0.04));
 	if (szene == 7.0) {   // Liebesbrief: Herz auf dem Glas
 		float h = herz(vec2(f.x, rp.y)) * (1.0 - band) * (1.0 - fern);
 		ALBEDO = mix(ALBEDO, vec3(0.9, 0.2, 0.35), h * (1.0 - d));

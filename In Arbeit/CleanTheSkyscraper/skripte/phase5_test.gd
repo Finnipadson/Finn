@@ -758,6 +758,9 @@ func _tag_bilder() -> void:
 				if (c / 2 + f) % 2 == 0:
 					s.zustand.sauber_machen(f, c)
 	orte["dach"] = [Vector3(230, 150, 260), Vector3(420, 0, 470)]   # Grafik 19.11.2026: Dachaufbauten von oben
+	orte["turmfuss"] = [Vector3(-62, 2.0, 70), Vector3(0, 26, 0)]          # Bodenstrahler am Turm (19.11.2026)
+	orte["boulevard"] = [Vector3(-300, 1.8, Kueste.BOUL_Z + 7.0), Vector3(-345, 0.4, Kueste.BOUL_Z + 2.0)]   # Leuchten an der Kanalkante
+	orte["promenade"] = [Vector3(-596, 1.8, 40.0), Vector3(-604, 0.3, 0.0)]   # Leuchtenreihe an der Ufermauer
 	var np := s.turm.fassaden_punkt(40, 120.0, 40 * Turm.STOCK_H)
 	orte["nah"] = [np.pos + np.normal * 7.0 + Vector3.UP * -1.0, np.pos + Vector3.UP * 0.5]
 	orte["nah2"] = [np.pos + np.normal * 12.0 + np.tangente * -8.0 + Vector3.UP * 2.0, np.pos + np.tangente * 6.0 + Vector3.UP * -1.0]

@@ -9,6 +9,8 @@ uniform vec3 rinde_dunkel : source_color = vec3(0.33, 0.25, 0.17);
 uniform vec3 blatt_innen : source_color = vec3(0.13, 0.27, 0.12);
 uniform vec3 blatt_spitze : source_color = vec3(0.4, 0.52, 0.22);
 uniform float wind = 1.0;
+uniform float strahler = 1.0;      // 19.11.2026: Bodenleuchte am Fuß jeder Palme
+global uniform float nacht;
 
 varying vec3 lokal;
 varying float ist_blatt;
@@ -47,6 +49,9 @@ void fragment() {
 		ROUGHNESS = 0.7;
 		SPECULAR = 0.3;
 		BACKLIGHT = c * 0.35;   // Sonne scheint durch die Blätter
+		// Bodenleuchte: Unterseite der Krone nahe am Stamm warm angestrahlt
+		float an = smoothstep(0.25, 0.6, nacht) * strahler;
+		EMISSION = c * vec3(1.0, 0.82, 0.58) * an * 0.5 * (1.0 - weit * 0.8);
 	} else {
 		// Dattelpalmen-Stamm: waagerechte Ringe + schräge Schuppen
 		float y = lokal.y * 7.0;
@@ -62,5 +67,8 @@ void fragment() {
 		c *= 0.9 + 0.15 * mix(hs(vec2(floor(y), floor(winkel * 3.0))), 0.5, ferne);
 		ALBEDO = c;
 		ROUGHNESS = 0.95;
+		// Bodenleuchte: Stamm unten hell, nach oben weich schwächer
+		float an = smoothstep(0.25, 0.6, nacht) * strahler;
+		EMISSION = c * vec3(1.0, 0.88, 0.7) * an * (0.95 * exp(-max(lokal.y, 0.0) / 0.75) + 0.025);
 	}
 }

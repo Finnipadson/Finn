@@ -42,6 +42,10 @@ func baue(w: Welt) -> void:
 	_mm_aus_modell("res://modelle/natur/plant_bushDetailed.glb", busch_xf, Bau.matt("3f6a2e", 0.85))   # natürliches Grün statt Kenney-Türkis
 	_lampen_mm()
 	_moebel_mm()
+	if "--ohne-bodenlicht" in OS.get_cmdline_user_args():   # Vergleichs-Schalter
+		palmen_mat.set_shader_parameter("strahler", 0.0)
+	else:
+		_bodenleuchten()
 	print("Stadtdetails: %d Bänke, %d Pflanzkübel, %d Mülleimer, %d Leute" % [bank_xf.size(), kuebel_xf.size(), eimer_xf.size(), leute_zahl])
 
 # ---------------------------------------------------------------- See mit Fontänen
@@ -610,3 +614,38 @@ func _mm_mesh(mesh: Mesh, xf: Array) -> void:
 	var mi := MultiMeshInstance3D.new()
 	mi.multimesh = mm
 	add_child(mi)
+
+# ---------------------------------------------------------------- Bodenleuchten (19.11.2026, Wunsch des Users)
+# Jede Palme bekommt eine Leuchte am Fuß (der Palmen-Shader strahlt Stamm und Krone an), am Boulevard leuchten Reihen an der
+# Kanalkante (Lichtfächer auf der Steinkante wie bei angestrahlten Bordsteinen), an der Strandpromenade eine Reihe an der Mauer.
+var bodenlicht: Bodenlicht
+func _bodenleuchten() -> void:
+	bodenlicht = Bodenlicht.new()
+	bodenlicht.name = "bodenleuchten"
+	add_child(bodenlicht)
+	for art in palmen_xf:
+		for xf in art:
+			var t: Transform3D = xf
+			var seite := Vector3(t.basis.x.x, 0.0, t.basis.x.z).normalized()
+			bodenlicht.leuchte(t.origin + seite * 0.85, 1.7)
+	var k := welt.kueste
+	if k == null:
+		bodenlicht.fertig()
+		return
+	var z0 := Kueste.BOUL_Z
+	var x := k.kanal_start - 4.0
+	while x > Kueste.UFER_X + 9.0:
+		if k._bruecke(x) == INF and absf(x - k._naechste_bruecke(x)) > Kueste.BRUECKE_L + 1.0:
+			for s in [-1.0, 1.0]:
+				var kante: float = z0 + s * (Kueste.KANAL_HALB + Kueste.RAND_B)
+				bodenlicht.leuchte(Vector3(x, 0.0, kante + s * 0.45), 1.1)
+				bodenlicht.faecher(Vector3(x, 0.0, kante), Vector3(0, 0, s), 2.6, Kueste.RAND_H)
+		x -= 6.0
+	var z := -900.0 + 4.0
+	while z < 700.0:
+		var frei := absf(z - z0) > Kueste.BOUL_HALB + 4.0 and absf(z - Kueste.STEG_Z) > Kueste.STEG_HALB + 3.0 and not Kueste.BAR.grow(6.0).has_point(Vector2(Kueste.UFER_X, z))
+		if frei:
+			bodenlicht.leuchte(Vector3(Kueste.UFER_X + 0.75, 0.0, z), 1.5)
+		z += 8.0
+	bodenlicht.fertig()
+	print("Bodenleuchten: %d" % bodenlicht.anzahl())

@@ -38,6 +38,38 @@ func _ready() -> void:
 	var rahmen_mat := Bau.shader_mat(load("res://shader/rahmen.gdshader"), {"farbe": Color("c9ced4"), "fern_farbe": Color("7d8c9c")})
 	add_child(Bau.rahmen(stockwerke, FENSTER_B, BAND_ANTEIL, rahmen_mat))
 	_spitze(alu)
+	if not "--ohne-bodenlicht" in OS.get_cmdline_user_args():   # Vergleichs-Schalter
+		_bodenstrahler([glas, rahmen_mat])
+
+# Bodenstrahler rund um den Turmfuß (19.11.2026): je ~8 m eine Leuchte im Boden, die Shader von Glas und Rahmen zeichnen
+# die Lichtkegel an der Fassade (gleiche Winkel, siehe strahler_licht in turm/rahmen.gdshader)
+var strahler_n := 0
+func _bodenstrahler(mats: Array) -> void:
+	var poly: PackedVector2Array = stockwerke[0].poly
+	strahler_n = maxi(12, int(round(umfaenge[0] / 8.0)))
+	var bl := Bodenlicht.new()
+	bl.name = "bodenstrahler"
+	add_child(bl)
+	var m := Bau.mitte(poly)
+	for k in strahler_n:
+		var a := TAU * k / strahler_n
+		var dir := Vector2(cos(a), sin(a))
+		var best := -1.0
+		var normal := dir
+		for j in poly.size():
+			var p0 := poly[j]
+			var p1 := poly[(j + 1) % poly.size()]
+			var hit = Geometry2D.segment_intersects_segment(Vector2.ZERO, dir * 2000.0, p0, p1)
+			if hit != null and (hit as Vector2).length() > best:
+				best = (hit as Vector2).length()
+				normal = Bau.aussen(p0, p1, m)
+		if best < 0.0:
+			continue
+		var q := dir * best + normal * 1.6
+		bl.leuchte(Vector3(q.x, 0.0, q.y), 1.3)
+	bl.fertig()
+	for mat in mats:
+		(mat as ShaderMaterial).set_shader_parameter("strahler_n", float(strahler_n))
 
 # ---------------------------------------------------------------- Form
 func _grundrisse() -> void:
