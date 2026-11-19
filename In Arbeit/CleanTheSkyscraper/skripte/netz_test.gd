@@ -10,10 +10,10 @@ extends Node
 # anderen an der richtigen Stelle → Gastgeber ändert Geld, Gast 2 tritt mitten im Spiel bei → Gast 3 wird abgelehnt
 # (voll) → Gast 2 verlässt die Runde selbst → Gastgeber beendet, Gast 1 landet mit Meldung im Hauptmenü.
 # Phase 7b (Befehle + Kasse): Einzelspieler-Umrechnung alt ↔ neu und koop_faktor ohne Netz; dann kauft Gast 1 über die
-# echten Knöpfe (Werkstatt: Motor, Kiosk: Abzieher, Kaffee, Espresso) → bei allen besessen, Geld stimmt, Koop-Preis ×1,5,
+# echten Knöpfe (Werkstatt: Motor, Kiosk: Abzieher, Kaffee, Espresso) → bei allen besessen, Geld stimmt, Koop-Preis ×1,25 (7h, vorher ×1,5),
 # Boost nur beim Käufer (Helfer-Boost Espresso wirkt für alle); Gastgeber kauft eine Putzkraft → offenes Menü beim Gast
 # aktualisiert sich; Kasse fast leer → Knopf beim Gast gesperrt, Kauf trotzdem geschickt → vom Gastgeber abgelehnt;
-# zu dritt Preise ×2, Gast 2 hat alles Gekaufte, aber keinen Boost.
+# zu dritt Preise ×1,5 (vorher ×2), Gast 2 hat alles Gekaufte, aber keinen Boost.
 # Gäste melden per Netz.test_nachricht („OK …“/„FEHLER …“) bzw. nach dem Trennen per Datei user://netztest_<profil>.txt.
 # Ergebnis: „NETZTEST ERGEBNIS ok=… fehler=…“.
 
@@ -147,7 +147,7 @@ func _einzel_pruefen() -> void:
 	w5.koop_takt(Wirtschaft.KOOP_FENSTER, 1)
 	var f1 := w5.koop_faktor()
 	w5.koop_takt(1.0, 2)
-	_p("Preis-Faktor: höchste Spielerzahl der letzten 10 min", f3 == 2.0 and f3b == 2.0 and f1 == 1.0 and w5.koop_faktor() == 1.5 and w5.upgrade_preis("motor") == 38, "%.1f %.1f %.1f %.1f" % [f3, f3b, f1, w5.koop_faktor()])
+	_p("Preis-Faktor: höchste Spielerzahl der letzten 10 min", f3 == 1.5 and f3b == 1.5 and f1 == 1.0 and w5.koop_faktor() == 1.25 and w5.upgrade_preis("motor") == 31 and w5.upgrade_preis("winde") == Wirtschaft.UPGRADES.winde.basis, "%.1f %.1f %.1f %.1f" % [f3, f3b, f1, w5.koop_faktor()])
 
 func _gast_starten(n: String) -> void:
 	var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--ansicht=37", "--rolle=gast", "--profil=" + n, "--join=127.0.0.1:%d" % TEST_PORT]
@@ -192,6 +192,7 @@ func _process(dt: float) -> void:
 			if _id_von("testgast1") > 0:
 				ids.testgast1 = _id_von("testgast1")
 				_p("Gast 1 beigetreten", true, "%.1f s" % zeit)
+				_p("Freie Gondel für Gast 1 bereitgestellt (7h)", s.wirtschaft.gondeln_gekauft() == 2, "%d Gondeln" % s.wirtschaft.gondeln_gekauft())
 				schritt = 3
 				warte_bis = zeit + 6.0   # Gast prüft seinen Stand, läuft los
 			elif zeit >= frist:
@@ -220,7 +221,7 @@ func _process(dt: float) -> void:
 			warte_bis = zeit + 0.6
 		60:   # 7b: Kasse setzen, Gast 1 kauft über echte Knöpfe
 			var w := s.wirtschaft
-			_p("Preis-Faktor zu zweit ×1,5", w.koop_max == 2 and w.koop_faktor() == 1.5 and w.upgrade_preis("motor") == 38 and w.werkzeug_preis("abzieher") == 180, "×%.2f" % w.koop_faktor())
+			_p("Preis-Faktor zu zweit ×1,25", w.koop_max == 2 and w.koop_faktor() == 1.25 and w.upgrade_preis("motor") == 31 and w.werkzeug_preis("abzieher") == 150, "×%.2f" % w.koop_faktor())
 			w.geld = 5000
 			_preise = {"motor": w.upgrade_preis("motor"), "abzieher": w.werkzeug_preis("abzieher"), "kaffee": w.boost_preis("kaffee"), "espresso": w.boost_preis("espresso")}
 			schritt = 61
@@ -283,8 +284,9 @@ func _process(dt: float) -> void:
 			s.helfer.aktiv = false   # Zähler/Geld sollen sich nur durchs Putzen der Spieler ändern
 			_kh = w.aktive_gondel
 			_k2 = (_kh + 1) % 3
-			var e := Netz.befehl("gondel", {"seite": _k2})
-			_p("Gastgeber kauft zweite Gondel", e.ok and w.gondeln[_k2].gekauft, "Seite %d" % _k2)
+			var schon: bool = w.gondeln[_k2].gekauft   # 7h: beim Beitritt evtl. schon kostenlos bereitgestellt
+			var e := Netz.befehl("gondel", {"seite": _k2}) if not schon else {"ok": true}
+			_p("Gastgeber kauft zweite Gondel", e.ok and w.gondeln[_k2].gekauft, "Seite %d%s" % [_k2, " (schon bereitgestellt)" if schon else ""])
 			schritt = 71
 			warte_bis = zeit + 1.5
 		71:
@@ -557,7 +559,7 @@ func _process(dt: float) -> void:
 		7:   # Gast 1 muss jetzt 3 Spieler in der Liste haben; Gast 3 wird abgelehnt
 			Netz.test_nachricht.rpc_id(ids.testgast1, "LISTE?")
 			var w := s.wirtschaft
-			_p("Preis-Faktor zu dritt ×2", w.koop_max == 3 and w.koop_faktor() == 2.0 and w.upgrade_preis("arm") == 120, "×%.2f, Arm %d €" % [w.koop_faktor(), w.upgrade_preis("arm")])
+			_p("Preis-Faktor zu dritt ×1,5", w.koop_max == 3 and w.koop_faktor() == 1.5 and w.upgrade_preis("arm") == 90, "×%.2f, Arm %d €" % [w.koop_faktor(), w.upgrade_preis("arm")])
 			_p("koop_max im Spielstand", int(s.stand_daten().wirtschaft.koop_max) == 3, "")
 			Netz.test_nachricht.rpc_id(ids.testgast1, "FAKTOR? 2.0")
 			Netz.befehl("fahrzeug", {"id": "scooter"})   # Gast 2 soll damit fahren (7d: Fahrzeuge der anderen)
@@ -684,9 +686,11 @@ func _nachricht(id: int, t: String) -> void:
 	elif t.begins_with("GASTPOS "):
 		var w := t.substr(8).split_floats(" ")
 		var soll := Vector3(w[0], w[1], w[2])
+		var empf0 := int(Netz.lage_zaehler.get(id, 0))
 		await get_tree().create_timer(1.0).timeout
 		var ist := s.mitspieler.figur_pos(id)
-		_p("Figur von %s an der richtigen Stelle" % wer, ist.distance_to(soll) < 0.6 and s.mitspieler.figur_sichtbar(id), "Abstand %.2f m" % ist.distance_to(soll))
+		var fi: Dictionary = s.mitspieler.figuren.get(id, {})
+		_p("Figur von %s an der richtigen Stelle" % wer, ist.distance_to(soll) < 0.6 and s.mitspieler.figur_sichtbar(id), "Abstand %.2f m (Ziel %s, Lage %s, soll %s; Gast hat %s Lage-Pakete gesendet, eigene Lage %s; empfangen %d, in der letzten Sekunde %d)" % [ist.distance_to(soll), fi.get("ziel"), str(fi.get("lage", [])).left(80), soll, t.split(" ")[4] if t.split(" ").size() > 4 else "?", t.split(" ")[5] if t.split(" ").size() > 5 else "?", int(Netz.lage_zaehler.get(id, 0)), int(Netz.lage_zaehler.get(id, 0)) - empf0])
 	elif t.begins_with("GELD "):
 		_p("Geld bei %s wie beim Gastgeber" % wer, int(t.substr(5)) == s.wirtschaft.geld, "%s / %d €" % [t.substr(5), s.wirtschaft.geld])
 	elif t.begins_with("ZAHL "):
@@ -766,7 +770,7 @@ func _gast_takt(dt: float) -> void:
 			s.laeufer.position = p
 		await get_tree().create_timer(1.0).timeout
 		var q := s.laeufer.position
-		Netz.test_nachricht.rpc_id(h, "GASTPOS %f %f %f" % [q.x, q.y + s.laeufer.hoch, q.z])
+		Netz.test_nachricht.rpc_id(h, "GASTPOS %f %f %f %d %s" % [q.x, q.y + s.laeufer.hoch, q.z, int(Netz.lage_zaehler.gesendet), str(s.lage_daten()).left(60).replace(" ", "")])
 
 func _melden(gut: bool, name: String, info: String) -> void:
 	Netz.test_nachricht.rpc_id(1, ("OK " if gut else "FEHLER ") + name + ((" – " + info) if info != "" else ""))
@@ -820,12 +824,12 @@ func _gast_nachricht(_id: int, t: String) -> void:
 		Netz.test_nachricht.rpc_id(1, "HOEHE_OK")
 	elif t.begins_with("FAKTOR? "):
 		var k: Button = s.shop.find_child("up_arm", true, false)
-		_melden(s.wirtschaft.koop_faktor() == 2.0 and s.wirtschaft.upgrade_preis("arm") == 120 and k != null and k.text == "120 €", "Preis-Faktor zu dritt beim Gast (Knopf zeigt 120 €)", "×%.2f, Knopf '%s'" % [s.wirtschaft.koop_faktor(), k.text if k else "-"])
+		_melden(s.wirtschaft.koop_faktor() == 1.5 and s.wirtschaft.upgrade_preis("arm") == 90 and k != null and k.text == "90 €", "Preis-Faktor zu dritt beim Gast (Knopf zeigt 90 €)", "×%.2f, Knopf '%s'" % [s.wirtschaft.koop_faktor(), k.text if k else "-"])
 	elif t == "BESITZ?":
 		var w := s.wirtschaft
 		_melden(w.stufen.motor == 1 and "abzieher" in w.besitz and w.helfer.putzkraft == 1, "Gast 2: alles Gekaufte da", "Motor %d, %s" % [w.stufen.motor, w.besitz])
 		_melden(w.boosts.is_empty() and w.aktiv == "schwamm" and w.boost_wirkung("tempo") == 0.0, "Gast 2: kein fremder Boost, eigenes Werkzeug", "boosts %s, aktiv %s" % [w.boosts.keys(), w.aktiv])
-		_melden(w.koop_faktor() == 2.0, "Gast 2: Preis-Faktor ×2", "×%.2f" % w.koop_faktor())
+		_melden(w.koop_faktor() == 1.5, "Gast 2: Preis-Faktor ×1,5", "×%.2f" % w.koop_faktor())
 		await get_tree().create_timer(1.5).timeout   # Scooter des Gastgebers ist jetzt in fahrzeuge
 		if "scooter" in w.fahrzeuge:
 			s._fahrzeug_waehlen("scooter")
@@ -1020,14 +1024,14 @@ func _gast_wischen() -> void:
 # Gast 1: über die echten Knöpfe kaufen (Werkstatt, Kiosk Werkzeuge, Snacks, Sky-Bar) – jeder Kauf wartet auf die Antwort
 func _gast_kaufen() -> void:
 	var w := s.wirtschaft
-	_melden(w.koop_faktor() == 1.5, "Preis-Faktor zu zweit beim Gast", "×%.2f" % w.koop_faktor())
+	_melden(w.koop_faktor() == 1.25, "Preis-Faktor zu zweit beim Gast", "×%.2f" % w.koop_faktor())
 	_melden(w.geld == 5000, "Kasse vom Gastgeber übernommen", "%d €" % w.geld)
 	s.shop.umschalten()
 	s.shop._reiter_waehlen(2)   # Ausbau
-	await _druecken(s.shop, "up_motor", "%s €" % Hud.punkte(38))
+	await _druecken(s.shop, "up_motor", "%s €" % Hud.punkte(31))
 	s.shop.umschalten()
 	s.hmenu.oeffnen("grund", "Werkzeuge")
-	await _druecken(s.hmenu, "w_abzieher", "180 €")
+	await _druecken(s.hmenu, "w_abzieher", "150 €")
 	s.hmenu.schliessen()
 	s.hmenu.oeffnen("snack", "Snacks")
 	await _druecken(s.hmenu, "b_kaffee", "")

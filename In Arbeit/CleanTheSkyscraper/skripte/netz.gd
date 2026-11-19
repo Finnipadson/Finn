@@ -311,6 +311,7 @@ func beenden(rueckgabe := 0) -> void:
 	get_tree().quit(rueckgabe)
 
 func _verbunden() -> void:
+	_nicht_drosseln(1)
 	status_geaendert.emit("Verbunden – lade die Welt des Gastgebers …")
 	anmelden.rpc_id(1, profil.duplicate())
 
@@ -325,8 +326,18 @@ func _server_weg() -> void:
 		t = "Der Gastgeber hat die Verbindung abgelehnt."
 	zurueck_ins_menue(t)
 
-func _peer_da(_id: int) -> void:
-	pass   # Gast meldet sich gleich mit anmelden()
+func _peer_da(id: int) -> void:
+	_nicht_drosseln(id)   # Gast meldet sich gleich mit anmelden()
+
+# ENet drosselt bei schwankender Laufzeit die „unzuverlässigen“ Pakete bis auf null – nach einem Beitritt (viel Verkehr durch die
+# Welt-Übertragung) kam sekundenlang keine Lage eines Gasts an, seine Figur stand still (Test 37, 7h: 52 gesendet, 9 angekommen).
+# Unsere Lage-Pakete sind klein (20 Hz, < 200 Byte) → Drosselung abschalten (Verlangsamung 0, Throttle bleibt voll).
+func _nicht_drosseln(id: int) -> void:
+	var p := multiplayer.multiplayer_peer
+	if p is ENetMultiplayerPeer:
+		var pp := (p as ENetMultiplayerPeer).get_peer(id)
+		if pp:
+			pp.throttle_configure(5000, 2, 0)   # Standard-Intervall 5 s, Beschleunigung 2, Verlangsamung 0
 
 func _peer_weg(id: int) -> void:
 	if not ist_host() or not spieler.has(id):
@@ -368,14 +379,47 @@ func anmelden(p: Dictionary) -> void:
 	while fa in belegt:
 		fa = (fa + 1) % FARBEN.size()
 	spieler[id] = {"name": str(p.get("name", "Gast")).left(16), "farbe": fa, "profil_id": str(p.get("profil_id", p.get("id", "")))}
+	var gondel := _koop_gondel(id)
 	var stand := spiel.stand_daten()
 	stand["ort"] = orte.get(spieler[id].profil_id, {})
 	_anwesend_setzen()
-	stand["netz"] = {"spieler": spieler, "belegte_gondeln": _belegte_gondeln(id)}
+	stand["netz"] = {"spieler": spieler, "belegte_gondeln": _belegte_gondeln(id), "gondel": gondel}
 	_gross_senden(id, "stand", var_to_bytes(stand).compress(FileAccess.COMPRESSION_GZIP))
 	liste.rpc(spieler)
 	spieler_geaendert.emit()
 	spiel.hud.meldung("%s ist dem Spiel beigetreten." % spieler[id].name, 3.0)
+
+# 7h: Gondel für den neuen Gast – entscheidet der Gastgeber und trägt sie sofort ein (sonst bekamen zwei kurz nacheinander
+# beitretende Gäste dieselbe). Seine eigene vom letzten Mal, sonst die erste freie gekaufte; ist keine frei, stellt der Gastgeber
+# kostenlos eine an einer freien Seite bereit (sonst könnten Freunde in einem frischen Spiel lange nicht mitputzen – gemessen mit
+# dem Koop-Bot: 2.000 € bei ~7 €/min). -1 = keine (alle drei belegt).
+func _koop_gondel(id: int) -> int:
+	var w := _w()
+	if w == null:
+		return -1
+	var belegt := _belegte_gondeln(id)
+	var pid := str(spieler[id].profil_id)
+	if not w.spieler_daten.has(pid):
+		w.spieler_daten[pid] = w.neue_spieler_daten()
+	var sd: Dictionary = w.spieler_daten[pid]
+	var eigene := int(sd.get("aktive_gondel", -1))
+	var reihe: Array = ([eigene] if eigene >= 0 and eigene < 3 else []) + [0, 1, 2]
+	var wahl := -1
+	for k in reihe:
+		if w.gondeln[k].gekauft and not k in belegt:
+			wahl = k
+			break
+	if wahl < 0:
+		for k in reihe:
+			if not w.gondeln[k].gekauft and not k in belegt:
+				wahl = k
+				w.gondeln[k].gekauft = true
+				spiel.gondeln.aktualisieren(w.aktive_gondel)
+				spiel.hud.meldung("Gondel %s für %s bereitgestellt (im Koop kostenlos)." % [Turm.SEITEN_NAMEN[k], spieler[id].name], 4.0)
+				break
+	if wahl >= 0:
+		sd["aktive_gondel"] = wahl
+	return wahl
 
 func _rauswerfen_spaeter(id: int) -> void:
 	await get_tree().create_timer(0.5).timeout
@@ -498,7 +542,9 @@ func _spaeter_lage(l: Array) -> void:
 # EOS kennt kein „unreliable ordered“ (EOSG stellt dann auf reliable um): dort „unreliable“ mit Laufnummer, ältere verwerfen
 var _lage_nr := 0
 var _lage_letzte := {}           # Absender (bzw. "h" Helfer) -> letzte Laufnummer
+var lage_zaehler := {"gesendet": 0}   # Test: gesendete Lage-Pakete und empfangene je Absender
 func _lage_senden(l: Array) -> void:
+	lage_zaehler["gesendet"] = int(lage_zaehler["gesendet"]) + 1
 	if transport == "eos":
 		_lage_nr += 1
 		lage_eos.rpc(_lage_nr, l)
@@ -521,6 +567,7 @@ func lage(l: Array) -> void:
 	if verlust > 0.0 and randf() < verlust:
 		return
 	var id := multiplayer.get_remote_sender_id()
+	lage_zaehler[id] = int(lage_zaehler.get(id, 0)) + 1
 	if spiel and is_instance_valid(spiel) and spiel.mitspieler and spieler.has(id):
 		spiel.mitspieler.lage(id, l)
 

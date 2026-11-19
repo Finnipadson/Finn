@@ -21,7 +21,7 @@ uniform bool mit_zustand = false;
 uniform sampler2D zustand : filter_nearest;
 uniform sampler2D wisch : filter_linear;
 uniform vec2 zustand_px = vec2(1.0, 1.0);
-uniform vec2 slots = vec2(16.0, 4.0);
+uniform vec2 slots = vec2(16.0, 8.0);
 uniform vec2 slot_px = vec2(64.0, 128.0);
 
 // Innenraum (Sky-Lounge): steht die Kamera drin, wird die Fassade in diesem Höhenband (y von, y bis) weggelassen –

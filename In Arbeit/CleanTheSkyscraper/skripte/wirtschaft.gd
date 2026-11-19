@@ -349,15 +349,19 @@ var radio: Dictionary:
 func _anwesende() -> Array:
 	return anwesend if not anwesend.is_empty() else [ich]
 
-# Preis-Faktor im Koop für Fortschritts-Käufe (Seilwinde, Werkzeuge, Motor, Teleskoparm, Gondeln, Helfer): +50 % je weiterem Spieler
+# Preis-Faktor im Koop für Fortschritts-Käufe (Werkzeuge, Motor, Teleskoparm, Gondeln, Helfer): +25 % je weiterem Spieler.
+# Die Seilwinde bleibt ohne Aufschlag. Grund (Koop-Bot 19.11.2026): Geld gibt es pro Fenster, die Fensterzahl ist fest – zu dritt
+# verdient man insgesamt etwa gleich viel wie allein, nur schneller. Mit +50 % (×2 zu dritt, auch auf die Seilwinde) waren 90 %
+# nach 3:39 h sauber, dann stand das Team über eine halbe Stunde ohne Fenster vor der letzten Seilwinde (109.147 €).
+const KOOP_AUFSCHLAG := 0.25
 func koop_faktor() -> float:
-	return 1.0 + 0.5 * float(clampi(koop_max, 1, 3) - 1)
+	return 1.0 + KOOP_AUFSCHLAG * float(clampi(koop_max, 1, 3) - 1)
 
 # Hinweis für Menü-Überschriften ("" allein)
 func koop_text() -> String:
 	if koop_max <= 1:
 		return ""
-	return " · ZU %d: PREISE ×%s" % [koop_max, ("%.1f" % koop_faktor()).replace(".", ",").trim_suffix(",0")]
+	return " · ZU %d: PREISE ×%s (SEILWINDE OHNE AUFSCHLAG)" % [koop_max, str(snappedf(koop_faktor(), 0.01)).replace(".", ",")]
 
 # Gastgeber/Einzelspieler jedes Bild: n = Spieler gerade in der Runde
 func koop_takt(dt: float, n: int) -> void:
@@ -726,7 +730,7 @@ func werkzeug(id := "") -> Dictionary:
 
 func upgrade_preis(id: String) -> int:
 	var u: Dictionary = UPGRADES[id]
-	return int(round(u.basis * pow(u.faktor, stufen[id]) * koop_faktor()))
+	return int(round(u.basis * pow(u.faktor, stufen[id]) * (1.0 if id == "winde" else koop_faktor())))
 
 func upgrade_voll(id: String) -> bool:
 	return stufen[id] >= UPGRADES[id].max

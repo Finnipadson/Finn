@@ -6,6 +6,11 @@ extends Node
 # Läden, Casino, Arcade, Penthouse und Sky-Lounge und kauft über die echten Knöpfe. Speichert + lädt einmal mitten im Lauf.
 # Protokoll: Zeilen „DS …“ auf der Konsole. Schnell: --headless --fixed-fps 20 (läuft so schnell wie die CPU kann).
 # Weitere Schalter: --bis=STUNDEN (Spielzeit-Ende, Standard 30), --hand=M/S (Wischtempo, Standard 2,5), --zeitraffer=F (Engine.time_scale)
+# Koop (Phase 7h): --koop → dieser Bot ist Gastgeber (ENet 127.0.0.1) und startet zwei Bot-Gäste (--koop-gast) als eigene
+# Prozesse (Log user://koop_gastN.log). Jeder putzt mit seiner eigenen Gondel seine Seite; Werkstatt-Käufe und Ausflüge macht
+# der Gastgeber, Gäste nehmen eine freie Gondel (oder kaufen eine) und angeln, solange keine frei ist. Alle 5 min
+# „DS … ABGLEICH“ (Fenster, Kasse, Besitz aller drei), dazu Netz-Datenmenge und Wisch-Atlas. Gleiches Tempo für alle:
+# --headless --fixed-fps 20 --max-fps 300 (= 15× Echtzeit; die Gäste bekommen dieselben Werte).
 
 const BOT_STAND_BASIS := "user://durchlauf_bot"
 static var BOT_STAND := bot_stand()
@@ -43,6 +48,17 @@ var _fps_werte: Array = []
 var angeltest := 0.0               # --angeltest[=MIN]: nur angeln (Messung), dann beenden
 const ANGEL_ALLE := 50.0 * 60.0    # so oft (Spielzeit) macht der Bot einen Angel-Ausflug
 const ANGEL_DAUER := 6.0 * 60.0    # so lange angelt er dann (wie ein Mensch zwischendurch)
+const KOOP_PORT := 24690
+const ABGLEICH_ALLE := 300.0
+var koop := ""                     # "" | "host" | "gast"
+var _koop_bilder := 0              # Bilder seit Start (Tempo-Messung)
+var _koop_ms := 0
+var _naechster_abgleich := ABGLEICH_ALLE
+var _abgleich := {}                # Gastgeber: Name -> letzter Bericht
+var _netz_bytes := 0               # Gastgeber: gesendet + empfangen (ENet)
+var _slots_max := 0
+var _gast_werkzeug_zeit := 0.0
+var koop_fps := 300                # Bilder je echter Sekunde für alle Koop-Prozesse (fixed-fps 20 → 15× Echtzeit)
 
 func setup(spiel: Spiel) -> void:
 	s = spiel
@@ -60,10 +76,30 @@ func setup(spiel: Spiel) -> void:
 			angeltest = float(a.split("=")[1]) if "=" in a else 30.0
 		if a.begins_with("--zeitraffer="):
 			Engine.time_scale = float(a.split("=")[1])
+		if a == "--koop":
+			koop = "host"
+		if a == "--koop-gast":
+			koop = "gast"
+		if a.begins_with("--koop-fps="):
+			koop_fps = int(a.split("=")[1])
+	if koop == "gast" and not (Netz.ist_gast() and not Netz.gast_stand.is_empty()):
+		# Gast-Prozess: die erste Szene läuft nur bis zum Beitritt (dann lädt die Welt des Gastgebers neu). Kommt man
+		# zurück ins eigene Spiel (Gastgeber beendet), ist der Koop-Lauf vorbei.
+		if Netz.menue_meldung != "":
+			print("DS KOOP ENDE Gast %s: %s" % [Netz.profil.name, Netz.menue_meldung])
+			Netz.beenden()
+		else:
+			get_tree().create_timer(120.0).timeout.connect(func():
+				if not Netz.ist_gast():
+					print("DS FEHLER Koop-Gast %s: kein Beitritt nach 120 s" % Netz.profil.name)
+					Netz.beenden(1))
+		return
+	if koop == "gast":
+		Netz.test_nachricht_da.connect(_koop_nachricht)
 	st = {"kaeufe": 0, "laden_test": false, "casino": -1e9, "arcade": -1e9, "ausflug": -1e9, "album": false, "erfolge_menue": false,
 		"jetpack_flug": false, "mode": false, "werkstatt_deko": false, "tote_zeit": 0.0, "unerreichbar": 0, "haenger_gondel": 0,
 		"haenger_fuss": 0, "teleport_raum": 0, "vorher": {}, "angeln": 1800.0 - ANGEL_ALLE, "angel_runden": 0, "angel_geld": 0, "angel_minuten": 0.0}
-	if FileAccess.file_exists(BOT_STAND):
+	if koop == "" and FileAccess.file_exists(BOT_STAND):
 		var d = JSON.parse_string(FileAccess.get_file_as_string(BOT_STAND))
 		if d is Dictionary and d.get("neu_laden", false):
 			for k in d.st:
@@ -79,7 +115,7 @@ func _uhr() -> String:
 	return "%d:%02d:%02d" % [t / 3600, (t / 60) % 60, t % 60]
 
 func _log(t: String) -> void:
-	print("DS [%s] %s" % [_uhr(), t])
+	print("DS [%s] %s%s" % [_uhr(), "" if koop != "gast" else "(%s) " % Netz.profil.name, t])
 
 func _warte(t: float) -> void:
 	await get_tree().create_timer(t).timeout
@@ -103,6 +139,8 @@ func _knopf(menu: Node, n: String) -> bool:
 
 # ---------------------------------------------------------------- Protokoll / Einnahmen
 func _process(_dt: float) -> void:
+	if koop != "":
+		_koop_takt()
 	if s.hud.meld.text != _letzte_meldung:
 		_letzte_meldung = s.hud.meld.text
 		if _letzte_meldung != "" and (_letzte_meldung.begins_with("Erfolg") or _letzte_meldung.begins_with("Neue Höhe") or _letzte_meldung.begins_with("Neu im") or _letzte_meldung.contains("Sandsturm") or _letzte_meldung.contains("fehlen")):
@@ -132,6 +170,8 @@ func _process(_dt: float) -> void:
 	if t >= _naechster_stand:
 		_naechster_stand = t + 600.0
 		_stand()
+		if koop == "host":
+			_koop_stand()
 
 # Einnahmen pro Minute (letzte ~10 min): gesamt, nur selbst geputzte Fenster, Helfer-Fenster pro Minute
 func _rate() -> Dictionary:
@@ -161,6 +201,11 @@ func _kauf(was: String, preis: int) -> void:
 # ---------------------------------------------------------------- Hauptablauf
 func _ablauf() -> void:
 	await _warte(1.0)
+	if koop != "":
+		_koop_bilder = 0
+	_koop_ms = Time.get_ticks_msec()
+	if koop == "host":
+		_koop_starten()
 	_log("START fenster=%d geld=%d seil=%d gesamt=%d hand=%.1f m/s" % [s.zustand.sauber_zahl, w.geld, w.oberstes_stockwerk(), s.turm.fenster_gesamt, hand])
 	_raster_bauen()
 	if "--dreck" in OS.get_cmdline_user_args():   # Test (FPS-Lauf im späten Spielstand): oben wieder alles dreckig
@@ -186,18 +231,27 @@ func _ablauf() -> void:
 	while true:
 		if s.zustand.sauber_zahl >= s.turm.fenster_gesamt:
 			_log("ZIEL alle Fenster sauber!")
+			if koop == "gast":   # Gast wartet, bis der Gastgeber beendet
+				await _warte(5.0)
+				continue
 			break
 		if _zeit() >= bis:
 			_log("ENDE Spielzeit-Grenze erreicht")
 			break
-		if not bool(st.laden_test) and _zeit() >= LADEN_TEST_NACH:
+		if koop == "" and not bool(st.laden_test) and _zeit() >= LADEN_TEST_NACH:
 			await _speichern_laden()
 			return
-		if not s.spieler.aktiv:
+		if koop == "gast":
+			if not await _gast_gondel():
+				await _gast_warten()
+				continue
+			await _gast_werkzeug()
+		elif not s.spieler.aktiv:
 			await _einsteigen()
 			continue
-		await _werkstatt()
-		if _ausflug_noetig():
+		if koop != "gast":
+			await _werkstatt()
+		if koop != "gast" and _ausflug_noetig():
 			await _ausflug()
 			continue
 		var ziel := _naechstes_fenster(w.aktive_gondel)
@@ -228,6 +282,8 @@ func _ablauf() -> void:
 	_ende()
 
 func _ende() -> void:
+	if koop == "host":
+		await _koop_ende()
 	_stand()
 	var ids := []
 	for e in Erfolge.LISTE:
@@ -237,7 +293,7 @@ func _ende() -> void:
 		_uhr(), s.zustand.sauber_zahl, s.turm.fenster_gesamt, w.geld, int(w.statistik.verdient), w.erfolge.size(), Erfolge.LISTE.size(), str(ids),
 		int(st.kaeufe), int(st.tote_zeit), unerreichbar.size(), int(st.haenger_gondel), int(st.haenger_fuss), int(st.teleport_raum), int(w.statistik.casino_bilanz)])
 	s._speichern()
-	get_tree().quit()
+	Netz.beenden()
 
 # ---------------------------------------------------------------- Speichern + Laden mitten im Lauf
 func _schnappschuss() -> Dictionary:
@@ -482,7 +538,7 @@ func _andere_seite() -> int:
 	var beste := -1
 	var bester_anteil := 0.02
 	for k in 3:
-		if k == w.aktive_gondel:
+		if k == w.aktive_gondel or _fremd_belegt(k):
 			continue
 		var a := _dreck_anteil(k)
 		if a > bester_anteil and (w.gondeln[k].gekauft or w.geld >= w.gondel_preis()):
@@ -1739,3 +1795,153 @@ func _angeltest() -> void:
 	_log("ANGELTEST %s%s%s Abschnitt %d: %.0f min, %d Würfe, %d Fische (%.1f/min, %.0f %% der Würfe), Index %d/20%s, Wert %d € = %.1f €/min | %s" % [
 		angel, " + Drinks" if drinks else "", " vom Boot" if boot else "", w.hoechster_abschnitt, minuten, runden, fische, fische / maxf(minuten, 0.1),
 		100.0 * fische / maxf(runden, 1), w.fisch_index.size(), (" (alle nach %.0f min)" % (erste_alle / 60.0)) if erste_alle >= 0.0 else "", wert, wert / maxf(minuten, 0.1), ", ".join(teile)])
+
+# ================================================================ Koop-Bot (Phase 7h)
+# Gondel k gehört gerade einem Mitspieler (dessen aktive_gondel, wie Netz._gondel_fahrer)
+func _fremd_belegt(k: int) -> bool:
+	if not Netz.aktiv():
+		return false
+	for pid in w.anwesend:
+		if str(pid) != w.ich and int((w.spieler_daten.get(str(pid), {}) as Dictionary).get("aktive_gondel", -1)) == k:
+			return true
+	return false
+
+func _koop_starten() -> void:
+	var e := Netz.host_starten(KOOP_PORT)
+	if e != "":
+		_log("FEHLER Koop-Gastgeber: " + e)
+		return
+	if not Netz.test_nachricht_da.is_connected(_koop_nachricht):
+		Netz.test_nachricht_da.connect(_koop_nachricht)
+	for n in 2:
+		var name := "koopgast%d" % (n + 1)
+		var args := ["--headless", "--fixed-fps", "20", "--log-file", OS.get_user_data_dir().path_join("koop_gast%d.log" % (n + 1)),
+			"--path", ProjectSettings.globalize_path("res://"), "--", "--durchspielen", "--koop-gast", "--profil=" + name, "--stand=" + name,
+			"--join=127.0.0.1:%d" % KOOP_PORT]
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--hand=") or a.begins_with("--netz-") or a.begins_with("--koop-fps="):
+				args.append(a)
+		var pid := OS.create_process(OS.get_executable_path(), args)
+		_log("KOOP Gast %s gestartet (pid %d, Log user://koop_gast%d.log)" % [name, pid, n + 1])
+		await _warte(3.0)
+
+func _koop_takt() -> void:
+	_koop_bilder += 1
+	# Gleiches Tempo für alle Prozesse (Engine.max_fps wirkt mit --fixed-fps nicht): vor der Soll-Zeit kurz schlafen
+	var soll_ms := int(_koop_bilder * 50.0 / (koop_fps / 20.0))
+	var ist_ms := Time.get_ticks_msec() - _koop_ms
+	if soll_ms > ist_ms:
+		OS.delay_msec(mini(soll_ms - ist_ms, 100))
+	var n := 0
+	for id in s.zustand.slot_fenster:
+		if id >= 0:
+			n += 1
+	_slots_max = maxi(_slots_max, n)
+	if koop == "host" and Netz.ist_host() and multiplayer.multiplayer_peer is ENetMultiplayerPeer:
+		var h := (multiplayer.multiplayer_peer as ENetMultiplayerPeer).host
+		if h:
+			_netz_bytes += h.pop_statistic(ENetConnection.HOST_TOTAL_SENT_DATA) + h.pop_statistic(ENetConnection.HOST_TOTAL_RECEIVED_DATA)
+	if koop == "gast" and Netz.ist_gast() and _zeit() >= _naechster_abgleich:
+		_naechster_abgleich = _zeit() + ABGLEICH_ALLE
+		Netz.test_nachricht.rpc_id(1, "KOOP " + JSON.stringify(_koop_bericht()))
+
+# Spielgeschwindigkeit dieses Prozesses (Spielsekunden je echter Sekunde)
+func _tempo() -> float:
+	return _koop_bilder * 0.05 / maxf(0.001, (Time.get_ticks_msec() - _koop_ms) / 1000.0)
+
+func _koop_bericht() -> Dictionary:
+	return {"name": Netz.profil.name, "zahl": s.zustand.sauber_zahl, "geld": w.geld, "besitz": w.besitz.size(), "stufen": str(w.stufen), "helfer": str(w.helfer),
+		"gondeln": w.gondeln_gekauft(), "seite": w.aktive_gondel, "in_gondel": s.spieler.aktiv, "werkzeug": w.aktiv, "tempo": snappedf(_tempo(), 0.1),
+		"slots": _slots_max, "verdraengt": s.zustand.verdraengt, "unerreichbar": unerreichbar.size(), "tote_zeit": int(st.get("tote_zeit", 0))}
+
+func _koop_nachricht(_id: int, t: String) -> void:
+	if t == "KOOP?" and koop == "gast":
+		Netz.test_nachricht.rpc_id(1, "KOOP " + JSON.stringify(_koop_bericht()))
+		return
+	if not t.begins_with("KOOP ") or koop != "host":
+		return
+	var d = JSON.parse_string(t.substr(5))
+	if not (d is Dictionary):
+		return
+	_abgleich[str(d.name)] = d
+	var ich: Dictionary = JSON.parse_string(JSON.stringify(_koop_bericht()))   # gleiche Zahlendarstellung wie der Bericht
+	var abw := []
+	for k in ["zahl", "geld", "besitz", "stufen", "helfer", "gondeln"]:
+		if str(d[k]) != str(ich[k]):
+			abw.append("%s %s≠%s" % [k, str(d[k]), str(ich[k])])
+	_log("ABGLEICH %s: %s | Seite %s, in Gondel %s, Werkzeug %s, Tempo %s×, Atlas max %s (verdrängt %s), unerreichbar %s, tote Zeit %s s" % [d.name,
+		"gleich" if abw.is_empty() else "ABWEICHUNG " + ", ".join(abw), d.seite, d.in_gondel, d.werkzeug, d.tempo, d.slots, d.verdraengt, d.unerreichbar, d.tote_zeit])
+
+func _koop_stand() -> void:
+	var je := []
+	for id in Netz.spieler:
+		var pid: String = w.ich if id == 1 else str(Netz.spieler[id].profil_id)
+		je.append("%s %d" % [Netz.name_von(id), int(w.fenster_je.get(pid, 0))])
+	var min_spiel := maxf(1.0, _zeit() / 60.0)
+	_log("KOOP spieler=%d faktor=×%.1f fenster je Spieler: %s | Helfer %d | Netz %.1f KB je Spielminute | Tempo %.1f× | Atlas max %d, verdrängt %d" % [
+		Netz.spieler.size(), w.koop_faktor(), ", ".join(je), int(w.statistik.fenster_helfer), _netz_bytes / 1024.0 / min_spiel, _tempo(), _slots_max, s.zustand.verdraengt])
+
+# Ende: letzter Abgleich mit beiden Gästen (alle Fenster sauber → nichts ändert sich mehr)
+func _koop_ende() -> void:
+	_koop_stand()
+	_abgleich = {}
+	for id in Netz.spieler:
+		if id != 1:
+			Netz.test_nachricht.rpc_id(id, "KOOP?")
+	var t := 0.0
+	while _abgleich.size() < Netz.spieler.size() - 1 and t < 10.0:
+		await _warte(0.5)
+		t += 0.5
+	_log("KOOP Schluss-Abgleich: %d von %d Gästen gemeldet" % [_abgleich.size(), Netz.spieler.size() - 1])
+
+# Gast: eigene Gondel sicherstellen (frei + gekauft, sonst eine freie kaufen). false = keine Gondel zu haben
+func _gast_gondel() -> bool:
+	var k := w.aktive_gondel
+	if s.spieler.aktiv and k >= 0 and not _fremd_belegt(k):
+		return true
+	if s.spieler.aktiv:   # sitzt in einer Gondel, die ein anderer hat (sollte nicht vorkommen)
+		_log("FEHLER Gast sitzt in Gondel %d, die ein Mitspieler hat" % k)
+		await _aussteigen()
+	if k >= 0 and k < 3 and w.gondeln[k].gekauft and not _fremd_belegt(k):
+		await _einsteigen()
+		return s.spieler.aktiv
+	var wahl := -1
+	for j in 3:
+		if w.gondeln[j].gekauft and not _fremd_belegt(j):
+			wahl = j
+			break
+	if wahl < 0:
+		for j in 3:
+			if not w.gondeln[j].gekauft and w.geld >= w.gondel_preis():
+				wahl = j
+				break
+	if wahl < 0:
+		return false
+	_log("GONDEL nehme Gondel %s (%s)" % [Turm.SEITEN_NAMEN[wahl], "gekauft" if w.gondeln[wahl].gekauft else "kaufe für %d €" % w.gondel_preis()])
+	await _seite_wechseln(wahl)
+	return s.spieler.aktiv and w.aktive_gondel == wahl
+
+# Gast ohne Gondel: angeln (Geld in die gemeinsame Kasse) oder kurz warten
+func _gast_warten() -> void:
+	if not st.has("ohne_gondel_seit"):
+		st["ohne_gondel_seit"] = _zeit()
+		_log("WARTEN keine freie Gondel (Kasse %d €, Gondel kostet %d €)" % [w.geld, w.gondel_preis()])
+	await _warte(5.0)
+	st.tote_zeit = float(st.tote_zeit) + 5.0
+
+# Gast: besseres (vom Gastgeber gekauftes) Werkzeug in die Hand nehmen
+func _gast_werkzeug() -> void:
+	if st.has("ohne_gondel_seit"):
+		_log("GONDEL wieder putzen nach %d s ohne Gondel" % int(_zeit() - float(st.ohne_gondel_seit)))
+		st.erase("ohne_gondel_seit")
+	if _zeit() < _gast_werkzeug_zeit:
+		return
+	_gast_werkzeug_zeit = _zeit() + 60.0
+	var beste := _bestes_werkzeug()
+	if w.aktiv == beste:
+		return
+	for i in Wirtschaft.WERKZEUGE.size():
+		if Wirtschaft.WERKZEUGE[i].id == beste:
+			s._taste(KEY_0 if i == 9 else KEY_1 + i)
+	await _bild()
+	_log("WERKZEUG %s in der Hand (%s)" % [w.aktiv, "ok" if w.aktiv == beste else "FEHLER Taste"])

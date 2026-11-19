@@ -9,7 +9,7 @@ extends RefCounted
 const SLOT_W := 64
 const SLOT_H := 128
 const SLOTS_X := 16
-const SLOTS_Y := 4
+const SLOTS_Y := 8           # 128 Plätze (7h: mit Sprühgeräten waren zu dritt alle 64 belegt, 96× verdrängt)
 const SAUBER_AB := 0.95      # ab so viel gewischter Fläche zählt das Fenster als sauber
 const SZENEN_ANTEIL := 1.0 / 35.0   # etwa jedes 35. Fenster hat eine Szene
 const SZENEN := ["", "Winkende Person", "Katze", "Party", "Büro", "Fitness", "Geburtstag", "Liebesbrief", "Dschungel", "Aquarium", "Hund"]
@@ -25,6 +25,7 @@ var slot_fenster := PackedInt32Array() # Slot -> Fenster-Nummer (-1 = frei)
 var slot_ort := []                     # Slot -> Vector2i(spalte, stockwerk)
 var slot_dreck := PackedInt32Array()   # dreckige Pixel im Slot
 var slot_zeit := PackedInt64Array()
+var verdraengt := 0                    # so oft war der Atlas voll und ein halb gewischtes Fenster verlor seinen Slot (Koop-Messung)
 var sauber := PackedByteArray()        # 1 = sauber
 var szenen := PackedByteArray()        # Szenen-Typ je Fenster (0 = keine)
 var sauber_zahl := 0
@@ -124,6 +125,7 @@ func _slot_fuer(id: int, f: int, spalte: int) -> int:
 	var slot := slot_fenster.find(-1)
 	if slot < 0:
 		# alle belegt: den am längsten nicht benutzten freigeben, sein Fortschritt geht als Dreckmenge zurück
+		verdraengt += 1
 		slot = 0
 		for i in slot_zeit.size():
 			if slot_zeit[i] < slot_zeit[slot]:

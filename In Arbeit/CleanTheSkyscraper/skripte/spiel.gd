@@ -235,7 +235,10 @@ func _gast_gondel(stand: Dictionary) -> void:
 	# eigene Gondel vom letzten Mal (je Spieler, 7b), sonst die erste freie gekaufte
 	var wahl := -1
 	var eigene := wirtschaft.aktive_gondel
-	if eigene >= 0 and eigene < 3 and wirtschaft.gondeln[eigene].gekauft and not eigene in belegt:
+	var vom_host := int((stand.get("netz", {}) as Dictionary).get("gondel", -1))   # 7h: der Gastgeber hat sie schon zugeteilt
+	if vom_host >= 0 and vom_host < 3 and wirtschaft.gondeln[vom_host].gekauft:
+		wahl = vom_host
+	elif eigene >= 0 and eigene < 3 and wirtschaft.gondeln[eigene].gekauft and not eigene in belegt:
 		wahl = eigene
 	else:
 		for k in 3:
@@ -258,7 +261,11 @@ func _gast_gondel(stand: Dictionary) -> void:
 func _ausruestung() -> void:
 	if get_parent().has_method("_grafik"):
 		get_parent()._grafik()   # Bildqualität (Optionen)
-	spieler.werkzeug_setzen(wirtschaft.werkzeug())
+	# Nur bei einem anderen Werkzeug neu setzen: werkzeug_setzen stellt das Wischen ab – im Koop kam _ausruestung bei jedem
+	# Kauf eines Mitspielers, ein Gast musste dann mitten im Strich neu klicken (gefunden mit dem Koop-Bot, 7h)
+	var wz_neu := wirtschaft.werkzeug()
+	if spieler.wz.is_empty() or hash(spieler.wz) != hash(wz_neu):
+		spieler.werkzeug_setzen(wz_neu)
 	var ka := wirtschaft.kosmetik_aktiv
 	spieler.aussehen(wirtschaft.kosmetik(ka.gondel).farbe, wirtschaft.kosmetik(ka.kleidung).farbe, wirtschaft.kosmetik(ka.schwamm).farbe, ka.lack, [ka.aufkleber, ka.blumen, ka.schirm, ka.radio])
 	_werte()
@@ -610,6 +617,12 @@ func _ein_aus() -> void:
 		elif _abstand_gondel() > EINSTEIG_WEIT:
 			hud.meldung("Geh zu einer Gondel am Turm, um einzusteigen.", 2.0)
 			return
+		# 7h: Gast ohne eigene Gondel (beim Beitritt war keine frei) – die des Gastgebers bzw. eines anderen ist gesperrt
+		if Netz.ist_gast():
+			var fahrer := Netz._gondel_fahrer(wirtschaft.aktive_gondel, wirtschaft.ich)
+			if fahrer != "":
+				hud.meldung("Gondel %s fährt gerade %s. Kauf eine Gondel an einer anderen Turmseite (dort E drücken) oder nimm eine freie." % [Turm.SEITEN_NAMEN[wirtschaft.aktive_gondel], fahrer], 4.0)
+				return
 		_einsteigen()
 
 func _einsteigen() -> void:
