@@ -51,6 +51,84 @@ var _zeit := 0.0
 var _mat: StandardMaterial3D
 var bodenlicht: Bodenlicht
 var _formen := {}
+
+# Baumkronen + Büsche (Wunsch des Users 19.11.: „der Baum braucht eine neue Textur“): Low-Poly-Facetten wie die
+# Kenney-Modelle, Blätterbüschel als Zellmuster (Ränder dunkler, Büschel unterschiedlich hell), unten dunkler, oben
+# heller. Muster im Modellraum (bleibt am Baum kleben), in der Ferne zur Mittelfarbe ausgeblendet (kein Flimmern).
+const LAUB_SHADER := """
+shader_type spatial;
+varying vec3 lp;
+varying vec3 farbe;
+void vertex() {
+	lp = VERTEX;
+	farbe = pow(COLOR.rgb, vec3(2.2));
+}
+vec3 h3(vec3 p) {
+	p = vec3(dot(p, vec3(127.1, 311.7, 74.7)), dot(p, vec3(269.5, 183.3, 246.1)), dot(p, vec3(113.5, 271.9, 124.6)));
+	return fract(sin(p) * 43758.5453);
+}
+void fragment() {
+	vec3 fn = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));   // flache Facetten
+	NORMAL = dot(fn, VERTEX) > 0.0 ? -fn : fn;               // immer zur Kamera
+	vec3 p = lp * 5.5 + farbe * 13.0;
+	vec3 i = floor(p);
+	vec3 f = fract(p);
+	float d1 = 8.0;
+	float d2 = 8.0;
+	float id = 0.0;
+	for (int z = -1; z <= 1; z++) for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
+		vec3 o = vec3(float(x), float(y), float(z));
+		vec3 h = h3(i + o);
+		vec3 r = o + h - f;
+		float d = dot(r, r);
+		if (d < d1) { d2 = d1; d1 = d; id = h.x; } else if (d < d2) { d2 = d; }
+	}
+	float rand = sqrt(d2) - sqrt(d1);                    // 0 an der Grenze zweier Büschel
+	float fw = length(fwidth(p));
+	float nah = 1.0 - smoothstep(0.35, 1.1, fw);
+	float fuge = (1.0 - smoothstep(0.0, 0.14 + fw, rand)) * nah;
+	vec3 c = farbe * mix(1.0, 0.78 + 0.44 * id, nah);
+	c *= 1.0 - 0.22 * fuge;
+	c *= mix(0.68, 1.12, smoothstep(-0.45, 0.45, lp.y));  // unten im Schatten der Krone
+	ALBEDO = c;
+	ROUGHNESS = 0.9;
+	BACKLIGHT = c * 0.25;
+}
+"""
+# Baumstamm: Rinde mit senkrechten Furchen und leichten Ringen, Farbe je Instanz
+const RINDE_SHADER := """
+shader_type spatial;
+varying vec3 lp;
+varying vec3 farbe;
+void vertex() {
+	lp = VERTEX;
+	farbe = pow(COLOR.rgb, vec3(2.2));
+}
+float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) {
+	vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hs(i), hs(i + vec2(1, 0)), u.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), u.x), u.y);
+}
+void fragment() {
+	float a = atan(lp.z, lp.x) / 6.2832 + 0.5;
+	vec2 q = vec2(a * 10.0, lp.y * 6.0);
+	float fw = length(fwidth(q));
+	float nah = 1.0 - smoothstep(0.4, 1.2, fw);
+	float furche = smoothstep(0.55, 0.9, vn(vec2(q.x * 1.6, q.y * 0.35)));
+	float ring = smoothstep(0.75, 0.95, fract(q.y * 1.5 + vn(q) * 0.3));
+	vec3 c = farbe * (1.0 - nah * (0.32 * furche + 0.12 * ring)) * mix(1.0, 0.9 + 0.2 * vn(q * 2.0), nah);
+	ALBEDO = c;
+	ROUGHNESS = 0.95;
+}
+"""
+var _laub_mat: ShaderMaterial
+var _rinde_mat: ShaderMaterial
+var _baum_orte: Array = []   # Vector2 (Layout) der Bäume/Palmen im aktuellen Feld – Mindestabstand
+func _platz_frei(l: Vector2, abstand: float) -> bool:
+	for q in _baum_orte:
+		if l.distance_to(q) < abstand:
+			return false
+	return true
 var _ohne: PackedStringArray = []   # Mess-Schalter --gs-ohne=autos,schatten,schrift,kraene,teile,boden
 var _arrays := {}
 
@@ -64,7 +142,7 @@ func baue(w: Welt) -> void:
 		var c: Vector2 = m
 		var r := Rect2(c - Vector2.ONE * HALB, Vector2.ONE * HALB * 2.0)
 		var naechster := Vector2(clampf(0.0, r.position.x, r.end.x), clampf(0.0, r.position.y, r.end.y))
-		if c.length() > MAX_D or naechster.length() < Welt.PLATZ_R + 6.0 or w._trifft_gebaeude(r, 6.0):
+		if c.length() > minf(MAX_D, w.stadt_r - 250.0) or naechster.length() < Welt.PLATZ_R + 6.0 or w._trifft_gebaeude(r, 6.0):
 			continue
 		if w.see_abstand(c) - r.size.length() * 0.5 < Welt.PROMENADE + 2.0 or w._kuesten_haus(r) != r:
 			continue
@@ -100,6 +178,9 @@ func baue(w: Welt) -> void:
 	for k in range(1, NAMEN.size()):
 		t.append("%s %d" % [NAMEN[k], zahl.get(k, 0)])
 	print("Grundstücke: %d (%s), %d Kräne" % [felder.size(), ", ".join(t), _kraene.size()])
+
+# Farbe auf der Karte (M) je Nutzung
+const KARTEN_FARBE := ["d6d0c4", "a3a6aa", "8fc06c", "c9a46c", "e3cf9e", "6f9fb8", "e9e2d2", "8fc06c"]
 
 # Erstes Feld einer Art (nächstes am Turm) – für Testbilder
 func erstes(typ: int) -> Dictionary:
@@ -238,8 +319,8 @@ const BUSCH_GRUEN := [Color("3f6a2e"), Color("4a7a35"), Color("55803a")]
 func _busch(f: Dictionary, l: Vector2, s := 2.5) -> void:
 	var d := s * 0.5 * rng.randf_range(0.8, 1.2)
 	var gr: Color = BUSCH_GRUEN[rng.randi() % BUSCH_GRUEN.size()]
-	_kugel("klein", f, l, d * 0.3, Vector3(d, d * 0.75, d), gr)
-	_kugel("klein", f, l + Vector2(rng.randf_range(-0.4, 0.4), rng.randf_range(-0.4, 0.4)) * d, d * 0.42, Vector3(d, d * 0.7, d) * 0.7, gr.lightened(0.05))
+	_kugel("busch", f, l, d * 0.3, Vector3(d, d * 0.75, d), gr)
+	_kugel("busch", f, l + Vector2(rng.randf_range(-0.4, 0.4), rng.randf_range(-0.4, 0.4)) * d, d * 0.42, Vector3(d, d * 0.7, d) * 0.7, gr.lightened(0.05))
 
 func _bank(f: Dictionary, l: Vector2, blick_l: Vector2) -> void:   # blick_l = Blickrichtung der Sitzenden (Layout)
 	var b := _w(f, blick_l)
@@ -325,11 +406,13 @@ func _park(f: Dictionary) -> void:
 	# Bäume und Palmen auf dem Rasen, Büsche am Rand
 	var n := 0
 	var versuche := 0
-	while n < 16 and versuche < 120:
+	_baum_orte.clear()
+	while n < 16 and versuche < 160:
 		versuche += 1
 		var l := Vector2(rng.randf_range(-22.0, 22.0), rng.randf_range(-22.0, 22.0))
-		if _auf_weg(f, l):
+		if _auf_weg(f, l) or not _platz_frei(l, 6.5):   # Mindestabstand (Bild des Users: Palme wuchs durch einen Baum)
 			continue
+		_baum_orte.append(l)
 		if rng.randf() < 0.15:   # wenige Palmen (teuer), meist runde Bäume
 			_palme(f, l)
 		else:
@@ -337,7 +420,7 @@ func _park(f: Dictionary) -> void:
 		n += 1
 	for k in 10:
 		var l := Vector2(rng.randf_range(-21.0, 21.0), rng.randf_range(-21.0, 21.0))
-		if not _auf_weg(f, l):
+		if not _auf_weg(f, l) and _platz_frei(l, 3.5):
 			_busch(f, l, rng.randf_range(2.6, 4.0))
 	# Leuchten an den Wegen
 	for k in 4:
@@ -410,12 +493,14 @@ func _teich(f: Dictionary) -> void:
 		_bank(f, l, -d)
 	var n := 0
 	var versuche := 0
-	while n < 12 and versuche < 120:
+	_baum_orte.clear()
+	while n < 12 and versuche < 160:
 		versuche += 1
 		var l := Vector2(rng.randf_range(-24.0, 24.0), rng.randf_range(-24.0, 24.0))
 		var r := (l / Vector2(19.5, 16.5)).length()
-		if r < 1.25 or absf(l.x) < 3.0 or absf(l.y) < 3.0 or HALB - maxf(absf(l.x), absf(l.y)) < 2.5:
+		if r < 1.25 or absf(l.x) < 3.0 or absf(l.y) < 3.0 or HALB - maxf(absf(l.x), absf(l.y)) < 2.5 or not _platz_frei(l, 6.5):
 			continue
+		_baum_orte.append(l)
 		if rng.randf() < 0.2:
 			_palme(f, l)
 		else:
@@ -839,8 +924,8 @@ func _form(name: String) -> Mesh:
 			var s := SphereMesh.new()
 			s.radius = 0.5
 			s.height = 1.0
-			s.radial_segments = 10
-			s.rings = 6
+			s.radial_segments = 12
+			s.rings = 7
 			m = s
 		_:
 			var b := BoxMesh.new()
@@ -887,6 +972,22 @@ func _mesh_knoten(eltern: Node3D, teile: Array, von: float, bis: float) -> MeshI
 	eltern.add_child(mi)
 	return mi
 
+func _laub() -> ShaderMaterial:
+	if _laub_mat == null:
+		var sh := Shader.new()
+		sh.code = LAUB_SHADER
+		_laub_mat = ShaderMaterial.new()
+		_laub_mat.shader = sh
+	return _laub_mat
+
+func _rinde() -> ShaderMaterial:
+	if _rinde_mat == null:
+		var sh := Shader.new()
+		sh.code = RINDE_SHADER
+		_rinde_mat = ShaderMaterial.new()
+		_rinde_mat.shader = sh
+	return _rinde_mat
+
 func _teile_bauen() -> void:
 	for k in _teile:
 		var t: PackedStringArray = (k as String).split("|")
@@ -902,9 +1003,11 @@ func _teile_bauen() -> void:
 		var mmi := MultiMeshInstance3D.new()
 		mmi.multimesh = mm
 		mmi.material_override = _mat
+		if t[1] == "baum" or t[1] == "busch":
+			mmi.material_override = _rinde() if t[0] == "zyl" else _laub()
 		var weit := 0.0
 		match t[1]:
-			"klein": weit = KLEIN_WEIT
+			"klein", "busch": weit = KLEIN_WEIT
 			"baum": weit = BAUM_WEIT
 			"fein": weit = FEIN_WEIT
 		if weit > 0.0:

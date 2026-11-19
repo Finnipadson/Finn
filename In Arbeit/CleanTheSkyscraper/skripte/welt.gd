@@ -49,6 +49,7 @@ var sturm_k := 0.0
 var daecher: Daecher
 var belichtung_faktor := 1.0    # Grafik-Test: z. B. AgX braucht mehr Belichtung als ACES
 var spiegel: Array = []         # Grafik-Test: ReflectionProbes am Turm (Stadt spiegelt sich im sauberen Glas)
+var stadt_r := 1600.0           # Radius der Bebauung (Mess-Schalter --stadt-r=m)
 var leere_felder: Array = []    # Vector2: Feld-Mitten ohne Haus (Grundstuecke.gd belegt sie, 19.11.2026)
 var grundstuecke: Grundstuecke
 var _werte := {}                # letzte Werte der Tageszeit
@@ -69,6 +70,9 @@ func _ready() -> void:
 	while sp.size() < 5:
 		sp.append(Vector4(1e6, 1e6, 1e6, 1e6))
 	boden_mat.set_shader_parameter("sperren", sp)
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--stadt-r="):
+			stadt_r = float(a.split("=")[1])
 	_stadt()
 	kueste = Kueste.new()
 	add_child(kueste)
@@ -312,8 +316,8 @@ func _stadt() -> void:
 		while z <= 1500.0:
 			var d := Vector2(x, z).length()
 			var dichte := 0.85 if d < 600.0 else 0.55      # nah am Turm dichter bebaut
-			var bauen := d > 100.0 and d < 1600.0 and rng.randf() < dichte   # gleiche Zufallsfolge wie vorher
-			if not bauen and d > 100.0 and d < 1600.0:
+			var bauen := d > 100.0 and d < stadt_r and rng.randf() < dichte   # gleiche Zufallsfolge wie vorher
+			if not bauen and d > 100.0 and d < stadt_r:
 				leere_felder.append(Vector2(x, z))
 			if bauen:
 				var bx := 25.0 + rng.randf() * 30.0

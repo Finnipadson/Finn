@@ -781,6 +781,11 @@ func _tag_bilder() -> void:
 			var gc: Vector2 = gf.mitte
 			orte["gs_" + Grundstuecke.NAMEN[t]] = [Vector3(gc.x + 40.0, 24.0, gc.y + 48.0), Vector3(gc.x, 2.0, gc.y)]
 			orte["gs_" + Grundstuecke.NAMEN[t] + "_nah"] = [Vector3(gc.x + 33.0, 1.8, gc.y + 18.0), Vector3(gc.x - 5.0, 4.0, gc.y - 4.0)]
+	orte["allee_ende"] = [Vector3(491.0, 1.8, 205.0), Vector3(487.5, 0.0, 300.0)]   # Mittelstreifen endet an einer Kreuzung (19.11.2026)
+	if "--karte-bild" in OS.get_cmdline_user_args():   # Karte (M) mit den Grundstücken
+		s.karte.oeffnen()
+		await _bild_machen("karte")
+		s.karte.schliessen()
 	var uhren := [9.0, 13.0, 16.5, 18.6, 19.4, 20.2, 22.0, 5.8]
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--uhren="):

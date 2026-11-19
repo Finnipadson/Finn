@@ -226,9 +226,11 @@ func _alleen() -> void:
 				if not welt.stueck_da(a, b):
 					continue
 				var quer := Vector2(1, 0) if richtung == 0 else Vector2(0, 1)
+				if a.lerp(b, 0.5).length() > ALLEE_BIS:   # Mittelstreifen je ganzem Straßenstück (wie im Boden-Shader)
+					continue
 				for i in ALLEE_ORTE.size():
 					var p := a.lerp(b, ALLEE_ORTE[i] / RASTER)
-					if p.length() > ALLEE_BIS - 6.0 or not _frei_fuer_allee(p):   # Mittelstreifen endet bei ALLEE_BIS
+					if not _frei_fuer_allee(p):
 						continue
 					if i == 1:
 						_lampe(p, quer)

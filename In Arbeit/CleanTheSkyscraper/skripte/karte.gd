@@ -76,6 +76,8 @@ func _orte_sammeln() -> void:
 	orte.append({"name": "Steg-Spitze (Angeln)", "pos": Vector2(Kueste.KOPF.get_center().x, Kueste.KOPF.get_center().y), "farbe": "7fe08a", "art": "strand"})
 	orte.append({"name": "Yacht-Liegeplatz", "pos": k.stationen[2].pos, "farbe": "f4f4f4", "art": "strand"})
 	orte.append({"name": "Strand", "pos": Vector2(-630.0, -40.0), "farbe": "ffd84a", "art": "strand", "ebene": 1})
+	if w.grundstuecke and not w.grundstuecke.erstes(Grundstuecke.Typ.RIESENRAD).is_empty():
+		orte.append({"name": "Riesenrad", "pos": Vector2(w.grundstuecke._pos(w.grundstuecke.erstes(Grundstuecke.Typ.RIESENRAD), Vector2(0, 9.5)).x, w.grundstuecke._pos(w.grundstuecke.erstes(Grundstuecke.Typ.RIESENRAD), Vector2(0, 9.5)).z), "farbe": "e2483e", "art": "riesenrad"})
 	orte.append({"name": "Palmen-Boulevard", "pos": Vector2(k.kanal_start - 30.0, Kueste.BOUL_Z + 12.0), "farbe": "3fc29a", "art": "strand"})
 	# Straßen für die Zeichnung
 	for richtung in 2:
@@ -220,6 +222,19 @@ func _zeichnen() -> void:
 	for p in see:
 		pts.append(_bild(p))
 	c.draw_colored_polygon(pts, Color("3aa0d0"))
+	# Leere Grundstücke (19.11.2026): Fläche in der Farbe der Nutzung, Teich als blaues Oval, Riesenrad als Ring
+	if w.grundstuecke:
+		for gf in w.grundstuecke.felder:
+			var gm: Vector2 = gf.mitte
+			_rect(Rect2(gm - Vector2.ONE * Grundstuecke.HALB, Vector2.ONE * Grundstuecke.HALB * 2.0), Color(Grundstuecke.KARTEN_FARBE[int(gf.typ)]))
+			if int(gf.typ) == Grundstuecke.Typ.TEICH:
+				var r := Vector2(14.0, 11.0) if int(gf.dreh) % 2 == 0 else Vector2(11.0, 14.0)
+				var oval := PackedVector2Array()
+				for i in 20:
+					oval.append(_bild(gm + Vector2(cos(TAU * i / 20.0) * r.x, sin(TAU * i / 20.0) * r.y)))
+				c.draw_colored_polygon(oval, Color("3aa0d0"))
+			elif int(gf.typ) == Grundstuecke.Typ.RIESENRAD:
+				c.draw_arc(_bild(gm), maxf(22.0 * zoom, 3.0), 0, TAU, 24, Color("e2483e"), maxf(3.0 * zoom, 1.5))
 	# Häuser
 	for h in w.haeuser:
 		_rect(h, Color("b9b2a6"))

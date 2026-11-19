@@ -193,7 +193,9 @@ void fragment() {
 	c = mix(c, vec3(0.86, 0.85, 0.82), bord_da * (1.0 - str));
 	c = mix(c, asphalt * (0.94 + 0.08 * mix(0.5, vn(p * 0.7), nah_2)), str);
 	// Mittelstreifen mit Rasen + Bordstein in Turmnähe (dort stehen Palmen + Laternen), sonst gestrichelte Linie
-	float allee = 1.0 - smoothstep(allee_r - 5.0, allee_r + 5.0, d);
+	// Mittelstreifen je ganzem Straßenstück (Mitte des Stücks näher als allee_r) – endet so immer an einer Kreuzung
+	vec2 stueck_mitte = entlang_z ? vec2(lin.x, k_lo_z + raster * 0.5) : vec2(k_lo_x + raster * 0.5, lin.y);
+	float allee = step(length(stueck_mitte), allee_r);
 	float mittel = (1.0 - sst(1.5, naechste, aa)) * sst(12.0, zur_kreuzung, aa) * str * allee;
 	vec3 rasen = gruen * (0.8 + 0.3 * mix(0.5, vn(p * 0.4), nah_2));
 	c = mix(c, mix(vec3(0.78, 0.76, 0.72), rasen, 1.0 - sst(1.15, naechste, aa)), mittel);
