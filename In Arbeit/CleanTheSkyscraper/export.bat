@@ -29,11 +29,8 @@ if not exist "%~dp0export\CleanTheSkyscraper.exe" (
   exit /b 1
 )
 del /q "%~dp0export\CleanTheSkyscraper-Spiel.zip" 2>nul
-if exist "%~dp0export\EOSSDK-Win64-Shipping.dll" (
-  powershell -NoProfile -Command "Compress-Archive -Path '%~dp0export\CleanTheSkyscraper.exe','%~dp0export\*.dll' -DestinationPath '%~dp0export\CleanTheSkyscraper-Spiel.zip'"
-) else (
-  powershell -NoProfile -Command "Compress-Archive -Path '%~dp0export\CleanTheSkyscraper.exe' -DestinationPath '%~dp0export\CleanTheSkyscraper-Spiel.zip'"
-)
+rem Packen mit bis zu 15 Versuchen: direkt nach dem Bauen ist die .exe manchmal noch gesperrt (z. B. OneDrive synchronisiert sie)
+powershell -NoProfile -Command "$d='%~dp0export'; $zip=$d+'\CleanTheSkyscraper-Spiel.zip'; $f=@($d+'\CleanTheSkyscraper.exe') + @(Get-ChildItem -Path ($d+'\*.dll') | ForEach-Object { $_.FullName }); for ($i=0; $i -lt 15; $i++) { try { Compress-Archive -Path $f -DestinationPath $zip -Force -ErrorAction Stop; break } catch { Start-Sleep -Seconds 2 } }; Add-Type -AssemblyName System.IO.Compression.FileSystem; $z=[IO.Compression.ZipFile]::OpenRead($zip); $ok=@($z.Entries | Where-Object { $_.Name -eq 'CleanTheSkyscraper.exe' }).Count; $z.Dispose(); if ($ok -eq 0) { Write-Host 'FEHLER: Die Zip enthaelt die .exe nicht - bitte export.bat nochmal starten.'; exit 1 } else { Write-Host 'Zip geprueft: .exe und DLLs sind drin.' }"
 echo.
 echo Fertig: export\CleanTheSkyscraper.exe
 echo Zum Weitergeben an Freunde: export\CleanTheSkyscraper-Spiel.zip (alles drin, nur entpacken und starten)
