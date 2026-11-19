@@ -423,6 +423,8 @@ func _fahrzeug_waehlen(id: String) -> void:
 	if laeufer.hoch > 1.5 and laeufer.fz_fliegt and id != "jetpack":
 		hud.meldung("Erst landen (Strg), dann absteigen.", 2.0)
 		return
+	if angel_hand:
+		angel_nehmen(false, true)
 	wirtschaft.fahrzeug = id
 	laeufer.fahrzeug_setzen(id)
 	hud.meldung("Zu Fuß" if id == "" else wirtschaft.fahrzeug_daten(id).name, 1.0)
@@ -449,6 +451,12 @@ func _hotbar() -> void:
 			if id == wirtschaft.fahrzeug:
 				aktiv = i
 			l.append({"taste": i + 1, "kurz": KURZ.get(id, id), "farbe": "9fd3a8" if id == "" else wirtschaft.fahrzeug_daten(id).farbe, "bild": Symbole.bilder.get(id)})
+		# Angel als letztes Feld (sobald eine gekauft ist), Wunsch des Users 19.11.2026
+		var an := wirtschaft.angel()
+		if an != "":
+			if angel_hand:
+				aktiv = l.size()
+			l.append({"taste": l.size() + 1, "kurz": "Angel", "farbe": "c9a258", "bild": Symbole.bilder.get("a_" + an)})
 	hud.hotbar(l, aktiv)
 
 # Ein Helfer hat ein Fenster fertig: Lohn abzüglich seines Anteils
@@ -534,11 +542,13 @@ func _input(e: InputEvent) -> void:
 		if t != "":
 			hud.meldung(t, 2.5)
 			_speichern()
-	elif Optionen.k(e) >= KEY_1 and Optionen.k(e) <= KEY_4 and not spieler.aktiv and not shop.offen and not hmenu.offen and not cmenu.offen:
+	elif Optionen.k(e) >= KEY_1 and Optionen.k(e) <= KEY_9 and not spieler.aktiv and not shop.offen and not hmenu.offen and not cmenu.offen and not strand.angeln.aktiv():
 		var fz := _fahrzeug_liste()
 		var i2: int = Optionen.k(e) - KEY_1
 		if i2 < fz.size():
 			_fahrzeug_waehlen(fz[i2])
+		elif i2 == fz.size() and wirtschaft.angel() != "":
+			angel_nehmen(not angel_hand)
 	elif Optionen.k(e) >= KEY_0 and Optionen.k(e) <= KEY_9 and spieler.aktiv and not shop.offen and not hmenu.offen and not cmenu.offen:
 		var i: int = 9 if Optionen.k(e) == KEY_0 else Optionen.k(e) - KEY_1
 		if i < Wirtschaft.WERKZEUGE.size() and wirtschaft.ausruesten(Wirtschaft.WERKZEUGE[i].id):
@@ -850,9 +860,12 @@ func _process(dt: float) -> void:
 				hud.meldung("Neue Höhe: %d m!  Höhenbonus +%d €" % [meter, int(e.bonus)], 3.5)
 				_speichern())
 	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv, strand.ort_name() if strand.ort_name() != "" else extras.ort_name())
-	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen() or strand.blockiert() or karte.offen or (miteinander != null and miteinander.blockiert())
+	# Beim Angeln nur das Laufen sperren – Umschauen mit der Maus bleibt (Wunsch des Users 19.11.2026)
+	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen() or strand.menu.offen or strand.yacht.an_bord or karte.offen or (miteinander != null and miteinander.blockiert())
 	laeufer.set_process(not menue)
 	laeufer.gesperrt = menue
+	laeufer.laufen_aus = strand.angeln.aktiv()
+	_angel_takt()
 	wirtschaft.boosts_takt(dt)
 	if not Netz.ist_gast():   # Preis-Faktor: höchste Spielerzahl der letzten 10 min (Gast bekommt ihn vom Gastgeber)
 		wirtschaft.koop_takt(dt, Netz.spieler.size() if Netz.ist_host() else 1)
@@ -1941,3 +1954,48 @@ func _helfen_takt(dt: float) -> void:
 	if t != "" and t != _helfen_hinweis:
 		_helfen_hinweis = t
 		hud.meldung(t, 5.0)
+
+# ---------------------------------------------------------------- Angel in der Hand (Wunsch des Users 19.11.2026)
+# Die Angel liegt als letztes Feld in der Leiste zu Fuß. Auswählen (Taste) = vom Fahrzeug absteigen und die Angel sichtbar
+# in die Hand nehmen; nur dann wirft ein Klick am Steg/Strand aus. Nochmal drücken oder ein Fahrzeug wählen = weglegen.
+var angel_hand := false
+var _angel_modell: Node3D
+var _angel_modell_id := ""
+var _angel_besitz := ""
+var _angel_init := false
+
+func angel_taste() -> int:
+	return _fahrzeug_liste().size() + 1
+
+func angel_nehmen(an: bool, still := false) -> void:
+	if an and wirtschaft.angel() == "":
+		return
+	if an and wirtschaft.fahrzeug != "":
+		_fahrzeug_waehlen("")
+		if wirtschaft.fahrzeug != "":   # in der Luft: erst landen
+			return
+	angel_hand = an
+	if not still:
+		hud.meldung("Angel in der Hand – am Steg oder unten am Wasser aufs Meer schauen und klicken." if an else "Angel weggelegt.", 2.5)
+
+func _angel_takt() -> void:
+	var an := wirtschaft.angel()
+	if not _angel_init:   # Spielstart: vorhandene Angel ohne Meldung
+		_angel_init = true
+		_angel_besitz = an
+	elif an != _angel_besitz:   # neue (bessere) Angel gekauft
+		if an != "":
+			hud.meldung("Die %s liegt jetzt in deiner Leiste (Taste %d)." % [Wirtschaft.angel_daten(an).name, angel_taste()], 4.0)
+		_angel_besitz = an
+	if an == "":
+		angel_hand = false
+	var zeigen := angel_hand and laeufer.aktiv and not strand.angeln.aktiv() and an != ""
+	if zeigen and (_angel_modell == null or _angel_modell_id != an):
+		if _angel_modell:
+			_angel_modell.queue_free()
+		_angel_modell = Angeln.modell(an)
+		_angel_modell_id = an
+		_angel_modell.transform = Transform3D(Basis.from_euler(Vector3(-0.95, 0.12, -0.12)), Vector3(0.28, -0.42, -0.45))
+		laeufer.cam.add_child(_angel_modell)
+	if _angel_modell:
+		_angel_modell.visible = zeigen

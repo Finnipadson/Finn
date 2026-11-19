@@ -152,10 +152,31 @@ func _test() -> void:
 	s._taste(KEY_E)
 	await _warte(0.3)
 	_pruefe("Fischladen zu", not st.menu.offen)
+	# ---- 19.11.2026: Angel in der Leiste, Auswerfen nur mit Angel in der Hand, nicht in der Hütte
+	await _warte(0.3)
+	var felder := s.hud.hotbar_box.get_child_count()
+	_pruefe("Angel als letztes Feld in der Leiste", felder == s._fahrzeug_liste().size() + 1 and s.angel_taste() == felder, "%d Felder, Taste %d" % [felder, s.angel_taste()])
+	_stelle(Kueste.KOPF.get_center() + Vector2(-10.0, 0.0), Vector2(-1, 0))
+	await _warte(0.3)
+	_pruefe("Ohne Angel in der Hand: kein Wurf, Hinweis mit Taste", st.wurf_ziel() == Vector3.INF and s.hud.status_l.text.contains("Taste %d" % s.angel_taste()), s.hud.status_l.text)
+	s._taste(KEY_1 + s.angel_taste() - 1)
+	await _warte(0.3)
+	_pruefe("Taste nimmt die Angel in die Hand", s.angel_hand and s._angel_modell != null and s._angel_modell.visible, "")
+	var fl: Rect2 = Kueste.FISCHLADEN
+	_stelle(Vector2(fl.get_center().x, fl.end.y - 0.3), Vector2(0, 1))
+	await _warte(0.2)
+	_pruefe("Im Fischladen kein Auswerfen", st.wurf_ziel() == Vector3.INF, s.hud.status_l.text)
 	# ---- Angeln an der Steg-Spitze: echter Klick, echter Spannungsbalken
 	_stelle(Kueste.KOPF.get_center() + Vector2(-10.0, 0.0), Vector2(-1, 0))
 	await _warte(0.3)
 	_pruefe("Hinweis Angel auswerfen", s.hud.status_l.text.begins_with("Klick: Angel"), s.hud.status_l.text)
+	s._klick(Vector2(400, 300), true)
+	s._klick(Vector2(400, 300), false)
+	await _warte(0.3)
+	_pruefe("Beim Angeln umschauen erlaubt, Laufen gesperrt", st.angeln.aktiv() and not s.laeufer.gesperrt and s.laeufer.laufen_aus, "aktiv %s gesperrt %s laufen_aus %s" % [st.angeln.aktiv(), s.laeufer.gesperrt, s.laeufer.laufen_aus])
+	if st.angeln.aktiv():
+		st.angeln.einholen("")
+	await _warte(0.5)
 	var gefangen := 0
 	var versuche := 0
 	while gefangen < 4 and versuche < 10:

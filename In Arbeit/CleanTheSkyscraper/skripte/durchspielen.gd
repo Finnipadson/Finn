@@ -1672,6 +1672,9 @@ func _angelausflug() -> void:
 	await _gehe_weit(platz)
 	await _hinschauen(platz + Vector2(-10.0, 0.0))
 	await _bild()
+	if not s.angel_hand:   # 19.11.2026: Angel aus der Leiste in die Hand nehmen
+		s._taste(KEY_1 + s.angel_taste() - 1)
+		await _warte(0.3)
 	if s.strand.wurf_ziel() == Vector3.INF:
 		_log("FEHLER Angeln: an der Steg-Spitze kein Wurf möglich (bei %.0f, %.0f, y=%.1f)" % [s.laeufer.position.x, s.laeufer.position.z, s.laeufer.position.y])
 		return

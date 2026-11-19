@@ -48,7 +48,13 @@ func stationen() -> Array:
 	return l
 
 # Kann man gerade (zu Fuß oder vom Boot) auswerfen? Gibt das Ziel der Pose zurück oder Vector3.INF
+# Auswerfen möglich? Zu Fuß nur mit der Angel in der Hand (19.11.2026)
 func wurf_ziel() -> Vector3:
+	if not yacht.an_bord and not spiel.angel_hand:
+		return Vector3.INF
+	return _wurf_ort()
+
+func _wurf_ort() -> Vector3:
 	if w.angel() == "" or angeln.aktiv() or menu.offen:
 		return Vector3.INF
 	if yacht.an_bord:
@@ -57,6 +63,8 @@ func wurf_ziel() -> Vector3:
 	if not L.aktiv or spiel.spieler.aktiv or spiel.extras.ort != "" or L.hoch > 0.5:
 		return Vector3.INF
 	var p := Vector2(L.position.x, L.position.z)
+	if Kueste.FISCHLADEN.grow(0.5).has_point(p):   # in der Hütte nicht auswerfen
+		return Vector3.INF
 	var auf_steg := Kueste.auf_steg(p) and L.position.y > -1.0
 	var am_wasser := p.x < Kueste.WASSER_X + 6.0 and L.position.y < -1.0
 	if not auf_steg and not am_wasser:
@@ -88,6 +96,8 @@ func status() -> String:
 		return "Zum Angeln anhalten (S) · E am Liegeplatz: an Land"
 	if wurf_ziel() != Vector3.INF:
 		return "Klick: Angel auswerfen (%s)" % Wirtschaft.angel_daten(w.angel()).name
+	if not spiel.angel_hand and _wurf_ort() != Vector3.INF:
+		return "Hier kannst du angeln: nimm die Angel in die Hand (Taste %d)" % spiel.angel_taste()
 	return ""
 
 # ---------------------------------------------------------------- Stationen (E über Extras)

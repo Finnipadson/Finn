@@ -14,6 +14,7 @@ const MAUS := 0.0022
 var cam: Camera3D
 var aktiv := false
 var gesperrt := false         # ein Menü ist offen: Maus nicht fangen, nicht umschauen
+var laufen_aus := false       # beim Angeln: nicht laufen/springen, aber umschauen (19.11.2026)
 var yaw := 0.0
 var pitch := 0.0
 var hoch := 0.0              # Sprunghöhe
@@ -82,7 +83,7 @@ func _input(e: InputEvent) -> void:
 		yaw = wrapf(yaw - e.relative.x * MAUS * Optionen.maus_x(), -PI, PI)
 		pitch = clampf(pitch - e.relative.y * MAUS * Optionen.maus_y(), -1.5, 1.5)
 	elif e is InputEventKey and e.pressed and not e.echo:
-		if Optionen.k(e) == KEY_SPACE and hoch <= 0.001 and not fz_fliegt:
+		if Optionen.k(e) == KEY_SPACE and hoch <= 0.001 and not fz_fliegt and not laufen_aus:
 			vy = 4.5
 		elif Optionen.k(e) == KEY_ESCAPE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -163,7 +164,9 @@ func _process(dt: float) -> void:
 	var vor := Vector3(-sin(yaw), 0, -cos(yaw))
 	var rechts := Vector3(cos(yaw), 0, -sin(yaw))
 	var d := Vector3.ZERO
-	if Optionen.gedrueckt(KEY_W): d += vor
+	if laufen_aus:
+		pass
+	elif Optionen.gedrueckt(KEY_W): d += vor
 	if Optionen.gedrueckt(KEY_S): d -= vor
 	if Optionen.gedrueckt(KEY_D): d += rechts
 	if Optionen.gedrueckt(KEY_A): d -= rechts
