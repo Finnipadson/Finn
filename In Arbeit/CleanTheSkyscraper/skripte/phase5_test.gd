@@ -607,6 +607,26 @@ func _wackeln() -> void:
 # Bildrate (ohne --write-movie starten, z. B. --resolution 2560x1440): Spiel-Ansicht am Turm, Straße, Aussicht, Strand –
 # je am Tag und in der Nacht (Ton, Musik, Tageszeit laufen mit)
 func _fps() -> void:
+	# 7h: --helfer-voll = alle 15 Helfer, --mitspieler=N = N Gast-Prozesse treten per ENet bei (Figuren, Lage 20 Hz, Stempel)
+	var args := OS.get_cmdline_user_args()
+	if "--helfer-voll" in args:
+		for id in Wirtschaft.HELFER:
+			w.helfer[id] = int(Wirtschaft.HELFER[id].max)
+		s._ausruestung()
+	for a in args:
+		if a.begins_with("--mitspieler="):
+			var n := int(a.substr(13))
+			print("FPS Gastgeber: ", Netz.host_starten(24682))
+			for i in n:
+				OS.create_process(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--ansicht=37", "--rolle=gast",
+					"--profil=fpsgast%d" % (i + 1), "--join=127.0.0.1:24682"])
+			var t := 0.0
+			while Netz.spieler.size() < n + 1 and t < 90.0:
+				await _warte(0.5)
+				t += 0.5
+			await _warte(4.0)
+			print("FPS mit %d Mitspielern (%d in der Runde), Helfer %d" % [n, Netz.spieler.size() - 1, s.helfer.anzahl()])
+	print("FPS Helfer: %d" % s.helfer.anzahl())
 	var cam := Camera3D.new()
 	cam.far = 40000.0
 	cam.fov = 70.0
