@@ -30,6 +30,12 @@ ORTE = {
     "fischladen": (1, "-695,1.7,-198.4,-695,0.95,-201.6", "0.25,0,0", 0),  # vor der Kühltheke im Fischladen (Video 19.11.2026)
     "theke_nah":  (1, "-695,1.5,-199.8,-694.3,0.95,-200.75", "0.02,0,0", 0),    # dicht an der Theke, Blick schräg auf die Fische (wie im Video)
     "theke_geh":  (1, "-695,1.6,-199.3,-694.0,0.95,-200.75", "0.08,0,0", 0),    # dito beim langsamen Vorbeigehen (Glanzpunkte auf Eis/Edelstahl)
+    # Leere Grundstücke (19.11.2026): dünne Teile (Zäune, Gerüst, Bewehrung, Kran-Gitter). Lage mit --gs-liste prüfen – ändert sich die Verteilung, zeigen die Orte evtl. auf andere Grundstücke
+    "gs_zaun_nah":  (1, "183,1.7,290,150,2,310", "0,0,0.3", 0),           # Sportplatz-Zaun aus 6 m
+    "gs_zaun_fern": (1, "150,80,40,150,0,300", "0.5,0,0", 0),            # derselbe Zaun von oben aus ~270 m (nahe der Sichtweite)
+    "gs_geruest":   (1, "197,15,456,157,15,456", "0,0,0.25", 0),         # Gerüst am fast fertigen Haus aus 40 m
+    "gs_bewehrung": (1, "40,6,-200,1.5,0,-230", "0.2,0,0", 0),           # Bewehrungsmatten + Anschlusseisen in der Baugrube
+    "gs_oben":      (1, "150,120,150,150,0,450", "0.6,0,0", 0),          # schräg von oben über mehrere Grundstücke (Kräne, Zäune)
     "still":      (1, "0,120,190,0,60,600", None, 0),                  # Kamera steht (zeigt TAA-Zittern)
     "drehen":     (1, "0,120,190,0,60,600", None, 0.3),                  # Gondel dreht sich (Boden + Häuser)
 }

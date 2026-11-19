@@ -23,8 +23,9 @@ const RASTER := 75.0
 const N := 41                 # Datentextur: Felder −1500 … 1500 m je Achse
 const MAX_D := 1350.0
 const KACHEL := 500.0
+const GROSS_KACHEL := 1000.0
 const AUTO_KACHEL := 250.0   # kleiner, damit die kurze Sichtweite der Autos genau greift
-const KLEIN_WEIT := 1100.0    # Kleinteile (Zaunplanen, Bäume, Container …) bis hier sichtbar
+const KLEIN_WEIT := 700.0    # Kleinteile (Zaunplanen, Bäume, Container …) bis hier sichtbar
 const FEIN_WEIT := 420.0      # dünne Teile (Zaunstangen, Gitter, Seile) – weiter weg wären sie kleiner als ein Bildpunkt
 const AUTO_WEIT := 380.0     # geparkte Autos (Messung 19.11.: sie kosteten am meisten)
 const BAUM_WEIT := 750.0     # Bäume mit Schatten
@@ -153,7 +154,7 @@ func baue(w: Welt) -> void:
 			continue
 		if w.see_abstand(c) - r.size.length() * 0.5 < Welt.PROMENADE + 2.0 or w._kuesten_haus(r) != r:
 			continue
-		if c.length() >= INNEN_D and rng.randf() < AUSSEN_HAUS:
+		if c.length() >= INNEN_D and c.length() <= MAX_D and rng.randf() < AUSSEN_HAUS:   # ganz außen (Stadtrand) bleibt frei wie vorher
 			if w.haus_bauen(c, rng):
 				zahl[Typ.LEER] = zahl.get(Typ.LEER, 0) + 1
 				continue
@@ -207,6 +208,9 @@ func baue(w: Welt) -> void:
 	var t := []
 	for k in range(1, NAMEN.size()):
 		t.append("%s %d" % [NAMEN[k], zahl.get(k, 0)])
+	if "--gs-liste" in OS.get_cmdline_user_args():   # Liste aller Grundstücke (für Messorte)
+		for f in felder:
+			print("GS %s v%d bei %s d=%.0f dreh=%d" % [NAMEN[int(f.typ)], int(f.var), str(f.mitte), float(f.d), int(f.dreh)])
 	print("Grundstücke: %d (%s), %d Kräne, %d neue Häuser außen" % [felder.size(), ", ".join(t), _kraene.size(), zahl.get(Typ.LEER, 0)])
 
 # Farbe auf der Karte (M) je Nutzung
@@ -355,7 +359,8 @@ func _rect(f: Dictionary, l: Vector2, groesse: Vector2) -> Rect2:   # Layout-Rec
 	return Rect2(p - g * 0.5, g)
 
 func _teil(form: String, kat: String, xf: Transform3D, farbe: Color) -> void:
-	var k := "%s|%s|%d|%d" % [form, kat, floori(xf.origin.x / KACHEL), floori(xf.origin.z / KACHEL)]
+	var ks := KACHEL if kat != "gross" else GROSS_KACHEL   # große Teile haben keine Sichtweite → wenige große Kacheln (weniger Zeichenaufrufe)
+	var k := "%s|%s|%d|%d" % [form, kat, floori(xf.origin.x / ks), floori(xf.origin.z / ks)]
 	if not _teile.has(k):
 		_teile[k] = []
 	_teile[k].append([xf, farbe])
