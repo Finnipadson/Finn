@@ -254,8 +254,11 @@ func _ablauf() -> void:
 		if koop != "gast" and _ausflug_noetig():
 			await _ausflug()
 			continue
-		var ziel := _naechstes_fenster(w.aktive_gondel)
+		var ziel := _naechstes_fenster(s.spieler.seite)   # 7h: beim Mithelfen die geholfene Seite
 		if ziel.is_empty():
+			if koop != "" and await _koop_helfen():
+				leer_seit = -1.0
+				continue
 			# Seite fertig (bis zur Seil-Grenze): andere Seite, neue Gondel oder warten (tote Phase)
 			var k := _andere_seite()
 			if k >= 0:
@@ -485,7 +488,7 @@ func _putze(z: Dictionary) -> void:
 	var id: int = z.id
 	var t0 := _zeit()
 	var mitte_w := (c + 0.5) * Turm.FENSTER_B
-	var weg_ziel := s.turm.weg_auf_seite(f, mitte_w, w.aktive_gondel)
+	var weg_ziel := s.turm.weg_auf_seite(f, mitte_w, s.spieler.seite)
 	for band in _baender(f, c):
 		if s.zustand.sauber[id] == 1:
 			break
@@ -528,7 +531,7 @@ func _putze(z: Dictionary) -> void:
 		unerreichbar[id] = int(unerreichbar.get(id, 0)) + 1
 		if int(unerreichbar[id]) == 2:
 			st.unerreichbar = int(st.unerreichbar) + 1
-			var sv: Vector2 = s.turm.seiten[f][w.aktive_gondel]
+			var sv: Vector2 = s.turm.seiten[f][s.spieler.seite]
 			_log("UNERREICHBAR Fenster f=%d c=%d (Seite %d, Seite reicht weg %.1f..%.1f, Fenster %.1f..%.1f, Fortschritt %.0f %%, Werkzeug %s)" % [
 				f, c, w.aktive_gondel, sv.x, sv.x + sv.y, c * Turm.FENSTER_B, (c + 1) * Turm.FENSTER_B, s.zustand.fortschritt(f, c) * 100, sp.wz_id])
 	if dauer > 90.0:
@@ -1945,3 +1948,24 @@ func _gast_werkzeug() -> void:
 			s._taste(KEY_0 if i == 9 else KEY_1 + i)
 	await _bild()
 	_log("WERKZEUG %s in der Hand (%s)" % [w.aktiv, "ok" if w.aktiv == beste else "FEHLER Taste"])
+
+# 7h: eigene (bzw. geholfene) Seite sauber, woanders noch Dreck → mit H mithelfen (wie ein Mensch nach dem Hinweis)
+func _koop_helfen() -> bool:
+	if not s.spieler.aktiv or s.express:
+		return false
+	var d: Array = s.dreck_je_seite()
+	var anderswo := false
+	for k in 3:
+		if k != s.spieler.seite and int(d[k]) > 0:
+			anderswo = true
+	if not anderswo:
+		return false
+	var vorher := s.spieler.seite
+	s._taste(KEY_H)
+	await _warte(1.0)
+	if s.spieler.seite == vorher:
+		_log("FEHLER Mithelfen (H) wechselt die Seite nicht")
+		return false
+	st["helfen"] = int(st.get("helfen", 0)) + 1
+	_log("HELFEN jetzt auf Seite %s (Dreck je Seite %s, eigene Gondel %s)" % [Turm.SEITEN_NAMEN[s.spieler.seite], str(d), Turm.SEITEN_NAMEN[w.aktive_gondel]])
+	return true

@@ -155,6 +155,8 @@ func _gast_starten(n: String) -> void:
 		args = ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--ansicht=39", "--rolle=gast", "--profil=" + n, "--join-code=" + Netz.code]
 	if not OS.has_feature("editor"):   # aus der exportierten .exe: Gäste sind auch die .exe (Spiel steckt drin), eigenes Log
 		args = ["--headless", "--log-file", OS.get_user_data_dir().path_join("netztest_%s.log" % n)] + args.slice(args.find("--"))
+	else:   # eigenes Log je Gast (Fehler der Gast-Prozesse sehen)
+		args = ["--log-file", OS.get_user_data_dir().path_join("netztest_%s.log" % n)] + args
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--netz-") or a.begins_with("--relay="):
 			args.append(a)
@@ -360,9 +362,35 @@ func _process(dt: float) -> void:
 		77:
 			if _berichte.has("HOEHE_OK"):
 				_p("Höhenbonus beim Gastgeber eingetragen", s.wirtschaft.hoechster_abschnitt == 2, "Abschnitt %d" % s.wirtschaft.hoechster_abschnitt)
-				schritt = 78
+				schritt = 770
 			elif zeit >= frist:
 				_p("Höhenbonus", false, "keine Antwort")
+				schritt = 770
+		770:   # 7h: Gast hilft mit H auf einer anderen Seite mit, dann zurück
+			Netz.test_nachricht.rpc_id(ids.testgast1, "HELFEN")
+			schritt = 771
+			frist = zeit + 20.0
+		771:
+			if _berichte.has("GEHOLFEN"):
+				var b: Dictionary = _berichte.GEHOLFEN
+				var orte: Array = s.mitspieler.gondel_orte()
+				var sh := int(b.seite)
+				_p("Gast hilft auf einer anderen Seite (H)", sh != _k2 and int(b.aktive) == _k2 and b.taste == "1", "Seite %d, eigene Gondel %d (%s)" % [sh, int(b.aktive), str(b)])
+				_p("Gastgeber sieht die Gondel des Gasts auf der geholfenen Seite", orte.size() == 1 and int(orte[0].seite) == sh, str(orte))
+				_p("Eigene Gondel des Gasts bleibt belegt (geparkte ausgeblendet)", not (s.gondeln.modelle[_k2] as Node3D).visible, "")
+				Netz.test_nachricht.rpc_id(ids.testgast1, "HEIM")
+				schritt = 772
+				frist = zeit + 20.0
+			elif zeit >= frist:
+				_p("Gast hilft mit", false, "keine Antwort")
+				schritt = 78
+		772:
+			if _berichte.has("HEIM_OK"):
+				var b: Dictionary = _berichte.HEIM_OK
+				_p("Gast wieder auf seiner Seite, Stand speichert die eigene Seite", int(b.seite) == _k2 and b.weg_ok == "1", str(b))
+				schritt = 78
+			elif zeit >= frist:
+				_p("Gast zurück", false, "keine Antwort")
 				schritt = 78
 		78:   # 7d: Helfer wieder an; Taube (Gastgeber hat Limo → fliegt zur Gondel des Gasts), Böe, Sandsturm
 			s.helfer.aktiv = true
@@ -708,7 +736,7 @@ func _nachricht(id: int, t: String) -> void:
 		await get_tree().create_timer(0.8).timeout
 		var fo := s.zustand.fortschritt(int(w2[1]), int(w2[2]))
 		_p("Wisch-Stempel des Gasts kommen beim Gastgeber an", fo > 0.0 and fo < 1.0, "Fenster %s/%s, Fortschritt %.2f" % [w2[1], w2[2], fo])
-	elif t.get_slice(" ", 0) in ["GEKAUFT", "ABGELEHNT", "IN_GONDEL", "GEWISCHT", "DOPPELT", "HOEHE_OK", "CASINO_OK", "MOEBEL1", "MOEBEL2_OK", "YACHT_MIT", "SOZIAL_OK"]:
+	elif t.get_slice(" ", 0) in ["GEKAUFT", "ABGELEHNT", "IN_GONDEL", "GEWISCHT", "DOPPELT", "HOEHE_OK", "GEHOLFEN", "HEIM_OK", "CASINO_OK", "MOEBEL1", "MOEBEL2_OK", "YACHT_MIT", "SOZIAL_OK"]:
 		var teile := t.split(" ")
 		var b := {}
 		for x in teile.slice(1):
@@ -817,6 +845,27 @@ func _gast_nachricht(_id: int, t: String) -> void:
 		_melden(not z.ist_sauber(f, sp) and absf(z.dreck(f, sp) - 0.4) < 0.01, "Taube beim Gastgeber → Fenster beim Gast wieder dreckig", "Dreck %.2f" % z.dreck(f, sp))
 		_melden(absf(z.dreck(f, sp + 1) - 0.12) < 0.01, "Helfer wischt beim Gastgeber → Dreck beim Gast weniger", "Dreck %.2f" % z.dreck(f, sp + 1))
 		_melden(z.ist_sauber(f, sp + 2) and z.sauber_zahl == int(t.get_slice(" ", 3)), "Helfer-Fenster beim Gast sauber, Zähler gleich", "%d / %s" % [z.sauber_zahl, t.get_slice(" ", 3)])
+	elif t == "HELFEN":   # 7h: Taste H in der Gondel
+		var vorher := s.spieler.seite
+		if s.shop.offen:   # Werkstatt ist von „SHOP_AUF“ noch offen – mit offenem Menü wirkt H (absichtlich) nicht
+			s.shop.umschalten()
+		await get_tree().create_timer(5.5).timeout   # Hinweis-Takt läuft alle 5 s (eigene Seite ist hier noch dreckig → kein Hinweis)
+		var info := "aktiv=%s express=%s faehrt=%s dreck=%s" % [s.spieler.aktiv, s.express, s.extras._faehrt, str(s.dreck_je_seite()).replace(" ", "")]
+		_taste_ereignis(KEY_H)
+		await get_tree().create_timer(1.2).timeout
+		var taste := s.spieler.seite != vorher
+		var direkt := false
+		if not taste:   # Eingrenzen: geht der direkte Aufruf?
+			s.mithelfen()
+			await get_tree().create_timer(1.2).timeout
+			direkt = s.spieler.seite != vorher
+		Netz.test_nachricht.rpc_id(1, "GEHOLFEN seite=%d aktive=%d taste=%d direkt=%d %s" % [s.spieler.seite, s.wirtschaft.aktive_gondel, 1 if taste else 0, 1 if direkt else 0, info])
+	elif t == "HEIM":
+		var w_hilf := s.stand_daten()
+		var heim := s._heim_weg()
+		s.heim_kehren()
+		await get_tree().create_timer(0.5).timeout
+		Netz.test_nachricht.rpc_id(1, "HEIM_OK seite=%d weg_ok=%d" % [s.spieler.seite, 1 if absf(float(w_hilf.weg) - heim) < 0.01 and absf(s.spieler.weg - heim) < 0.5 else 0])
 	elif t == "HOEHE":
 		var e1 := await _befehl("hoehe", {"abschnitt": 2, "stock": 12})
 		var e2 := await _befehl("hoehe", {"abschnitt": 2, "stock": 12})

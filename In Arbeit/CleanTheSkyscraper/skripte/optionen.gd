@@ -41,6 +41,7 @@ const AKTIONEN := [
 	["sender", KEY_T, "Radio: nächster Sender"],
 	["chat", KEY_ENTER, "Mehrspieler: Chat"],
 	["emote", KEY_G, "Mehrspieler: Emote-Rad"],
+	["mithelfen", KEY_H, "Mehrspieler: auf einer anderen Seite mithelfen"],
 ]
 
 static var d := {}

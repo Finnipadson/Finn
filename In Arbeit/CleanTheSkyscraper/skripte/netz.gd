@@ -266,6 +266,7 @@ func trennen() -> void:
 		if spiel and is_instance_valid(spiel) and spiel.miteinander:
 			spiel.miteinander.pause_zeigen(false)
 	if _w():
+		spiel.heim_kehren()   # 7h: Mithelfen endet mit der Runde
 		spiel.spieler.mitschreiben = false
 		spiel.spieler.stempel_neu = PackedFloat32Array()
 		spiel.zustand.protokollieren = false
@@ -333,6 +334,8 @@ func _peer_da(id: int) -> void:
 # Welt-Übertragung) kam sekundenlang keine Lage eines Gasts an, seine Figur stand still (Test 37, 7h: 52 gesendet, 9 angekommen).
 # Unsere Lage-Pakete sind klein (20 Hz, < 200 Byte) → Drosselung abschalten (Verlangsamung 0, Throttle bleibt voll).
 func _nicht_drosseln(id: int) -> void:
+	if not multiplayer.is_server() and id != 1:
+		return   # Gast: andere Gäste laufen über den Gastgeber, keine eigene ENet-Verbindung
 	var p := multiplayer.multiplayer_peer
 	if p is ENetMultiplayerPeer:
 		var pp := (p as ENetMultiplayerPeer).get_peer(id)

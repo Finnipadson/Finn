@@ -527,6 +527,8 @@ func _input(e: InputEvent) -> void:
 	elif Optionen.k(e) == KEY_ESCAPE and pause == null and not express and not extras.menue_offen() and not strand.blockiert():
 		pause_oeffnen()
 		get_viewport().set_input_as_handled()
+	elif Optionen.k(e) == KEY_H and Netz.aktiv() and not shop.offen and not album.offen:
+		mithelfen()
 	elif (Optionen.k(e) == KEY_R or Optionen.k(e) == KEY_T) and spieler.aktiv and not shop.offen and not album.offen and Ton.i:
 		var t := Ton.i.radio_taste(Optionen.k(e) == KEY_T)
 		if t != "":
@@ -569,6 +571,8 @@ func _ein_aus() -> void:
 			spieler.gesperrt = true
 			hud.meldung("Die Gondel fährt nach unten – du steigst dann aus. Deine Höhe (%d m) merkt sie sich." % int(letzte_hoehe), 3.0)
 			return
+		if hilft():
+			heim_kehren()   # die Gondel parkt immer auf ihrer eigenen Seite
 		var n := spieler.normal
 		var pos := spieler.gondel.global_position + n * 2.2
 		spieler.aktiv = false
@@ -714,13 +718,14 @@ func _ort_herstellen(o: Dictionary) -> void:
 
 # Spielstand als Dictionary (Speichern + Mehrspieler-Beitritt)
 func stand_daten() -> Dictionary:
-	wirtschaft.gondeln[wirtschaft.aktive_gondel].weg = spieler.weg
+	var weg := _heim_weg() if hilft() else spieler.weg   # beim Mithelfen: so speichern, als stünde die Gondel daheim
+	wirtschaft.gondeln[wirtschaft.aktive_gondel].weg = weg
 	wirtschaft.gondeln[wirtschaft.aktive_gondel].hoehe = maxf(spieler.y, letzte_hoehe)
 	var d := {
 		"version": 1,
 		"wirtschaft": wirtschaft.speichern(),
 		"sauber": zustand.speichern(),
-		"stock": spieler.stock, "weg": spieler.weg, "y": maxf(spieler.y, letzte_hoehe),
+		"stock": spieler.stock, "weg": weg, "y": maxf(spieler.y, letzte_hoehe),
 		"ort": _ort_daten(),
 	}
 	if not Netz.orte.is_empty():
@@ -781,7 +786,7 @@ func lage_daten() -> Array:
 		# 7c: dazu Drehung der Gondel, Seite, Werkzeug und wo es gerade ist (für die Gondel-Figur bei den anderen)
 		var g := spieler.gondel.global_position
 		var wp := spieler.werkzeug.global_position if spieler.werkzeug else g
-		return [1, g.x, g.y, g.z, spieler.yaw, "", "", spieler.winkel, spieler.seite, spieler.wz_id, wp.x, wp.y, wp.z, spieler.strahl.visible, spieler.wischt]
+		return [1, g.x, g.y, g.z, spieler.yaw, "", "", spieler.winkel, wirtschaft.aktive_gondel, spieler.wz_id, wp.x, wp.y, wp.z, spieler.strahl.visible, spieler.wischt, spieler.seite]
 	if strand.yacht and strand.yacht.an_bord:   # 7e: Lage der Yacht; fahrer = 1 → die anderen folgen ihr
 		var yp := strand.yacht.position
 		return [2, yp.x, yp.y, yp.z, strand.yacht.richtung, "", "", 0 if strand.yacht.mitfahrer else 1, strand.yacht.tempo]
@@ -789,6 +794,7 @@ func lage_daten() -> Array:
 
 # ---------------------------------------------------------------- Ablauf
 func _process(dt: float) -> void:
+	_helfen_takt(dt)
 	if start_zu_fuss > 0:
 		start_zu_fuss -= 1
 		if start_zu_fuss == 0 and spieler.aktiv:
@@ -1832,3 +1838,104 @@ func _menue_bilder(dt: float) -> void:
 			hmenu.schliessen()
 		var k := i - 6
 		hmenu.oeffnen(Haendler.STAENDE[k].id, Haendler.STAENDE[k].name)
+
+# ---------------------------------------------------------------- Mithelfen (Phase 7h, Wunsch des Users)
+# Im Koop putzt jeder mit seiner Gondel seine Seite. Ist die eigene Seite bis zur Seil-Grenze sauber, kann man mit H auf die
+# Seite mit dem meisten Dreck wechseln (die Gondel bleibt die eigene – Belegung, Speichern und Parken gelten für die eigene Seite).
+# Noch einmal H: nächste dreckige Seite bzw. zurück. Beim Aussteigen fährt sie automatisch zurück. Koop-Bot: 10–15 min weniger
+# Leerlauf am Ende (vorher war nur noch die Seite des Gastgebers dreckig).
+var _helfen_zeit := 0.0
+var _helfen_hinweis := ""
+
+func hilft() -> bool:
+	return spieler.seite >= 0 and spieler.seite != wirtschaft.aktive_gondel
+
+func _heim_weg() -> float:
+	var k := wirtschaft.aktive_gondel
+	return turm.weg_auf_seite(spieler.stock, turm.seiten_mitte(spieler.stock, k), k)
+
+# Dreckige Fenster je Seite bis zur Seil-Grenze
+func dreck_je_seite() -> Array:
+	var n := [0, 0, 0]
+	for f in wirtschaft.oberstes_stockwerk():
+		var basis: int = turm.fenster_basis[f]
+		for k in 3:
+			for c in turm.spalten_der_seite(f, k):
+				if zustand.sauber[basis + c] == 0:
+					n[k] += 1
+	return n
+
+func mithelfen() -> void:
+	if not Netz.aktiv() or not spieler.aktiv or express or extras._faehrt:
+		if Netz.aktiv() and not spieler.aktiv:
+			hud.meldung("Mithelfen geht aus der Gondel: steig ein und drück H.", 2.5)
+		return
+	var d := dreck_je_seite()
+	var ziel := -1
+	for k in 3:
+		if k != spieler.seite and d[k] > 0 and (ziel < 0 or d[k] > d[ziel]):
+			ziel = k
+	if ziel < 0:
+		if hilft():
+			ziel = wirtschaft.aktive_gondel
+		else:
+			hud.meldung("Alles sauber bis zur Seil-Grenze – Zeit für die Seilwinde (Tab).", 3.0)
+			return
+	_seite_setzen(ziel)
+
+func _seite_setzen(k: int) -> void:
+	extras._faehrt = true
+	spieler.wischt = false
+	var tw := create_tween()
+	tw.tween_property(extras.blende, "color:a", 1.0, 0.25)
+	await tw.finished
+	spieler.seite = k
+	spieler.weg = turm.weg_auf_seite(spieler.stock, turm.seiten_mitte(spieler.stock, k), k)
+	spieler._platzieren(0.0)
+	_helfen_hinweis = ""
+	if k == wirtschaft.aktive_gondel:
+		hud.meldung("Zurück auf deiner Seite (%s)." % Turm.SEITEN_NAMEN[k], 3.0)
+	else:
+		var wer := _fahrer_der_seite(k)
+		hud.meldung("Du hilfst jetzt auf Seite %s mit%s. H: weiter bzw. zurück." % [Turm.SEITEN_NAMEN[k], " (bei %s)" % wer if wer != "" else ""], 4.0)
+	await get_tree().create_timer(0.2).timeout
+	var tw2 := create_tween()
+	tw2.tween_property(extras.blende, "color:a", 0.0, 0.3)
+	extras._faehrt = false
+
+func heim_kehren() -> void:
+	if not hilft():
+		return
+	spieler.seite = wirtschaft.aktive_gondel
+	spieler.weg = _heim_weg()
+	spieler._platzieren(0.0)
+
+func _fahrer_der_seite(k: int) -> String:
+	for id in Netz.spieler:
+		var pid: String = wirtschaft.ich if id == Netz.meine_id() else str(Netz.spieler[id].profil_id)
+		if id != Netz.meine_id() and int((wirtschaft.spieler_daten.get(pid, {}) as Dictionary).get("aktive_gondel", -1)) == k:
+			return Netz.name_von(id)
+	return ""
+
+# Alle 5 s: Hinweis, wenn die eigene (bzw. die gerade geholfene) Seite sauber ist und woanders noch Dreck ist
+func _helfen_takt(dt: float) -> void:
+	if not Netz.aktiv() or not spieler.aktiv or express:
+		return
+	_helfen_zeit += dt
+	if _helfen_zeit < 5.0:
+		return
+	_helfen_zeit = 0.0
+	var d := dreck_je_seite()
+	if d[spieler.seite] > 0:
+		_helfen_hinweis = ""
+		return
+	var anderswo := false
+	for k in 3:
+		if k != spieler.seite and d[k] > 0:
+			anderswo = true
+	var t := ""
+	if anderswo:
+		t = "Hier ist alles sauber bis zur Seil-Grenze! Drück H, um auf einer anderen Seite mitzuhelfen." if not hilft() else "Hier ist auch alles sauber – H: auf der nächsten Seite helfen bzw. zurück."
+	if t != "" and t != _helfen_hinweis:
+		_helfen_hinweis = t
+		hud.meldung(t, 5.0)

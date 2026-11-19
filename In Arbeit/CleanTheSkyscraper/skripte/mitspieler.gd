@@ -201,7 +201,7 @@ func gondel_orte() -> Array:
 		if l.size() >= 14 and int(l[0]) == 1:
 			var t := spiel.turm
 			var st := t.stockwerk_bei(float(l[2]) + 1.2)
-			_orte.append({"seite": int(l[8]), "stock": st, "weg": t.naechster_weg(st, Vector2(float(l[1]), float(l[3]))),
+			_orte.append({"seite": int(l[15]) if l.size() > 15 else int(l[8]), "stock": st, "weg": t.naechster_weg(st, Vector2(float(l[1]), float(l[3]))),
 				"pid": str((Netz.spieler.get(id, {}) as Dictionary).get("profil_id", ""))})
 	return _orte
 
