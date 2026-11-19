@@ -33,6 +33,8 @@ So spielst du „Clean the Skyscraper“ mit bis zu zwei Freunden, auch wenn sie
 
 - Gespielt wird immer im Turm des Gastgebers, mit **gemeinsamer Kasse**. Nur der Gastgeber speichert.
   Der eigene Einzelspieler-Stand deines Freundes bleibt unverändert.
+- Jeder bekommt beim Beitritt eine **eigene Gondel** an einer eigenen Turmseite (wenn nötig kostenlos).
+- Ist deine Seite sauber, drück in der Gondel **H**: du hilfst auf der Seite mit dem meisten Dreck mit. Noch einmal H bringt dich weiter bzw. zurück.
 - Höchstens **3 Spieler**. Ein Vierter bekommt „Das Spiel ist voll“.
 - Beendet der Gastgeber das Spiel, landen alle anderen mit einer Meldung im Hauptmenü. Der Code gilt dann nicht mehr –
   beim nächsten Mal gibt es einen neuen.
