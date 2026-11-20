@@ -195,7 +195,10 @@ func baue(w: Welt) -> void:
 			Typ.HUNDEWIESE: _hundewiese(f)
 			Typ.ZIRKUS: _zirkus(f)
 			Typ.STADION: _stadion(f)
+		if not "leute" in _ohne:
+			_leute_fuer(f)
 	_licht_punkte_bauen()
+	_leute_bauen()
 	if not "teile" in _ohne:
 		_teile_bauen()
 	if not "autos" in _ohne:
@@ -1791,6 +1794,132 @@ func _stadion(f: Dictionary) -> void:
 	_schrift(f, Vector2(0.0, -26.98), 5.8, "2 : 1", 0.0, 140, Color.WHITE, 400.0)
 	for l in [Vector2(-8.0, -21.0), Vector2(8.0, 21.0)]:
 		bodenlicht.leuchte(_pos(f, l), 2.0)
+
+# ---------------------------------------------------------------- Leute auf den Grundstücken (20.11.2026)
+# Kenney-Figuren (wie am Platz) mit Stehen-Animation, nur auf Grundstücken bis LEUTE_D vom Turm, höchstens LEUTE_MAX,
+# in der Ferne ausgeblendet (Figuren sind einzelne animierte Modelle – die teuersten Teile pro Stück).
+const LEUTE_D := 600.0
+const LEUTE_MAX := 140
+const LEUTE_WEIT := 260.0
+const FIGUREN := ["leute/character-female-a", "leute/character-female-c", "leute/character-male-b", "leute/character-male-e"]
+var _leute: Array = []   # [Modell, Vector3, Blick (Welt, Vector2)]
+
+func _person(f: Dictionary, l: Vector2, blick_l: Vector2, y := 0.0, modell := "") -> void:
+	if float(f.d) > LEUTE_D:
+		return
+	var m := modell if modell != "" else str(FIGUREN[rng.randi() % FIGUREN.size()])
+	_leute.append([m, _pos(f, l, y), _w(f, blick_l)])
+	if y < 0.5:
+		welt.hindernisse.append(_rect(f, l, Vector2(0.7, 0.7)))
+
+func _leute_fuer(f: Dictionary) -> void:
+	var v := int(f.var)
+	match int(f.typ):
+		Typ.MARKT:
+			for x in [-15.0, 0.5, 15.5]:
+				if rng.randf() < 0.75:
+					_person(f, Vector2(x - 0.3 + rng.randf_range(-0.8, 0.8), -18.6), Vector2(0, -1))
+			for x in [-12.0, 8.0]:
+				if rng.randf() < 0.75:
+					_person(f, Vector2(x - 0.3 + rng.randf_range(-0.8, 0.8), 18.6), Vector2(0, 1))
+			for i in 3:
+				_person(f, Vector2(-10.0 + i * 10.0 + 1.3, -5.0 + (i % 2) * 10.0), Vector2(-1, 0))
+		Typ.WOCHENMARKT:
+			for zr in [-14.0, 14.0]:
+				for ix in 4:
+					if rng.randf() < 0.5:
+						var s := 1.0 if zr < 0.0 else -1.0
+						_person(f, Vector2(-16.5 + ix * 11.0 + rng.randf_range(-1.0, 1.0), zr + s * 2.6), Vector2(0, -s))
+		Typ.SPORT:
+			if v == 0:
+				for cx in [-9.0, 9.0]:
+					for i in 3:
+						_person(f, Vector2(cx + rng.randf_range(-4.0, 4.0), rng.randf_range(-9.0, 9.0)), Vector2(rng.randf_range(-1, 1), rng.randf_range(-1, 1)))
+			elif v == 1:
+				for cx in [-7.0, 7.0]:
+					for s in [-1.0, 1.0]:
+						_person(f, Vector2(cx + rng.randf_range(-2.0, 2.0), s * 11.5), Vector2(0, -s))
+			else:
+				for i in 8:
+					_person(f, Vector2(rng.randf_range(-12.0, 12.0), rng.randf_range(-19.0, 19.0)), Vector2(rng.randf_range(-1, 1), rng.randf_range(-1, 1)))
+		Typ.SKATEPARK:
+			for l in [Vector2(-6.0, -17.0), Vector2(-4.0, 5.5), Vector2(6.0, -4.0)]:
+				_person(f, l, Vector2(rng.randf_range(-1, 1), rng.randf_range(-1, 1)))
+		Typ.SPIELPLATZ:
+			_person(f, Vector2(-21.0, 1.5), Vector2(1, 0))
+			_person(f, Vector2(-11.0, -9.0), Vector2(0, -1))
+			_person(f, Vector2(7.5, 9.0), Vector2(1, 0))
+		Typ.PARK, Typ.TEICH:
+			for i in rng.randi_range(2, 4):
+				var a := rng.randf() * TAU
+				var r := 8.5 if int(f.typ) == Typ.PARK else 19.5
+				_person(f, Vector2(cos(a), sin(a)) * r * (1.0 if int(f.typ) == Typ.PARK else 1.0), Vector2(cos(a), sin(a)) * -1.0)
+		Typ.GARTEN:
+			_person(f, Vector2(-16.0, -16.5), Vector2(0, -1), 0.0, "leute/character-worker")
+			_person(f, Vector2(2.0, 0.0), Vector2(0, 1), 0.0, "leute/character-worker")
+		Typ.TANKSTELLE:
+			_person(f, Vector2(-3.0, -14.5), Vector2(0, 1))
+		Typ.ZIRKUS:
+			for i in 5:
+				_person(f, Vector2(rng.randf_range(-4.0, 4.0), rng.randf_range(14.0, 19.0)), Vector2(0, -1))
+		Typ.STADION:
+			for i in 14:
+				var s := -1.0 if i % 2 == 0 else 1.0
+				var k := rng.randi_range(0, 5)
+				_person(f, Vector2(s * (15.5 + k * 1.8), rng.randf_range(-18.0, 18.0)), Vector2(-s, 0), 0.8 * (k + 1))
+			for i in 6:
+				_person(f, Vector2(rng.randf_range(-10.0, 10.0), rng.randf_range(-15.0, 15.0)), Vector2(rng.randf_range(-1, 1), rng.randf_range(-1, 1)))
+		Typ.RIESENRAD:
+			for i in 3:
+				_person(f, Vector2(-13.2 + i * 0.9, 8.6), Vector2(-1, 0))
+
+func _leute_bauen() -> void:
+	# Feste Pose statt animierter Figuren (Messung 20.11.2026: 79 animierte Figuren kosteten ~5 % FPS, angehalten noch
+	# ~2,5 %): je Modell die Stehen-Pose einmal in ein festes Mesh backen, dann alle Personen als MultiMesh zeichnen.
+	_leute.sort_custom(func(a, b): return Vector2((a[1] as Vector3).x, (a[1] as Vector3).z).length() < Vector2((b[1] as Vector3).x, (b[1] as Vector3).z).length())
+	if _leute.size() > LEUTE_MAX:
+		_leute.resize(LEUTE_MAX)
+	var je_modell := {}
+	for p in _leute:
+		var bl: Vector2 = p[2]
+		var gier := atan2(bl.x, bl.y) if bl.length() > 0.01 else rng.randf() * TAU   # Kenney-Figuren schauen nach +Z
+		if not je_modell.has(p[0]):
+			je_modell[p[0]] = []
+		je_modell[p[0]].append(Transform3D(Basis(Vector3.UP, gier).scaled(Vector3.ONE * 2.3), p[1]))
+	for modell in je_modell:
+		var inst: Node3D = load("res://modelle/%s.glb" % str(modell)).instantiate()
+		add_child(inst)
+		var ap := inst.find_child("AnimationPlayer", true, false) as AnimationPlayer
+		if ap:
+			for a in ap.get_animation_list():
+				if "idle" in a.to_lower():
+					ap.play(a)
+					ap.seek(0.4, true)
+					break
+		for sk in inst.find_children("*", "Skeleton3D", true, false):
+			(sk as Skeleton3D).force_update_all_bone_transforms()
+		var xfs: Array = je_modell[modell]
+		for mi in inst.find_children("*", "MeshInstance3D", true, false):
+			var m3 := mi as MeshInstance3D
+			if m3.mesh == null:
+				continue
+			var mesh: Mesh = m3.bake_mesh_from_current_skeleton_pose() if m3.skin != null or m3.get_node_or_null(m3.skeleton) is Skeleton3D else m3.mesh
+			var teil_xf := inst.global_transform.affine_inverse() * m3.global_transform
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.mesh = mesh
+			mm.instance_count = xfs.size()
+			for k in xfs.size():
+				mm.set_instance_transform(k, (xfs[k] as Transform3D) * teil_xf)
+			var mmi := MultiMeshInstance3D.new()
+			mmi.multimesh = mm
+			for su in m3.mesh.get_surface_count():   # Material der Vorlage übernehmen
+				var mat := m3.get_active_material(su)
+				if mat and su == 0:
+					mmi.material_override = mat if m3.mesh.get_surface_count() == 1 else null
+			add_child(mmi)
+		inst.queue_free()
+	print("Leute auf Grundstücken: %d (%d Modelle)" % [_leute.size(), je_modell.size()])
 
 # ---------------------------------------------------------------- Meshes
 func _form(name: String) -> Mesh:
