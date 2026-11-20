@@ -740,6 +740,20 @@ func _tag_bilder() -> void:
 	add_child(cam)
 	cam.current = true
 	s.hud.visible = false
+	if "--grundstueck-ton-test" in OS.get_cmdline_user_args():   # 20.11.2026: Geräusche an Markt, Zirkus, Baustelle
+		var gs2: Grundstuecke = s.welt.grundstuecke
+		for t in [[Grundstuecke.Typ.MARKT, "menge"], [Grundstuecke.Typ.ZIRKUS, "orgel"]]:
+			var gf: Dictionary = gs2.erstes(t[0])
+			var gc: Vector2 = gf.mitte
+			cam.position = Vector3(gc.x + 5.0, 1.8, gc.y + 5.0)
+			await _warte(3.0)
+			var l: Dictionary = Ton.i._loops.get(t[1], {})
+			_pruefe("Schleife %s am %s hörbar" % [t[1], Grundstuecke.NAMEN[t[0]]], not l.is_empty() and float(l.laut) > 0.1, str(l.get("laut", -1)))
+		cam.position = Vector3(0, 300, 0)
+		await _warte(3.0)
+		var l2: Dictionary = Ton.i._loops.get("menge", {})
+		_pruefe("oben (300 m) still", l2.is_empty() or float(l2.laut) < 0.01, str(l2.get("laut", -1)))
+		return
 	if "--riesenrad-test" in OS.get_cmdline_user_args():   # 20.11.2026: Riesenrad fahren
 		var gs: Grundstuecke = s.welt.grundstuecke
 		var kasse: Vector2 = gs._rad_kasse

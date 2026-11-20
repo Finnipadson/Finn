@@ -46,6 +46,8 @@ var _alt_y := 0.0
 var _alt_lauf := Vector3.ZERO
 var _naechste_hupe := 8.0
 var _naechste_moewe := 4.0
+var _naechste_jubel := 6.0
+var _naechste_hammer := 1.0
 
 func _ready() -> void:
 	i = self
@@ -309,11 +311,38 @@ func _umgebung(p: Vector3, drinnen: bool, wind: float, sturm: float) -> void:
 		if stadt > 0.25:
 			var a := randf() * TAU
 			spielen_bei("hupe", Vector3(p.x + cos(a) * randf_range(50.0, 160.0), 1.0, p.z + sin(a) * randf_range(50.0, 160.0)), -8.0, randf_range(0.85, 1.15))
+	_grundstuecke(p, drinnen)
 	if _uhr > _naechste_moewe:
 		_naechste_moewe = _uhr + randf_range(5.0, 14.0)
 		if meer > 0.2 and not drinnen:
 			var a2 := randf() * TAU
 			spielen_bei("moewe", p + Vector3(cos(a2) * randf_range(15.0, 50.0), randf_range(8.0, 25.0), sin(a2) * randf_range(15.0, 50.0)), -4.0, randf_range(0.9, 1.15))
+
+# Grundstücke (20.11.2026): Gemurmel an Märkten/Zirkus/Stadion, Drehorgel am Zirkus, Jubel im Stadion, Hämmern auf
+# Baustellen – nur unten (bis 60 m Höhe) und draußen, leise und nur in der Nähe
+func _grundstuecke(p: Vector3, drinnen: bool) -> void:
+	if spiel == null or spiel.welt.grundstuecke == null or drinnen or p.y > 60.0:
+		return
+	var gs := spiel.welt.grundstuecke
+	var q := Vector2(p.x, p.z)
+	var nah := clampf(1.0 - p.y / 60.0, 0.0, 1.0)
+	var m := gs.naechstes(q, [Grundstuecke.Typ.MARKT, Grundstuecke.Typ.WOCHENMARKT, Grundstuecke.Typ.ZIRKUS, Grundstuecke.Typ.STADION])
+	if not m.is_empty():
+		schleife("menge", clampf(1.0 - (q.distance_to(m.mitte) - 20.0) / 50.0, 0.0, 1.0) * 0.4 * nah)
+	var z := gs.naechstes(q, [Grundstuecke.Typ.ZIRKUS])
+	if not z.is_empty():
+		schleife("orgel", clampf(1.0 - (q.distance_to(z.mitte) - 15.0) / 60.0, 0.0, 1.0) * 0.3 * nah)
+	if _uhr > _naechste_jubel:
+		_naechste_jubel = _uhr + randf_range(9.0, 24.0)
+		var st := gs.naechstes(q, [Grundstuecke.Typ.STADION])
+		if not st.is_empty() and q.distance_to(st.mitte) < 150.0:
+			spielen_bei("jubel", Vector3(st.mitte.x, 4.0, st.mitte.y), -3.0, randf_range(0.92, 1.08))
+	if _uhr > _naechste_hammer:
+		_naechste_hammer = _uhr + randf_range(1.0, 3.5)
+		var b := gs.naechstes(q, [Grundstuecke.Typ.BAUSTELLE])
+		if not b.is_empty() and q.distance_to(b.mitte) < 110.0:
+			var o := Vector2(randf_range(-14.0, 14.0), randf_range(-14.0, 14.0))
+			spielen_bei("hammer", Vector3(b.mitte.x + o.x, randf_range(1.0, 12.0), b.mitte.y + o.y), -9.0, randf_range(0.85, 1.2))
 
 # Ganze Klangwelt im Spiel. Gibt zurück, ob man drinnen ist (Musik etwas leiser).
 func _welt(dt: float, cam: Camera3D) -> bool:

@@ -21,6 +21,8 @@ const REZEPTE := {
 	"wurf": false, "platsch": false, "biss": false, "rolle": true, "yacht": true, "scooter": true, "hover": true, "jetpack": true,
 	# Feier
 	"knall": false,
+	# Grundstücke (20.11.2026)
+	"menge": true, "jubel": false, "hammer": false, "orgel": true,
 	# Instrumente (Musik + Radio): Grundton steht in Musik.GRUNDTON
 	"i_ep": false, "i_bass": false, "i_pad": false, "i_kick": false, "i_snare": false, "i_rim": false, "i_hat": false,
 	"i_hat_offen": false, "i_shaker": false, "i_klatsch": false, "i_chip": false, "i_pluck": false, "i_klavier": false,
@@ -676,3 +678,56 @@ static func _i_knistern() -> PackedFloat32Array:
 static func _i_glocke() -> PackedFloat32Array:
 	var s := leer(2.5)
 	return normal(glocke(s, 0.0, 523.25, 0.9, 1.0, [[1.0, 1.0, 1.0], [2.0, 0.4, 0.6], [3.0, 0.2, 0.35], [4.16, 0.1, 0.2]]), 0.7)
+
+# ---------------------------------------------------------------- Grundstücke (20.11.2026)
+# Stimmengemurmel (Märkte, Zirkus, Stadion): leises Rauschen + viele kurze „Silben“ verschiedener Stimmen
+static func _menge() -> PackedFloat32Array:
+	var sek := 6.0
+	var s := tiefpass(bandpass(rauschen(sek + 0.4), 700.0, 0.6), 2500.0)
+	for i in s.size():
+		s[i] *= 0.25
+	for k in 260:
+		var f := rng.randf_range(110.0, 260.0)
+		var d := rng.randf_range(0.08, 0.22)
+		var sil := ton(d, func(t): return f * (1.0 + 0.15 * sin(t * 30.0)), func(t): return sin(PI * t / d), [1.0, 0.6, 0.35, 0.2])
+		s = mischen(s, bandpass(sil, 900.0, 0.7), rng.randf() * sek, rng.randf_range(0.05, 0.2))
+	return normal(schleife(s, 0.4), 0.6)
+
+# Jubel im Stadion: anschwellendes Rauschen, hohe Rufe, Klatschen
+static func _jubel() -> PackedFloat32Array:
+	var sek := 3.0
+	var s := bandpass(rauschen(sek), 1100.0, 0.5)
+	for i in s.size():
+		var t := i / R
+		s[i] *= minf(1.0, t / 0.4) * exp(-maxf(0.0, t - 1.2) / 0.8)
+	for k in 120:
+		var f := rng.randf_range(250.0, 600.0)
+		var d := rng.randf_range(0.3, 0.9)
+		var v := ton(d, func(t): return f * (1.0 + 0.3 * t), func(t): return sin(PI * t / d) * 0.8, [1.0, 0.5, 0.25])
+		s = mischen(s, v, rng.randf_range(0.0, 1.6), rng.randf_range(0.03, 0.08))
+	for k in 80:
+		var c := huelle(hochpass(rauschen(0.03), 800.0), 0.001, 0.012)
+		s = mischen(s, c, rng.randf_range(0.2, 2.6), rng.randf_range(0.1, 0.3))
+	return normal(s, 0.8)
+
+# Hammerschlag auf Metall (Baustelle)
+static func _hammer() -> PackedFloat32Array:
+	var s := leer(0.5)
+	s = glocke(s, 0.0, 1750.0, 0.22, 0.8)
+	s = mischen(s, huelle(hochpass(rauschen(0.05), 1500.0), 0.001, 0.025), 0.0, 0.7)
+	return normal(s, 0.8)
+
+# Drehorgel-Walzer am Zirkus (Schleife)
+static func _orgel() -> PackedFloat32Array:
+	var takt := 0.36
+	var noten := [0, 4, 7, 12, 7, 4, 5, 9, 12, 9, 5, 2, 4, 7, 11, 7, 4, 0]
+	var sek := noten.size() * takt
+	var s := leer(sek + 0.4)
+	for i in noten.size():
+		var f := 523.25 * pow(2.0, noten[i] / 12.0)
+		var tn := ton(takt * 0.9, func(t): return f * (1.0 + 0.004 * sin(t * 38.0)), func(t): return minf(1.0, t / 0.01) * exp(-t / 0.5), [1.0, 0.0, 0.4, 0.0, 0.2])
+		s = mischen(s, tn, i * takt, 0.35)
+		var b := 130.81 * (1.0 if i % 3 == 0 else 1.498)
+		var bt := ton(takt * 0.5, func(t): return b, func(t): return exp(-t / 0.12), [1.0, 0.5])
+		s = mischen(s, bt, i * takt, 0.28)
+	return normal(schleife(s, 0.4), 0.6)

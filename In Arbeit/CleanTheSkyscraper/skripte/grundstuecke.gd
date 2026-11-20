@@ -227,6 +227,18 @@ func erstes(typ: int, variante := -1) -> Dictionary:
 			best = f
 	return best
 
+# Nächstes Grundstück einer der Arten (für Geräusche), {} wenn keins
+func naechstes(q: Vector2, typen: Array) -> Dictionary:
+	var best := {}
+	var bd := INF
+	for f in felder:
+		if int(f.typ) in typen:
+			var d := q.distance_squared_to(f.mitte)
+			if d < bd:
+				bd = d
+				best = f
+	return best
+
 func an_details(d: StadtDetails) -> void:
 	if "details" in _ohne:
 		return
