@@ -740,6 +740,31 @@ func _tag_bilder() -> void:
 	add_child(cam)
 	cam.current = true
 	s.hud.visible = false
+	if "--riesenrad-test" in OS.get_cmdline_user_args():   # 20.11.2026: Riesenrad fahren
+		var gs: Grundstuecke = s.welt.grundstuecke
+		var kasse: Vector2 = gs._rad_kasse
+		s.welt.zeit.phase = Tageszeit.phase_zu(13.0)
+		s.welt.zeit.laeuft = false
+		if s.spieler.aktiv:
+			s._taste(KEY_E)   # aussteigen (Gondel steht unten)
+			await _warte(0.5)
+		s.laeufer.aktivieren(Vector3(kasse.x, 0, kasse.y), 0.0)
+		await _warte(0.5)
+		_pruefe("Station an der Kasse", s.extras.station().get("art", "") == "riesenrad", str(s.extras.station().get("art", "")))
+		s._taste(KEY_E)
+		await _warte(0.5)
+		_pruefe("Fahrt läuft, eigene Kamera aktiv", gs.faehrt and get_viewport().get_camera_3d() == gs._fahrt_cam)
+		var y0 := get_viewport().get_camera_3d().global_position.y
+		await _warte(15.0)
+		var y1 := get_viewport().get_camera_3d().global_position.y
+		_pruefe("Gondel steigt (%.1f → %.1f m)" % [y0, y1], y1 > y0 + 15.0)
+		await _bild_machen("riesenrad_fahrt")
+		gs.fahrt_maus(Vector2(-400, 60))
+		await _bild_machen("riesenrad_umschauen")
+		s._taste(KEY_E)
+		await _warte(0.5)
+		_pruefe("Ausgestiegen, Läufer-Kamera wieder aktiv", not gs.faehrt and get_viewport().get_camera_3d() == s.laeufer.cam)
+		return
 	var sm := s.welt.see_mitte()
 	var orte := {
 		"fern": [Vector3(-668, 262, 1020), Vector3(0, 440, 0)],

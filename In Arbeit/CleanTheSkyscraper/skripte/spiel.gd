@@ -471,6 +471,13 @@ func _oben_gesperrt() -> void:
 
 # ---------------------------------------------------------------- Eingaben (Shop, Werkzeugwechsel)
 func _input(e: InputEvent) -> void:
+	if welt.grundstuecke and welt.grundstuecke.faehrt:   # Riesenrad-Fahrt (20.11.2026): Maus schaut, E/Esc steigt aus
+		if e is InputEventMouseMotion:
+			welt.grundstuecke.fahrt_maus(e.relative)
+		elif e is InputEventKey and e.pressed and not e.echo and Optionen.k(e) in [KEY_E, KEY_ESCAPE]:
+			welt.grundstuecke.fahrt_ende()
+		get_viewport().set_input_as_handled()
+		return
 	if miteinander and miteinander.blockiert():   # Chat/Emote-Rad offen: Tasten gehören dem Chat
 		return
 	if karte.offen:   # Karte (M) nimmt alle Eingaben selbst
@@ -861,7 +868,7 @@ func _process(dt: float) -> void:
 				_speichern())
 	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv, strand.ort_name() if strand.ort_name() != "" else extras.ort_name())
 	# Beim Angeln nur das Laufen sperren – Umschauen mit der Maus bleibt (Wunsch des Users 19.11.2026)
-	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen() or strand.menu.offen or strand.yacht.an_bord or karte.offen or (miteinander != null and miteinander.blockiert())
+	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen() or strand.menu.offen or strand.yacht.an_bord or karte.offen or (miteinander != null and miteinander.blockiert()) or (welt.grundstuecke != null and welt.grundstuecke.faehrt)
 	laeufer.set_process(not menue)
 	laeufer.gesperrt = menue
 	laeufer.laufen_aus = strand.angeln.aktiv()

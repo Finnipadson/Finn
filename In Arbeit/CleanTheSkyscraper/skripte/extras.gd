@@ -120,7 +120,7 @@ func _stationen() -> Array:
 	match ort:
 		"":
 			return [{"art": "aufzug_turm", "name": "Express-Aufzug", "hinweis": "E: Express-Aufzug zur Sky-Lounge", "pos": sky.unten_pos, "ziel": sky.unten_ziel},
-				{"art": "aufzug_casino", "name": "Aufzug", "hinweis": "E: Aufzug (Arcade-Halle, Penthouse)", "pos": spiel.casino.aufzug_pos, "ziel": spiel.casino.aufzug_ziel}] + laeden.stationen + (spiel.strand.stationen() if spiel.strand else [])
+				{"art": "aufzug_casino", "name": "Aufzug", "hinweis": "E: Aufzug (Arcade-Halle, Penthouse)", "pos": spiel.casino.aufzug_pos, "ziel": spiel.casino.aufzug_ziel}] + laeden.stationen + (spiel.strand.stationen() if spiel.strand else []) + (spiel.welt.grundstuecke.stationen() if spiel.welt.grundstuecke else [])
 		"arcade": return arcade.stationen
 		"penthouse": return penthouse.stationen
 		_: return sky.etagen[ort].stationen
@@ -198,6 +198,9 @@ func e_druecken() -> bool:
 			_greif_starten(int(s.nr))
 		"strandbar", "fischladen", "yacht":
 			spiel.strand.station(s)
+		"riesenrad":
+			spiel.welt.grundstuecke.fahrt_start(spiel.laeufer.cam)
+			spiel.hud.meldung("Riesenrad: eine Runde über der Stadt – Maus zum Umschauen, E steigt aus.", 3.5)
 	return true
 
 # Tasten (vor dem Spiel): Menü zu, P, Platzieren, Greifautomat. true = verbraucht

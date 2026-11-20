@@ -242,8 +242,15 @@ func _process(dt: float) -> void:
 	_zeit += dt
 	for k in _kraene:
 		(k.ausleger as Node3D).rotation.y = float(k.basis) + 0.9 * sin(_zeit * 0.045 + float(k.phase))
+	if faehrt:
+		_fahrt_t += dt
+		_rad_extra += dt * (TAU / FAHRT_DAUER - TAU / 240.0)
 	if _rad:
 		_rad_drehen()
+	if faehrt:
+		_fahrt_kamera()
+		if _fahrt_t >= FAHRT_DAUER:
+			fahrt_ende()
 
 # ---------------------------------------------------------------- Auswahl
 func _ij(c: Vector2) -> Vector2i:
@@ -1273,6 +1280,8 @@ func _riesenrad(f: Dictionary) -> void:
 	_box("klein", f, Vector2(-15.45, 8.0), 1.0, Vector3(0.04, 0.9, 1.6), Color("2a3440"))
 	welt.hindernisse.append(_rect(f, Vector2(-17.5, 8.0), Vector2(4.2, 3.2)))
 	welt.hindernisse.append(_rect(f, Vector2.ZERO, Vector2(30.0, 9.0)))
+	var kp := _pos(f, Vector2(-14.6, 8.0))
+	_rad_kasse = Vector2(kp.x, kp.z)   # Station „Riesenrad fahren“ vor dem Kassenfenster
 	_haeuser.append([_rect(f, Vector2.ZERO, Vector2(2.0 * RAD_R + 3.0, 4.5)), RAD_NABE + RAD_R + 2.5])
 	for s in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
 		_palme(f, s * 25.0)
@@ -1283,8 +1292,79 @@ func _riesenrad(f: Dictionary) -> void:
 		bodenlicht.leuchte(_pos(f, Vector2(x, -6.2)), 1.5)
 	print("Riesenrad bei ", f.mitte)
 
+# ---------------------------------------------------------------- Riesenrad fahren (20.11.2026)
+# An der Kasse E: eine Runde (60 s) in der untersten Gondel, Startblick zum Turm, Maus schaut sich um, E/Esc steigt aus.
+# Während der Fahrt dreht das Rad viermal so schnell (eine Runde dauert sonst 4 min). Nur lokal (Koop: jeder für sich).
+const FAHRT_DAUER := 60.0
+var faehrt := false
+var _fahrt_t := 0.0
+var _fahrt_i := 0
+var _fahrt_gier0 := 0.0         # Startblick: zum Turm (lokal im Gestell)
+var _fahrt_blick := Vector2.ZERO   # Gier, Neigung (Maus)
+var _fahrt_cam: Camera3D
+var _fahrt_alt: Camera3D
+var _rad_extra := 0.0
+var _rad_kasse := Vector2.INF
+
+func stationen() -> Array:
+	if _rad == null:
+		return []
+	var t := "Riesenrad · Maus: umschauen · E: aussteigen (noch %d s)" % ceili(FAHRT_DAUER - _fahrt_t) if faehrt else "E: Riesenrad fahren (eine Runde, kostenlos)"
+	return [{"art": "riesenrad", "name": "Riesenrad", "hinweis": t, "pos": _rad_kasse}]
+
+func _rad_winkel_jetzt() -> float:
+	return float(_rad_info.winkel) + _zeit * TAU / 240.0 + _rad_extra
+
+func fahrt_start(alt: Camera3D) -> void:
+	if faehrt or _rad == null:
+		return
+	var w := _rad_winkel_jetzt()
+	var bd := INF
+	for i in RAD_GONDELN:   # Gondel, die gerade am tiefsten ist
+		var a := fposmod(w + TAU * i / RAD_GONDELN + PI * 0.5, TAU)
+		var dd := minf(a, TAU - a)
+		if dd < bd:
+			bd = dd
+			_fahrt_i = i
+	var g := _rad.get_parent() as Node3D
+	var zum_turm := -g.global_position
+	zum_turm.y = 0.0
+	var lokal := g.global_transform.basis.inverse() * zum_turm
+	_fahrt_gier0 = atan2(-lokal.x, -lokal.z)   # Kamera schaut nach −Z: so zeigt sie zum Turm
+	_fahrt_t = 0.0
+	_fahrt_blick = Vector2.ZERO
+	_fahrt_alt = alt
+	_fahrt_cam = Camera3D.new()
+	_fahrt_cam.far = 40000.0
+	_fahrt_cam.fov = 72.0
+	g.add_child(_fahrt_cam)
+	faehrt = true
+	_fahrt_kamera()
+	_fahrt_cam.current = true
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func fahrt_ende() -> void:
+	if not faehrt:
+		return
+	faehrt = false
+	if is_instance_valid(_fahrt_alt):
+		_fahrt_alt.current = true
+	if is_instance_valid(_fahrt_cam):
+		_fahrt_cam.queue_free()
+	_fahrt_cam = null
+
+func fahrt_maus(rel: Vector2) -> void:
+	_fahrt_blick.x = wrapf(_fahrt_blick.x - rel.x * 0.003, -PI, PI)
+	_fahrt_blick.y = clampf(_fahrt_blick.y - rel.y * 0.003, -1.1, 0.9)
+
+func _fahrt_kamera() -> void:
+	var a := _rad_winkel_jetzt() + TAU * _fahrt_i / RAD_GONDELN
+	var pos := Vector3(cos(a) * RAD_R, RAD_NABE + sin(a) * RAD_R - 2.2, 0.0)
+	var gier := _fahrt_gier0 + _fahrt_blick.x
+	_fahrt_cam.transform = Transform3D(Basis(Vector3.UP, gier) * Basis(Vector3.RIGHT, _fahrt_blick.y - 0.12), pos)
+
 func _rad_drehen() -> void:
-	var w: float = float(_rad_info.winkel) + _zeit * TAU / 240.0   # eine Runde in 4 Minuten
+	var w: float = _rad_winkel_jetzt()   # eine Runde in 4 Minuten (während einer Fahrt schneller)
 	_rad.rotation.z = w
 	for i in RAD_GONDELN:
 		var a := w + TAU * i / RAD_GONDELN
