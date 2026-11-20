@@ -653,7 +653,7 @@ func _foodtruck(f: Dictionary, l: Vector2, s: float, farbe: Color, name: String)
 	for wx in [-1.9, 1.9, 3.7]:
 		for wz in [-1.06, 1.06]:   # Außenseite 6 cm vor der Wand (bei ±1,0 lag sie genau in der Wand → Räder flackerten, Video 20.11.2026)
 			_rad_zyl(f, l + Vector2(wx, wz), 0.45, 0.45, 0.3, 0.0)
-	_box("klein", f, l + Vector2(-0.3, s * 1.16), 1.45, Vector3(2.8, 1.15, 0.05), Color("2a3440"))
+	_box("leucht", f, l + Vector2(-0.3, s * 1.16), 1.45, Vector3(2.8, 1.15, 0.05), Color("ffcf8a"))   # Verkaufsklappe: tags dunkel, nachts warm beleuchtet
 	_box("klein", f, l + Vector2(-0.3, s * 1.42), 1.4, Vector3(2.9, 0.08, 0.5), Color("e6e6e2"))
 	_box_rot("klein", f, l + Vector2(-0.3, s * 1.75), 2.85, Vector3(3.2, 0.07, 1.2), Color("f2f2ee"), 0.0, Basis(Vector3.RIGHT, s * 0.28))
 	_box("klein", f, l + Vector2(-0.3, 0), 3.05, Vector3(2.6, 0.7, 0.12), Color("f2f2ee"))
@@ -710,6 +710,8 @@ func _tankstelle(f: Dictionary) -> void:
 	var marke: Color = [Color("2f5f9e"), Color("2e8b57"), Color("d9644f")][rng.randi() % 3]
 	# Dach auf vier Stützen, farbige Blende ringsum
 	_box("gross", f, Vector2(0, 0), 5.4, Vector3(28.0, 0.9, 16.0), Color("f2f2f0"))
+	for z in [-6.0, -2.0, 2.0, 6.0]:   # Lichtleisten unter dem Dach (nachts hell)
+		_box("leucht", f, Vector2(0, z), 5.3, Vector3(24.0, 0.05, 0.5), Color("fff4e0"))
 	_box("gross", f, Vector2(0, 8.05), 5.35, Vector3(28.2, 1.0, 0.1), marke)
 	_box("gross", f, Vector2(0, -8.05), 5.35, Vector3(28.2, 1.0, 0.1), marke)
 	_box("gross", f, Vector2(14.05, 0), 5.35, Vector3(0.1, 1.0, 16.2), marke)
@@ -777,6 +779,13 @@ func _parkhaus(f: Dictionary) -> void:
 				_auto_neu(f, Vector2(-19.5 + k * 2.6, rz), 0.0 if (rz == -12.5 or rz == 7.5) else PI, y)
 		if e == decks:
 			break
+		for sx in [-1.0, 1.0]:   # Lichtpunkte an den Außenseiten (nachts sieht man die Ebenen von weitem)
+			var lx := -bx * 0.5 + 3.0
+			while lx < bx * 0.5 - 2.0:
+				_licht_punkte.append([_pos(f, Vector2(lx, sx * (bz * 0.5 + 0.1)), (e + 1) * dh - 0.6), Color(0.85, 0.92, 1.0)])
+				lx += 5.0
+		for lz in [-10.0, 0.0, 10.0]:   # Lichtleisten unter der Decke dieser Ebene
+			_box("leucht", f, Vector2(0, lz), (e + 1) * dh - 0.45, Vector3(40.0, 0.05, 0.3), Color("eef4ff"))
 		for ix in 6:
 			for iz in 5:
 				_box("klein", f, Vector2(-bx * 0.5 + 0.5 + ix * (bx - 1.0) / 5.0, -bz * 0.5 + 0.5 + iz * (bz - 1.0) / 4.0), y, Vector3(0.6, dh - 0.35, 0.6), beton)
@@ -1795,6 +1804,7 @@ func _stadion(f: Dictionary) -> void:
 		var richtung: Vector2 = -(e as Vector2).normalized()
 		var gl := atan2(richtung.x, richtung.y)
 		_box_rot("gross", f, e + richtung * 0.4, 24.0, Vector3(3.6, 2.4, 0.3), DUNKEL, gl, Basis(Vector3.RIGHT, -0.5))
+		_box_rot("leucht", f, e + richtung * 0.56, 24.09, Vector3(3.3, 2.1, 0.06), Color("fff6e6"), gl, Basis(Vector3.RIGHT, -0.5))   # Strahlerfront (nachts hell)
 		for ix in 3:
 			for iy in 2:
 				var q := Vector2(richtung.y, -richtung.x)
@@ -1925,6 +1935,7 @@ func _leute_bauen() -> void:
 				mm.set_instance_transform(k, (xfs[k] as Transform3D) * teil_xf)
 			var mmi := MultiMeshInstance3D.new()
 			mmi.multimesh = mm
+			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF   # kleine Figuren: Schatten kaum sichtbar, kosteten messbar
 			for su in m3.mesh.get_surface_count():   # Material der Vorlage übernehmen
 				var mat := m3.get_active_material(su)
 				if mat and su == 0:
@@ -2007,6 +2018,30 @@ func _mesh_knoten(eltern: Node3D, teile: Array, von: float, bis: float) -> MeshI
 	eltern.add_child(mi)
 	return mi
 
+# Leuchtflächen (20.11.2026): tags gedämpfte Farbe, nachts hell (globale Uniform nacht wie die Bodenleuchten)
+const LEUCHT_SHADER := """
+shader_type spatial;
+global uniform float nacht;
+varying vec3 farbe;
+void vertex() {
+	farbe = pow(COLOR.rgb, vec3(2.2));
+}
+void fragment() {
+	float an = smoothstep(0.25, 0.6, nacht);
+	ALBEDO = farbe * 0.3;
+	EMISSION = farbe * an * 2.5;
+	ROUGHNESS = 0.5;
+}
+"""
+var _leucht_mat: ShaderMaterial
+func _leucht() -> ShaderMaterial:
+	if _leucht_mat == null:
+		var sh := Shader.new()
+		sh.code = LEUCHT_SHADER
+		_leucht_mat = ShaderMaterial.new()
+		_leucht_mat.shader = sh
+	return _leucht_mat
+
 func _laub() -> ShaderMaterial:
 	if _laub_mat == null:
 		var sh := Shader.new()
@@ -2040,9 +2075,11 @@ func _teile_bauen() -> void:
 		mmi.material_override = _mat
 		if t[1] == "baum" or t[1] == "busch":
 			mmi.material_override = _rinde() if t[0] == "zyl" else _laub()
+		elif t[1] == "leucht":
+			mmi.material_override = _leucht()
 		var weit := 0.0
 		match t[1]:
-			"klein", "busch": weit = KLEIN_WEIT
+			"klein", "busch", "leucht": weit = KLEIN_WEIT
 			"baum": weit = BAUM_WEIT
 			"fein": weit = FEIN_WEIT
 		if weit > 0.0:
