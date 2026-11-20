@@ -51,6 +51,7 @@ var werkzeug: Node3D          # Modell des Werkzeugs (Schwamm, Abzieher, …)
 var strahl: MeshInstance3D    # Wasserstrahl des Hochdruckreinigers
 var arm: MeshInstance3D
 var gesperrt := false         # true = keine Eingaben (Testbilder, Shop offen)
+var pause_offen := false      # Pausenmenü offen (im Mehrspieler läuft die Welt weiter – Klicks gehören dann dem Menü)
 var wind := 0.0               # 0..1, wird von Ereignisse gesetzt: Gondel schaukelt
 var aktiv := true             # false = ausgestiegen, man läuft zu Fuß (Gondel bleibt unten stehen)
 var wisch_faktor := 1.0       # Glanzspray: größere Wisch-Fläche
@@ -199,7 +200,7 @@ func aussehen(gondel_hex: String, kleidung_hex: String, schwamm_hex: String, lac
 
 # ---------------------------------------------------------------- Eingaben
 func _input(e: InputEvent) -> void:
-	if gesperrt or not aktiv:
+	if gesperrt or not aktiv or pause_offen:
 		return
 	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_RIGHT:
 		rechts_gedrueckt = e.pressed
@@ -252,7 +253,7 @@ func _begrenzen() -> void:
 # ---------------------------------------------------------------- Ablauf
 func _process(dt: float) -> void:
 	_gesperrt_zeit = maxf(0.0, _gesperrt_zeit - dt)
-	if not gesperrt and aktiv:
+	if not gesperrt and aktiv and not pause_offen:
 		var seite := 0.0
 		var hoch := 0.0
 		if Optionen.gedrueckt(KEY_D): seite += 1.0

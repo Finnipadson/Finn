@@ -471,6 +471,8 @@ func _oben_gesperrt() -> void:
 
 # ---------------------------------------------------------------- Eingaben (Shop, Werkzeugwechsel)
 func _input(e: InputEvent) -> void:
+	if pause != null:   # Pausenmenü offen (im Mehrspieler ohne Pause): alle Eingaben gehören dem Menü
+		return
 	if welt.grundstuecke and welt.grundstuecke.faehrt:   # Riesenrad-Fahrt (20.11.2026): Maus schaut, E/Esc steigt aus
 		if e is InputEventMouseMotion:
 			welt.grundstuecke.fahrt_maus(e.relative)
@@ -868,9 +870,10 @@ func _process(dt: float) -> void:
 				_speichern())
 	hud.zeige(zustand.sauber_zahl, turm.fenster_gesamt, wirtschaft.geld, spieler.y, spieler.stock, not spieler.aktiv, strand.ort_name() if strand.ort_name() != "" else extras.ort_name())
 	# Beim Angeln nur das Laufen sperren – Umschauen mit der Maus bleibt (Wunsch des Users 19.11.2026)
-	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen() or strand.menu.offen or strand.yacht.an_bord or karte.offen or (miteinander != null and miteinander.blockiert()) or (welt.grundstuecke != null and welt.grundstuecke.faehrt)
+	var menue := shop.offen or album.offen or hmenu.offen or cmenu.offen or extras.menue_offen() or strand.menu.offen or strand.yacht.an_bord or karte.offen or (miteinander != null and miteinander.blockiert()) or (welt.grundstuecke != null and welt.grundstuecke.faehrt) or pause != null
 	laeufer.set_process(not menue)
 	laeufer.gesperrt = menue
+	spieler.pause_offen = pause != null   # Mehrspieler: Welt läuft beim Pausenmenü weiter – Klicks nicht an Gondel/Läufer (Video 20.11.2026)
 	laeufer.laufen_aus = strand.angeln.aktiv()
 	_angel_takt()
 	wirtschaft.boosts_takt(dt)

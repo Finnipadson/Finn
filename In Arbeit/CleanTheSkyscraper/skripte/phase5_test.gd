@@ -740,6 +740,42 @@ func _tag_bilder() -> void:
 	add_child(cam)
 	cam.current = true
 	s.hud.visible = false
+	if "--pause-klick-test" in OS.get_cmdline_user_args():   # 20.11.2026 (Video): Pausenmenü-Knöpfe, wenn die Welt weiterläuft (Mehrspieler)
+		cam.current = false
+		s.hud.visible = true
+		if s.spieler.aktiv:
+			s._taste(KEY_E)
+			await _warte(0.5)
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		for runde in ["läufer", "gondel"]:
+			if runde == "gondel":
+				s.laeufer.aktivieren(s.spieler.gondel.global_position + Vector3(2, 0, 0), 0.0, s.spieler.gondel.global_position)
+				await _warte(0.3)
+				s._taste(KEY_E)   # einsteigen
+				await _warte(0.8)
+			s.pause_oeffnen()
+			get_tree().paused = false   # wie im Mehrspieler: Welt läuft weiter
+			await _warte(0.3)
+			var knopf: Button = s.pause.find_child("einstellungen", true, false)
+			var mitte := knopf.get_global_rect().get_center()
+			for gedrueckt in [true, false]:
+				var ev := InputEventMouseButton.new()
+				ev.button_index = MOUSE_BUTTON_LEFT
+				ev.pressed = gedrueckt
+				ev.position = mitte
+				ev.global_position = mitte
+				Input.parse_input_event(ev)
+				await get_tree().process_frame
+				await get_tree().process_frame
+			await _warte(0.3)
+			_pruefe("%s: Klick auf Einstellungen öffnet sie" % runde, s.pause != null and s.pause.einst != null)
+			_pruefe("%s: Maus bleibt frei" % runde, Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, str(Input.mouse_mode))
+			var zu: Button = s.pause.find_child("beenden", true, false)
+			_pruefe("%s: Knopf „Speichern und beenden“ da" % runde, zu != null)
+			s.pause.schliessen()
+			await _warte(0.5)
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		return
 	if "--grundstueck-ton-test" in OS.get_cmdline_user_args():   # 20.11.2026: Geräusche an Markt, Zirkus, Baustelle
 		var gs2: Grundstuecke = s.welt.grundstuecke
 		for t in [[Grundstuecke.Typ.MARKT, "menge"], [Grundstuecke.Typ.ZIRKUS, "orgel"]]:
