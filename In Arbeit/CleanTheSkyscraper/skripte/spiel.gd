@@ -903,6 +903,7 @@ func _process(dt: float) -> void:
 		hud.fortschritt(0.0, false)
 	# Alle Fenster sauber → einmal der Abspann (danach frei weiterspielen)
 	if not wirtschaft.abspann and zustand.sauber_zahl >= turm.fenster_gesamt and ((ansicht == 0 and not durchlauf) or ansicht == 33) and not Netz.ist_gast():
+		extras.erfolge_pruefen()   # „Alle Fenster“ sofort vergeben, nicht erst bis zu 1 s später (Bot endete vorher, 20.11.2026)
 		abspann_starten()   # im Mehrspieler startet ihn der Gastgeber für alle
 	# Tageszeit: speichern, Innenräume hell halten, Uhr anzeigen, Leuchtfeuer auf der Spitze blinkt nachts
 	if welt.zeit.phase >= 0.0:

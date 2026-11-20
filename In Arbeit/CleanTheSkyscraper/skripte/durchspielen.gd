@@ -287,6 +287,7 @@ func _ablauf() -> void:
 func _ende() -> void:
 	if koop == "host":
 		await _koop_ende()
+	x.erfolge_pruefen()   # letzte Erfolge noch vergeben (sonst fehlte „Alle Fenster“, wenn das Ende < 1 s nach dem letzten Fenster kam)
 	_stand()
 	var ids := []
 	for e in Erfolge.LISTE:

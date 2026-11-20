@@ -38,8 +38,123 @@ func _ready() -> void:
 	var rahmen_mat := Bau.shader_mat(load("res://shader/rahmen.gdshader"), {"farbe": Color("c9ced4"), "fern_farbe": Color("7d8c9c")})
 	add_child(Bau.rahmen(stockwerke, FENSTER_B, BAND_ANTEIL, rahmen_mat))
 	_spitze(rahmen_mat)
+	_terrassen()
 	if not "--ohne-bodenlicht" in OS.get_cmdline_user_args():   # Vergleichs-Schalter
 		_bodenstrahler([glas, rahmen_mat])
+
+# Terrassen auf den Rücksprüngen der Flügel (20.11.2026, alte Notiz „schlichte Dächer ohne Deko“): Glasgeländer entlang
+# der alten Flügelspitze, dazu je Terrasse abwechselnd Liegen mit Sonnenschirm oder Pflanzkübel mit Bäumchen und Bank.
+# Alles in wenigen MultiMeshes (Farbe je Instanz), ohne Schatten, nur in Gondelnähe sichtbar.
+func _terrassen() -> void:
+	var laengen := [FLUEGEL_START, FLUEGEL_START, FLUEGEL_START]
+	var teile := {"box": [], "zyl": [], "kegel": [], "kugel": []}
+	var nr := 0
+	for f in STOCKWERKE:
+		if f >= STUFE_AB and (f - STUFE_AB) % STUFE_ALLE == 0:
+			var w := ((f - STUFE_AB) / STUFE_ALLE) % 3
+			var alt: float = laengen[w]
+			laengen[w] = maxf(KERN, alt - STUFE_UM)
+			if laengen[w] <= KERN + 1.0 or laengen.max() <= KERN + 0.5:
+				continue
+			var b := BREITE * (1.0 - ((f - 1) - (f - 1) % STUFE_ALLE) / 420.0)
+			_terrasse(teile, w, alt, float(laengen[w]), b, f * STOCK_H, nr)
+			nr += 1
+	var m := StandardMaterial3D.new()
+	m.vertex_color_use_as_albedo = true
+	m.vertex_color_is_srgb = true
+	m.roughness = 0.6
+	for form in teile:
+		var liste: Array = teile[form]
+		if liste.is_empty():
+			continue
+		var mesh: Mesh
+		match form:
+			"zyl", "kegel":
+				var c := CylinderMesh.new()
+				c.top_radius = 0.0 if form == "kegel" else 0.5
+				c.bottom_radius = 0.5
+				c.height = 1.0
+				c.radial_segments = 12
+				c.rings = 1
+				mesh = c
+			"kugel":
+				var k := SphereMesh.new()
+				k.radius = 0.5
+				k.height = 1.0
+				k.radial_segments = 10
+				k.rings = 6
+				mesh = k
+			_:
+				var bm := BoxMesh.new()
+				bm.size = Vector3.ONE
+				mesh = bm
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
+		mm.mesh = mesh
+		mm.instance_count = liste.size()
+		for i in liste.size():
+			mm.set_instance_transform(i, liste[i][0])
+			mm.set_instance_color(i, liste[i][1])
+		var mi := MultiMeshInstance3D.new()
+		mi.multimesh = mm
+		mi.material_override = m
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mi)
+
+func _terrasse(teile: Dictionary, w: int, l_alt: float, l_neu: float, b: float, y: float, nr: int) -> void:
+	var a := TAU * w / 3.0 - PI / 2.0
+	var d := Vector2(cos(a), sin(a))
+	var q := Vector2(-d.y, d.x)
+	var r := b * 0.5
+	var m_alt := d * (l_alt - r)
+	var m_neu := d * (l_neu - r)
+	var glas := Color("bcd6e0")
+	var alu := Color("c9ced4")
+	# Geländer: Bogen der alten Flügelspitze + gerade Stücke an den Seiten bis zur neuen Wand
+	var punkte: Array = []
+	for j in 13:
+		var t := -PI / 2.0 + PI * j / 12.0
+		punkte.append(m_alt + (d * cos(t) + q * sin(t)) * (r - 0.15))
+	var zuege: Array = []
+	for j in 12:
+		zuege.append([punkte[j], punkte[j + 1]])
+	for s in [-1.0, 1.0]:
+		zuege.append([m_neu + q * s * (r - 0.15), m_alt + q * s * (r - 0.15)])
+	for z in zuege:
+		var p0: Vector2 = z[0]
+		var p1: Vector2 = z[1]
+		var mitte := (p0 + p1) * 0.5
+		var lang := p0.distance_to(p1) + 0.05
+		var gier := atan2(p1.x - p0.x, p1.y - p0.y)
+		var basis := Basis(Vector3.UP, gier)
+		teile.box.append([Transform3D(basis * Basis.from_scale(Vector3(0.05, 1.05, lang)), Vector3(mitte.x, y + 0.53, mitte.y)), glas])
+		teile.box.append([Transform3D(basis * Basis.from_scale(Vector3(0.09, 0.07, lang)), Vector3(mitte.x, y + 1.08, mitte.y)), alu])
+	# Möblierung auf dem Halbmond zwischen alter und neuer Spitze
+	var ort := func(t: float, rr: float) -> Vector2:
+		return m_alt + (d * cos(t) + q * sin(t)) * rr
+	var mitte_p: Vector2 = ort.call(0.0, r - 1.6)
+	_kuebel_baum(teile, mitte_p, y)
+	for s in [-1.0, 1.0]:
+		var p: Vector2 = ort.call(s * 0.75, r - 2.0)
+		var raus := (p - m_alt).normalized()
+		var gier := atan2(raus.x, raus.y)
+		if nr % 2 == 0:   # zwei Liegen + Sonnenschirm
+			for k in [-0.55, 0.55]:
+				var seit: Vector2 = Vector2(raus.y, -raus.x) * float(k)
+				teile.box.append([Transform3D(Basis(Vector3.UP, gier) * Basis.from_scale(Vector3(0.65, 0.3, 1.9)), Vector3(p.x + seit.x, y + 0.15, p.y + seit.y)), Color("f2f2ee")])
+				teile.box.append([Transform3D(Basis(Vector3.UP, gier) * Basis(Vector3.RIGHT, -0.6) * Basis.from_scale(Vector3(0.65, 0.08, 0.7)), Vector3(p.x + seit.x - raus.x * 0.75, y + 0.5, p.y + seit.y - raus.y * 0.75)), Color("f2f2ee")])
+			var sp := p - raus * 1.6
+			teile.zyl.append([Transform3D(Basis.from_scale(Vector3(0.08, 2.3, 0.08)), Vector3(sp.x, y + 1.15, sp.y)), alu])
+			teile.kegel.append([Transform3D(Basis.from_scale(Vector3(2.8, 0.5, 2.8)), Vector3(sp.x, y + 2.35, sp.y)), [Color("d9644f"), Color("4f93c4"), Color("e8b33c")][(nr / 2) % 3]])
+		else:   # Bank + kleiner Kübel
+			teile.box.append([Transform3D(Basis(Vector3.UP, gier + PI * 0.5) * Basis.from_scale(Vector3(1.8, 0.45, 0.5)), Vector3(p.x, y + 0.23, p.y)), Color("a8744a")])
+			_kuebel_baum(teile, p + Vector2(raus.y, -raus.x) * 1.6, y, 0.7)
+
+func _kuebel_baum(teile: Dictionary, p: Vector2, y: float, s := 1.0) -> void:
+	teile.box.append([Transform3D(Basis.from_scale(Vector3(1.1, 0.7, 1.1) * s), Vector3(p.x, y + 0.35 * s, p.y)), Color("d6d0c4")])
+	teile.zyl.append([Transform3D(Basis.from_scale(Vector3(0.14, 1.4, 0.14) * s), Vector3(p.x, y + (0.7 + 0.7) * s, p.y)), Color("7a5a3c")])
+	teile.kugel.append([Transform3D(Basis.from_scale(Vector3(1.6, 1.4, 1.6) * s), Vector3(p.x, y + 2.3 * s, p.y)), Color("4f7d3a")])
 
 # Bodenstrahler rund um den Turmfuß (19.11.2026): je ~8 m eine Leuchte im Boden, die Shader von Glas und Rahmen zeichnen
 # die Lichtkegel an der Fassade (gleiche Winkel, siehe strahler_licht in turm/rahmen.gdshader)

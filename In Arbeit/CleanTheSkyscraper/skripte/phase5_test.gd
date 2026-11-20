@@ -786,6 +786,7 @@ func _tag_bilder() -> void:
 				if not vf.is_empty():
 					var vc: Vector2 = vf.mitte
 					orte["gs_" + Grundstuecke.NAMEN[t] + str(v)] = [Vector3(vc.x + 36.0, 20.0, vc.y + 42.0), Vector3(vc.x, 1.0, vc.y)]
+	orte["terrasse"] = [Vector3(22.0, 88.0, -72.0), Vector3(0.0, 76.0, -52.0)]   # erste Terrasse (Stockwerk 18, Nordflügel), 20.11.2026
 	orte["allee_ende"] = [Vector3(491.0, 1.8, 205.0), Vector3(487.5, 0.0, 300.0)]   # Mittelstreifen endet an einer Kreuzung (19.11.2026)
 	if "--karte-bild" in OS.get_cmdline_user_args():   # Karte (M) mit den Grundstücken
 		s.karte.oeffnen()
