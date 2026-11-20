@@ -170,6 +170,9 @@ func _startansicht() -> void:
 func _optionen_geaendert(k: String) -> void:
 	if k in ["qualitaet", "ruhig", "fps", "vollbild"]:
 		_grafik()
+	if k == "fov" and spiel_knoten:   # Sichtfeld sofort übernehmen
+		spiel_knoten.laeufer.cam.fov = Optionen.fov()
+		spiel_knoten.spieler.cam.fov = Optionen.fov() + 3.0
 
 func _grafik() -> void:
 	var vp := get_viewport()

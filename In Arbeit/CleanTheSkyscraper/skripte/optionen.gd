@@ -18,6 +18,7 @@ const STANDARD := {
 	"vollbild": false,
 	"maus": 1.0,             # Empfindlichkeit (Umschauen)
 	"maus_umkehren": false,  # Maus hoch = nach unten schauen
+	"fov": 75.0,             # Sichtfeld in Grad (zu Fuß; Gondel +3°), Wunsch des Users 20.11.2026
 	"tasten": {},            # Aktion → Keycode (nur Abweichungen von der Standardbelegung)
 }
 const QUALITAET := ["Niedrig", "Mittel", "Hoch"]
@@ -150,6 +151,11 @@ static func gedrueckt(standard: Key) -> bool:
 	return Input.is_key_pressed(int(_belegt.get(int(standard), int(standard))) as Key)
 
 # ---------------------------------------------------------------- Maus
+# Sichtfeld (Grad) – zu Fuß direkt, in der Gondel 3° mehr (wie vorher 75/78)
+const FOV_BEREICH := Vector2(60.0, 110.0)
+static func fov() -> float:
+	return clampf(float(wert("fov")), FOV_BEREICH.x, FOV_BEREICH.y)
+
 static func maus_x() -> float:
 	return float(wert("maus"))
 

@@ -89,7 +89,7 @@ func _bauen() -> void:
 	eimer.position = Vector3(-1.4, 0.15, 0.2)
 	gondel.add_child(eimer)
 	cam = Camera3D.new()
-	cam.fov = 78.0
+	cam.fov = Optionen.fov() + 3.0
 	cam.near = 0.03
 	cam.far = 40000.0
 	cam.position = Vector3(0, AUGE, 0.3)

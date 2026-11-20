@@ -740,6 +740,27 @@ func _tag_bilder() -> void:
 	add_child(cam)
 	cam.current = true
 	s.hud.visible = false
+	if "--fov-test" in OS.get_cmdline_user_args():   # 20.11.2026: Sichtfeld-Regler in den Einstellungen
+		cam.current = false
+		s.hud.visible = true
+		var alt := Optionen.fov()
+		s.pause_oeffnen()
+		await _warte(0.3)
+		s.pause._einstellungen()
+		await _warte(0.5)
+		var r: HSlider = s.pause.einst.find_child("r_fov", true, false)
+		_pruefe("Regler „Sichtfeld“ vorhanden", r != null)
+		await _bild_machen("einstellungen_fov")
+		r.value = 100.0
+		await _warte(0.2)
+		_pruefe("FOV zu Fuß 100°", is_equal_approx(s.laeufer.cam.fov, 100.0), str(s.laeufer.cam.fov))
+		_pruefe("FOV Gondel 103°", is_equal_approx(s.spieler.cam.fov, 103.0), str(s.spieler.cam.fov))
+		r.value = 30.0
+		await _warte(0.2)
+		_pruefe("Untergrenze 60°", is_equal_approx(s.laeufer.cam.fov, 60.0), str(s.laeufer.cam.fov))
+		r.value = alt
+		s.pause.schliessen()
+		return
 	if "--pause-klick-test" in OS.get_cmdline_user_args():   # 20.11.2026 (Video): Pausenmenü-Knöpfe, wenn die Welt weiterläuft (Mehrspieler)
 		cam.current = false
 		s.hud.visible = true

@@ -47,7 +47,7 @@ var sperre_fn: Callable
 
 func setup(t: Turm, w: Welt) -> void:
 	cam = Camera3D.new()
-	cam.fov = 75.0
+	cam.fov = Optionen.fov()
 	cam.near = 0.05
 	cam.far = 40000.0
 	add_child(cam)

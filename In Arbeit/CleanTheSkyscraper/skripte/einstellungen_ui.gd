@@ -35,6 +35,19 @@ func aufbauen() -> void:
 	_schalter("vollbild", "Vollbild", "Spiel bildschirmfüllend statt im Fenster.", "▣")
 	add_child(UiGlas.ueberschrift("MAUS"))
 	_regler("maus", "Empfindlichkeit", "Wie schnell du dich mit der Maus umschaust.", "M", 0.3, 2.5)
+	# Sichtfeld (FOV): Regler + Zahl, wirkt sofort (Wunsch des Users 20.11.2026)
+	var fz := HBoxContainer.new()
+	var fs := UiGlas.regler(Optionen.fov(), Optionen.FOV_BEREICH.x, Optionen.FOV_BEREICH.y, 1.0)
+	fs.name = "r_fov"
+	var fl := UiGlas.text("%d°" % int(Optionen.fov()), 16, UiGlas.TEXT, true)
+	fl.custom_minimum_size = Vector2(48, 0)
+	fs.value_changed.connect(func(v: float):
+		fl.text = "%d°" % int(v)
+		Optionen.setzen("fov", v, false))
+	fs.drag_ended.connect(func(_c: bool): Optionen.speichern())
+	fz.add_child(fs)
+	fz.add_child(fl)
+	add_child(UiGlas.karte("Sichtfeld (FOV)", "Wie weit du zur Seite siehst. Standard 75°, mehr = mehr Überblick, wirkt aber verzerrter.", fz, "FOV", UiGlas.AKZENT))
 	_schalter("maus_umkehren", "Maus umkehren", "Maus nach vorn schieben = nach unten schauen.", "↕")
 	add_child(UiGlas.ueberschrift("TASTEN – ANKLICKEN, DANN NEUE TASTE DRÜCKEN (ESC = ABBRECHEN)"))
 	for a in Optionen.AKTIONEN:
