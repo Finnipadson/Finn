@@ -35,6 +35,7 @@ ORTE = {
     "gs_zaun_fern": (1, "150,80,40,150,0,300", "0.5,0,0", 0),            # derselbe Zaun von oben aus ~270 m (nahe der Sichtweite)
     "gs_geruest":   (1, "197,15,456,157,15,456", "0,0,0.25", 0),         # Gerüst am fast fertigen Haus aus 40 m
     "gs_bewehrung": (1, "40,6,-200,1.5,0,-230", "0.2,0,0", 0),           # Bewehrungsmatten + Anschlusseisen in der Baugrube
+    "gs_truck":     (1, "72,1.2,-327,75.5,0.6,-321.5", "0.2,0,0", 0),     # Foodtruck von der Seite (Video 20.11.2026: Räder flackerten)
     "gs_oben":      (1, "150,120,150,150,0,450", "0.6,0,0", 0),          # schräg von oben über mehrere Grundstücke (Kräne, Zäune)
     "still":      (1, "0,120,190,0,60,600", None, 0),                  # Kamera steht (zeigt TAA-Zittern)
     "drehen":     (1, "0,120,190,0,60,600", None, 0.3),                  # Gondel dreht sich (Boden + Häuser)

@@ -629,7 +629,7 @@ func _foodtruck(f: Dictionary, l: Vector2, s: float, farbe: Color, name: String)
 	_box("klein", f, l + Vector2(3.65, 0), 0.55, Vector3(1.7, 1.9, 2.2), farbe.darkened(0.12))
 	_box("klein", f, l + Vector2(4.48, 0), 1.45, Vector3(0.05, 0.75, 1.9), Color("2a3440"))
 	for wx in [-1.9, 1.9, 3.7]:
-		for wz in [-1.0, 1.0]:
+		for wz in [-1.06, 1.06]:   # Außenseite 6 cm vor der Wand (bei ±1,0 lag sie genau in der Wand → Räder flackerten, Video 20.11.2026)
 			_rad_zyl(f, l + Vector2(wx, wz), 0.45, 0.45, 0.3, 0.0)
 	_box("klein", f, l + Vector2(-0.3, s * 1.16), 1.45, Vector3(2.8, 1.15, 0.05), Color("2a3440"))
 	_box("klein", f, l + Vector2(-0.3, s * 1.42), 1.4, Vector3(2.9, 0.08, 0.5), Color("e6e6e2"))
@@ -1371,7 +1371,7 @@ func _baugrube(f: Dictionary, bm: Vector2, bx: float, bz: float) -> void:
 	_box("klein", f, ml + Vector2(3.82, 0), 1.9, Vector3(0.05, 0.8, 2.0), Color("2a3440"))
 	_teil("zyl", "klein", Transform3D(Basis(Vector3.UP, _gier(f, 0.0)) * Basis(Vector3.BACK, PI * 0.5 - 0.25) * Basis.from_scale(Vector3(2.2, 4.4, 2.2)), _pos(f, ml + Vector2(-0.8, 0), 2.2)), Color("e0652a"))
 	for wx in [-2.5, -1.2, 3.0]:
-		for wz in [-1.0, 1.0]:
+		for wz in [-1.06, 1.06]:
 			_rad_zyl(f, ml + Vector2(wx, wz), 0.5, 0.5, 0.35, 0.0)
 	welt.hindernisse.append(_rect(f, ml + Vector2(0.4, 0), Vector2(7.6, 2.6)))
 
