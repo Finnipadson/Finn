@@ -147,6 +147,10 @@ func _gondel_bauen(id: int, f: Dictionary) -> void:
 	var fa := int((Netz.spieler.get(id, {}) as Dictionary).get("farbe", 0))
 	var figur := RaumBau.modell(g, "leute/" + FIGUREN[fa % FIGUREN.size()], Vector3(0.0, 0.06, 0.15), MASS, PI)   # schaut zum Glas (−Z)
 	figur.name = "figur"
+	var stange := Bau.zylinder(0.014, 0.014, 1.0, Bau.metall("c9ced4", 0.3, 0.8), 8)   # Teleskopstange zu Schwamm/Abzieher
+	stange.name = "stange"
+	stange.visible = false
+	g.add_child(stange)
 	var ap := figur.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if ap:
 		for a in ap.get_animation_list():
@@ -163,6 +167,8 @@ func _werkzeug_setzen(f: Dictionary, wz_id: String, schwamm_hex: String) -> void
 		(f.wz as Node3D).queue_free()
 	var w: Dictionary = spiel.wirtschaft.werkzeug(wz_id)
 	var n := Spieler.werkzeug_modell(w, schwamm_hex)
+	if n.has_node("stiel"):
+		(n.get_node("stiel") as Node3D).visible = false   # wie beim Spieler: die Stange ersetzt den Stiel
 	add_child(n)
 	f["wz"] = n
 	f["wz_id"] = wz_id + "|" + schwamm_hex
@@ -405,6 +411,13 @@ func _gondel_takt(id: int, f: Dictionary, l: Array, modus: int, dt: float) -> vo
 		if drin:
 			wz.global_position = wz.global_position.lerp(f.wz_ziel, minf(1.0, dt * 14.0)) if wz.global_position.distance_to(f.wz_ziel) < 3.0 else f.wz_ziel
 			wz.global_basis = g.global_basis
+	# Stange von der Hand der Figur zum Werkzeug (wie in der eigenen Ich-Ansicht)
+	var stange := g.get_node("stange") as MeshInstance3D
+	stange.visible = drin and f.wz != null and (f.wz as Node3D).has_node("ansatz")
+	if stange.visible:
+		var hand := g.global_transform * Vector3(0.2, 0.95, -0.05)
+		var ansatz := ((f.wz as Node3D).get_node("ansatz") as Node3D).global_position
+		Spieler.zwischen(stange, hand - (ansatz - hand).normalized() * 0.2, ansatz)
 	# die geparkte Gondel dieser Seite ausblenden, solange die des Mitspielers zu sehen ist
 	var k := int(f.seite)
 	if k >= 0 and k < 3 and spiel.gondeln and k != spiel.wirtschaft.aktive_gondel:

@@ -49,7 +49,21 @@ var spray_trifft := false
 var letzter_stempel := Vector2(INF, INF)
 var werkzeug: Node3D          # Modell des Werkzeugs (Schwamm, Abzieher, …)
 var strahl: MeshInstance3D    # Wasserstrahl des Hochdruckreinigers
-var arm: MeshInstance3D
+var arm: MeshInstance3D          # Oberarm
+var unterarm: MeshInstance3D
+var hand: MeshInstance3D
+var stange: MeshInstance3D       # Teleskopstange zu Schwamm/Abzieher (die Scheibe ist ~2 m weg)
+var stangen_griff: MeshInstance3D
+var gelenk: MeshInstance3D
+var arm_teile: Node3D
+const OBERARM := 0.36
+const UNTERARM := 0.36
+# Nur Optik (das Putzen selbst rechnet mit schwamm_off): weiche Übergänge Ruhe ↔ Glas, Kippen, Atmen, Rückstoß
+var _anlegen := 0.0              # 0 = Ruhe-Pose, 1 = Werkzeug liegt am Glas
+var _zielen := 0.0               # Sprüher: 0 = gesenkt, 1 = im Anschlag
+var _kipp := 0.0
+var _letzt_off := Vector2.ZERO
+var _anim_zeit := 0.0
 var gesperrt := false         # true = keine Eingaben (Testbilder, Shop offen)
 var pause_offen := false      # Pausenmenü offen (im Mehrspieler läuft die Welt weiter – Klicks gehören dann dem Menü)
 var wind := 0.0               # 0..1, wird von Ereignisse gesetzt: Gondel schaukelt
@@ -95,8 +109,30 @@ func _bauen() -> void:
 	cam.position = Vector3(0, AUGE, 0.3)
 	gondel.add_child(cam)
 	arm_mat = Bau.matt("3a86d4", 0.85)
-	arm = Bau.zylinder(0.05, 0.06, 1.0, arm_mat, 12)
-	add_child(arm)
+	arm_teile = Node3D.new()
+	add_child(arm_teile)
+	arm = Bau.zylinder(0.052, 0.06, 1.0, arm_mat, 12)
+	arm_teile.add_child(arm)
+	unterarm = Bau.zylinder(0.042, 0.05, 1.0, arm_mat, 12)
+	arm_teile.add_child(unterarm)
+	hand = MeshInstance3D.new()
+	var hm := SphereMesh.new()
+	hm.radius = 0.047
+	hm.height = 0.094
+	hand.mesh = hm
+	hand.material_override = Bau.matt("f1c29b", 0.6)
+	arm_teile.add_child(hand)
+	stange = Bau.zylinder(0.014, 0.014, 1.0, Bau.metall("c9ced4", 0.3, 0.8), 8)
+	arm_teile.add_child(stange)
+	stangen_griff = Bau.zylinder(0.024, 0.024, 1.0, Bau.matt("2b2b2b", 0.85), 10)
+	arm_teile.add_child(stangen_griff)
+	gelenk = MeshInstance3D.new()
+	var gm := SphereMesh.new()
+	gm.radius = 0.028
+	gm.height = 0.056
+	gelenk.mesh = gm
+	gelenk.material_override = Bau.matt("33363d", 0.6)
+	arm_teile.add_child(gelenk)
 	var sm := StandardMaterial3D.new()
 	sm.albedo_color = Color(0.85, 0.95, 1.0, 0.55)
 	sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -129,17 +165,11 @@ func werkzeug_setzen(w: Dictionary) -> void:
 	wz = w
 	werkzeug = werkzeug_modell(w, schwamm_farbe)
 	add_child(werkzeug)
-	var haut := Bau.matt("f1c29b", 0.6)
-	var k := MeshInstance3D.new()
-	var km := SphereMesh.new()
-	km.radius = 0.06
-	km.height = 0.12
-	k.mesh = km
-	k.material_override = haut
-	k.position = Vector3(0.0, 0.0, 0.1) if wz_art == "wisch" else Vector3(0, -0.06, 0.1)
-	k.scale = Vector3(1.4, 1.0, 1.0)
-	k.name = "hand"
-	werkzeug.add_child(k)
+	if werkzeug.has_node("stiel"):
+		(werkzeug.get_node("stiel") as Node3D).visible = false   # die Teleskopstange ersetzt den kurzen Stiel
+	_anlegen = 0.0
+	_zielen = 0.0
+	_kipp = 0.0
 
 # Modell eines Werkzeugs (ohne Hand) – auch für die Bilder in Hotbar und Menüs (Symbole)
 static func werkzeug_modell(w: Dictionary, schwamm_farbe := "ffd84a") -> Node3D:
@@ -150,6 +180,7 @@ static func werkzeug_modell(w: Dictionary, schwamm_farbe := "ffd84a") -> Node3D:
 			var farbe: String = w.get("farbe", schwamm_farbe) if w.has("farbe") else schwamm_farbe
 			_sbox(n, Vector3(0.24, 0.15, 0.07) * s, Vector3.ZERO, Bau.matt(farbe, 0.95))
 			_sbox(n, Vector3(0.24 * s, 0.15 * s, 0.025), Vector3(0, 0, -0.045 * s), Bau.matt("3aa655", 0.9))
+			_marke(n, "ansatz", Vector3(0, 0, 0.035 * s))   # hier sitzt die Teleskopstange
 		"abzieher":
 			var breit: float = float(w.rx) * 2.0
 			var gummi := Bau.matt("2b2b2b", 0.7)
@@ -162,7 +193,9 @@ static func werkzeug_modell(w: Dictionary, schwamm_farbe := "ffd84a") -> Node3D:
 			var stiel := Bau.zylinder(0.022, 0.022, 0.3, Bau.matt("e2483e", 0.6), 10)
 			stiel.rotation.x = PI / 2.0
 			stiel.position = Vector3(0, 0.05, 0.17)
+			stiel.name = "stiel"   # an der Stange ausgeblendet (die Stange ersetzt den Stiel)
 			n.add_child(stiel)
+			_marke(n, "ansatz", Vector3(0, 0.09 if w.get("doppel", false) else 0.02, 0.015))
 		"spray":
 			var g: float = w.get("groesse", 1.0)
 			var koerper: String = {"hochdruck": "ffc531", "dampf": "e2483e", "lanze": "3a86d4"}.get(w.id, "ffc531")
@@ -176,7 +209,14 @@ static func werkzeug_modell(w: Dictionary, schwamm_farbe := "ffd84a") -> Node3D:
 			duese.position = Vector3(0, 0.03, -0.53)
 			n.add_child(duese)
 			_sbox(n, Vector3(0.04, 0.1, 0.05), Vector3(0, -0.09, 0.1), Bau.matt("33363d", 0.6))
+			_marke(n, "griff", Vector3(0, -0.08, 0.1))
 	return n
+
+static func _marke(eltern: Node3D, name: String, p: Vector3) -> void:
+	var m := Node3D.new()
+	m.name = name
+	m.position = p
+	eltern.add_child(m)
 
 static func _sbox(eltern: Node3D, groesse: Vector3, p: Vector3, m: Material) -> void:
 	var mi := MeshInstance3D.new()
@@ -280,12 +320,12 @@ func _process(dt: float) -> void:
 		else:
 			_wischen()
 	werkzeug.visible = aktiv
-	arm.visible = aktiv
+	arm_teile.visible = aktiv
 	if not aktiv:
 		wischt = false
 		strahl.visible = false
 	else:
-		_hand()
+		_hand(dt)
 	zustand.aktualisieren()
 
 func _platzieren(dt: float) -> void:
@@ -367,26 +407,92 @@ func _stempel(o: Vector2) -> void:
 			if zustand.wische(f, spalte + ds, mx, gy, rx, ry):
 				fenster_sauber.emit(f, spalte + ds)
 
-func _hand() -> void:
-	var schulter := cam.global_transform * Vector3(0.38, -0.5, 0.1)
+# Arm (Schulter → Ellbogen → Hand) + Werkzeug. Schwamm und Abzieher sitzen auf einer Teleskopstange: die Hand bleibt
+# vor dem Körper, die Stange fährt beim Ansetzen aus bis an die Scheibe. Alles nur Optik.
+func _hand(dt: float) -> void:
+	_anim_zeit += dt
+	var ct := cam.global_transform
+	var schulter := ct * Vector3(0.3, -0.4, 0.04)
+	var knick := ct.basis * Vector3(0.75, -0.6, 0.25)   # Ellbogen zeigt nach außen unten
 	strahl.visible = false
-	if wischt and wz_art == "wisch":
-		werkzeug.global_position = glas_punkt + rechts * schwamm_off.x + Vector3.UP * schwamm_off.y + normal * 0.07
-		werkzeug.global_basis = gondel.global_basis
-	elif wz_art == "spray":
-		werkzeug.global_transform = cam.global_transform * Transform3D(Basis.from_euler(Vector3(0.05, 0.08, 0.0)), Vector3(0.36, -0.34, -0.8))
+	var atem := sin(_anim_zeit * 1.7) * 0.006
+	var griff_p: Vector3
+	if wz_art == "spray":
+		stange.visible = false
+		stangen_griff.visible = false
+		gelenk.visible = false
+		_zielen = move_toward(_zielen, 1.0 if wischt else 0.0, dt * 7.0)
+		var z := smoothstep(0.0, 1.0, _zielen)
+		var rueck := 0.0
+		if spray_trifft:   # Rückstoß: das Gerät zittert leicht nach hinten
+			rueck = (sin(_anim_zeit * 47.0) * 0.5 + 0.5) * 0.014 + (sin(_anim_zeit * 31.0) * 0.004)
+		var ruhe := Transform3D(Basis.from_euler(Vector3(-0.3, 0.3, 0.12)), Vector3(0.38, -0.44 + atem, -0.6))
+		var anschlag := Transform3D(Basis.from_euler(Vector3(0.05, 0.08, 0.0)), Vector3(0.34, -0.3, -0.7 + rueck))
+		werkzeug.global_transform = ct * ruhe.interpolate_with(anschlag, z)
 		if spray_trifft:
 			var duese: Node3D = werkzeug.get_node("duese")
 			var a := duese.global_position
 			var b := glas_punkt + rechts * schwamm_off.x + Vector3.UP * schwamm_off.y
-			_zwischen(strahl, a, b)
+			zwischen(strahl, a, b)
 			strahl.visible = true
+		griff_p = (werkzeug.get_node("griff") as Node3D).global_position
+		_griff_drehen(werkzeug.global_basis * Vector3.FORWARD)
 	else:
-		werkzeug.global_transform = cam.global_transform * Transform3D(Basis.from_euler(Vector3(0.5, -0.35, 0.15)), Vector3(0.42, -0.4, -0.85))
-	var hand_p := (werkzeug.get_node("hand") as Node3D).global_position
-	_zwischen(arm, schulter, hand_p)
+		var am_glas := wischt
+		var ist_abzieher: bool = wz.get("modell", "") == "abzieher"
+		_anlegen = move_toward(_anlegen, 1.0 if am_glas else 0.0, dt * 9.0)
+		var b := smoothstep(0.0, 1.0, _anlegen)
+		# leichtes Kippen mit der Wischrichtung (Schwamm stärker, Abzieher kaum)
+		var kipp_ziel := 0.0
+		if am_glas and dt > 0.0 and _anlegen > 0.5:   # nicht beim Ansetzen (Sprung zum Fadenkreuz)
+			var tempo := (schwamm_off - _letzt_off) / dt
+			var st := 0.015 if ist_abzieher else 0.05
+			kipp_ziel = clampf(-tempo.x * st, -0.16, 0.16)
+		_letzt_off = schwamm_off
+		_kipp = lerpf(_kipp, kipp_ziel, minf(1.0, dt * 8.0))
+		var glas := Transform3D(gondel.global_basis * Basis(Vector3.BACK, _kipp),
+			glas_punkt + rechts * schwamm_off.x + Vector3.UP * schwamm_off.y + normal * 0.07)
+		# Ruhe: Stange eingefahren, Werkzeug schräg vor dem Körper (Abzieher hochkant, damit die lange Lippe nicht die Sicht versperrt)
+		var ruhe := ct * (Transform3D(Basis.from_euler(Vector3(0.4, -0.45, 1.15)), Vector3(0.55, -0.32 + atem, -1.0)) if ist_abzieher
+			else Transform3D(Basis.from_euler(Vector3(0.55, -0.3, 0.12)), Vector3(0.5, -0.3 + atem, -1.0)))
+		werkzeug.global_transform = ruhe.interpolate_with(glas, b)
+		var ansatz := (werkzeug.get_node("ansatz") as Node3D).global_position
+		# Hand: vor dem Körper, ein Stück in Richtung Werkzeug gezogen, höchstens eine Armlänge weit
+		var g0 := ct * Vector3(0.2, -0.34 + atem, -0.5)
+		griff_p = g0 + (ansatz - g0).normalized() * 0.12
+		var reich := OBERARM + UNTERARM - 0.02
+		if griff_p.distance_to(schulter) > reich:
+			griff_p = schulter + (griff_p - schulter).normalized() * reich
+		var r := (ansatz - griff_p).normalized()
+		zwischen(stange, griff_p - r * 0.22, ansatz)
+		zwischen(stangen_griff, griff_p - r * 0.2, griff_p + r * 0.12)
+		gelenk.global_position = ansatz
+		stange.visible = true
+		stangen_griff.visible = true
+		gelenk.visible = true
+		_griff_drehen(r)
+	hand.global_position = griff_p
+	_arm_setzen(schulter, griff_p, knick)
 
-func _zwischen(mi: Node3D, a: Vector3, b: Vector3) -> void:
+# Faust um den Griff: etwas länglich quer zur Greifrichtung
+func _griff_drehen(r: Vector3) -> void:
+	var oben := Vector3.UP if absf(r.dot(Vector3.UP)) < 0.95 else Vector3.RIGHT
+	hand.global_basis = Basis.looking_at(r, oben).scaled_local(Vector3(1.15, 1.0, 1.35))
+
+# Zwei-Knochen-Arm: Ellbogen so, dass Ober- und Unterarm genau reichen, Knick zur Seite „knick“
+func _arm_setzen(s: Vector3, h: Vector3, knick: Vector3) -> void:
+	var d := h - s
+	var l := clampf(d.length(), 0.05, OBERARM + UNTERARM - 0.001)
+	var dir := d.normalized()
+	var a := (OBERARM * OBERARM - UNTERARM * UNTERARM + l * l) / (2.0 * l)
+	var hoch := sqrt(maxf(OBERARM * OBERARM - a * a, 0.0))
+	var seit := knick - dir * knick.dot(dir)
+	seit = seit.normalized() if seit.length() > 0.001 else Vector3.DOWN
+	var ell := s + dir * a + seit * hoch
+	zwischen(arm, s, ell)
+	zwischen(unterarm, ell, s + dir * l)
+
+static func zwischen(mi: Node3D, a: Vector3, b: Vector3) -> void:
 	var d := b - a
 	mi.global_position = a + d * 0.5
 	var yv := d.normalized()

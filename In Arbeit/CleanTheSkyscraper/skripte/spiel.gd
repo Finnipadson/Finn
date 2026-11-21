@@ -1010,6 +1010,9 @@ func _funkeln(p: Vector3) -> void:
 # 5: Schwamm fährt Schlangenlinien – derselbe Code wie beim Putzen mit der Maus
 func _demo(dt: float) -> void:
 	demo_zeit += dt
+	if "--anim" in OS.get_cmdline_user_args():
+		_anim_demo()
+		return
 	spieler.wischt = true
 	var reihen := 14
 	var dauer := 0.32
@@ -1018,6 +1021,63 @@ func _demo(dt: float) -> void:
 	if r % 2 == 1:
 		t = 1.0 - t
 	spieler.schwamm_off = Vector2(lerpf(-1.7, 1.2, t), lerpf(0.35, 2.5, float(r) / (reihen - 1)))
+
+# 5 mit --anim: Putz-Animation je Werkzeug (Ruhe → Ansetzen → Putzen → Loslassen → Ruhe), wie mit der Maus
+const ANIM_WZ := ["schwamm", "abzieher", "teleskop", "dampf", "lanze"]
+const ANIM_DAUER := 4.5
+var _anim_nr := -1
+var _anim_start := Vector2.ZERO
+func _anim_demo() -> void:
+	var nr := int(demo_zeit / ANIM_DAUER)
+	if nr >= ANIM_WZ.size() and "--anim-koop" in OS.get_cmdline_user_args() and demo_zeit < (ANIM_WZ.size() + 1) * ANIM_DAUER:
+		_anim_koop(demo_zeit - ANIM_WZ.size() * ANIM_DAUER)
+		return
+	if nr >= ANIM_WZ.size():
+		print("ANIM ENDE frame=%d" % Engine.get_frames_drawn())
+		get_tree().quit()
+		return
+	var t := fmod(demo_zeit, ANIM_DAUER)
+	if nr != _anim_nr:
+		_anim_nr = nr
+		spieler.werkzeug_setzen(wirtschaft.werkzeug(ANIM_WZ[nr]))
+		spieler.yaw = 0.25
+		spieler.pitch = 0.05
+		print("ANIM %s frame=%d fps=%d" % [ANIM_WZ[nr], Engine.get_frames_drawn(), Engine.get_frames_per_second()])
+	var putzt := t > 0.8 and t < 3.6
+	var tt := t - 0.8
+	if putzt and not spieler.wischt:
+		spieler.wischen_start()
+		_anim_start = spieler.schwamm_off
+	spieler.wischt = putzt
+	if not putzt:
+		return
+	if spieler.wz_art == "spray":
+		spieler.yaw = 0.25 + sin(tt * 2.4) * 0.35
+		spieler.pitch = 0.05 + sin(tt * 1.3) * 0.18
+	elif spieler.wz.get("modell", "") == "abzieher":
+		spieler.schwamm_off = _anim_start + Vector2(sin(tt * 2.2) * 0.9, -tt * 0.22)
+	else:
+		spieler.schwamm_off = _anim_start + Vector2(sin(tt * 4.2) * 0.55, sin(tt * 2.7) * 0.3 + tt * 0.15)
+	spieler._begrenzen()
+
+# --anim-koop: nachgestellte Gondel eines Mitspielers rechts daneben (Figur + Stange + Schwamm), ohne Netz
+var _koop_f := {}
+func _anim_koop(t: float) -> void:
+	if _koop_f.is_empty():
+		_koop_f = {"gondel": null, "wz": null, "wz_id": "", "deko_zeit": 1.0, "seite": -1}
+		spieler.wischt = false
+		print("ANIM koop frame=%d" % Engine.get_frames_drawn())
+	var gp := spieler.gondel.global_position + spieler.rechts * 6.0
+	var wp := spieler.glas_punkt + spieler.rechts * (6.0 + sin(t * 3.0) * 0.5) + Vector3.UP * (1.6 + sin(t * 2.1) * 0.3) + spieler.normal * 0.07
+	if not _koop_f.has("cam"):   # eigene Kamera schräg hinter der Mitspieler-Gondel
+		var c := Camera3D.new()
+		add_child(c)
+		c.global_position = gp + spieler.normal * 1.6 + Vector3.UP * 2.0 + spieler.rechts * 3.2
+		c.look_at(spieler.glas_punkt + spieler.rechts * 6.0 + Vector3.UP * 1.2)
+		c.make_current()
+		_koop_f["cam"] = c
+	var l := [1, gp.x, gp.y, gp.z, 0.0, "", "", spieler.winkel, -1, "schwamm" if t < 2.2 else "abzieher", wp.x, wp.y, wp.z, false, true, -1]
+	mitspieler._gondel_takt(99, _koop_f, l, 1, get_process_delta_time())
 
 # 8: echte Maus-Ereignisse durch das ganze Eingabesystem
 var _mt := 0
