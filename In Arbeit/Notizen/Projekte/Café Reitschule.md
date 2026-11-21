@@ -21,13 +21,25 @@ Professionelle Neufassung der Website-Demo für das Café Reitschule (München-S
 - Reservierungsformular mit Uhrzeit-Slots je nach Wochentag, Validierung, Bestätigungsansicht (Demo, sendet nichts)
 - Handy: Burger-Menü, untere Leiste „Anrufen / Tisch reservieren“
 
+## Redesign 2026-11-21 (Hallmark, Theme „Broadside“)
+
+- Neues Design: Druck-/Plakat-Look wie eine Speisekarte: Buff-Papier, Holzlettern (Six Caps, Bevan) + Archivo Narrow, ein Zinnoberrot, Fotos schwarzweiß im Doppelrahmen
+- Signatur: heutige Öffnungszeit live in roter Holzschrift unter der Überschrift
+- Nav: schwarze Info-Leiste (Status, Adresse, Telefon) über der Menüleiste, fährt beim Scrollen weg
+- Tageszeiten als Plakatspalten, Räume als Zeilen, Galerie und Gästestimmen als waagerechte Leisten, Reservierung auf rotem Band
+- Entfernt (Theme ist „still“): Marquee, Parallax, Zähl-Animation, Scroll-Reveals, laufende Bewertungsspalten
+- Unsplash-Bilder ersetzt durch frei lizenzierte Wikimedia-Platzhalter (Credits im Footer)
+- Bestätigungsansicht ehrlich formuliert („es wurde nichts gesendet“), keine erfundene Vorgangsnummer mehr
+- Alte Version gesichert: `CafeReitschule/.hallmark/cafereitschule-v2.before.html`, Vergleich: `.hallmark/compare.html`
+
 ## Offene Punkte
 
-- [ ] Echte Fotos vom Café statt Unsplash-Bildern
+- [ ] Echte Fotos vom Café statt der Wikimedia-Platzhalter (Hero, Gastraum, 8 Galeriebilder)
 - [ ] Echte Bewertungen statt Demo-Texten
 - [ ] Reservierung an echtes System anbinden (z. B. OpenTable) oder per E-Mail
 - [ ] Impressum/Datenschutz-Links füllen
 
 ## Notizen
 
-- Design-Farben und Schriften wie v1 (Elfenbein, Grün, Terrakotta; DM Serif Display + Outfit)
+- Bis 2026-11-21: Farben und Schriften wie v1 (Elfenbein, Grün, Terrakotta; DM Serif Display + Outfit), seitdem Broadside-Theme
+- Holzschrift-Zeilen sind per CSS in `cqi` eingepasst (gemessene Werte). Ändert sich ein Text, muss der `--fit`-Wert neu gemessen werden

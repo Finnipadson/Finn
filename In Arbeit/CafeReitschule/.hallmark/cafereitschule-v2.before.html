@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Café Reitschule | Restaurant & Café in München-Schwabing</title>
+  <meta name="description" content="Café Reitschule in Schwabing – zwischen Englischem Garten und Leopoldstraße. Frühstück, Mittagessen, Abendessen, Sonntagsbrunch und Events auf 2.000 m².">
+  <meta name="theme-color" content="#2b4535">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* =====================================================
+       TOKENS
+    ===================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ivory:     #f7f1e8;
+      --ivory-l:   #fbf8f2;
+      --ivory-d:   #efe7da;
+      --ivory-dd:  #e2d7c5;
+      --green:     #2b4535;
+      --green-d:   #1f3328;
+      --green-m:   #3a5e47;
+      --green-l:   #5b8569;
+      --terra:     #b5613a;
+      --terra-d:   #9a4f2d;
+      --gold:      #e9cf9c;
+      --text:      #2a2118;
+      --text-mid:  #54473a;
+      --text-soft: #857565;
+      --line:      rgba(43,69,53,.12);
+
+      --font-d: 'DM Serif Display', Georgia, serif;
+      --font-b: 'Outfit', system-ui, sans-serif;
+
+      --r-s: 4px;
+      --r-m: 10px;
+      --r-l: 18px;
+      --shadow-s: 0 1px 2px rgba(31,51,40,.06), 0 2px 8px rgba(31,51,40,.05);
+      --shadow-m: 0 4px 12px rgba(31,51,40,.07), 0 18px 40px rgba(31,51,40,.09);
+      --shadow-l: 0 30px 80px rgba(31,51,40,.22);
+      --ease: cubic-bezier(.22,.8,.26,1);
+      --pad-x: clamp(20px, 5vw, 72px);
+      --nav-h: 76px;
+    }
+
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; -webkit-text-size-adjust: 100%; overflow-x: clip; }
+
+    body {
+      background: var(--ivory);
+      color: var(--text);
+      font-family: var(--font-b);
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 1.65;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    body.no-scroll { overflow: hidden; }
+
+    img { display: block; max-width: 100%; }
+    a { color: inherit; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+
+    :focus-visible { outline: 2px solid var(--terra); outline-offset: 3px; border-radius: 2px; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    /* =====================================================
+       SHARED
+    ===================================================== */
+    section { padding: clamp(80px, 11vw, 140px) var(--pad-x); position: relative; }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 12px;
+      font-size: .72rem; font-weight: 500;
+      letter-spacing: .26em; text-transform: uppercase;
+      color: var(--terra);
+      margin-bottom: 18px;
+    }
+    .eyebrow::before { content: ''; width: 28px; height: 1px; background: currentColor; opacity: .7; }
+
+    .h2 {
+      font-family: var(--font-d);
+      font-weight: 400;
+      font-size: clamp(2.1rem, 4.2vw, 3.5rem);
+      line-height: 1.08;
+      letter-spacing: -.012em;
+      color: var(--green);
+    }
+    .h2 em { font-style: italic; color: var(--terra); }
+
+    .lead { font-size: 1.06rem; color: var(--text-mid); line-height: 1.8; max-width: 540px; font-weight: 300; }
+
+    .sec-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; margin-bottom: clamp(40px, 5vw, 64px); flex-wrap: wrap; }
+    .sec-head .lead { max-width: 420px; }
+    .sec-head.center { flex-direction: column; align-items: center; text-align: center; }
+    .sec-head.center .eyebrow::after { content: ''; width: 28px; height: 1px; background: currentColor; opacity: .7; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 15px 30px;
+      font-size: .78rem; font-weight: 500;
+      letter-spacing: .14em; text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 100px;
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      transition: background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease), transform .25s var(--ease), box-shadow .25s var(--ease);
+      white-space: nowrap;
+    }
+    .btn svg { width: 16px; height: 16px; transition: transform .25s var(--ease); }
+    .btn:hover svg { transform: translateX(3px); }
+    .btn-primary { background: var(--green); color: var(--ivory); }
+    .btn-primary:hover { background: var(--green-m); transform: translateY(-2px); box-shadow: 0 10px 24px rgba(43,69,53,.22); }
+    .btn-terra { background: var(--terra); color: #fff; }
+    .btn-terra:hover { background: var(--terra-d); transform: translateY(-2px); box-shadow: 0 10px 24px rgba(181,97,58,.3); }
+    .btn-outline { border-color: var(--green); color: var(--green); background: transparent; }
+    .btn-outline:hover { background: var(--green); color: var(--ivory); }
+    .btn-glass { background: rgba(247,241,232,.12); border-color: rgba(247,241,232,.45); color: var(--ivory); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .btn-glass:hover { background: var(--ivory); color: var(--green); }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
+    .reveal.in { opacity: 1; transform: none; }
+    .reveal.d1 { transition-delay: .1s; } .reveal.d2 { transition-delay: .2s; } .reveal.d3 { transition-delay: .3s; } .reveal.d4 { transition-delay: .4s; }
+
+    /* status dot */
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #9aa39c; flex-shrink: 0; position: relative; }
+    .dot.open { background: #4caf73; }
+    .dot.open::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid #4caf73; opacity: 0; animation: ping 2s ease-out infinite; }
+    .dot.soon { background: #e0a43a; }
+    @keyframes ping { 0% { transform: scale(.6); opacity: .8; } 100% { transform: scale(1.6); opacity: 0; } }
+
+    /* =====================================================
+       NAVIGATION
+    ===================================================== */
+    #nav {
+      position: fixed; inset: 0 0 auto 0; z-index: 300;
+      height: var(--nav-h);
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      padding: 0 var(--pad-x);
+      color: var(--ivory);
+      transition: background .4s var(--ease), color .4s var(--ease), box-shadow .4s var(--ease), height .3s var(--ease);
+    }
+    #nav.scrolled {
+      --nav-h: 66px;
+      background: rgba(247,241,232,.92);
+      backdrop-filter: blur(14px) saturate(1.3);
+      -webkit-backdrop-filter: blur(14px) saturate(1.3);
+      color: var(--text);
+      box-shadow: 0 1px 0 var(--line), 0 8px 30px rgba(43,69,53,.06);
+    }
+
+    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; flex-shrink: 0; }
+    .logo-mark { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid currentColor; display: grid; place-items: center; font-family: var(--font-d); font-size: 1.05rem; font-style: italic; transition: border-color .4s; }
+    .logo-text { font-family: var(--font-d); font-size: 1.4rem; line-height: 1; letter-spacing: .005em; }
+    .logo-text small { display: block; font-family: var(--font-b); font-size: .58rem; letter-spacing: .32em; text-transform: uppercase; opacity: .7; margin-top: 4px; }
+    #nav.scrolled .logo-text { color: var(--green); }
+    #nav.scrolled .logo-mark { color: var(--terra); }
+
+    .nav-links { display: flex; gap: clamp(18px, 2.2vw, 34px); list-style: none; }
+    .nav-links a {
+      text-decoration: none; font-size: .76rem; font-weight: 500;
+      letter-spacing: .15em; text-transform: uppercase;
+      opacity: .85; position: relative; padding: 6px 0;
+      transition: opacity .2s;
+    }
+    .nav-links a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform .35s var(--ease); }
+    .nav-links a:hover, .nav-links a.active { opacity: 1; }
+    .nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); transform-origin: left; }
+    #nav.scrolled .nav-links a.active { color: var(--terra); }
+
+    .nav-right { display: flex; align-items: center; gap: 18px; }
+    .nav-status { display: flex; align-items: center; gap: 9px; font-size: .74rem; letter-spacing: .04em; opacity: .9; white-space: nowrap; }
+    .nav-cta { padding: 11px 22px; font-size: .72rem; }
+    #nav:not(.scrolled) .nav-cta { background: var(--ivory); color: var(--green); }
+    #nav:not(.scrolled) .nav-cta:hover { background: #fff; }
+
+    .burger { display: none; width: 44px; height: 44px; border: none; background: none; cursor: pointer; position: relative; z-index: 2; }
+    .burger span { position: absolute; left: 11px; right: 11px; height: 1.5px; background: currentColor; transition: transform .35s var(--ease), opacity .2s, top .35s var(--ease); }
+    .burger span:nth-child(1) { top: 16px; } .burger span:nth-child(2) { top: 22px; } .burger span:nth-child(3) { top: 28px; }
+    body.menu-open .burger span:nth-child(1) { top: 22px; transform: rotate(45deg); }
+    body.menu-open .burger span:nth-child(2) { opacity: 0; }
+    body.menu-open .burger span:nth-child(3) { top: 22px; transform: rotate(-45deg); }
+    body.menu-open #nav { color: var(--ivory); background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    body.menu-open #nav .logo-text, body.menu-open #nav .logo-mark { color: var(--ivory); }
+
+    #mobile-menu {
+      position: fixed; inset: 0; z-index: 250;
+      background: var(--green-d);
+      color: var(--ivory);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 100px 28px 40px;
+      clip-path: circle(0 at calc(100% - 42px) 38px);
+      transition: clip-path .6s var(--ease);
+      visibility: hidden;
+    }
+    body.menu-open #mobile-menu { clip-path: circle(150% at calc(100% - 42px) 38px); visibility: visible; }
+    #mobile-menu ul { list-style: none; }
+    #mobile-menu li { overflow: hidden; border-bottom: 1px solid rgba(247,241,232,.1); }
+    #mobile-menu li a { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 0; font-family: var(--font-d); font-size: 2rem; text-decoration: none; transform: translateY(100%); transition: transform .6s var(--ease); }
+    #mobile-menu li a span { font-family: var(--font-b); font-size: .7rem; letter-spacing: .2em; opacity: .45; }
+    body.menu-open #mobile-menu li a { transform: none; }
+    #mobile-menu li:nth-child(2) a { transition-delay: .05s; } #mobile-menu li:nth-child(3) a { transition-delay: .1s; }
+    #mobile-menu li:nth-child(4) a { transition-delay: .15s; } #mobile-menu li:nth-child(5) a { transition-delay: .2s; }
+    #mobile-menu li:nth-child(6) a { transition-delay: .25s; }
+    .mm-foot { margin-top: 36px; display: grid; gap: 14px; }
+    .mm-foot .btn { width: 100%; }
+    .mm-status { display: flex; align-items: center; gap: 10px; font-size: .85rem; opacity: .75; margin-top: 8px; }
+
+    /* =====================================================
+       HERO
+    ===================================================== */
+    #hero {
+      min-height: 100svh;
+      padding: 0;
+      display: flex; flex-direction: column;
+      color: var(--ivory);
+      overflow: hidden;
+      background: var(--green-d);
+    }
+    .hero-bg { position: absolute; inset: -8% 0 0 0; will-change: transform; }
+    .hero-bg img { width: 100%; height: 100%; object-fit: cover; animation: kenburns 22s ease-out forwards; }
+    @keyframes kenburns { from { transform: scale(1.12); } to { transform: scale(1.02); } }
+    .hero-bg::after {
+      content: ''; position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg, rgba(20,33,26,.55) 0%, rgba(20,33,26,.15) 32%, rgba(20,33,26,.25) 60%, rgba(20,33,26,.85) 100%),
+        linear-gradient(90deg, rgba(20,33,26,.45) 0%, transparent 60%);
+    }
+
+    .hero-inner {
+      position: relative; z-index: 2;
+      flex: 1;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: calc(var(--nav-h) + 40px) var(--pad-x) 0;
+      max-width: 1344px; width: 100%; margin: 0 auto;
+    }
+    .hero-kicker {
+      display: inline-flex; align-items: center; gap: 12px;
+      font-size: .74rem; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 26px;
+    }
+    .hero-kicker::before { content: ''; width: 40px; height: 1px; background: currentColor; }
+    .hero-h1 {
+      font-family: var(--font-d); font-weight: 400;
+      font-size: clamp(3rem, min(7vw, 11vh), 6.8rem);
+      line-height: .98; letter-spacing: -.025em;
+    }
+    .hero-h1 em { font-style: italic; color: var(--gold); }
+    .hero-h1 .line { display: block; overflow: hidden; padding-bottom: .06em; }
+    .hero-h1 .line > span { display: block; transform: translateY(105%); animation: rise 1.2s var(--ease) forwards; }
+    .hero-h1 .line:nth-child(2) > span { animation-delay: .12s; }
+    @keyframes rise { to { transform: none; } }
+    .hero-sub { margin-top: 28px; max-width: 470px; font-size: 1.08rem; font-weight: 300; line-height: 1.7; color: rgba(247,241,232,.85); opacity: 0; animation: fadein 1s .5s var(--ease) forwards; }
+    .hero-ctas { display: flex; gap: 14px; margin-top: 36px; flex-wrap: wrap; opacity: 0; animation: fadein 1s .7s var(--ease) forwards; }
+    @keyframes fadein { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+    .hero-bar {
+      position: relative; z-index: 2;
+      margin-top: clamp(40px, 7vh, 80px);
+      border-top: 1px solid rgba(247,241,232,.18);
+      background: rgba(20,33,26,.35);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+    .hero-bar-inner {
+      max-width: 1344px; margin: 0 auto; padding: 0 var(--pad-x);
+      display: grid; grid-template-columns: repeat(4, 1fr);
+    }
+    .hb-item { padding: 22px 0 22px 24px; border-left: 1px solid rgba(247,241,232,.14); display: flex; flex-direction: column; gap: 4px; }
+    .hb-item:first-child { border-left: none; padding-left: 0; }
+    .hb-label { font-size: .64rem; letter-spacing: .24em; text-transform: uppercase; color: rgba(247,241,232,.55); }
+    .hb-value { font-size: .95rem; display: flex; align-items: center; gap: 9px; }
+    .hb-value a { text-decoration: none; }
+    .hb-value a:hover { color: var(--gold); }
+
+    /* =====================================================
+       MARQUEE
+    ===================================================== */
+    .marquee { background: var(--green); color: var(--ivory); padding: 18px 0; overflow: hidden; white-space: nowrap; }
+    .marquee-track { display: inline-flex; animation: marquee 38s linear infinite; }
+    .marquee-track span { font-family: var(--font-d); font-size: 1.35rem; padding: 0 28px; display: inline-flex; align-items: center; gap: 56px; }
+    .marquee-track span::after { content: '✦'; font-size: .7rem; color: var(--gold); }
+    .marquee-track span:nth-child(even) { font-style: italic; color: var(--gold); }
+    @keyframes marquee { to { transform: translateX(-50%); } }
+
+    /* =====================================================
+       ABOUT
+    ===================================================== */
+    #about { background: var(--ivory); }
+    .about-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(48px, 8vw, 120px); align-items: center; }
+    .about-visual { position: relative; padding: 0 0 70px 0; }
+    .about-visual .img-a { width: 82%; aspect-ratio: 4/5; object-fit: cover; border-radius: var(--r-l); box-shadow: var(--shadow-m); }
+    .about-visual .img-b {
+      position: absolute; right: 0; bottom: 0; width: 48%; aspect-ratio: 1; object-fit: cover;
+      border-radius: var(--r-l); border: 8px solid var(--ivory); box-shadow: var(--shadow-m);
+    }
+    .about-seal {
+      position: absolute; top: 28px; right: 6%;
+      width: 124px; height: 124px; border-radius: 50%;
+      background: var(--terra); color: #fff;
+      display: grid; place-items: center; text-align: center;
+      box-shadow: 0 14px 30px rgba(181,97,58,.35);
+    }
+    .about-seal svg { position: absolute; inset: 0; animation: spin 24s linear infinite; }
+    .about-seal b { font-family: var(--font-d); font-weight: 400; font-size: 2.1rem; line-height: 1; font-style: italic; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .about-copy p + p { margin-top: 16px; }
+    .about-copy .h2 { margin-bottom: 26px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 44px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .stat { padding: 24px 0 22px; }
+    .stat + .stat { padding-left: 24px; border-left: 1px solid var(--line); }
+    .stat-n { font-family: var(--font-d); font-size: clamp(2.2rem, 3.5vw, 2.9rem); line-height: 1; color: var(--green); }
+    .stat-n sup { font-size: .45em; color: var(--terra); margin-left: 2px; }
+    .stat-l { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-soft); margin-top: 8px; }
+    .about-btns { display: flex; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+
+    /* =====================================================
+       TAGESZEITEN
+    ===================================================== */
+    #zeiten { background: var(--ivory-d); }
+    .times { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .time-card {
+      position: relative; border-radius: var(--r-l); overflow: hidden;
+      aspect-ratio: 3/4; color: var(--ivory);
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 30px; isolation: isolate;
+      box-shadow: var(--shadow-s);
+      transition: transform .6s var(--ease), box-shadow .6s var(--ease);
+    }
+    .time-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; transition: transform 1.2s var(--ease); }
+    .time-card::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(20,33,26,0) 30%, rgba(20,33,26,.88) 100%); }
+    .time-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-l); }
+    .time-card:hover img { transform: scale(1.06); }
+    .tc-time { position: absolute; top: 24px; left: 24px; padding: 7px 14px; border-radius: 100px; background: rgba(247,241,232,.16); border: 1px solid rgba(247,241,232,.3); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font-size: .74rem; letter-spacing: .08em; }
+    .tc-num { font-family: var(--font-d); font-style: italic; color: var(--gold); font-size: 1rem; margin-bottom: 6px; }
+    .time-card h3 { font-family: var(--font-d); font-weight: 400; font-size: 2rem; line-height: 1.1; margin-bottom: 10px; }
+    .time-card p { font-size: .92rem; color: rgba(247,241,232,.82); font-weight: 300; line-height: 1.6; }
+    .time-card .now-pill { display: none; position: absolute; top: 24px; right: 24px; padding: 7px 12px; border-radius: 100px; background: var(--terra); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 500; }
+    .time-card.is-now .now-pill { display: block; }
+
+    /* =====================================================
+       MENU
+    ===================================================== */
+    #menu { background: var(--ivory); }
+    .menu-tools { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tab {
+      border: 1.5px solid var(--ivory-dd); background: transparent;
+      padding: 10px 20px; border-radius: 100px;
+      font-size: .78rem; font-weight: 500; letter-spacing: .06em;
+      color: var(--text-mid); cursor: pointer;
+      transition: all .25s var(--ease);
+    }
+    .tab:hover { border-color: var(--green-l); color: var(--green); }
+    .tab[aria-selected="true"] { background: var(--green); border-color: var(--green); color: var(--ivory); }
+    .tab .cnt { opacity: .55; margin-left: 6px; font-weight: 400; }
+
+    .search { position: relative; width: min(320px, 100%); }
+    .search input {
+      width: 100%; padding: 12px 42px 12px 44px;
+      border: 1.5px solid var(--ivory-dd); border-radius: 100px;
+      background: var(--ivory-l); font-size: .92rem; outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .search input:focus { border-color: var(--green-l); box-shadow: 0 0 0 4px rgba(43,69,53,.08); }
+    .search input::placeholder { color: var(--text-soft); }
+    .search .s-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--text-soft); pointer-events: none; }
+    .search .s-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border: none; border-radius: 50%; background: var(--ivory-d); cursor: pointer; display: none; place-items: center; color: var(--text-mid); }
+    .search.has-value .s-clear { display: grid; }
+
+    .menu-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: .78rem; color: var(--text-soft); margin-bottom: 26px; }
+    .menu-legend span { display: inline-flex; align-items: center; gap: 7px; }
+
+    .tag { display: inline-flex; align-items: center; justify-content: center; height: 20px; padding: 0 7px; border-radius: 100px; font-size: .62rem; font-weight: 600; letter-spacing: .06em; vertical-align: middle; }
+    .tag-v { background: rgba(91,133,105,.15); color: var(--green-m); }
+    .tag-vg { background: rgba(91,133,105,.28); color: var(--green-d); }
+    .tag-star { background: rgba(181,97,58,.12); color: var(--terra-d); }
+
+    .menu-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: clamp(40px, 6vw, 90px); min-height: 200px; }
+    .dish { padding: 22px 0; border-bottom: 1px dashed var(--ivory-dd); animation: dishIn .5s var(--ease) both; }
+    @keyframes dishIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .dish-top { display: flex; align-items: baseline; gap: 12px; }
+    .dish-name { font-family: var(--font-d); font-size: 1.22rem; color: var(--green); line-height: 1.25; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .dish-dots { flex: 1; border-bottom: 1.5px dotted var(--ivory-dd); transform: translateY(-5px); min-width: 20px; }
+    .dish-price { font-family: var(--font-d); font-size: 1.15rem; color: var(--terra); white-space: nowrap; }
+    .dish-desc { font-size: .88rem; color: var(--text-soft); margin-top: 5px; max-width: 46ch; }
+    .dish-cat { font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--green-l); margin-bottom: 4px; }
+    .dish mark { background: rgba(233,207,156,.6); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+    .menu-empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-soft); }
+    .menu-empty b { display: block; font-family: var(--font-d); font-weight: 400; font-size: 1.6rem; color: var(--green); margin-bottom: 6px; }
+
+    .menu-foot { margin-top: 44px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; padding: 26px 30px; border-radius: var(--r-m); background: var(--ivory-d); }
+    .menu-foot p { font-size: .9rem; color: var(--text-mid); }
+    .menu-foot p b { font-weight: 500; color: var(--green); }
+
+    /* =====================================================
+       EVENTS
+    ===================================================== */
+    #events { background: var(--green); color: var(--ivory); overflow: hidden; }
+    #events .h2 { color: var(--ivory); }
+    #events .h2 em { color: var(--gold); }
+    #events .eyebrow { color: var(--gold); }
+    #events .lead { color: rgba(247,241,232,.72); }
+
+    .rooms { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .room {
+      background: rgba(247,241,232,.05);
+      border: 1px solid rgba(247,241,232,.12);
+      border-radius: var(--r-l); overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: transform .5s var(--ease), background .3s, border-color .3s;
+    }
+    .room:hover { transform: translateY(-6px); background: rgba(247,241,232,.09); border-color: rgba(233,207,156,.4); }
+    .room-img { aspect-ratio: 4/3; overflow: hidden; position: relative; }
+    .room-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease); }
+    .room:hover .room-img img { transform: scale(1.07); }
+    .room-cap { position: absolute; left: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 100px; background: rgba(20,33,26,.7); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-size: .74rem; }
+    .room-cap svg { width: 14px; height: 14px; color: var(--gold); }
+    .room-body { padding: 24px 24px 26px; display: flex; flex-direction: column; flex: 1; }
+    .room-body h3 { font-family: var(--font-d); font-weight: 400; font-size: 1.55rem; margin-bottom: 8px; }
+    .room-body p { font-size: .88rem; color: rgba(247,241,232,.68); font-weight: 300; line-height: 1.65; flex: 1; }
+    .room-feat { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 20px; }
+    .room-feat span { font-size: .68rem; letter-spacing: .06em; padding: 4px 10px; border-radius: 100px; border: 1px solid rgba(247,241,232,.18); color: rgba(247,241,232,.75); }
+    .room-link { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; color: var(--gold); font-size: .75rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; padding: 0; align-self: flex-start; }
+    .room-link svg { width: 15px; height: 15px; transition: transform .25s var(--ease); }
+    .room-link:hover svg { transform: translateX(4px); }
+
+    .event-types { margin-top: 56px; padding-top: 40px; border-top: 1px solid rgba(247,241,232,.12); display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; }
+    .et { display: flex; gap: 16px; align-items: flex-start; }
+    .et-ico { width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%; border: 1px solid rgba(233,207,156,.35); display: grid; place-items: center; color: var(--gold); }
+    .et-ico svg { width: 20px; height: 20px; }
+    .et h4 { font-family: var(--font-d); font-weight: 400; font-size: 1.15rem; margin-bottom: 2px; }
+    .et p { font-size: .82rem; color: rgba(247,241,232,.6); line-height: 1.55; }
+
+    /* =====================================================
+       GALLERY
+    ===================================================== */
+    #galerie { background: var(--ivory); }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, clamp(150px, 16vw, 230px));
+      gap: 14px;
+    }
+    .g-item { position: relative; border: none; padding: 0; cursor: zoom-in; border-radius: var(--r-m); overflow: hidden; background: var(--ivory-d); }
+    .g-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease), filter .4s; }
+    .g-item::after { content: attr(data-caption); position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 18px 14px; text-align: left; color: var(--ivory); font-size: .82rem; letter-spacing: .04em; background: linear-gradient(transparent, rgba(20,33,26,.75)); opacity: 0; transform: translateY(8px); transition: opacity .35s, transform .35s var(--ease); }
+    .g-item:hover img { transform: scale(1.06); }
+    .g-item:hover::after, .g-item:focus-visible::after { opacity: 1; transform: none; }
+    .g-1 { grid-column: span 2; grid-row: span 2; }
+    .g-4 { grid-row: span 2; }
+    .g-6 { grid-column: span 2; }
+
+    #lightbox {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(16,24,19,.94);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transition: opacity .35s, visibility .35s;
+    }
+    #lightbox.open { opacity: 1; visibility: visible; }
+    #lightbox figure { max-width: min(1200px, 88vw); max-height: 84vh; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    #lightbox img { max-width: 100%; max-height: 76vh; object-fit: contain; border-radius: var(--r-s); box-shadow: 0 30px 80px rgba(0,0,0,.5); transform: scale(.96); transition: transform .4s var(--ease), opacity .25s; }
+    #lightbox.open img { transform: none; }
+    #lightbox figcaption { color: rgba(247,241,232,.8); font-size: .9rem; display: flex; gap: 18px; align-items: center; }
+    #lightbox figcaption span { opacity: .5; font-size: .78rem; letter-spacing: .1em; }
+    .lb-btn { position: absolute; width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(247,241,232,.25); background: rgba(247,241,232,.06); color: var(--ivory); cursor: pointer; display: grid; place-items: center; transition: background .2s, border-color .2s; }
+    .lb-btn:hover { background: rgba(247,241,232,.16); border-color: rgba(247,241,232,.5); }
+    .lb-btn svg { width: 20px; height: 20px; }
+    .lb-close { top: 22px; right: 22px; }
+    .lb-prev { left: 22px; top: 50%; transform: translateY(-50%); }
+    .lb-next { right: 22px; top: 50%; transform: translateY(-50%); }
+
+    /* =====================================================
+       TESTIMONIALS
+    ===================================================== */
+    #stimmen { background: var(--ivory-d); overflow: hidden; }
+    .rating-sum { display: flex; align-items: center; gap: 18px; margin-top: 22px; }
+    .rating-big { font-family: var(--font-d); font-size: 3rem; line-height: 1; color: var(--green); }
+    .stars { color: var(--terra); letter-spacing: 3px; font-size: .95rem; }
+    .rating-sum small { display: block; font-size: .78rem; color: var(--text-soft); margin-top: 2px; }
+
+    .t-columns {
+      display: flex; gap: 20px; justify-content: center;
+      height: 620px; overflow: hidden;
+      mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+    }
+    .t-col { width: 340px; flex-shrink: 0; }
+    .t-col-inner { display: flex; flex-direction: column; gap: 18px; animation: scrollUp var(--dur, 30s) linear infinite; }
+    .t-columns:hover .t-col-inner { animation-play-state: paused; }
+    @keyframes scrollUp { to { transform: translateY(calc(-50% - 9px)); } }
+    .t-card { background: var(--ivory-l); border: 1px solid var(--line); border-radius: var(--r-l); padding: 26px 28px; box-shadow: var(--shadow-s); }
+    .t-card .stars { font-size: .78rem; margin-bottom: 14px; }
+    .t-text { font-size: .95rem; line-height: 1.7; color: var(--text-mid); margin-bottom: 20px; font-weight: 300; }
+    .t-author { display: flex; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .t-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-d); font-size: 1rem; color: var(--ivory); flex-shrink: 0; }
+    .t-name { font-size: .9rem; font-weight: 500; color: var(--green); }
+    .t-role { font-size: .74rem; color: var(--text-soft); }
+
+    /* =====================================================
+       RESERVATION
+    ===================================================== */
+    #reservieren { background: var(--ivory); }
+    .res-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(32px, 4vw, 56px); align-items: start; }
+    .res-card { background: var(--ivory-l); border: 1px solid var(--line); border-radius: var(--r-l); padding: clamp(26px, 4vw, 48px); box-shadow: var(--shadow-m); position: relative; overflow: hidden; }
+    .res-card h3 { font-family: var(--font-d); font-weight: 400; font-size: 1.9rem; color: var(--green); margin-bottom: 6px; }
+    .res-card > p { font-size: .9rem; color: var(--text-soft); margin-bottom: 30px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 18px; }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label, .field .flabel { font-size: .7rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--text-mid); }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 13px 16px;
+      border: 1.5px solid var(--ivory-dd); border-radius: var(--r-m);
+      background: #fff; font-size: .95rem; outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      appearance: none; -webkit-appearance: none;
+    }
+    .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2354473a' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px; cursor: pointer; }
+    .field textarea { resize: vertical; min-height: 90px; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--green-l); box-shadow: 0 0 0 4px rgba(43,69,53,.08); }
+    .field.invalid input, .field.invalid select { border-color: #c0532f; box-shadow: 0 0 0 4px rgba(192,83,47,.1); }
+    .field .err { font-size: .76rem; color: #b0482a; display: none; }
+    .field.invalid .err { display: block; }
+
+    .stepper { display: flex; align-items: center; border: 1.5px solid var(--ivory-dd); border-radius: var(--r-m); background: #fff; overflow: hidden; }
+    .stepper button { width: 48px; height: 48px; border: none; background: none; cursor: pointer; font-size: 1.3rem; color: var(--green); transition: background .2s; }
+    .stepper button:hover { background: var(--ivory-d); }
+    .stepper button:disabled { opacity: .3; cursor: default; background: none; }
+    .stepper output { flex: 1; text-align: center; font-size: 1rem; font-weight: 500; }
+
+    .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 5px; border-radius: var(--r-m); background: var(--ivory-d); }
+    .seg label { position: relative; text-transform: none; letter-spacing: 0; font-size: .86rem; font-weight: 400; }
+    .seg input { position: absolute; opacity: 0; pointer-events: none; }
+    .seg span { display: block; text-align: center; padding: 10px 8px; border-radius: 7px; cursor: pointer; color: var(--text-mid); transition: background .2s, color .2s, box-shadow .2s; }
+    .seg input:checked + span { background: #fff; color: var(--green); font-weight: 500; box-shadow: var(--shadow-s); }
+    .seg input:focus-visible + span { outline: 2px solid var(--terra); outline-offset: 1px; }
+
+    .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+    .slot { position: relative; }
+    .slot input { position: absolute; opacity: 0; pointer-events: none; }
+    .slot span { display: block; text-align: center; padding: 9px 4px; border: 1.5px solid var(--ivory-dd); border-radius: 8px; background: #fff; font-size: .86rem; cursor: pointer; transition: all .2s; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--text); }
+    .slot span:hover { border-color: var(--green-l); }
+    .slot input:checked + span { background: var(--green); border-color: var(--green); color: var(--ivory); }
+    .slot input:focus-visible + span { outline: 2px solid var(--terra); outline-offset: 2px; }
+    .slots-empty { font-size: .86rem; color: var(--text-soft); padding: 12px 0; }
+
+    .form-foot { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-top: 28px; flex-wrap: wrap; }
+    .form-foot small { font-size: .76rem; color: var(--text-soft); max-width: 300px; line-height: 1.5; }
+
+    .res-success { display: none; text-align: center; padding: 20px 0; }
+    .res-card.done form, .res-card.done > h3, .res-card.done > p { display: none; }
+    .res-card.done .res-success { display: block; animation: fadein .6s var(--ease); }
+    .check { width: 74px; height: 74px; margin: 0 auto 22px; border-radius: 50%; background: rgba(91,133,105,.15); display: grid; place-items: center; color: var(--green); }
+    .check svg { width: 34px; height: 34px; stroke-dasharray: 30; stroke-dashoffset: 30; animation: draw .6s .25s var(--ease) forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    .res-success h3 { margin-bottom: 8px; }
+    .res-success > p { color: var(--text-soft); font-size: .92rem; margin-bottom: 24px; }
+    .summary { text-align: left; border: 1px solid var(--line); border-radius: var(--r-m); background: #fff; margin: 0 auto 26px; max-width: 420px; }
+    .summary div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 18px; font-size: .9rem; }
+    .summary div + div { border-top: 1px solid var(--line); }
+    .summary dt { color: var(--text-soft); }
+    .summary dd { color: var(--text); font-weight: 500; text-align: right; }
+
+    .res-side { display: grid; gap: 18px; }
+    .info-card { border-radius: var(--r-l); padding: 30px; }
+    .info-card.green { background: var(--green); color: var(--ivory); }
+    .info-card.light { background: var(--ivory-d); }
+    .info-card h4 { font-family: var(--font-d); font-weight: 400; font-size: 1.45rem; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .live { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-b); font-size: .72rem; letter-spacing: .06em; padding: 6px 12px; border-radius: 100px; background: rgba(247,241,232,.1); border: 1px solid rgba(247,241,232,.18); white-space: nowrap; }
+    .hours { list-style: none; }
+    .hours li { display: flex; justify-content: space-between; padding: 10px 12px; margin: 0 -12px; border-radius: 8px; font-size: .92rem; }
+    .hours li span:first-child { color: rgba(247,241,232,.65); }
+    .hours li.today { background: rgba(247,241,232,.1); }
+    .hours li.today span { color: var(--ivory); font-weight: 500; }
+    .hours li.today span:first-child::after { content: ' · Heute'; color: var(--gold); font-weight: 400; }
+    .brunch-note { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(247,241,232,.14); font-size: .84rem; color: rgba(247,241,232,.72); line-height: 1.6; }
+    .brunch-note b { color: var(--gold); font-weight: 500; }
+
+    .contact-row { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; text-decoration: none; }
+    .contact-row + .contact-row { border-top: 1px solid var(--line); }
+    .contact-row svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 3px; color: var(--terra); }
+    .contact-row b { display: block; font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--text-soft); font-weight: 500; }
+    .contact-row span { font-size: .95rem; color: var(--text); }
+    a.contact-row:hover span { color: var(--terra); }
+
+    .map-card { position: relative; border-radius: var(--r-l); overflow: hidden; height: 210px; background: #dfe6d8; }
+    .map-card svg.map { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .map-pin { position: absolute; left: 58%; top: 46%; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; }
+    .map-pin .lbl { background: var(--green); color: var(--ivory); padding: 6px 12px; border-radius: 100px; font-size: .74rem; white-space: nowrap; box-shadow: var(--shadow-m); }
+    .map-pin .tip { width: 2px; height: 14px; background: var(--green); }
+    .map-pin .base { width: 12px; height: 12px; border-radius: 50%; background: var(--terra); border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(181,97,58,.22); }
+    .map-card .btn { position: absolute; right: 14px; bottom: 14px; padding: 10px 18px; font-size: .68rem; }
+
+    /* =====================================================
+       FAQ
+    ===================================================== */
+    #faq { background: var(--ivory-d); }
+    .faq-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(40px, 7vw, 110px); align-items: start; }
+    .faq-grid .lead { margin-top: 22px; }
+    .faq-grid .btn { margin-top: 30px; }
+    .acc { border-top: 1px solid var(--ivory-dd); }
+    .acc-item { border-bottom: 1px solid var(--ivory-dd); }
+    .acc-trigger {
+      width: 100%; background: none; border: none; cursor: pointer; text-align: left;
+      display: flex; justify-content: space-between; align-items: center; gap: 24px;
+      padding: 24px 0; font-family: var(--font-d); font-size: 1.25rem; color: var(--green);
+      transition: color .2s;
+    }
+    .acc-trigger:hover { color: var(--terra); }
+    .acc-icon { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--ivory-dd); flex-shrink: 0; position: relative; transition: background .3s, border-color .3s, transform .4s var(--ease); }
+    .acc-icon::before, .acc-icon::after { content: ''; position: absolute; left: 50%; top: 50%; width: 12px; height: 1.5px; background: currentColor; transform: translate(-50%,-50%); transition: transform .4s var(--ease); }
+    .acc-icon::after { transform: translate(-50%,-50%) rotate(90deg); }
+    .acc-item.open .acc-icon { background: var(--green); border-color: var(--green); color: var(--ivory); transform: rotate(180deg); }
+    .acc-item.open .acc-icon::after { transform: translate(-50%,-50%) rotate(0); }
+    .acc-panel { height: 0; overflow: hidden; transition: height .4s var(--ease); }
+    .acc-panel p { padding: 0 60px 26px 0; color: var(--text-mid); font-size: .97rem; line-height: 1.8; font-weight: 300; }
+
+    /* =====================================================
+       FOOTER
+    ===================================================== */
+    footer { background: var(--green-d); color: var(--ivory); padding: clamp(64px, 8vw, 100px) var(--pad-x) 30px; }
+    .f-cta { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-end; gap: 30px; flex-wrap: wrap; padding-bottom: clamp(48px, 6vw, 72px); border-bottom: 1px solid rgba(247,241,232,.1); }
+    .f-cta h2 { font-family: var(--font-d); font-weight: 400; font-size: clamp(2.2rem, 5vw, 4.2rem); line-height: 1.02; letter-spacing: -.02em; max-width: 14ch; }
+    .f-cta h2 em { color: var(--gold); }
+    .f-grid { max-width: 1200px; margin: 0 auto; padding: 56px 0; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1.3fr; gap: 40px; }
+    .f-grid .logo { color: var(--ivory); margin-bottom: 18px; }
+    .f-grid .logo-mark { color: var(--gold); }
+    .f-desc { color: rgba(247,241,232,.55); font-size: .9rem; line-height: 1.75; max-width: 320px; font-weight: 300; }
+    .f-socials { display: flex; gap: 10px; margin-top: 24px; }
+    .f-socials a { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(247,241,232,.18); display: grid; place-items: center; color: rgba(247,241,232,.7); transition: all .25s; }
+    .f-socials a:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+    .f-socials svg { width: 15px; height: 15px; }
+    .f-head { font-size: .66rem; letter-spacing: .24em; text-transform: uppercase; color: rgba(247,241,232,.4); margin-bottom: 20px; }
+    .f-links { list-style: none; display: grid; gap: 11px; }
+    .f-links a { text-decoration: none; color: rgba(247,241,232,.72); font-size: .92rem; transition: color .2s; }
+    .f-links a:hover { color: var(--gold); }
+    .f-contact { font-size: .92rem; color: rgba(247,241,232,.72); line-height: 1.75; font-style: normal; }
+    .f-contact a { text-decoration: none; } .f-contact a:hover { color: var(--gold); }
+    .f-contact .ubahn { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-size: .8rem; color: var(--gold); }
+    .ubahn i { font-style: normal; font-weight: 600; font-size: .66rem; background: #2b62b8; color: #fff; padding: 2px 6px; border-radius: 3px; }
+    .f-bottom { max-width: 1200px; margin: 0 auto; padding-top: 26px; border-top: 1px solid rgba(247,241,232,.1); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: .8rem; color: rgba(247,241,232,.4); }
+    .to-top { background: none; border: none; color: inherit; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; font-size: .8rem; }
+    .to-top:hover { color: var(--gold); }
+
+    /* Mobile sticky booking bar */
+    .m-bar { display: none; }
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+    @media (max-width: 1180px) {
+      .nav-status { display: none; }
+      .rooms { grid-template-columns: repeat(2, 1fr); }
+      .event-types { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 980px) {
+      .nav-links, .nav-cta { display: none; }
+      .burger { display: block; }
+      .about-grid, .res-grid, .faq-grid { grid-template-columns: 1fr; }
+      .about-visual { max-width: 560px; }
+      .times { grid-template-columns: 1fr; }
+      .time-card { aspect-ratio: 16/10; }
+      .menu-list { grid-template-columns: 1fr; }
+      .hero-bar-inner { grid-template-columns: repeat(2, 1fr); }
+      .hb-item:nth-child(3) { border-left: none; padding-left: 0; }
+      .hb-item:nth-child(n+3) { border-top: 1px solid rgba(247,241,232,.14); }
+      .f-grid { grid-template-columns: 1fr 1fr; }
+      .gallery { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; grid-auto-rows: 180px; }
+      .g-1 { grid-column: span 2; grid-row: span 2; }
+      .g-4 { grid-row: span 1; }
+      .g-6 { grid-column: span 2; }
+    }
+    @media (max-width: 640px) {
+      body { padding-bottom: 72px; }
+      .hero-h1 { font-size: clamp(2.8rem, 13vw, 4rem); }
+      .hero-ctas .btn { flex: 1; }
+      .hb-item { padding: 16px 0 16px 16px; }
+      .hb-value { font-size: .86rem; }
+      .rooms, .event-types { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr 1fr 1fr; }
+      .stat + .stat { padding-left: 14px; }
+      .about-seal { width: 96px; height: 96px; top: 14px; right: 2%; }
+      .about-seal b { font-size: 1.6rem; }
+      .form-grid { grid-template-columns: 1fr; }
+      .t-columns { height: 520px; }
+      .t-col { width: 100%; max-width: 360px; }
+      .acc-trigger { font-size: 1.1rem; }
+      .acc-panel p { padding-right: 0; }
+      .f-grid { grid-template-columns: 1fr; gap: 34px; }
+      .lb-prev, .lb-next { top: auto; bottom: 22px; transform: none; }
+      .lb-prev { left: calc(50% - 62px); } .lb-next { right: calc(50% - 62px); }
+      .gallery { grid-auto-rows: 140px; gap: 10px; }
+      .menu-tools { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+      .menu-tools > * { min-width: 0; }
+      .hero-kicker { letter-spacing: .18em; font-size: .66rem; }
+      .hero-kicker::before { width: 24px; }
+      .search { width: 100%; }
+      .tabs { flex-wrap: nowrap; overflow-x: auto; margin: 0 calc(var(--pad-x) * -1); padding: 2px var(--pad-x); scrollbar-width: none; }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab { flex-shrink: 0; }
+      .m-bar {
+        display: grid; grid-template-columns: auto 1fr; gap: 10px;
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+        background: rgba(247,241,232,.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border-top: 1px solid var(--line);
+        transform: translateY(110%); transition: transform .4s var(--ease);
+      }
+      .m-bar.show { transform: none; }
+      .m-bar .btn { padding: 13px 18px; }
+      .m-bar .btn-outline { width: 48px; padding: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<nav id="nav" aria-label="Hauptnavigation">
+  <a href="#top" class="logo" aria-label="Café Reitschule – zum Seitenanfang">
+    <span class="logo-mark">R</span>
+    <span class="logo-text">Café Reitschule<small>München · Schwabing</small></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">Über uns</a></li>
+    <li><a href="#menu">Speisekarte</a></li>
+    <li><a href="#events">Events</a></li>
+    <li><a href="#galerie">Galerie</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="nav-status"><span class="dot js-dot"></span><span class="js-status-short">…</span></div>
+    <a href="#reservieren" class="btn btn-primary nav-cta">Tisch reservieren</a>
+    <button class="burger" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div id="mobile-menu" aria-hidden="true">
+  <ul>
+    <li><a href="#about">Über uns <span>01</span></a></li>
+    <li><a href="#menu">Speisekarte <span>02</span></a></li>
+    <li><a href="#events">Events &amp; Räume <span>03</span></a></li>
+    <li><a href="#galerie">Galerie <span>04</span></a></li>
+    <li><a href="#reservieren">Reservieren <span>05</span></a></li>
+    <li><a href="#faq">FAQ <span>06</span></a></li>
+  </ul>
+  <div class="mm-foot">
+    <a href="tel:+498938887600" class="btn btn-glass">+49 89 38 88 76 0</a>
+    <div class="mm-status"><span class="dot js-dot"></span><span class="js-status-long">…</span></div>
+  </div>
+</div>
+
+<!-- ================= HERO ================= -->
+<header id="hero">
+  <span id="top"></span>
+  <div class="hero-bg" id="heroBg">
+    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=2000&q=80" alt="" fetchpriority="high">
+  </div>
+
+  <div class="hero-inner">
+    <div class="hero-kicker">Restaurant &amp; Café · seit Generationen</div>
+    <h1 class="hero-h1">
+      <span class="line"><span>Der richtige Ort,</span></span>
+      <span class="line"><span><em>zu fast jeder Zeit.</em></span></span>
+    </h1>
+    <p class="hero-sub">Zwischen Englischem Garten und Leopoldstraße – vom ausgedehnten Frühstück über den Mittagstisch bis zum Abendessen auf unserer Terrasse.</p>
+    <div class="hero-ctas">
+      <a href="#reservieren" class="btn btn-terra">Tisch reservieren
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a href="#menu" class="btn btn-glass">Speisekarte ansehen</a>
+    </div>
+  </div>
+
+  <div class="hero-bar">
+    <div class="hero-bar-inner">
+      <div class="hb-item">
+        <span class="hb-label">Jetzt</span>
+        <span class="hb-value"><span class="dot js-dot"></span><span class="js-status-long">…</span></span>
+      </div>
+      <div class="hb-item">
+        <span class="hb-label">Heute geöffnet</span>
+        <span class="hb-value js-today-hours">…</span>
+      </div>
+      <div class="hb-item">
+        <span class="hb-label">Adresse</span>
+        <span class="hb-value"><a href="https://www.google.com/maps/search/?api=1&query=K%C3%B6niginstra%C3%9Fe+34+80802+M%C3%BCnchen" target="_blank" rel="noopener">Königinstraße 34, München</a></span>
+      </div>
+      <div class="hb-item">
+        <span class="hb-label">Telefon</span>
+        <span class="hb-value"><a href="tel:+498938887600">+49 89 38 88 76 0</a></span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track" id="marquee"></div>
+</div>
+
+<main>
+
+<!-- ================= ABOUT ================= -->
+<section id="about">
+  <div class="wrap about-grid">
+    <div class="about-visual reveal">
+      <img class="img-a" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80" alt="Gedeckter Tisch im Restaurant" loading="lazy">
+      <img class="img-b" src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=700&q=80" alt="Frisch gebrühter Kaffee" loading="lazy">
+      <div class="about-seal" aria-hidden="true">
+        <svg viewBox="0 0 124 124"><defs><path id="circ" d="M62,62 m-48,0 a48,48 0 1,1 96,0 a48,48 0 1,1 -96,0"/></defs><text fill="rgba(255,255,255,.85)" font-size="9.5" letter-spacing="3.2" font-family="Outfit, sans-serif"><textPath href="#circ">ENGLISCHER GARTEN · SCHWABING · </textPath></text></svg>
+        <b>R</b>
+      </div>
+    </div>
+
+    <div class="about-copy">
+      <div class="eyebrow reveal">Über uns</div>
+      <h2 class="h2 reveal d1">Zwischen Englischem Garten &amp; <em>Leopoldstraße</em></h2>
+      <p class="lead reveal d2">Das Café Reitschule liegt im Herzen von Schwabing. Auf über 2.000 m² – mit 180 Plätzen im Innenbereich und 270 auf unseren Terrassen – empfangen wir Nachbarn, Familien, Geschäftsleute und Gäste aus aller Welt.</p>
+      <p class="lead reveal d2">Ob ausgiebiges Wochenend-Frühstück, schneller Mittagstisch oder ein langer Abend mit Freunden: Bei uns finden Sie für jeden Anlass den passenden Platz.</p>
+
+      <div class="stats reveal d3">
+        <div class="stat"><div class="stat-n"><span data-count="2000">0</span><sup>m²</sup></div><div class="stat-l">Fläche</div></div>
+        <div class="stat"><div class="stat-n"><span data-count="450">0</span></div><div class="stat-l">Sitzplätze</div></div>
+        <div class="stat"><div class="stat-n"><span data-count="270">0</span></div><div class="stat-l">Terrassenplätze</div></div>
+      </div>
+
+      <div class="about-btns reveal d4">
+        <a href="#menu" class="btn btn-primary">Zur Speisekarte</a>
+        <a href="#events" class="btn btn-outline">Events &amp; Räume</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TAGESZEITEN ================= -->
+<section id="zeiten">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow reveal">Ein Tag im Café</div>
+        <h2 class="h2 reveal d1">Vom ersten Kaffee<br>bis zum <em>letzten Glas</em></h2>
+      </div>
+      <p class="lead reveal d2">Drei Tageszeiten, drei Stimmungen – und immer ein Platz für Sie.</p>
+    </div>
+
+    <div class="times">
+      <article class="time-card reveal" data-from="9" data-to="11.5">
+        <img src="https://images.unsplash.com/photo-1525351484163-7529414344d8?w=900&q=80" alt="" loading="lazy">
+        <span class="tc-time">Sa · So ab 09:00</span>
+        <span class="now-pill">Gerade jetzt</span>
+        <div class="tc-num">I.</div>
+        <h3>Frühstück &amp; Brunch</h3>
+        <p>Am Wochenende ausgiebig frühstücken – sonntags mit unserem großen Brunch-Buffet.</p>
+      </article>
+      <article class="time-card reveal d1" data-from="11.5" data-to="17">
+        <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=900&q=80" alt="" loading="lazy">
+        <span class="tc-time">täglich ab 11:30</span>
+        <span class="now-pill">Gerade jetzt</span>
+        <div class="tc-num">II.</div>
+        <h3>Mittagstisch</h3>
+        <p>Bayerische Klassiker und leichte Küche – ideal für die Mittagspause im Grünen.</p>
+      </article>
+      <article class="time-card reveal d2" data-from="17" data-to="23">
+        <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=80" alt="" loading="lazy">
+        <span class="tc-time">täglich ab 17:00</span>
+        <span class="now-pill">Gerade jetzt</span>
+        <div class="tc-num">III.</div>
+        <h3>Abendessen</h3>
+        <p>Feine Küche, gute Weine und laue Sommerabende auf der Terrasse.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MENU ================= -->
+<section id="menu">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow reveal">Speisekarte</div>
+        <h2 class="h2 reveal d1">Ehrliche Küche,<br><em>frisch</em> zubereitet</h2>
+      </div>
+      <p class="lead reveal d2">Regionale Zutaten, bayerische Klassiker und mediterrane Leichtigkeit – eine Auswahl aus unserer aktuellen Karte.</p>
+    </div>
+
+    <div class="menu-tools reveal">
+      <div class="tabs" role="tablist" aria-label="Kategorien" id="tabs"></div>
+      <div class="search" id="searchWrap">
+        <svg class="s-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4.2-4.2"/></svg>
+        <label for="search" class="sr-only">Speisekarte durchsuchen</label>
+        <input id="search" type="search" placeholder="Gericht suchen, z. B. „Schnitzel“" autocomplete="off">
+        <button class="s-clear" id="searchClear" aria-label="Suche leeren"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+    </div>
+
+    <div class="menu-legend">
+      <span><i class="tag tag-v">V</i> Vegetarisch</span>
+      <span><i class="tag tag-vg">VG</i> Vegan</span>
+      <span><i class="tag tag-star">★</i> Empfehlung des Hauses</span>
+    </div>
+
+    <div class="menu-list" id="menuList" role="tabpanel" aria-live="polite"></div>
+
+    <div class="menu-foot reveal">
+      <p><b>Allergene &amp; Zusatzstoffe:</b> Unser Service-Team informiert Sie gerne. Alle Preise in Euro inkl. MwSt.</p>
+      <a href="#reservieren" class="btn btn-primary">Tisch reservieren</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EVENTS ================= -->
+<section id="events">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow reveal">Events &amp; Räume</div>
+        <h2 class="h2 reveal d1">Feiern, tagen,<br><em>zusammenkommen</em></h2>
+      </div>
+      <p class="lead reveal d2">Von der Hochzeit bis zur Firmenfeier: Unsere Räume bieten den passenden Rahmen für 10 bis 450 Gäste – inklusive Catering und persönlicher Planung.</p>
+    </div>
+
+    <div class="rooms" id="rooms"></div>
+
+    <div class="event-types">
+      <div class="et reveal"><div class="et-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-4.35-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.65 12 21 12 21z"/></svg></div><div><h4>Hochzeiten</h4><p>Vom Sektempfang bis zum Mitternachtssnack.</p></div></div>
+      <div class="et reveal d1"><div class="et-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div><div><h4>Firmenevents</h4><p>Tagungen, Weihnachtsfeiern, Sommerfeste.</p></div></div>
+      <div class="et reveal d2"><div class="et-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg></div><div><h4>Private Feiern</h4><p>Geburtstage, Taufen, Jubiläen.</p></div></div>
+      <div class="et reveal d3"><div class="et-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 11h18M5 11V8a7 7 0 0 1 14 0v3M4 11l1 9h14l1-9"/></svg></div><div><h4>Catering</h4><p>Unsere Küche kommt auch zu Ihnen.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GALERIE ================= -->
+<section id="galerie">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow reveal">Galerie</div>
+        <h2 class="h2 reveal d1">Ein erster <em>Eindruck</em></h2>
+      </div>
+      <p class="lead reveal d2">Ein Blick auf Terrassen, Räume und Küche. Klicken Sie auf ein Bild für die Großansicht.</p>
+    </div>
+    <div class="gallery reveal" id="gallery"></div>
+  </div>
+</section>
+
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Bildergalerie" aria-hidden="true">
+  <button class="lb-btn lb-close" aria-label="Schließen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  <button class="lb-btn lb-prev" aria-label="Vorheriges Bild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <figure>
+    <img id="lbImg" alt="">
+    <figcaption><span id="lbCount"></span><b id="lbCap" style="font-weight:400"></b></figcaption>
+  </figure>
+  <button class="lb-btn lb-next" aria-label="Nächstes Bild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18l6-6-6-6"/></svg></button>
+</div>
+
+<!-- ================= STIMMEN ================= -->
+<section id="stimmen">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow reveal">Gästestimmen</div>
+        <h2 class="h2 reveal d1">Was unsere <em>Gäste</em> sagen</h2>
+        <div class="rating-sum reveal d2">
+          <div class="rating-big">4,6</div>
+          <div><div class="stars">★★★★★</div><small>Beispiel-Bewertungen (Demo)</small></div>
+        </div>
+      </div>
+      <p class="lead reveal d2">Ehrliche Worte von Stammgästen, Brautpaaren und Besuchern aus aller Welt.</p>
+    </div>
+  </div>
+  <div class="t-columns">
+    <div class="t-col" id="tcol1"><div class="t-col-inner" style="--dur:34s"></div></div>
+    <div class="t-col" id="tcol2"><div class="t-col-inner" style="--dur:42s"></div></div>
+    <div class="t-col" id="tcol3"><div class="t-col-inner" style="--dur:38s"></div></div>
+  </div>
+</section>
+
+<!-- ================= RESERVIERUNG ================= -->
+<section id="reservieren">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow reveal">Reservierung</div>
+        <h2 class="h2 reveal d1">Ihr Tisch <em>wartet</em></h2>
+      </div>
+      <p class="lead reveal d2">Reservieren Sie in weniger als einer Minute – für größere Gruppen und Events melden wir uns persönlich bei Ihnen.</p>
+    </div>
+
+    <div class="res-grid">
+      <div class="res-card reveal" id="resCard">
+        <h3>Tisch anfragen</h3>
+        <p>Pflichtfelder sind mit * markiert.</p>
+
+        <form id="resForm" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label for="fDate">Datum *</label>
+              <input type="date" id="fDate" required>
+              <span class="err">Bitte ein Datum ab heute wählen.</span>
+            </div>
+            <div class="field">
+              <span class="flabel" id="lblPeople">Personen *</span>
+              <div class="stepper" role="group" aria-labelledby="lblPeople">
+                <button type="button" id="pMinus" aria-label="Eine Person weniger">−</button>
+                <output id="pOut" aria-live="polite">2 Personen</output>
+                <button type="button" id="pPlus" aria-label="Eine Person mehr">+</button>
+              </div>
+            </div>
+
+            <div class="field full">
+              <span class="flabel">Bereich</span>
+              <div class="seg" role="radiogroup" aria-label="Bereich">
+                <label><input type="radio" name="area" value="Innen" checked><span>Innen</span></label>
+                <label><input type="radio" name="area" value="Terrasse"><span>Terrasse</span></label>
+                <label><input type="radio" name="area" value="Egal"><span>Egal</span></label>
+              </div>
+            </div>
+
+            <div class="field full" id="slotField">
+              <span class="flabel">Uhrzeit * <span id="slotInfo" style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--text-soft)"></span></span>
+              <div class="slots" id="slots" role="radiogroup" aria-label="Uhrzeit"></div>
+              <span class="err">Bitte eine Uhrzeit auswählen.</span>
+            </div>
+
+            <div class="field">
+              <label for="fName">Name *</label>
+              <input type="text" id="fName" autocomplete="name" required>
+              <span class="err">Bitte Ihren Namen angeben.</span>
+            </div>
+            <div class="field">
+              <label for="fPhone">Telefon *</label>
+              <input type="tel" id="fPhone" autocomplete="tel" required>
+              <span class="err">Bitte eine gültige Telefonnummer angeben.</span>
+            </div>
+            <div class="field">
+              <label for="fMail">E-Mail *</label>
+              <input type="email" id="fMail" autocomplete="email" required>
+              <span class="err">Bitte eine gültige E-Mail-Adresse angeben.</span>
+            </div>
+            <div class="field">
+              <label for="fOccasion">Anlass</label>
+              <select id="fOccasion">
+                <option>Kein besonderer Anlass</option>
+                <option>Geburtstag</option>
+                <option>Geschäftsessen</option>
+                <option>Sonntagsbrunch</option>
+                <option>Jahrestag</option>
+                <option>Event-Anfrage</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="fNote">Nachricht</label>
+              <textarea id="fNote" placeholder="Allergien, Kinderstuhl, Wunschplatz …"></textarea>
+            </div>
+          </div>
+
+          <div class="form-foot">
+            <small>Demo-Formular: Es werden keine Daten versendet. Echte Reservierungen bitte telefonisch.</small>
+            <button type="submit" class="btn btn-terra">Reservierung anfragen
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </form>
+
+        <div class="res-success" aria-live="polite">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+          <h3>Vielen Dank, <span id="sName"></span>!</h3>
+          <p>Ihre Anfrage ist eingegangen. Wir bestätigen sie in Kürze per E-Mail.</p>
+          <dl class="summary" id="summary"></dl>
+          <button class="btn btn-outline" id="resAgain" type="button">Neue Anfrage</button>
+        </div>
+      </div>
+
+      <aside class="res-side">
+        <div class="info-card green reveal d1">
+          <h4>Öffnungszeiten <span class="live"><span class="dot js-dot"></span><span class="js-status-short">…</span></span></h4>
+          <ul class="hours" id="hoursList"></ul>
+          <p class="brunch-note"><b>Sonntagsbrunch</b> jeden Sonntag 09:30 – 16:00 Uhr. Wir empfehlen eine frühzeitige Reservierung.</p>
+        </div>
+
+        <div class="info-card light reveal d2">
+          <a class="contact-row" href="tel:+498938887600">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+            <div><b>Telefon</b><span>+49 89 38 88 76 0</span></div>
+          </a>
+          <a class="contact-row" href="mailto:contact@cafe-reitschule.de">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+            <div><b>E-Mail</b><span>contact@cafe-reitschule.de</span></div>
+          </a>
+          <div class="contact-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><b>Adresse</b><span>Königinstraße 34, 80802 München<br><small style="color:var(--text-soft)">5 Min. von U3/U6 Münchner Freiheit</small></span></div>
+          </div>
+        </div>
+
+        <div class="map-card reveal d3">
+          <svg class="map" viewBox="0 0 400 210" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <rect width="400" height="210" fill="#e6e9dc"/>
+            <path d="M250 -10 C 290 40, 300 90, 340 120 S 420 180, 430 230 L 430 -10 Z" fill="#c9d8b9"/>
+            <path d="M262 -10 C 300 50, 312 95, 352 125" fill="none" stroke="#a9c3cf" stroke-width="5" stroke-linecap="round"/>
+            <g stroke="#fff" stroke-linecap="round" fill="none">
+              <path d="M95 -10 L 105 230" stroke-width="10"/>
+              <path d="M-10 70 L 260 92" stroke-width="6"/>
+              <path d="M-10 150 L 300 165" stroke-width="6"/>
+              <path d="M225 -10 C 228 60, 230 140, 238 230" stroke-width="7"/>
+              <path d="M30 -10 L 40 230" stroke-width="4"/>
+              <path d="M160 -10 L 168 230" stroke-width="4"/>
+            </g>
+            <text x="112" y="40" fill="#8a8f80" font-size="9" font-family="Outfit, sans-serif" letter-spacing="1.5" transform="rotate(87 112 40)">LEOPOLDSTRASSE</text>
+            <text x="300" y="60" fill="#6f8a63" font-size="10" font-family="Outfit, sans-serif" font-style="italic">Englischer Garten</text>
+            <circle cx="98" cy="72" r="9" fill="#2b62b8"/><text x="98" y="75.5" fill="#fff" font-size="9" font-weight="700" text-anchor="middle" font-family="Outfit, sans-serif">U</text>
+          </svg>
+          <div class="map-pin"><span class="lbl">Café Reitschule</span><span class="tip"></span><span class="base"></span></div>
+          <a class="btn btn-primary" href="https://www.google.com/maps/dir/?api=1&destination=K%C3%B6niginstra%C3%9Fe+34+80802+M%C3%BCnchen" target="_blank" rel="noopener">Route planen</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq">
+  <div class="wrap faq-grid">
+    <div>
+      <div class="eyebrow reveal">FAQ</div>
+      <h2 class="h2 reveal d1">Häufige <em>Fragen</em></h2>
+      <p class="lead reveal d2">Ihre Frage ist nicht dabei? Rufen Sie uns an – wir helfen gerne weiter.</p>
+      <a href="tel:+498938887600" class="btn btn-outline reveal d3">Jetzt anrufen</a>
+    </div>
+    <div class="acc reveal d1" id="faqList"></div>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="f-cta">
+    <h2>Wir freuen uns auf <em>Ihren Besuch.</em></h2>
+    <a href="#reservieren" class="btn btn-terra">Tisch reservieren
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+
+  <div class="f-grid">
+    <div>
+      <a href="#top" class="logo"><span class="logo-mark">R</span><span class="logo-text">Café Reitschule<small>München · Schwabing</small></span></a>
+      <p class="f-desc">Restaurant &amp; Café zwischen Englischem Garten und Leopoldstraße. Der richtige Ort zu fast jeder Zeit – für jeden Anlass.</p>
+      <div class="f-socials">
+        <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg></a>
+        <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8V6.5c0-.8.2-1.3 1.4-1.3H17V2.2C16.7 2.1 15.7 2 14.6 2 12.2 2 10.6 3.4 10.6 6.1V8H8v3.3h2.6V22H14V11.3h2.7L17 8h-3z"/></svg></a>
+        <a href="mailto:contact@cafe-reitschule.de" aria-label="E-Mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg></a>
+      </div>
+    </div>
+    <div>
+      <div class="f-head">Entdecken</div>
+      <ul class="f-links">
+        <li><a href="#about">Über uns</a></li>
+        <li><a href="#menu">Speisekarte</a></li>
+        <li><a href="#events">Events &amp; Räume</a></li>
+        <li><a href="#galerie">Galerie</a></li>
+        <li><a href="#reservieren">Reservieren</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="f-head">Rechtliches</div>
+      <ul class="f-links">
+        <li><a href="#">Impressum</a></li>
+        <li><a href="#">Datenschutz</a></li>
+        <li><a href="#">Allergeninformation</a></li>
+        <li><a href="#">Jobs</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="f-head">Besuchen Sie uns</div>
+      <address class="f-contact">
+        Königinstraße 34<br>80802 München<br>
+        <a href="tel:+498938887600">+49 89 38 88 76 0</a><br>
+        <a href="mailto:contact@cafe-reitschule.de">contact@cafe-reitschule.de</a><br>
+        <span class="ubahn"><i>U3</i><i>U6</i> Münchner Freiheit</span>
+      </address>
+    </div>
+  </div>
+
+  <div class="f-bottom">
+    <span>© <span id="year"></span> Café Reitschule München · Design-Entwurf</span>
+    <button class="to-top" id="toTop">Nach oben
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    </button>
+  </div>
+</footer>
+
+<div class="m-bar" id="mBar">
+  <a href="tel:+498938887600" class="btn btn-outline" aria-label="Anrufen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></a>
+  <a href="#reservieren" class="btn btn-terra">Tisch reservieren</a>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* =====================================================
+   DATA
+===================================================== */
+const IMG = (id, w = 1200) => `https://images.unsplash.com/photo-${id}?w=${w}&q=80`;
+
+// Öffnungszeiten: Index = getDay() (0 = Sonntag). Werte in Stunden (11.5 = 11:30)
+const HOURS = {
+  0: [9, 19], 1: [11.5, 23], 2: [11.5, 23], 3: [11.5, 23], 4: [11.5, 23], 5: [11.5, 23], 6: [9, 23]
+};
+const DAY_NAMES = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+
+const MENU = {
+  'Frühstück & Brunch': [
+    { n:'Klassisches Frühstück', d:'Drei Brotsorten, Butter, Konfitüren, Honig, Aufschnitt, Käse, Ei', p:16.5 },
+    { n:'Reitschule Brunch', d:'Sonntags 09:30–16:00 – großes Buffet mit warmen und kalten Klassikern', p:34, t:['star'] },
+    { n:'Eggs Florentine', d:'Pochierte Eier, Blattspinat, Sauce Hollandaise, English Muffin', p:14.5, t:['v'] },
+    { n:'Pancakes mit Ahornsirup', d:'Fluffige Pancakes, Ahornsirup, frische Beeren, Schlagsahne', p:13.9, t:['v'] },
+    { n:'Granola Bowl', d:'Hausgemachtes Granola, Hafer-Joghurt, Agavendicksaft, Saisonfrüchte', p:10.5, t:['vg'] },
+    { n:'Rührei mit Räucherlachs', d:'Cremiges Rührei, Räucherlachs, Toast, Kapern, rote Zwiebeln', p:15.9 },
+  ],
+  'Mittagessen': [
+    { n:'Bayerische Leberknödelsuppe', d:'Hausgemachte Leberknödel in kräftiger Rinderbrühe, Schnittlauch', p:9.5 },
+    { n:'Schwabinger Salat', d:'Bunte Blattsalate, gratinierter Ziegenkäse, Walnüsse, Honig-Senf-Dressing', p:14.9, t:['v'] },
+    { n:'Vitello Tonnato', d:'Zart rosa Kalbfleisch, Thunfischcreme, Kapern, Zitrone', p:16.9 },
+    { n:'Wiener Schnitzel vom Kalb', d:'In Butterschmalz gebraten, Bratkartoffeln, Preiselbeeren, Zitrone', p:24.9, t:['star'] },
+    { n:'Lachsforelle vom Grill', d:'Bayerische Lachsforelle, Kräuterbutter, Petersilienkartoffeln, Gemüse', p:22.9 },
+    { n:'Flammkuchen Garten', d:'Schmand, Kirschtomaten, Rucola, Parmesan, Balsamico', p:14.5, t:['v'] },
+    { n:'Pasta des Tages', d:'Frische Pasta mit täglich wechselnder Sauce – fragen Sie unser Team', p:13.5 },
+    { n:'Tagessuppe', d:'Täglich wechselnd, mit frischem Baguette', p:7.5, t:['vg'] },
+  ],
+  'Abendessen': [
+    { n:'Beef Tartare', d:'Handgeschnittenes Rinderfilet, Kapern, Schalotten, Eigelb, Toast', p:19.9 },
+    { n:'Burrata & Prosciutto', d:'Burrata, Parmaschinken, geröstete Tomaten, Basilikumöl', p:17.5 },
+    { n:'Reitschule Steak', d:'200 g Rinderfilet, Sauce Béarnaise, Pommes allumettes, Salat', p:38.9, t:['star'] },
+    { n:'Ente à l’orange', d:'Bayerische Ente, Orangenjus, Rotkohl, Semmelknödel', p:29.9 },
+    { n:'Wolfsbarsch', d:'Auf der Haut gebraten, Fenchel, Safrankartoffeln, Aioli', p:27.5 },
+    { n:'Risotto al Tartufo', d:'Cremiges Trüffelrisotto, Parmesan, schwarze Trüffelspäne', p:24.5, t:['v'] },
+    { n:'Käsevariation', d:'Drei bayerische Käsesorten, Trauben, Walnüsse, Feigensenf, Brot', p:16.9, t:['v'] },
+    { n:'Crème brûlée', d:'Bourbon-Vanille, karamellisierter Zucker, frische Beeren', p:8.9, t:['v'] },
+  ],
+  'Getränke': [
+    { n:'Espresso', d:'Einfach oder doppelt, Specialty Coffee aus Münchner Rösterei', p:2.8, t:['vg'] },
+    { n:'Cappuccino', d:'Specialty Espresso, Vollmilch oder Hafermilch', p:4.2 },
+    { n:'Frisch gepresster Orangensaft', d:'Täglich frisch gepresst, 0,3 l', p:6.8, t:['vg'] },
+    { n:'Hefeweißbier', d:'Münchner Hefeweizen vom Fass, 0,5 l', p:5.2 },
+    { n:'Aperol Spritz', d:'Aperol, Prosecco, Soda, Orange', p:9.5 },
+    { n:'Hugo', d:'Prosecco, Holunderblüte, Minze, Limette, Soda', p:9.5, t:['star'] },
+    { n:'Hauswein Weiß / Rot', d:'Sorgfältig ausgewählt, 0,2 l', p:7.5 },
+    { n:'Mineralwasser', d:'Still oder sprudelnd, 0,5 l', p:4.2 },
+  ],
+};
+
+const ROOMS = [
+  { n:'Orangerie', cap:'bis 120 Gäste', img:'1519671482749-fd09be7ccebf', d:'Lichtdurchflutet mit Blick ins Grüne – ideal für Hochzeiten und festliche Dinner.', f:['Tageslicht','Tanzfläche','Bühne'] },
+  { n:'Lounge', cap:'bis 60 Gäste', img:'1514933651103-005eec06c04b', d:'Gemütlich und stilvoll für Empfänge, Geburtstage und After-Work.', f:['Bar','Musikanlage'] },
+  { n:'Studio', cap:'bis 40 Gäste', img:'1497366216548-37526070297c', d:'Der private Raum für Tagungen, Workshops und Geschäftsessen.', f:['Beamer','WLAN','Flipchart'] },
+  { n:'Panorama-Terrasse', cap:'bis 270 Gäste', img:'1559339352-11d035aa65de', d:'Unter freiem Himmel direkt am Englischen Garten – Sommerfeste mit Stil.', f:['Open Air','Markisen'] },
+];
+
+const GALLERY = [
+  { id:'1517248135467-4c7edcad34c4', c:'Der Gastraum am Abend' },
+  { id:'1495474472287-4d71bcdd2085', c:'Specialty Coffee' },
+  { id:'1504674900247-0877df9cc836', c:'Aus unserer Küche' },
+  { id:'1559339352-11d035aa65de', c:'Unsere Terrasse' },
+  { id:'1525351484163-7529414344d8', c:'Wochenend-Frühstück' },
+  { id:'1414235077428-338989a2e8c0', c:'Gedeckte Tafel' },
+  { id:'1551218808-94e220e084d2', c:'Feierabend in Schwabing' },
+  { id:'1540189549336-e6e99c3679fe', c:'Frisch & saisonal' },
+];
+
+const REVIEWS = [
+  { t:'Wunderschöne Lage direkt am Englischen Garten. Die Terrasse ist im Sommer unser Lieblingsplatz – und das Essen hervorragend.', n:'Katharina W.', r:'München' },
+  { t:'Der Sonntagsbrunch ist phänomenal. Wir kommen seit Jahren und die Qualität ist konstant hoch.', n:'Stefan M.', r:'Stammgast' },
+  { t:'Unser Firmenevent in der Orangerie war ein Traum. Service tadellos, Essen erstklassig, Planung völlig unkompliziert.', n:'Laura B.', r:'Event-Kundin' },
+  { t:'Das Steak ist eines der besten in München. Atmosphäre einmalig, das Personal herzlich und aufmerksam.', n:'Michael H.', r:'Schwabing' },
+  { t:'Schon seit meiner Kindheit liebe ich diesen Ort. Ein echtes Stück Münchner Gemütlichkeit.', n:'Petra S.', r:'Stammgast' },
+  { t:'Mittags eine echte Oase. Die Leberknödelsuppe ist authentisch bayerisch, das Vitello Tonnato fantastisch.', n:'Jonas F.', r:'Maxvorstadt' },
+  { t:'Top Lage, einladende Atmosphäre und eine Karte, die Klassiker und moderne Küche verbindet.', n:'Anna K.', r:'Gastro-Fan' },
+  { t:'Eggs Florentine zum Brunch – besser als in London! Die ruhige Ecke auf der Terrasse ist unschlagbar.', n:'David L.', r:'Zu Besuch aus London' },
+  { t:'Wir haben hier unsere Hochzeit gefeiert und alle Gäste waren begeistert. Alles perfekt koordiniert.', n:'Marie & Tom', r:'Hochzeitspaar' },
+];
+
+const FAQ = [
+  { q:'Wie kann ich reservieren?', a:'Am schnellsten über das Formular auf dieser Seite oder telefonisch unter +49 89 38 88 76 0. Für Gruppen ab 12 Personen und Events melden wir uns persönlich bei Ihnen.' },
+  { q:'Wann findet der Sonntagsbrunch statt?', a:'Jeden Sonntag von 09:30 bis 16:00 Uhr. Da der Brunch sehr beliebt ist, empfehlen wir eine Reservierung einige Tage im Voraus. Samstags und an Feiertagen öffnen wir bereits um 09:00 Uhr.' },
+  { q:'Kann ich auch ohne Reservierung kommen?', a:'Natürlich! Gerade unter der Woche und auf der Terrasse finden sich meist spontan freie Plätze. Am Wochenende und abends empfehlen wir aber eine Reservierung.' },
+  { q:'Bieten Sie Räume für Events an?', a:'Ja – Orangerie, Lounge, Studio sowie mehrere Terrassen für 10 bis 450 Gäste. Wir erstellen Ihnen gerne ein individuelles Angebot inklusive Menü und Getränkepauschale.' },
+  { q:'Gibt es vegetarische und vegane Gerichte?', a:'Ja, auf unserer Karte sind vegetarische (V) und vegane (VG) Gerichte gekennzeichnet. Auf Nachfrage passt unsere Küche viele Gerichte auch individuell an.' },
+  { q:'Wie komme ich am besten zu Ihnen?', a:'Wir liegen in der Königinstraße 34, 80802 München. Die U-Bahn-Station Münchner Freiheit (U3/U6) ist etwa 5 Gehminuten entfernt. Fahrradstellplätze sind direkt vor dem Haus.' },
+  { q:'Sind Hunde erlaubt?', a:'Gut erzogene Hunde sind auf unserer Terrasse herzlich willkommen – eine Schale frisches Wasser steht bereit.' },
+];
+
+/* =====================================================
+   HELPERS
+===================================================== */
+const $  = (s, c = document) => c.querySelector(s);
+const $$ = (s, c = document) => [...c.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const euro = v => v.toFixed(2).replace('.', ',') + ' €';
+const hhmm = h => { const H = Math.floor(h), M = Math.round((h - H) * 60); return String(H).padStart(2,'0') + ':' + String(M).padStart(2,'0'); };
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Aktuelle Zeit in München (unabhängig von der Zeitzone des Besuchers)
+function munichNow() {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone:'Europe/Berlin', weekday:'short', hour:'numeric', minute:'numeric', hourCycle:'h23' }).formatToParts(new Date());
+  const get = t => parts.find(p => p.type === t).value;
+  const day = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(get('weekday'));
+  return { day, h: Number(get('hour')) + Number(get('minute')) / 60 };
+}
+
+/* =====================================================
+   LIVE STATUS
+===================================================== */
+function computeStatus() {
+  const { day, h } = munichNow();
+  const [o, c] = HOURS[day];
+  if (h >= o && h < c) {
+    const soon = c - h <= 1;
+    return { cls: soon ? 'open soon' : 'open', short: soon ? 'Schließt bald' : 'Geöffnet', long: `Geöffnet · bis ${hhmm(c)} Uhr`, day, h };
+  }
+  if (h < o) return { cls:'', short:'Geschlossen', long:`Geschlossen · öffnet um ${hhmm(o)} Uhr`, day, h };
+  const nd = (day + 1) % 7;
+  return { cls:'', short:'Geschlossen', long:`Geschlossen · öffnet morgen ${hhmm(HOURS[nd][0])}`, day, h };
+}
+
+function renderStatus() {
+  const s = computeStatus();
+  $$('.js-dot').forEach(d => { d.className = 'dot js-dot ' + s.cls; });
+  $$('.js-status-short').forEach(e => e.textContent = s.short);
+  $$('.js-status-long').forEach(e => e.textContent = s.long);
+  const [o, c] = HOURS[s.day];
+  $$('.js-today-hours').forEach(e => e.textContent = `${hhmm(o)} – ${hhmm(c)} Uhr`);
+
+  // Öffnungszeiten-Liste (Mo–So), heutigen Tag hervorheben
+  const order = [1,2,3,4,5,6,0];
+  $('#hoursList').innerHTML = order.map(d => {
+    const [a, b] = HOURS[d];
+    return `<li class="${d === s.day ? 'today' : ''}"><span>${DAY_NAMES[d]}</span><span>${hhmm(a)} – ${hhmm(b)}</span></li>`;
+  }).join('');
+
+  // Tageszeit-Karte "Gerade jetzt"
+  $$('.time-card').forEach(card => {
+    const from = +card.dataset.from, to = +card.dataset.to;
+    card.classList.toggle('is-now', s.cls.includes('open') && s.h >= from && s.h < to);
+  });
+}
+renderStatus();
+setInterval(renderStatus, 60000);
+
+/* =====================================================
+   NAV
+===================================================== */
+const nav = $('#nav');
+const mBar = $('#mBar');
+const heroBg = $('#heroBg');
+const hero = $('#hero');
+let ticking = false;
+
+function onScroll() {
+  const y = scrollY;
+  nav.classList.toggle('scrolled', y > 40);
+  mBar.classList.toggle('show', y > hero.offsetHeight * .7);
+  if (!reduced && y < hero.offsetHeight) heroBg.style.transform = `translate3d(0, ${y * .3}px, 0)`;
+  ticking = false;
+}
+addEventListener('scroll', () => { if (!ticking) { requestAnimationFrame(onScroll); ticking = true; } }, { passive: true });
+onScroll();
+
+// Aktiven Navigationspunkt markieren
+const navLinks = $$('.nav-links a');
+const spy = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+  });
+}, { rootMargin: '-45% 0px -50% 0px' });
+$$('main > section').forEach(s => spy.observe(s));
+
+// Mobile Menu
+const burger = $('.burger');
+const mm = $('#mobile-menu');
+function setMenu(open) {
+  document.body.classList.toggle('menu-open', open);
+  document.body.classList.toggle('no-scroll', open);
+  burger.setAttribute('aria-expanded', open);
+  burger.setAttribute('aria-label', open ? 'Menü schließen' : 'Menü öffnen');
+  mm.setAttribute('aria-hidden', !open);
+}
+burger.addEventListener('click', () => setMenu(!document.body.classList.contains('menu-open')));
+$$('#mobile-menu a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+
+$('#toTop').addEventListener('click', () => scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }));
+$('#year').textContent = new Date().getFullYear();
+
+/* =====================================================
+   MARQUEE
+===================================================== */
+const words = ['Frühstück','Mittagstisch','Kaffee & Kuchen','Abendessen','Sonntagsbrunch','Terrasse','Events','Catering'];
+$('#marquee').innerHTML = [...words, ...words].map(w => `<span>${esc(w)}</span>`).join('');
+
+/* =====================================================
+   COUNT-UP
+===================================================== */
+const countIO = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target, target = +el.dataset.count, t0 = performance.now(), dur = reduced ? 1 : 1600;
+    const step = now => {
+      const k = Math.min((now - t0) / dur, 1), eased = 1 - Math.pow(1 - k, 4);
+      el.textContent = Math.round(target * eased).toLocaleString('de-DE');
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    countIO.unobserve(el);
+  });
+}, { threshold: .6 });
+$$('[data-count]').forEach(el => countIO.observe(el));
+
+/* =====================================================
+   MENU (Tabs + Suche)
+===================================================== */
+const cats = Object.keys(MENU);
+let activeCat = 'Mittagessen';
+const tabsEl = $('#tabs'), listEl = $('#menuList'), searchEl = $('#search'), searchWrap = $('#searchWrap');
+
+tabsEl.innerHTML = cats.map(c => `<button class="tab" role="tab" data-cat="${esc(c)}" aria-selected="${c === activeCat}">${esc(c)}<span class="cnt">${MENU[c].length}</span></button>`).join('');
+
+const TAG_HTML = { v:'<i class="tag tag-v" title="Vegetarisch">V</i>', vg:'<i class="tag tag-vg" title="Vegan">VG</i>', star:'<i class="tag tag-star" title="Empfehlung des Hauses">★</i>' };
+
+function highlight(text, q) {
+  const safe = esc(text);
+  if (!q) return safe;
+  const i = text.toLowerCase().indexOf(q);
+  if (i < 0) return safe;
+  return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+}
+
+function dishHTML(item, q, cat, idx) {
+  const tags = (item.t || []).map(t => TAG_HTML[t]).join('');
+  return `<article class="dish" style="animation-delay:${Math.min(idx, 10) * 35}ms">
+    ${cat ? `<div class="dish-cat">${esc(cat)}</div>` : ''}
+    <div class="dish-top"><h3 class="dish-name">${highlight(item.n, q)} ${tags}</h3><span class="dish-dots"></span><span class="dish-price">${euro(item.p)}</span></div>
+    <p class="dish-desc">${highlight(item.d, q)}</p>
+  </article>`;
+}
+
+function renderMenu() {
+  const q = searchEl.value.trim().toLowerCase();
+  searchWrap.classList.toggle('has-value', q.length > 0);
+  $$('.tab', tabsEl).forEach(t => t.setAttribute('aria-selected', !q && t.dataset.cat === activeCat));
+
+  if (!q) {
+    listEl.innerHTML = MENU[activeCat].map((it, i) => dishHTML(it, '', '', i)).join('');
+    return;
+  }
+  const hits = [];
+  cats.forEach(c => MENU[c].forEach(it => {
+    if (it.n.toLowerCase().includes(q) || it.d.toLowerCase().includes(q)) hits.push([it, c]);
+  }));
+  listEl.innerHTML = hits.length
+    ? hits.map(([it, c], i) => dishHTML(it, q, c, i)).join('')
+    : `<div class="menu-empty"><b>Leider nichts gefunden</b>Zu „${esc(searchEl.value.trim())}“ gibt es kein Gericht. Versuchen Sie es mit einem anderen Begriff.</div>`;
+}
+
+tabsEl.addEventListener('click', e => {
+  const t = e.target.closest('.tab');
+  if (!t) return;
+  activeCat = t.dataset.cat;
+  searchEl.value = '';
+  renderMenu();
+});
+searchEl.addEventListener('input', renderMenu);
+$('#searchClear').addEventListener('click', () => { searchEl.value = ''; renderMenu(); searchEl.focus(); });
+
+// Standard-Tab je nach Tageszeit
+(() => { const { day, h } = munichNow(); activeCat = h < 11.5 && (day === 0 || day === 6) ? 'Frühstück & Brunch' : h >= 17 ? 'Abendessen' : 'Mittagessen'; })();
+renderMenu();
+
+/* =====================================================
+   EVENTS / RÄUME
+===================================================== */
+$('#rooms').innerHTML = ROOMS.map((r, i) => `
+  <article class="room reveal d${i}">
+    <div class="room-img">
+      <img src="${IMG(r.img, 800)}" alt="${esc(r.n)}" loading="lazy">
+      <span class="room-cap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>${esc(r.cap)}</span>
+    </div>
+    <div class="room-body">
+      <h3>${esc(r.n)}</h3>
+      <p>${esc(r.d)}</p>
+      <div class="room-feat">${r.f.map(f => `<span>${esc(f)}</span>`).join('')}</div>
+      <button class="room-link" data-room="${esc(r.n)}">Anfrage stellen <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </article>`).join('');
+
+$('#rooms').addEventListener('click', e => {
+  const b = e.target.closest('.room-link');
+  if (!b) return;
+  $('#fOccasion').value = 'Event-Anfrage';
+  $('#fNote').value = `Anfrage für: ${b.dataset.room}\nGeplante Gästezahl: \nArt der Veranstaltung: `;
+  people = Math.max(people, 10); updatePeople();
+  $('#reservieren').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+  setTimeout(() => $('#fDate').focus({ preventScroll: true }), 700);
+});
+
+/* =====================================================
+   GALERIE + LIGHTBOX
+===================================================== */
+$('#gallery').innerHTML = GALLERY.map((g, i) => `
+  <button class="g-item g-${i + 1}" data-i="${i}" data-caption="${esc(g.c)}" aria-label="Bild öffnen: ${esc(g.c)}">
+    <img src="${IMG(g.id, 900)}" alt="${esc(g.c)}" loading="lazy">
+  </button>`).join('');
+
+const lb = $('#lightbox'), lbImg = $('#lbImg');
+let lbIndex = 0, lastFocus = null;
+function lbShow(i) {
+  lbIndex = (i + GALLERY.length) % GALLERY.length;
+  const g = GALLERY[lbIndex];
+  lbImg.style.opacity = 0;
+  lbImg.onload = () => { lbImg.style.opacity = 1; };
+  lbImg.src = IMG(g.id, 1800);
+  lbImg.alt = g.c;
+  $('#lbCap').textContent = g.c;
+  $('#lbCount').textContent = `${lbIndex + 1} / ${GALLERY.length}`;
+}
+function lbOpen(i) { lastFocus = document.activeElement; lbShow(i); lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false'); document.body.classList.add('no-scroll'); $('.lb-close').focus(); }
+function lbClose() { lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); document.body.classList.remove('no-scroll'); if (lastFocus) lastFocus.focus(); }
+$('#gallery').addEventListener('click', e => { const b = e.target.closest('.g-item'); if (b) lbOpen(+b.dataset.i); });
+$('.lb-close').addEventListener('click', lbClose);
+$('.lb-prev').addEventListener('click', () => lbShow(lbIndex - 1));
+$('.lb-next').addEventListener('click', () => lbShow(lbIndex + 1));
+lb.addEventListener('click', e => { if (e.target === lb) lbClose(); });
+let tx0 = null;
+lb.addEventListener('touchstart', e => { tx0 = e.touches[0].clientX; }, { passive: true });
+lb.addEventListener('touchend', e => { if (tx0 === null) return; const dx = e.changedTouches[0].clientX - tx0; if (Math.abs(dx) > 50) lbShow(lbIndex + (dx < 0 ? 1 : -1)); tx0 = null; });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.body.classList.contains('menu-open')) setMenu(false);
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'Escape') lbClose();
+  if (e.key === 'ArrowLeft') lbShow(lbIndex - 1);
+  if (e.key === 'ArrowRight') lbShow(lbIndex + 1);
+  if (e.key === 'Tab') { // Fokus im Dialog halten
+    const f = $$('.lb-btn', lb), first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+
+/* =====================================================
+   GÄSTESTIMMEN
+===================================================== */
+const AV_COLORS = ['#3a5e47','#b5613a','#6b4c34','#5b8569','#9a4f2d'];
+const initials = n => n.replace(/&/g,' ').split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+function cards(items) {
+  return [...items, ...items].map((r, i) => `
+    <figure class="t-card"${i >= items.length ? ' aria-hidden="true"' : ''}>
+      <div class="stars">★★★★★</div>
+      <blockquote class="t-text">„${esc(r.t)}“</blockquote>
+      <figcaption class="t-author">
+        <span class="t-avatar" style="background:${AV_COLORS[(r.n.length) % AV_COLORS.length]}">${esc(initials(r.n))}</span>
+        <span><span class="t-name" style="display:block">${esc(r.n)}</span><span class="t-role">${esc(r.r)}</span></span>
+      </figcaption>
+    </figure>`).join('');
+}
+$('#tcol1 .t-col-inner').innerHTML = cards(REVIEWS.slice(0, 3));
+$('#tcol2 .t-col-inner').innerHTML = cards(REVIEWS.slice(3, 6));
+$('#tcol3 .t-col-inner').innerHTML = cards(REVIEWS.slice(6, 9));
+function updateCols() {
+  const w = innerWidth;
+  $('#tcol2').style.display = w >= 760 ? '' : 'none';
+  $('#tcol3').style.display = w >= 1120 ? '' : 'none';
+}
+updateCols();
+addEventListener('resize', updateCols, { passive: true });
+
+/* =====================================================
+   FAQ (Accordion)
+===================================================== */
+$('#faqList').innerHTML = FAQ.map((f, i) => `
+  <div class="acc-item">
+    <button class="acc-trigger" aria-expanded="false" aria-controls="faq-p${i}" id="faq-b${i}">${esc(f.q)}<span class="acc-icon" aria-hidden="true"></span></button>
+    <div class="acc-panel" id="faq-p${i}" role="region" aria-labelledby="faq-b${i}"><p>${esc(f.a)}</p></div>
+  </div>`).join('');
+
+function toggleAcc(item, open) {
+  const panel = $('.acc-panel', item), btn = $('.acc-trigger', item);
+  item.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open);
+  if (open) {
+    panel.style.height = panel.scrollHeight + 'px';
+    panel.addEventListener('transitionend', function te() { if (item.classList.contains('open')) panel.style.height = 'auto'; panel.removeEventListener('transitionend', te); });
+  } else {
+    panel.style.height = panel.scrollHeight + 'px';
+    requestAnimationFrame(() => { panel.style.height = '0px'; });
+  }
+}
+$('#faqList').addEventListener('click', e => {
+  const btn = e.target.closest('.acc-trigger');
+  if (!btn) return;
+  const item = btn.parentElement, willOpen = !item.classList.contains('open');
+  $$('.acc-item.open', $('#faqList')).forEach(o => { if (o !== item) toggleAcc(o, false); });
+  toggleAcc(item, willOpen);
+});
+toggleAcc($('.acc-item'), true);
+
+/* =====================================================
+   RESERVIERUNG
+===================================================== */
+const form = $('#resForm'), dateEl = $('#fDate'), slotsEl = $('#slots');
+let people = 2;
+const P_MIN = 1, P_MAX = 20;
+
+function isoLocal(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+const todayIso = isoLocal(new Date());
+dateEl.min = todayIso;
+const max = new Date(); max.setMonth(max.getMonth() + 3);
+dateEl.max = isoLocal(max);
+dateEl.value = todayIso;
+
+function updatePeople() {
+  people = Math.min(P_MAX, Math.max(P_MIN, people));
+  $('#pOut').textContent = people === 1 ? '1 Person' : (people === P_MAX ? '20+ Personen' : `${people} Personen`);
+  $('#pMinus').disabled = people <= P_MIN;
+  $('#pPlus').disabled = people >= P_MAX;
+}
+$('#pMinus').addEventListener('click', () => { people--; updatePeople(); });
+$('#pPlus').addEventListener('click', () => { people++; updatePeople(); });
+updatePeople();
+
+function renderSlots() {
+  const v = dateEl.value;
+  slotsEl.innerHTML = '';
+  $('#slotInfo').textContent = '';
+  if (!v) { slotsEl.innerHTML = '<div class="slots-empty">Bitte zuerst ein Datum wählen.</div>'; return; }
+  const [Y, M, D] = v.split('-').map(Number);
+  const day = new Date(Y, M - 1, D).getDay();
+  const [o, c] = HOURS[day];
+  const last = c - 1.5; // letzte Reservierung 90 Min. vor Schluss
+  let start = o;
+  if (v === todayIso) { const { h } = munichNow(); start = Math.max(o, Math.ceil((h + .5) * 2) / 2); }
+  const list = [];
+  for (let t = start; t <= last; t += .5) list.push(t);
+  $('#slotInfo').textContent = `· ${DAY_NAMES[day]}, ${hhmm(o)}–${hhmm(c)} Uhr`;
+  if (!list.length) { slotsEl.innerHTML = '<div class="slots-empty">Für heute sind keine Zeiten mehr verfügbar – bitte einen anderen Tag wählen.</div>'; return; }
+  slotsEl.innerHTML = list.map(t => `<label class="slot"><input type="radio" name="time" value="${hhmm(t)}"><span>${hhmm(t)}</span></label>`).join('');
+}
+dateEl.addEventListener('change', () => { renderSlots(); dateEl.closest('.field').classList.remove('invalid'); });
+slotsEl.addEventListener('change', () => $('#slotField').classList.remove('invalid'));
+renderSlots();
+
+$$('#resForm input[type=text], #resForm input[type=tel], #resForm input[type=email]').forEach(i =>
+  i.addEventListener('input', () => i.closest('.field').classList.remove('invalid')));
+
+function validate() {
+  let ok = true;
+  const mark = (el, bad) => { el.closest('.field').classList.toggle('invalid', bad); if (bad) ok = false; };
+  mark(dateEl, !dateEl.value || dateEl.value < todayIso || dateEl.value > dateEl.max);
+  mark(slotsEl, !$('input[name=time]:checked', slotsEl));
+  mark($('#fName'), $('#fName').value.trim().length < 2);
+  mark($('#fPhone'), !/^[+\d][\d\s/()-]{5,}$/.test($('#fPhone').value.trim()));
+  mark($('#fMail'), !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($('#fMail').value.trim()));
+  return ok;
+}
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  if (!validate()) {
+    const first = $('.field.invalid', form);
+    first.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+    const f = $('input, select', first); if (f) f.focus({ preventScroll: true });
+    return;
+  }
+  const [Y, M, D] = dateEl.value.split('-').map(Number);
+  const dateTxt = new Date(Y, M - 1, D).toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const rows = [
+    ['Datum', dateTxt],
+    ['Uhrzeit', $('input[name=time]:checked').value + ' Uhr'],
+    ['Personen', $('#pOut').textContent],
+    ['Bereich', $('input[name=area]:checked').value],
+    ['Anlass', $('#fOccasion').value],
+    ['Vorgangsnr.', 'RS-' + Math.random().toString(36).slice(2, 7).toUpperCase()],
+  ];
+  $('#summary').innerHTML = rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+  $('#sName').textContent = $('#fName').value.trim().split(' ')[0];
+  $('#resCard').classList.add('done');
+  $('#resCard').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+});
+
+$('#resAgain').addEventListener('click', () => {
+  form.reset();
+  dateEl.value = todayIso;
+  people = 2; updatePeople(); renderSlots();
+  $('#resCard').classList.remove('done');
+});
+
+/* =====================================================
+   REVEAL ON SCROLL
+===================================================== */
+const revealIO = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); revealIO.unobserve(e.target); } });
+}, { threshold: .12, rootMargin: '0px 0px -40px 0px' });
+$$('.reveal').forEach(el => revealIO.observe(el));
+
+})();
+</script>
+</body>
+</html>

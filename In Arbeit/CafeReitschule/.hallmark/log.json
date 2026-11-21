@@ -1,0 +1,45 @@
+[
+ {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "page",
+  "shape": "bill-of-fare",
+  "theme": "broadside",
+  "axes": "light/display-condensed/warm",
+  "hero": "stage",
+  "nav": "banner over a retracting bar",
+  "footer": "index columns under a statement",
+  "imagery": "photographs",
+  "photos": [
+   "Breakfast_in_Ile_dOrleans_072",
+   "Restaurant_room_of_Amantaka",
+   "Restaurant_in_Place_DYouville",
+   "Gray_espresso_cup_with_amaretto_1",
+   "Almond_croissant",
+   "Writing_in_a_notebook",
+   "White_tablecloth_Amantaka",
+   "Paris_waiter_lighting_candles",
+   "Espresso_coffee_pouring"
+  ],
+  "entry": "stage",
+  "fingerprint": "stage/switcher/schedule/split/index/rail/band-form/rows",
+  "sections": [
+   "hero",
+   "menu switcher",
+   "schedule bill",
+   "about split",
+   "rooms index",
+   "gallery rail",
+   "reviews rail",
+   "reservation band",
+   "faq rows",
+   "footer"
+  ],
+  "signature": "todays opening hours fitted in vermilion wood type",
+  "waived": [
+   "39b"
+  ],
+  "prompt": "Restaurant und Café in München-Schwabing: Speisekarte, Events, Tisch reservieren",
+  "date": "2026-11-21"
+ }
+]
