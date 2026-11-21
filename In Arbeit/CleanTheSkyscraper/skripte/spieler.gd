@@ -306,6 +306,8 @@ func _process(dt: float) -> void:
 			oben_gesperrt.emit()
 			_gesperrt_zeit = 3.0
 		y = clampf(neu, 0.3, max_y)
+	if aktiv and wischt and wz_art == "wisch" and not rechts_gedrueckt and Optionen.wert("kamera_folgt"):
+		_kamera_folgen(dt)
 	_platzieren(dt)
 	spray_trifft = false
 	if wischt:
@@ -361,6 +363,28 @@ func _platzieren(dt: float) -> void:
 		gondel.position += rechts * sin(zeit * 1.3) * 0.3 * wind + normal * sin(zeit * 0.8) * 0.12 * wind
 		gondel.rotate_object_local(Vector3.FORWARD, sin(zeit * 1.1) * 0.04 * wind)
 	cam.rotation = Vector3(pitch, yaw, 0)
+
+# Beim Putzen: kommt das Werkzeug an den Bildrand, schwenkt der Blick weich hinterher (Mitte = ruhige Zone,
+# damit Hin-und-her-Reiben das Bild nicht wackeln lässt). Ändert nur yaw/pitch, nicht das Wischen.
+const FOLGEN_ZONE := 0.5      # Anteil des halben Sichtfelds, in dem die Kamera still bleibt
+const FOLGEN_TEMPO := 5.0
+func _kamera_folgen(dt: float) -> void:
+	var ziel := glas_punkt + rechts * schwamm_off.x + Vector3.UP * schwamm_off.y
+	var d := gondel.global_basis.inverse() * (ziel - cam.global_position)
+	var ziel_yaw := atan2(-d.x, -d.z)
+	var ziel_pitch := atan2(d.y, Vector2(d.x, d.z).length())
+	var halb_v := deg_to_rad(cam.fov) * 0.5
+	var sicht := get_viewport().get_visible_rect().size
+	var halb_h := atan(tan(halb_v) * sicht.x / maxf(sicht.y, 1.0))
+	var k := minf(1.0, dt * FOLGEN_TEMPO)
+	var dy := wrapf(ziel_yaw - yaw, -PI, PI)
+	var zone_h := halb_h * FOLGEN_ZONE
+	if absf(dy) > zone_h:
+		yaw = wrapf(yaw + (dy - signf(dy) * zone_h) * k, -PI, PI)
+	var dp := ziel_pitch - pitch
+	var zone_v := halb_v * FOLGEN_ZONE
+	if absf(dp) > zone_v:
+		pitch = clampf(pitch + (dp - signf(dp) * zone_v) * k, -1.5, 1.5)
 
 # Strich: von der letzten zur aktuellen Position lückenlos stempeln
 func _wischen() -> void:

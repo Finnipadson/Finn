@@ -49,6 +49,7 @@ func aufbauen() -> void:
 	fz.add_child(fl)
 	add_child(UiGlas.karte("Sichtfeld (FOV)", "Wie weit du zur Seite siehst. Standard 75°, mehr = mehr Überblick, wirkt aber verzerrter.", fz, "FOV", UiGlas.AKZENT))
 	_schalter("maus_umkehren", "Maus umkehren", "Maus nach vorn schieben = nach unten schauen.", "↕")
+	_schalter("kamera_folgt", "Kamera folgt beim Putzen", "Kommt das Werkzeug an den Bildrand, schwenkt der Blick weich mit. In der Bildmitte bleibt die Kamera ruhig.", "◎")
 	add_child(UiGlas.ueberschrift("TASTEN – ANKLICKEN, DANN NEUE TASTE DRÜCKEN (ESC = ABBRECHEN)"))
 	for a in Optionen.AKTIONEN:
 		var id: String = a[0]

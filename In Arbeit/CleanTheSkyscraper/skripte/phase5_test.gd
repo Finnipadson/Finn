@@ -750,6 +750,8 @@ func _tag_bilder() -> void:
 		await _warte(0.5)
 		var r: HSlider = s.pause.einst.find_child("r_fov", true, false)
 		_pruefe("Regler „Sichtfeld“ vorhanden", r != null)
+		var kf: Button = s.pause.einst.find_child("s_kamera_folgt", true, false)   # 21.11.2026
+		_pruefe("Schalter „Kamera folgt beim Putzen“ vorhanden, Standard an", kf != null and kf.text == "An" and Optionen.wert("kamera_folgt") == true)
 		await _bild_machen("einstellungen_fov")
 		r.value = 100.0
 		await _warte(0.2)

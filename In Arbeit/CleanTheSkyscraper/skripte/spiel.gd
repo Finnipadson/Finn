@@ -1010,6 +1010,9 @@ func _funkeln(p: Vector3) -> void:
 # 5: Schwamm fährt Schlangenlinien – derselbe Code wie beim Putzen mit der Maus
 func _demo(dt: float) -> void:
 	demo_zeit += dt
+	if "--anim-folgen" in OS.get_cmdline_user_args():
+		_anim_folgen()
+		return
 	if "--anim" in OS.get_cmdline_user_args():
 		_anim_demo()
 		return
@@ -1059,6 +1062,36 @@ func _anim_demo() -> void:
 	else:
 		spieler.schwamm_off = _anim_start + Vector2(sin(tt * 4.2) * 0.55, sin(tt * 2.7) * 0.3 + tt * 0.15)
 	spieler._begrenzen()
+
+# --anim-folgen: Schwamm fährt weit nach rechts oben, dann links unten (Arm-Upgrade-Reichweite) → Kamera muss mitschwenken,
+# Hin-und-her in der Mitte darf sie nicht bewegen. Ausgabe: Blick + Bildschirm-Lage des Schwamms (0..1).
+var _af_naechste := 0.0
+func _anim_folgen() -> void:
+	var t := demo_zeit
+	if t > 7.5:
+		print("FOLGEN ENDE frame=%d" % Engine.get_frames_drawn())
+		get_tree().quit()
+		return
+	spieler.reich_seite = 3.2
+	spieler.reich_oben = 3.6
+	if not spieler.wischt:
+		spieler.wischen_start()
+		_anim_start = spieler.schwamm_off
+		print("FOLGEN start frame=%d yaw=%.2f pitch=%.2f" % [Engine.get_frames_drawn(), spieler.yaw, spieler.pitch])
+	var z: Vector2
+	if t < 2.0:     # Mitte: schnell hin und her reiben
+		z = _anim_start + Vector2(sin(t * 9.0) * 0.4, sin(t * 6.0) * 0.2)
+	elif t < 4.0:   # weit nach rechts oben
+		z = _anim_start.lerp(Vector2(3.1, 3.5), smoothstep(2.0, 4.0, t))
+	else:           # quer nach links unten
+		z = Vector2(3.1, 3.5).lerp(Vector2(-3.1, 0.4), smoothstep(4.0, 6.5, t))
+	spieler.schwamm_off = z
+	spieler._begrenzen()
+	if t >= _af_naechste:
+		_af_naechste += 0.5
+		var w := spieler.glas_punkt + spieler.rechts * spieler.schwamm_off.x + Vector3.UP * spieler.schwamm_off.y
+		var sp := spieler.cam.unproject_position(w) / get_viewport().get_visible_rect().size
+		print("FOLGEN t=%.1f frame=%d yaw=%.2f pitch=%.2f schwamm_bild=(%.2f, %.2f)" % [t, Engine.get_frames_drawn(), spieler.yaw, spieler.pitch, sp.x, sp.y])
 
 # --anim-koop: nachgestellte Gondel eines Mitspielers rechts daneben (Figur + Stange + Schwamm), ohne Netz
 var _koop_f := {}

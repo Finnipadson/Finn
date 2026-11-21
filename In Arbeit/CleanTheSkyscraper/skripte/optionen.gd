@@ -18,6 +18,7 @@ const STANDARD := {
 	"vollbild": false,
 	"maus": 1.0,             # Empfindlichkeit (Umschauen)
 	"maus_umkehren": false,  # Maus hoch = nach unten schauen
+	"kamera_folgt": true,    # beim Putzen schwenkt der Blick mit, wenn das Werkzeug an den Bildrand kommt (21.11.2026)
 	"fov": 75.0,             # Sichtfeld in Grad (zu Fuß; Gondel +3°), Wunsch des Users 20.11.2026
 	"tasten": {},            # Aktion → Keycode (nur Abweichungen von der Standardbelegung)
 }
