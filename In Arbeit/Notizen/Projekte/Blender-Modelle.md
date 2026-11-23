@@ -7,7 +7,7 @@
 ## Modelle
 - **Steinwolf** – Stein-/Lava-Wolf mit Glüh-Rissen, Spiralen, Energiebändern, Blitzen; Angriffssprung
 - **Lavadrache** – Lava-Drache mit glattem Körper, Skelett, Flügelschlag, Schuppenreihen, Stachelreihen, Feuerspucken
-- **Skorpion** – violetter Kristall-/Schatten-Skorpion mit Sichelscheren, Stachel-Stich, tippelnden Beinen, Ketten, Splittern, Nebel und Runenkreis
+- **Skorpion** – violetter Kristall-/Schatten-Skorpion mit Sichelscheren, Stachel-Stich mit Giftstrahl, Scheren-Schlag mit Schockwelle, tippelnden Beinen, Ketten, Splittern, Nebel und Runenkreis
 
 ## Offene Punkte
 - Animation als Video rendern (Render → Animation rendern)
