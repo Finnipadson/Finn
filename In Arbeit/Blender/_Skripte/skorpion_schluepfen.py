@@ -3,8 +3,8 @@
 #   60-159  Risse gluehen immer staerker, 80-158 Ei wackelt (immer heftiger)
 #   160     Schale platzt: Oberteil in Stuecken weg (ballistisch), Unterteil bleibt als Schale stehen,
 #           Lichtblitz + leuchtende Kugel + Funken
-#   158-300 kleiner Skorpion (verlinkte Instanz der Sammlung "Skorpion") taucht auf, klettert ueber den Rand,
-#           krabbelt raus und waechst. Der grosse Skorpion bleibt unveraendert.
+#   158-300 kleiner Skorpion (eigene Kopie 'Skorpion_Baby' mit eigener Bewegung): Scheren ueber den Rand,
+#           hochziehen, oben balancieren, nach vorne kippen, mit hastigen Beinen weglaufen. Der grosse Skorpion bleibt unveraendert.
 import bpy, bmesh, math, random
 from mathutils import Vector, Matrix, Euler
 D = bpy.data; C = bpy.context; sc = bpy.context.scene
@@ -126,11 +126,103 @@ def fracture(sh, wobble, rnd):
     return pieces
 
 
+BABY = "Skorpion_Baby"
+BABY_S = 0.2            # Groesse des Babys (passt hochkant ins Ei)
+
+
+def copy_scorpion():
+    """Eigene Kopie aller Objekte der Sammlung 'Skorpion' (Daten geteilt), alle Bezuege auf die Kopien umgehaengt.
+    Skelett + Koerper-Mesh bleiben am Ursprung (sonst doppelte Verschiebung durch CHILD_OF/Armature);
+    bewegt wird nur die Root-Kopie."""
+    c = D.collections.get(BABY)
+    if c:
+        for o in list(c.objects): D.objects.remove(o, do_unlink=True)
+    else:
+        c = D.collections.new(BABY); sc.collection.children.link(c)
+    src = list(D.collections["Skorpion"].all_objects); mp = {}
+    for o in src:
+        n = o.copy(); n.name = "Bb_" + o.name[3:] if o.name.startswith("Sk_") else "Bb_" + o.name
+        c.objects.link(n); mp[o] = n
+    def m(t): return mp.get(t, t)
+    for o, n in mp.items():
+        if o.parent: n.parent = m(o.parent); n.matrix_parent_inverse = o.matrix_parent_inverse.copy()
+        for md in n.modifiers:
+            for attr in ("object", "curve", "target"):
+                if getattr(md, attr, None) in mp: setattr(md, attr, mp[getattr(md, attr)])
+        for cn in n.constraints:
+            if getattr(cn, "target", None) in mp: cn.target = mp[cn.target]
+        if n.type == 'ARMATURE':
+            for pb in n.pose.bones:
+                for cn in pb.constraints:
+                    if getattr(cn, "target", None) in mp: cn.target = mp[cn.target]
+        if n.animation_data:
+            if n.animation_data.action and o.name == "Sk_Root": n.animation_data.action = None   # keine Stich/Schlag-Props
+            for fc in n.animation_data.drivers:
+                for v in fc.driver.variables:
+                    for t in v.targets:
+                        if t.id in mp: t.id = mp[t.id]
+    return mp
+
+
+def build_baby(root):
+    mp = copy_scorpion(); B = {o.name: n for o, n in mp.items()}
+    br = B["Sk_Root"]
+    piv = D.objects.new("Ei_Baby", None); coll(EI).objects.link(piv); piv.parent = root; piv.empty_display_size = 0.6
+    br.parent = piv; br.matrix_parent_inverse = Matrix.Identity(4); br.location = (0, 0, 0); br.rotation_euler = (0, 0, 0); br.scale = (1, 1, 1)
+    keyprop(piv, "klettern", ((1, 0), (BURST, 0), (BURST + 12, 1.0), (BURST + 80, 1.0), (BURST + 105, 0.35), (300, 0.35)))
+    keyprop(piv, "greifen", ((1, 0), (BURST + 4, 0), (BURST + 18, 1.0), (BURST + 45, 1.0), (BURST + 62, 0.0), (300, 0)))
+    k = ("k", piv, '["klettern"]'); g = ("g", piv, '["greifen"]')
+    # eigene Bewegung: hastiges Krabbeln statt Stich/Schlag
+    drv(B["Sk_Koerper"], "location", 2, "1.2+0.04*k*sin(frame*2*pi/22)", [k])
+    drv(B["Sk_Koerper"], "rotation_euler", 1, "0.05*k*sin(frame*2*pi/44)", [k])
+    drv(B["Sk_Koerper"], "rotation_euler", 0, "0.08*k*sin(frame*2*pi/30)", [k])      # seitliches Wackeln beim Klettern
+    drv(B["Sk_Koerper"], "rotation_euler", 2, "0.05*sin(frame*2*pi/60)", [])
+    wave = [0.05, 0.06, 0.07, 0.08, 0.08, 0.07]; tuck = [0.15, 0.12, 0.1, 0.05, 0.0, 0.0]
+    for i in range(6):
+        j = B[f"Sk_Schwanz_J{i}"]
+        drv(j, "rotation_euler", 1, f"{wave[i]}*sin(frame*2*pi/50-{i * 0.5:.2f})+{tuck[i]}*k", [k])   # beim Klettern Schwanz eingerollt
+        drv(j, "rotation_euler", 2, f"0.1*sin(frame*2*pi/40-{i * 0.55:.2f})", [])
+    for s, S, ph in ((-1, "L", 0.0), (1, "R", 1.6)):
+        drv(B[f"Sk_Finger_{S}"], "rotation_euler", 2, f"{s}*(0.25+0.25*sin(frame*2*pi/26+{ph}))", [])
+        drv(B[f"Sk_Schere_{S}0"], "rotation_euler", 1, f"-0.55*g+0.06*sin(frame*2*pi/30+{ph})", [g])     # Arme hoch ueber den Rand
+        drv(B[f"Sk_Schere_{S}0"], "rotation_euler", 2, f"{-s}*0.08*sin(frame*2*pi/36+{ph})", [])
+        drv(B[f"Sk_Schere_{S}1"], "rotation_euler", 1, f"0.4*g+0.08*sin(frame*2*pi/30+{ph + 0.6:.2f})", [g])  # Haende haken ein
+        for i in range(4):
+            ph2 = math.pi * ((i + (0 if S == "L" else 1)) % 2)
+            leg = B[f"Sk_Bein_{S}{i}"]
+            drv(leg, "rotation_euler", 2, f"(0.08+0.08*k)*sin(frame*2*pi/22+{ph2:.2f})", [k])
+            drv(leg, "rotation_euler", 0, f"{s}*(0.05+0.07*k)*max(0,sin(frame*2*pi/22+{ph2:.2f}))", [k])
+    drv(B["Sk_Kopf"], "rotation_euler", 2, "0.06*sin(frame*2*pi/34)", [])
+    # Weg aus dem Ei: Scheren ueber den Rand, hochziehen, oben balancieren, nach vorne kippen, weglaufen
+    out = Vector((math.cos(BABY_DIR), math.sin(BABY_DIR), 0)); rim = EI_H * 0.42
+    path = [  # frame, Abstand, Hoehe, Neigung (neg = Nase hoch), Drehung
+        (BURST - 2, -0.35, 0.05, -1.05, 0.0), (BURST + 14, -0.3, 0.25, -1.0, 0.05),
+        (BURST + 30, -0.15, 0.55, -0.85, -0.06), (BURST + 46, 0.15, 0.85, -0.55, 0.05),
+        (BURST + 60, 0.55, rim * 0.95, -0.12, -0.04), (BURST + 70, 0.85, rim * 0.95, 0.05, 0.0),
+        (BURST + 82, 1.3, rim * 0.6, 0.45, 0.04), (BURST + 94, 1.75, 0.12, 0.22, -0.03),
+        (BURST + 104, 2.05, 0.0, 0.0, 0.0), (300, 3.3, 0.0, 0.0, 0.12)]
+    for f, d, z, tilt, yaw in path:
+        piv.location = out * d + Vector((0, 0, z)); piv.rotation_euler = (0, tilt, BABY_DIR + yaw)
+        piv.keyframe_insert("location", frame=f); piv.keyframe_insert("rotation_euler", frame=f)
+    # vor dem Schluepfen unsichtbar (Groesse 0), danach fest
+    for f, sv in ((1, 0.0), (BURST - 3, 0.0), (BURST - 2, BABY_S), (300, BABY_S * 1.08)):
+        piv.scale = (sv, sv, sv); piv.keyframe_insert("scale", frame=f)
+    from bpy_extras import anim_utils
+    ad = piv.animation_data
+    for fc in anim_utils.action_get_channelbag_for_slot(ad.action, ad.action_slot).fcurves:
+        if fc.data_path == "scale":
+            for kp in fc.keyframe_points: kp.interpolation = 'CONSTANT' if kp.co[0] < BURST - 2 else 'LINEAR'
+
+
 def build_hatch(seed=11):
     rnd = random.Random(seed)
     root = build_egg()
     for o in list(coll(EI).objects):
         if o.name.startswith("Ei_Grat_"): D.objects.remove(o, do_unlink=True)    # Grate waren im Render kaum sichtbar
+    def angdiff(x, y): return abs((x - y + math.pi) % (2 * math.pi) - math.pi)
+    for o in list(coll(EI).objects):   # Luecke im Nest, wo das Baby rauslaeuft
+        if o.name.startswith(("Ei_Stein_", "Ei_Kristall_")) and angdiff(math.atan2(o.location.y, o.location.x), BABY_DIR) < 0.6:
+            D.objects.remove(o, do_unlink=True)
     keyprop(root, "wackel", ((1, 0), (80, 0), (120, 0.3), (150, 1.0), (158, 1.0), (BURST, 0), (300, 0)))
     keyprop(root, "gluehen", ((1, 0), (60, 0), (150, 1.0), (159, 1.8), (BURST + 4, 0.5), (210, 0), (300, 0)))
     keyprop(root, "blitz", ((1, 0), (BURST - 1, 0), (BURST + 1, 1.0), (BURST + 25, 0), (300, 0)))
@@ -152,6 +244,9 @@ def build_hatch(seed=11):
     for ob, cen in pieces:
         if cen is None: continue
         out = Vector((cen.x, cen.y, 0)); out = out.normalized() if out.length > 0.05 else Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), 0)).normalized()
+        ang = math.atan2(out.y, out.x); dd = (ang - BABY_DIR + math.pi) % (2 * math.pi) - math.pi
+        if abs(dd) < 0.9:   # keine Stuecke auf den Laufweg des Babys
+            ang = BABY_DIR + math.copysign(0.9 + rnd.uniform(0, 0.6), dd if dd else 1); out = Vector((math.cos(ang), math.sin(ang), 0))
         hz = cen.z / EI_H
         v0 = out * rnd.uniform(1.6, 3.2) + Vector((0, 0, rnd.uniform(2.5, 4.5) + 2.0 * hz))
         w0 = Vector((rnd.uniform(-8, 8), rnd.uniform(-8, 8), rnd.uniform(-4, 4)))
@@ -190,23 +285,6 @@ def build_hatch(seed=11):
             if p.z < 0.05: p.z = 0.05; v.z = abs(v.z) * 0.3
         sp.scale = (0, 0, 0); sp.keyframe_insert("scale", frame=BURST + life + 2)
         set_interp(sp, None, 'LINEAR')
-    # kleiner Skorpion: verlinkte Instanz der Sammlung "Skorpion"
-    baby = D.objects.new("Ei_Baby_Skorpion", None); coll(EI).objects.link(baby); baby.parent = root
-    baby.instance_type = 'COLLECTION'; baby.instance_collection = D.collections["Skorpion"]
-    baby.rotation_euler = (0, 0, BABY_DIR)
-    out = Vector((math.cos(BABY_DIR), math.sin(BABY_DIR), 0))
-    rim_z = EI_H * 0.42
-    keys = [  # frame, Abstand vom Ei-Zentrum, Hoehe, Groesse, Neigung (neg = Nase hoch)
-        (BURST - 2, 0.0, 0.25, 0.10, 0.0), (BURST + 20, 0.05, 0.45, 0.12, -0.35), (BURST + 50, 0.45, rim_z * 0.95, 0.15, 0.0),
-        (BURST + 70, 1.05, rim_z * 0.75, 0.18, 0.4), (BURST + 90, 1.7, 0.0, 0.23, 0.0), (300, 3.0, 0.0, 0.32, 0.0)]
-    for f, dist, z, s, tilt in keys:
-        baby.location = out * dist + Vector((0, 0, z)); baby.scale = (s, s, s)
-        baby.rotation_euler = (0, tilt, BABY_DIR)
-        for p in ("location", "scale", "rotation_euler"): baby.keyframe_insert(p, frame=f)
-    # vor dem Schluepfen unsichtbar
-    for f, hid in ((1, True), (BURST - 3, True), (BURST - 2, False)):
-        baby.hide_render = hid; baby.hide_viewport = hid
-        baby.keyframe_insert("hide_render", frame=f); baby.keyframe_insert("hide_viewport", frame=f)
-    set_interp(baby, "hide_render", 'CONSTANT'); set_interp(baby, "hide_viewport", 'CONSTANT')
+    build_baby(root)
     sc.frame_set(1)
     return root
