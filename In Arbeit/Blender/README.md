@@ -29,7 +29,7 @@ Render-Ausgabe der Szene auf `<Name>/Renders/Animation/` stellen.
 |---|---|---|
 | Steinwolf | Stein-/Lava-Wolf, Glüh-Risse, Spiralen, Energiebänder, Blitze | 300 Frames @ 60 fps, Atmen/Knurren, Angriffssprung |
 | Lavadrache | Lava-Drache: glatter Metaball-Körper + Skelett, Flügel-Armatures, Schuppenreihen, Stacheln, Kristallkrallen | 300 Frames @ 60 fps, Flügelschlag, Schwanzwelle, Feuerspucken (Frame ~140–246) |
-| Skorpion | Violetter Kristall-/Schatten-Skorpion: glatter Metaball-Körper + Skelett, Kristall-Sichelscheren, glühender Stachel, Panzerplatten, Ketten-Ringe, Splitter, Nebel, Runenkreis im Boden | 300 Frames @ 60 fps, Schwanz pendelt + Stich nach vorne über den Kopf (Frame ~170–250) mit Giftstrahl (207–234), Scheren-Schlag + Schockwelle im Boden (232–292), Scheren auf/zu, Beine tippeln, Ketten/Splitter kreisen |
+| Skorpion | Violetter Kristall-/Schatten-Skorpion: glatter Metaball-Körper + Skelett, Kristall-Sichelscheren, glühender Stachel, Panzerplatten, Ketten-Ringe, Splitter, Nebel, Runenkreis im Boden | 300 Frames @ 60 fps, Schwanz pendelt + Stich nach vorne über den Kopf (Frame ~170–250) mit Giftstrahl (207–234), Scheren-Schlag + Schockwelle im Boden (232–292), Scheren auf/zu, Beine tippeln, Ketten/Splitter kreisen. Daneben ein Ei: wackelt + Risse glühen (60–159), platzt bei Frame 160 auf (Stücke, Blitz, Funken), kleiner Skorpion (verlinkte Instanz) klettert raus und wächst |
 
 ## Skripte (`_Skripte/`)
 
@@ -49,6 +49,8 @@ In Blender ausführen mit `exec(open(r"...\_Skripte\<datei>.py", encoding="utf-8
 | `skorpion_body.py` | Skorpion: Gelenk-Empties, glatter Metaball-Körper direkt aus Capsules/Ellipsoiden, Skelett + Bindung |
 | `skorpion_details.py` | Skorpion: Sichelklingen (Kurve mit Profil-Objekt), Stachel, Augen, Krone, Panzerplatten, Dornen (Raycast nur gegen den Körper) |
 | `skorpion_gift.py` | Skorpion: Giftstrahl aus der Stachelspitze (Ladung, Strahl, Tropfen, Einschlag), Scheren-Schlag, Schockwelle + Runen-Blitz im Bodenmaterial; Steuerung über Properties `ladung/gift/glut/schlag/welle` an `Sk_Root` |
+| `skorpion_ei.py` | Skorpion-Ei neben dem Skorpion: kantige Schale (eigene Material-Kopie `Sk_Ei_Schale`), Nest aus Steinen + Kristallen, Splitter |
+| `skorpion_schluepfen.py` | Schlüpf-Animation: Schale zerteilen (Unterteil bleibt), Wackeln, Glühen, ballistische Stücke + Funken, Blitz, Baby = Collection-Instanz von „Skorpion“; `build_hatch()` baut Ei + Animation komplett neu |
 | `skorpion_fx.py` | Skorpion: Splitter, Ketten-Ringe (Array + Curve), Nebel-Volumen, Lichter, alle Animations-Drivers |
 
 Die Skripte sind auf die Lavadrache-Namen zugeschnitten (z. B. `Schwanz_J*`, `Drachenkoerper`) –
