@@ -6,6 +6,7 @@ Roblox-RPG: Hub-Insel mit Portal in der Mitte, vier Elementinseln mit je einem B
 - Gebaut direkt in Roblox Studio über den **Roblox-Studio-MCP** (`claude mcp add ... Roblox_Studio`, eingebauter Studio-MCP, unten rechts „MCP on“).
 - Erst `list_roblox_studios` aufrufen – die `studio_id` ändert sich bei jedem Studio-Neustart.
 - Bauen per `execute_luau` (Edit-DataModel), Kontrolle per `screen_capture` mit Kameraposition. Große Bauten zeilenweise mit `task.wait()`, sonst Timeout.
+- Boden-Säulen (`Ground`) und Wolken sind `Locked = true`, damit der User sie nicht versehentlich zieht. Zum Bearbeiten per Skript entsperren.
 - Place-Datei: `himmelsinseln.rbxl` in diesem Ordner (vom User per Datei → Speichern unter angelegt).
 
 ## Welt-Layout (Studs, User-Vorgabe: Hub 300 breit, Biom-Inseln 1200 breit)
