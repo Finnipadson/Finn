@@ -1,6 +1,6 @@
 ---
 typ: spiel
-status: Hub-Insel fertig
+status: Hub + Lavainsel gebaut
 technik: Roblox Studio (Luau), gebaut über Roblox-Studio-MCP
 speicher: himmelsinseln.rbxl
 ---
@@ -12,7 +12,8 @@ Roblox-RPG auf schwebenden Inseln: Hub mit Portal in der Mitte, vier Elementinse
 ## Offene Punkte
 
 - [x] Hub-Insel mit Portal, Brücken und Toren
-- [ ] Lavainsel + Lavadrache als erster Boss
+- [x] Lavainsel (1200 Studs) mit Vulkan, Boss-Tor und Arena
+- [ ] Lavadrache als erster Boss
 - [ ] Level-System und erste Gegner
 - [ ] Eier/Begleiter
 - [ ] Eis-, Dschungel- und Kristallinsel
