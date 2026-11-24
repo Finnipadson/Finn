@@ -39,18 +39,28 @@ Steinwolf, Lavadrache, Skorpion existieren in Blender (`In Arbeit/Blender/`). Im
 3. Importiert kommt alles **grau** (Blender-Materialien sind prozedural) und **1 m = 1 Stud** (zu klein) → in Studio Farbe/Material je MeshPart setzen, skalieren, verankern, drehen.
 4. Ist ein Package: Änderungen gelten nur für diese Kopie.
 
-### Lavadrache (fertig importiert, statisch)
-- Asset-ID **116836643030172** (1 Upload). GLB `Export/lavadrache.glb`, Pose Frame 100, 43k Dreiecke, 10 MeshParts `Drache_<Material>`.
-- In `Map/Lava/Arena/Lavadrache`, 28 Studs hoch, ~71 breit, steht auf dem Arena-Boden (Y 270.9), Kopf schaut Richtung Treppe/Hub.
-- Farben aus dem Render: Körper Basalt (110,92,98), Kopf Slate (150,140,146), Flügel (125,22,28), Kristall/Glühen Neon rot-rosa, PointLight im Glühen (Brightness 0.6 – mehr färbt alles rosa).
-- Fehlt: Glüh-Risse (nur per Textur-Bake), Animation (bräuchte Roblox-Rig).
+### Lavadrache (Rig mit Skelett, Skin und Animation) – aktuell
+- Export: `Export/export_drache_rig.py` (headless). Baut EIN Rig: 34 Skelett-Knochen + Flügel-Rigs (Präfix `WL_`/`WR_`) + `Kiefer`; Ruhelage = Pose Frame 100. Starre Teile (Krallen, Hörner, Stacheln, Zähne) hängen per Bewegungsvergleich über 4 Frames am passenden Knochen (Gewicht 1). 3 Meshes `Drache_Vorne/Hinten/Fluegel` (18,5k/18,5k/15k Dreiecke), Smart-UV, Cycles-Bake (Selected→Active, Kurven als temporäre Mesh-Kopien) → `drache_color_*.png` + `drache_emissive_*.png` (2048). Bake dauert ~40 min.
+- Assets: Rig **112074245532582**; Farbe vorne/hinten/flügel 128319781998618 / 131479757513267 / 81129183016308; Glühen 97707548132093 / 140052499849874 / 136229445760186. Alte statische Version 116836643030172 wird nicht mehr benutzt.
+- In Studio: `Map/Lava/Arena/Lavadrache` (Package), SurfaceAppearance mit ColorMapContent + EmissiveMaskContent (EmissiveTint orange), 40 Studs hoch, ~82 breit, Kopf Richtung Treppe, `ModelStreamingMode = Persistent` (sonst fehlen die Knochen im Client, wenn der Spieler am Hub spawnt). Knochen liegen unter `RootPart`.
+- Körperfarbe wirkt im Spiel recht dunkel (Bake-Farbe), Glüh-Risse gut sichtbar.
+
+## Bosskampf (Skripte in `Scripts/`, in Studio eingespielt)
+- `BossServer.server.lua` → ServerScriptService. Zustand als Attribute am Boss: State, StateStart, HP, MaxHP, Phase. Kampf startet, sobald ein Spieler in der Arena ist (r < 96). HP 2500 + 1500 je weiterem Spieler. Dreht sich zum Ziel (Modell-Yaw um Arena-Mitte).
+  - Angriffe mit rotem Warnfeld (SmoothPlastic, nicht Neon – Neon wirkte wie massiver Block): Feueratem (Kegel 80 Studs, 9 Schaden/0,25 s), Schwanzhieb (Kreis r 50, 30 + Rückstoß), Stampfen (Ring-Schockwelle, drüberspringen, 25), ab 50 % Phase 2 „wütend“: Meteorregen (9 Einschläge, 35), schneller.
+  - Sieg: State Dead, 500 XP (leaderstats „XP“, noch ohne Level-System), Respawn nach 45 s.
+- `Schwert.server.lua` → Tool `Schwert` in StarterPack (Klick, 25 Schaden, Reichweite 18 um Knochenpunkte inkl. Pfoten/Schwanz). Griff: GripForward (1,0,0), GripUp (0,0,-1), GripPos (0,0,0.4).
+- `DracheAnim.client.lua` → StarterPlayerScripts: Bone.Transform je Zustand; Achsen aus Geometrie (vorne/oben/seitlich), Flügelachse so, dass + die Spitze hebt. Glühen pulsiert (EmissiveStrength), beim Tod kippen + ausblenden (LocalTransparencyModifier).
+- `BossHUD.client.lua` → StarterGui/BossHUD: Lebensbalken, Meldungen, Rückstoß (Client setzt Velocity).
+- Änderungen in Studio immer auch in die Dateien hier übernehmen (Quelle der Wahrheit = Dateien).
+- Getestet (Playtest per MCP): Start, Feuer/Schwanz/Stampfen/Meteor, Schaden an Spieler (Spawn-ForceField blockt die ersten 10 s), Schwert-Treffer, Phase 2, Sieg + XP, Respawn.
 
 ## Stand
 - [x] Hub-Insel 300 Studs mit Portal, Wegen, Brücken, Toren, Bäumen, Wasserfällen, Licht, Wolken (24.11.2026)
 - [x] Lavainsel 1200 Studs: Ebene, Plateau, Vulkan mit Treppe, Boss-Tor, Arena (24.11.2026)
-- [ ] Lava macht Schaden, Boss-Tor prüft Level
+- [ ] Lava macht Schaden, Boss-Tor prüft Level (Tor ist bis dahin begehbar, CanCollide aus)
 - [ ] Level-System (XP, Level-Anzeige), erste Gegner zum Farmen in GegnerZone_1/2
 - [x] Lavadrache importiert und in der Arena platziert (statisch, 24.11.2026)
-- [ ] Bosskampf (Lebensbalken, Angriffe), evtl. Animation/Glüh-Textur
+- [x] Lavadrache als Rig mit Glüh-Haut, 40 Studs, Animationen + kompletter Bosskampf (24.11.2026)
 - [ ] Eier/Begleiter
 - [ ] Restliche drei Inseln + Bosse

@@ -1,0 +1,38 @@
+00:01.281  blend            | Read blend: "C:\Users\finns\OneDrive\Desktop\Claude\Games\In Arbeit\Blender\Lavadrache\lavadrache.blend"
+BlenderMCP addon registered
+RIGID_ASSIGN [('Kopf', 62), ('Kiefer', 27), ('B_VHand_L_Ballen', 27), ('Schwanz_0', 24), ('B_HFuss_R_Ballen', 22), ('B_VArm_O_R', 20), ('B_VHand_R_Ballen', 19), ('Hals_1', 19), ('Koerper_H', 16), ('Hals_2', 16), ('Schwanz_1', 15), ('B_HBein_O_R', 14), ('B_HBein_M_R', 14), ('B_HFuss_L_Ballen', 11), ('B_VArm_U_R', 10), ('B_HBein_M_L', 10), ('B_VArm_U_L', 9), ('B_VArm_O_L', 9), ('Schwanz_3', 8), ('WL_Hand', 7), ('WR_Hand', 7), ('Hals_3', 7), ('Hals_0', 6), ('Schwanz_2', 6), ('Schwanz_4', 6), ('Schwanz_7', 6), ('Schwanz_5', 5), ('Schwanz_6', 5), ('Schwanz_11', 4), ('WL_Arm', 3), ('WL_F2', 3), ('WR_Arm', 3), ('WR_F2', 3), ('Koerper_V', 3), ('B_HBein_O_L', 3), ('Schwanz_8', 3), ('Schwanz_9', 3), ('WL_F1', 2), ('WL_F3', 2), ('WL_F4', 2)]
+BONES 47
+RAW_TRIS 216060 MATS ['Kopfstein', 'Kristall', 'Drachenstein', 'Fluegelhaut', 'Augen', 'Gluehen', 'Maul', 'Zahn', 'Zunge', 'Panzer']
+CHUNK Vorne 18499
+CHUNK Hinten 18499
+CHUNK Fluegel 15000
+BAKE_SOURCES 454
+Info: Baking map saved to internal image, save it externally or pack it
+Info: Baking map saved to internal image, save it externally or pack it
+BAKED Vorne emissive_ref 23.456 glow_px 198040
+Info: Baking map saved to internal image, save it externally or pack it
+Info: Baking map saved to internal image, save it externally or pack it
+BAKED Hinten emissive_ref 12.67 glow_px 103475
+Info: Baking map saved to internal image, save it externally or pack it
+Info: Baking map saved to internal image, save it externally or pack it
+BAKED Fluegel emissive_ref 6.188 glow_px 341447
+INFO Draco is available, use library at C:\Program Files\Blender Foundation\Blender 5.3\blender.shared\bf_intern_draco_bridge.dll
+INFO MeshOptimizer is available, use library at C:\Program Files\Blender Foundation\Blender 5.3\blender.shared\bf_intern_meshopt_bridge.dll
+22:35:02 | INFO: Starting glTF 2.0 export
+22:35:02 | INFO: Extracting primitive: Drache_Fluegel.001
+22:35:02 | INFO: Primitives created: 1
+22:35:02 | INFO: Extracting primitive: Drache_Hinten.001
+22:35:02 | INFO: Primitives created: 1
+22:35:02 | WARNING: There are more than 4 joint vertex influences.The 4 with highest weight will be used (and normalized).
+22:35:02 | WARNING: Mesh Drache_Vorne.001 is not valid, and may be exported wrongly
+22:35:02 | INFO: Extracting primitive: Drache_Vorne.001
+22:35:02 | INFO: Primitives created: 1
+22:35:02 | INFO: Finished glTF 2.0 export in 0.30609941482543945 s
+
+BOUNDS [-8.18, -7.07, -0.19] [5.66, 7.19, 6.87]
+HEAD (3.24, 0.09, 4.31)
+DONE
+BlenderMCP addon unregistered
+Blender 5.3.0 (hash 02f0899d78e3 built 2026-11-10 01:33:43)
+
+Blender quit

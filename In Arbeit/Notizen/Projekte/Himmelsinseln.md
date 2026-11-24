@@ -1,6 +1,6 @@
 ---
 typ: spiel
-status: Hub + Lavainsel gebaut, Lavadrache in der Arena
+status: Hub + Lavainsel + Bosskampf Lavadrache spielbar
 technik: Roblox Studio (Luau), gebaut über Roblox-Studio-MCP
 speicher: himmelsinseln.rbxl
 ---
@@ -14,7 +14,7 @@ Roblox-RPG auf schwebenden Inseln: Hub mit Portal in der Mitte, vier Elementinse
 - [x] Hub-Insel mit Portal, Brücken und Toren
 - [x] Lavainsel (1200 Studs) mit Vulkan, Boss-Tor und Arena
 - [x] Lavadrache aus Blender importiert (statische Figur in der Arena)
-- [ ] Bosskampf mit dem Lavadrachen
+- [x] Bosskampf mit dem Lavadrachen (Glüh-Haut, Animationen, 4 Angriffe, Phase 2, Schwert, Lebensbalken)
 - [ ] Level-System und erste Gegner
 - [ ] Eier/Begleiter
 - [ ] Eis-, Dschungel- und Kristallinsel
