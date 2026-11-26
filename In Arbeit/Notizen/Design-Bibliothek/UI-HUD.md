@@ -44,6 +44,13 @@ Alle Fenster (siehe [[Items-Loot]]) folgen einem Baukasten: Titelleiste in einer
 - **Was ist gut:** Sehr reduziertes Shooter-HUD: Lebensbalken unten links (grün, mit Zahl), Waffe mit Name und Munition unten rechts, kleine Tastenhinweise ganz unten. Die Mitte gehört komplett der Waffe und dem Ziel. Die Aufgabenliste bleibt auch im Spiel links sichtbar.
 - **Prinzip zum Übernehmen:** Shooter-HUD nach dem Ecken-Prinzip; Ziele (rote Scheiben) haben eine knallige Farbe, die sich klar von der grauen Umgebung abhebt. Gut als Vorlage für [[Nachtschicht]].
 
+### Grow a Garden – HUD (Roblox)
+
+![[growagarden-hud.jpg]]
+
+- **Was ist gut:** Oben mittig 3 große Reiter **Samen · GARTEN · VERKAUFEN** – das sind Teleports zu den 3 wichtigsten Orten, nicht Menüs. Jeder in eigener Farbe (Blau, Holzbraun, Rot). Links 3 Buttons (Geschäft, Handel, Pass) mit Symbol. Unten links Geld („20¢“) und „Freund-Boost +0 %“ mit Plus-Button (lädt zum Einladen ein). Pfeile auf dem Boden zeigen, wohin es geht.
+- **Prinzip zum Übernehmen:** Die Kern-Schleife des Spiels (kaufen → anbauen → verkaufen) steht als 3 Teleport-Buttons oben. In [[Himmelsinseln]] ginge das als Hub · Insel · Händler.
+
 ## Bei uns umgesetzt
 
 -

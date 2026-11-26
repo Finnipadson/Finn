@@ -76,6 +76,21 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Die Waffe groß in 3D in der Mitte. Rechts eine Spalte: Name, Stufe als Balken (28), „Jetzt aufsteigen“, nächste **Belohnung auf Stufe 50** sichtbar, darunter Verträge, Überblick, Statistik. Unten Aktionen als Symbol-Buttons (Verlassen, Aussehen, Einpacken, Zauber).
 - **Prinzip zum Übernehmen:** Jede Waffe hat ihren eigenen Fortschritt mit sichtbarem nächstem Ziel. Das motiviert, eine Waffe weiterzuspielen.
 
+### Grow a Garden – Zeitlich begrenzter Shop (Roblox)
+
+![[growagarden-zeitshop.jpg]]
+
+- **Was ist gut:** Fast gleicher Aufbau wie der Ei-Shop von Steal An Egg: Zeile pro Angebot mit „NEU!“, „Endet in 3 Tagen“, Inhalte mit Prozenten, 3 Mengenstufen mit durchgestrichenem Preis beim größten Paket und Geschenk-Button daneben. Die seltensten Inhalte zeigen ein „?“ statt des Bildes. Die Zeilen sind in der Farbe des Themas eingefärbt (Regenbogen, Blau).
+- **Prinzip zum Übernehmen:** Dass zwei Top-Spiele das identisch machen, zeigt: Das ist ein gelernter Standard für Roblox-Shops.
+
+### Grow a Garden – Saat-Laden mit Restock (Roblox)
+
+![[growagarden-saatladen.jpg]]
+![[growagarden-saat-kaufen.jpg]]
+
+- **Was ist gut:** Oben groß der Countdown **„New seeds in 1m 31s“** und ein Button „RESTOCK“ (vermutlich sofort auffüllen gegen Robux). Jede Saat als Zeile: Bild, Name, **begrenzter Vorrat** („X9 Stock“), Preis grün, Seltenheit als Schild. Antippen klappt die Zeile auf: großer grüner Button mit Spielgeld-Preis, lila Button mit Robux-Preis, Geschenk-Button. Ist eine Saat ausverkauft, muss man auf den nächsten Restock warten.
+- **Prinzip zum Übernehmen:** Begrenzter Vorrat + Countdown bis zum Auffüllen = Grund, alle paar Minuten wieder in den Laden zu schauen. Aufklappen statt eines eigenen Kaufdialogs.
+
 ## Bei uns umgesetzt
 
 -
