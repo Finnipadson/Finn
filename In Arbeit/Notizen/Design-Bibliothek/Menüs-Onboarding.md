@@ -18,7 +18,12 @@ Zurück: [[Design-Bibliothek]]
 
 ## Referenzen
 
-<!-- Bilder hier einbetten: ![[datei.jpg]] + was daran gut ist -->
+### Steal An Egg – Verkaufen-Fenster (Roblox)
+
+![[stealanegg-verkaufen.jpg]]
+
+- **Was ist gut:** Links Sortierung (Gewicht/Wert) und „Alle auswählen“, der aktive Sortierknopf ist grün. Unten eine feste Leiste mit dem **Gesamtwert** groß (Geldbündel-Symbol) und dem „Verkaufen“-Button rechts. Der Button bleibt grau, solange nichts ausgewählt ist.
+- **Prinzip zum Übernehmen:** Bei Massenaktionen den Gesamtwert live zeigen, bevor man bestätigt; deaktivierte Buttons grau statt versteckt.
 
 ## Bei uns umgesetzt
 

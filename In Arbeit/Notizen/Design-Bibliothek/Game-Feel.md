@@ -20,7 +20,12 @@ Zurück: [[Design-Bibliothek]]
 
 ## Referenzen
 
-<!-- Bilder hier einbetten: ![[datei.jpg]] + was daran gut ist -->
+### Steal An Egg – Ei schlüpft (Roblox)
+
+![[stealanegg-schluepfen.jpg]]
+
+- **Ablauf (Video, ~6 s):** Ei abstellen → Schild „Ei – Bereit!“ → Schale platzt in Blockstücke auseinander, die wegfliegen → weißer Lichtkegel und Funkeln → Haustier springt heraus und läuft direkt hinter dem Spieler her.
+- **Prinzip zum Übernehmen:** Belohnung in 3 Takten: Vorfreude (Bereit-Schild), Explosion (Stücke + Licht), Ergebnis (Figur bleibt sichtbar beim Spieler). Bei seltenen Tieren sollte die Explosion größer und farbiger werden.
 
 ## Bei uns umgesetzt
 

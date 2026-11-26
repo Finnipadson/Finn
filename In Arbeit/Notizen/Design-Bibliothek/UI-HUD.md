@@ -19,7 +19,16 @@ Zurück: [[Design-Bibliothek]]
 
 ## Referenzen
 
-<!-- Bilder hier einbetten: ![[datei.jpg]] + was daran gut ist -->
+### Steal An Egg – HUD mit Ziel (Roblox)
+
+![[stealanegg-hud-ziel.jpg]]
+
+- **Was ist gut:** Das aktuelle Ziel steht groß oben mittig („Das Ei ausbrüten!“). Links mittig nur 2 beschriftete Buttons (Geschäft, Index), rechts eine Spalte mit Symbol-Buttons ohne Text. Unten links die Währungen mit Symbol, unten rechts ein Timer bis zum nächsten Ereignis. Die Bildmitte bleibt komplett frei. Über dem Ei schwebt ein Status-Schild („Ei – Bereit!“).
+- **Prinzip zum Übernehmen:** Ziel oben, Navigation an den Seitenrändern (Daumen am Handy), Werte in den unteren Ecken. Statusschilder direkt an Objekten in der Welt statt im HUD.
+
+### Steal An Egg – Fenster-Stil allgemein (Roblox)
+
+Alle Fenster (siehe [[Items-Loot]]) folgen einem Baukasten: Titelleiste in einer **eigenen Farbe pro Fenster-Art** (Grün = Shop/Verkaufen, Lila = Trails/Maschine, Hellblau = Index) mit schrägen Glanzstreifen, dicke weiße Schrift mit dunkler Kontur, rotes „X“ immer oben rechts, dunkler Hintergrund mit Noppen-Muster. Dadurch sieht man sofort, wo man ist, und alles wirkt wie aus einem Guss.
 
 ## Bei uns umgesetzt
 
