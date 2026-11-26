@@ -36,6 +36,18 @@ Die größten Roblox-Spiele 2025/2026 (nach Spielerrekorden, gleichzeitigen Spie
 
 Live-Zahlen ändern sich schnell. Die aktuell größten Spiele zeigt Roblox selbst auf der Startseite unter „Beliebt“.
 
+## Für Welt & Objekte filmen
+
+Für [[Welt-Map]] und [[Objekte-Mechaniken]] sind **kurze Videos** besser als Screenshots (Claude zieht die Bilder selbst heraus):
+
+- **Spawn-Rundgang (30–60 s):** direkt nach dem Beitreten einmal im Kreis drehen, dann zu Shop, Verkaufen und erstem Gebiet laufen
+- **Übersicht von oben:** Kamera ganz rauszoomen und nach unten kippen, langsam über die Map drehen
+- **Zonen-Wechsel:** durch ein Portal/Tor gehen, das nächste Gebiet zeigen
+- **Objekt in Aktion (5–15 s):** Laufband mit Waren, Gehege beim Füllen, Upgrade kaufen und sehen, wie es wächst
+- **Grundstücke:** die eigene Basis und die von anderen Spielern im Vergleich
+
+Gute Kandidaten: Steal a Brainrot (Laufband + Basen), Steal An Egg (Gehege), ein „+1 Speed Keyboard Escape“-Spiel (langer Lauf-Parcours), Blox Fruits (Inselwelt), 99 Nights in the Forest (Wald-Map mit Lager in der Mitte).
+
 ## Tipps beim Fotografieren
 
 - Win+Shift+S → nur den Bereich markieren, der interessant ist

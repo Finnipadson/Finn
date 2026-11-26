@@ -13,6 +13,8 @@ Bewährte Design-Muster aus erfolgreichen Spielen – als **Inspiration, nicht z
 | [[Items-Loot]] | Seltenheit, Tooltips, Inventar, Belohnungsmomente |
 | [[Gegner-Bosse]] | Ankündigen (Telegraphing), Phasen, Fairness |
 | [[Menüs-Onboarding]] | Hauptmenü, Pause, Einstellungen, die ersten 60 Sekunden |
+| [[Welt-Map]] | Map-Aufbau: Spawn, Hub, Wege, Zonen, Grundstücke, Maßstab |
+| [[Objekte-Mechaniken]] | Objekte in der Welt: Laufbänder, Gehege, Stände, Portale, Sammelobjekte |
 
 Spiele zum Screenshot-Sammeln: [[Screenshot-Liste]]
 
