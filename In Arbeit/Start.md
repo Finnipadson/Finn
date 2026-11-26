@@ -27,6 +27,7 @@ Zentrale Übersicht über alle Projekte.
 
 - [[Ideen]] – Ideen-Inbox
 - [[Gelernte Fehler]] – Fallen, die schon mal Zeit gekostet haben
+- [[Design-Bibliothek]] – bewährte Design-Muster + Screenshots als Inspiration ([[Screenshot-Liste]])
 - Tagesnotiz: Kalender-Symbol links in der Seitenleiste (landet in `Notizen/Tagebuch`)
 - Neue Projektnotiz: Befehl „Vorlage einfügen“ (Strg+P → „Vorlage“) → *Projekt*
 
