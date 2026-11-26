@@ -67,6 +67,20 @@ Anime Crusaders X · Jujutsu Shenanigans · Hyper Realistic Ragdoll · Dress To 
 
 **Empfehlung zum Filmen zuerst:** Steal a Brainrot (Fließband), Blox Fruits (Inselwelt), 99 Nights (Map um ein Zentrum), Animal Hospital (Koop-Horror), Throw Food For Animals (warum so erfolgreich?).
 
+## Roblox – 5 Spiele, in denen die Welt im Mittelpunkt steht
+
+Für [[Welt-Map]]: zwei handgebaute Welten (Blox Fruits, Fisch), eine, die sich nach und nach öffnet (99 Nights), und zwei, die per Zufall gebaut werden (Dead Rails, DOORS).
+
+| Spiel | Art der Welt | Was filmen |
+|---|---|---|
+| **Blox Fruits** | handgebaut: viele Inseln in mehreren „Meeren“, jede Insel ein eigenes Thema + Level-Bereich | Ankunft auf einer neuen Insel, Übersicht von oben, Weg vom Hafen zum Boss, wie man Inseln aus der Ferne erkennt → direkt für [[Himmelsinseln]] |
+| **99 Nights in the Forest** | Wald um ein Lagerfeuer; **Nebel sperrt die Map**, jede Lagerfeuer-Stufe öffnet mehr (ab Stufe 3 Schneegebiet, Stufe 6 ganze Map) | Nebelgrenze, Moment, wenn sie zurückweicht, Lager in der Mitte, Wege zu Fundorten |
+| **Fisch** | handgebaut: Inseln mit eigenen Biomen, Wetter und Tag/Nacht | Biom-Wechsel, Wetter-Effekte, Hafen/Händler pro Insel |
+| **Dead Rails** | laut Community **zufällig generiert**: lange Bahnstrecke, Städte und Landschaft bei jeder Runde neu | Wie Städte aus Bausteinen zusammengesetzt sind, Übergänge zwischen Abschnitten, Wiederholungen erkennen |
+| **DOORS** | **zufällig zusammengesetzte Räume** (Hotel aus Raum-Baukasten) | Wie Räume aneinanderhängen, wie sich Räume unterscheiden, Licht/Stimmung → auch für [[Nachtschicht]] |
+
+Tipp: Bei den Zufalls-Welten zwei Runden filmen – dann sieht man, welche Teile gleich bleiben und welche wechseln. Das ist genau das, was man für eigene Generierung braucht.
+
 ## Für Welt & Objekte filmen
 
 Für [[Welt-Map]] und [[Objekte-Mechaniken]] sind **kurze Videos** besser als Screenshots (Claude zieht die Bilder selbst heraus):
