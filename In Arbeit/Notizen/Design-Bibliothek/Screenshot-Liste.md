@@ -36,6 +36,37 @@ Die größten Roblox-Spiele 2025/2026 (nach Spielerrekorden, gleichzeitigen Spie
 
 Live-Zahlen ändern sich schnell. Die aktuell größten Spiele zeigt Roblox selbst auf der Startseite unter „Beliebt“.
 
+## Roblox – alle mit 500.000+ gleichzeitigen Spielern (Dez. 2025 – Nov. 2026)
+
+Stand 26.11.2026. Quellen: LiveCounts (Spitzen seit 23.09.2026), RoStats (Rekorde), Rolimons-Monatsdurchschnitt Juli 2026 via MaxPowerGaming. Die Tracker messen unterschiedlich, die Zahlen sind gerundet. ✅ = schon gefilmt.
+
+### Belegt über 500k
+
+| Spiel | Spitze | Genre | Was filmen |
+|---|---|---|---|
+| ✅ Steal An Egg | 13,8 Mio. (Sep. 2026) | Haustier-Sammeln + Klauen | – |
+| ✅ +1 Speed Keyboard Escape | 3,7 Mio. (Sep. 2026) | Tempo-Simulator / Parcours | – |
+| Throw Food For Animals | 2,5 Mio. (Nov. 2026) | Simulator | Wurf-Mechanik, Tier-Reaktionen, Upgrades |
+| Murder Mystery 2 | 2,2 Mio. (Okt. 2026) | Runden-Spiel | Lobby, Rollen-Enthüllung, Map-Auswahl |
+| 99 Nights in the Forest | 2,2 Mio. (Okt. 2026) | Koop-Überleben | Lagerfeuer-Mitte, Tag/Nacht, Crafting, Wald-Map |
+| Adopt Me! | 1,4 Mio. (Okt. 2026) | Haustiere / Rollenspiel | Haus, Haustier-Bedürfnisse, Handel |
+| Break and Steal an Egg | 1,3 Mio. (Okt. 2026) | Ei-Klauen | Vergleich zu Steal An Egg: was ist anders? |
+| Steal a Brainrot | 1,3 Mio. (Sep. 2026), Rekord 25 Mio. (2025) | Klauen + Basis | **Fließband**, Basen, Klau-Ablauf |
+| Brookhaven RP | ~720k, Monatsschnitt Juli 546k | Rollenspiel-Stadt | Stadt-Map, Häuser, Seitenmenü |
+| Animal Hospital | Monatsschnitt Juli 471k (Spitze sicher höher) | Koop-Horror (Nachtschicht in Tierklinik) | Untersuchen, Anomalien erkennen → spannend für [[Nachtschicht]] |
+| Grow a Garden 2 | Monatsschnitt Juli 463k (Spitze sicher höher) | Farm-Simulator | größere Map, neue Beete, Gilden |
+| Blox Fruits | 930k (Okt. 2026) | Insel-RPG | **Inselwelt, Quests, Bosse** → [[Himmelsinseln]] |
+| Dandy's World | 800k (Nov. 2026) | Koop-Horror | Stockwerke, Figurenauswahl, Gegner-Warnungen |
+| ✅ RIVALS | ~670k | Shooter | – |
+| Fisch | ~510k | Angel-Simulator | Angel-Minispiel, Fang-Popup, Inseln |
+| The Hollow | ~510k | (nicht geprüft) | erst anschauen |
+
+### Grenzfälle (aktuell 50k–150k gleichzeitig, Spitze über 500k nicht belegt)
+
+Anime Crusaders X · Jujutsu Shenanigans · Hyper Realistic Ragdoll · Dress To Impress · Fish It! · Pet Simulator 99 · Forsaken · Dead Rails · ✅ Grow a Garden (Teil 1, inzwischen klein)
+
+**Empfehlung zum Filmen zuerst:** Steal a Brainrot (Fließband), Blox Fruits (Inselwelt), 99 Nights (Map um ein Zentrum), Animal Hospital (Koop-Horror), Throw Food For Animals (warum so erfolgreich?).
+
 ## Für Welt & Objekte filmen
 
 Für [[Welt-Map]] und [[Objekte-Mechaniken]] sind **kurze Videos** besser als Screenshots (Claude zieht die Bilder selbst heraus):
