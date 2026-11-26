@@ -17,7 +17,24 @@ Zurück: [[Design-Bibliothek]]
 | 9 | Slay the Spire 2 | 2026 | Kartenauswahl, Weltkarte mit Pfaden, Relikt-Tooltips, Gegner-Absichtssymbole | Items-Loot, Gegner-Bosse | [[Burgwacht]] Kampagnenkarte, [[Kopfsache]] |
 | 10 | Forza Horizon 6 | 2026 | Hauptmenü-Kacheln, Belohnungs-Popups (Rad, Freischalten), Fortschrittsanzeigen | Menüs-Onboarding, Items-Loot | Belohnungsmomente allgemein |
 
-**Bonus für Roblox ([[Himmelsinseln]]):** 2–3 der aktuell größten Roblox-Spiele (Startseite „Beliebt“) – dort vor allem Mobile-Buttons, Shop-Fenster und Tutorial-Pfeile anschauen, weil die für Handy optimiert sind.
+## Roblox ([[Himmelsinseln]])
+
+Die größten Roblox-Spiele 2025/2026 (nach Spielerrekorden, gleichzeitigen Spielern und Besuchen, Stand Nov. 2026). Bei Roblox besonders auf **Handy-Bedienung** achten: Button-Größe, Daumenzonen, Shop-Fenster, Tutorial-Pfeile. Am besten auch mal im Handy-Emulator von Studio oder am echten Handy fotografieren.
+
+| # | Spiel | Was fotografieren | Ordner |
+|---|---|---|---|
+| 1 | Blox Fruits | **wichtigste Referenz für Himmelsinseln:** Insel-Welt, Quest-Anzeige, Level/XP-Leiste, Kampf-HUD mit Skill-Tasten (Z/X/C/V), Boss-Lebensbalken | UI-HUD, Gegner-Bosse |
+| 2 | Steal a Brainrot | Fließband-Shop, Seltenheits-Schilder über Figuren, Basis-Anzeige, Geld-Zähler | Items-Loot, UI-HUD |
+| 3 | Grow a Garden | Saat-Shop mit Lager-Timer („neu in 5:00“), Wetter-/Event-Banner, Handy-Buttons am Rand | Items-Loot, Menüs-Onboarding |
+| 4 | Steal An Egg and Collect Rare Pets | Ei-Öffnen-Animation, Haustier-Seltenheit, Inventar-Raster | Items-Loot, Game-Feel |
+| 5 | 99 Nights in the Forest | Tag-/Nacht-Zähler, Crafting-Menü, Koop-Hinweise, Gegner-Ankündigung nachts | UI-HUD, Gegner-Bosse |
+| 6 | Murder Mystery 2 | Lobby, Runden-Anzeige, Rollen-Enthüllung, Kisten-Öffnen | Menüs-Onboarding, Items-Loot |
+| 7 | Rivals | Shooter-HUD am Handy, Loadout-Auswahl, Kill-Anzeige | UI-HUD, Game-Feel |
+| 8 | Adopt Me! | Haustier-Inventar, Handel-Fenster, Aufgaben-Liste (Bedürfnisse) | Items-Loot |
+| 9 | Brookhaven RP | Seitenmenü mit Symbolen, Handy-artige Menüs, Haus-/Auto-Auswahl | Menüs-Onboarding |
+| 10 | Fisch | Angel-Minispiel (Leiste mit Zielzone), Fang-Popup mit Seltenheit, Fisch-Index | Game-Feel, Items-Loot (auch für Angeln in [[Clean the Skyscraper]]) |
+
+Live-Zahlen ändern sich schnell. Die aktuell größten Spiele zeigt Roblox selbst auf der Startseite unter „Beliebt“.
 
 ## Tipps beim Fotografieren
 
