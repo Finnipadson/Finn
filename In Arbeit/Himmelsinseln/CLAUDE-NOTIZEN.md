@@ -3,6 +3,7 @@
 Roblox-RPG: Hub-Insel mit Portal in der Mitte, vier Elementinseln mit je einem Boss. Spieler leveln, sammeln/brüten Kreaturen aus Eiern (Begleiter, die mitkämpfen), Bosse im Koop.
 
 ## Arbeitsweise
+- **Vorher lesen:** `Notizen/Roblox-Wissen/Roblox-Wissen.md` (Architektur, Speichern, System-Rezepte, Fallen) und für das Aussehen `Notizen/Design-Bibliothek/Design-Bibliothek.md`.
 - Gebaut direkt in Roblox Studio über den **Roblox-Studio-MCP** (`claude mcp add ... Roblox_Studio`, eingebauter Studio-MCP, unten rechts „MCP on“).
 - Erst `list_roblox_studios` aufrufen – die `studio_id` ändert sich bei jedem Studio-Neustart.
 - Bauen per `execute_luau` (Edit-DataModel), Kontrolle per `screen_capture` mit Kameraposition. Große Bauten zeilenweise mit `task.wait()`, sonst Timeout.
