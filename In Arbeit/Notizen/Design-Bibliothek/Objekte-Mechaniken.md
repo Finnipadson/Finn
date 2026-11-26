@@ -8,7 +8,8 @@ Gegenstände in der Welt, mit denen man etwas tut: Laufbänder, Gehege, Stände,
 
 | Objekt | Wo gesehen | Was es tut | Worauf achten |
 |---|---|---|---|
-| **Laufband / Fließband** | Steal a Brainrot, Keyboard-Escape-Spiele | Bringt Waren oder Figuren vorbei, die man kaufen/schnappen muss; oder bewegt Spieler | Richtung sichtbar (Pfeile/Streifen laufen mit), Geschwindigkeit gleichmäßig, seltene Dinge leuchten schon auf dem Band |
+| **Fließband** | Steal a Brainrot | Bringt Waren oder Figuren vorbei, die man kaufen/schnappen muss | Richtung sichtbar (Streifen laufen mit), Geschwindigkeit gleichmäßig, seltene Dinge leuchten schon auf dem Band |
+| **Laufband (Fitness)** | +1 Speed Keyboard Escape | Auf der Stelle rennen → Werte steigen; Bänder in Stufen mit Multiplikator | Stufe an Farbe/Größe erkennbar, Multiplikator-Schild darüber, fliegende Zahlen pro Schritt (siehe unten) |
 | **Gehege / Grundstück** | Steal An Egg, Grow a Garden | Eigener Bereich für Tiere/Pflanzen, wächst mit Upgrades | Zaun + Eingang, Slots sichtbar (leer = Umriss), Besitzername darüber |
 | **Ei / Kiste zum Öffnen** | Steal An Egg, Pet-Spiele | Belohnung mit Zufall | Schild „Bereit!“, Öffnen mit Licht + Teilen (siehe [[Game-Feel]]) |
 | **Marktstand / Händler** | Grow a Garden | Kaufen/Verkaufen in der Welt | Markise in Funktionsfarbe, Schild, NPC, Prompt beim Näherkommen |
