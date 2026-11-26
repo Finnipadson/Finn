@@ -30,6 +30,20 @@ Zurück: [[Design-Bibliothek]]
 
 Alle Fenster (siehe [[Items-Loot]]) folgen einem Baukasten: Titelleiste in einer **eigenen Farbe pro Fenster-Art** (Grün = Shop/Verkaufen, Lila = Trails/Maschine, Hellblau = Index) mit schrägen Glanzstreifen, dicke weiße Schrift mit dunkler Kontur, rotes „X“ immer oben rechts, dunkler Hintergrund mit Noppen-Muster. Dadurch sieht man sofort, wo man ist, und alles wirkt wie aus einem Guss.
 
+### Rivals – Lobby (Roblox)
+
+![[rivals-lobby.jpg]]
+
+- **Was ist gut:** Die Lobby ist eine begehbare 3D-Szene statt eines Menüs. Links eine kompakte Liste „Tägliche Aufgaben“ mit Fortschrittsbalken und grünen Haken, darunter ein Button „Zu Duellen“. Unten mittig eine Leiste aus 5 Symbol-Buttons (Waffen, Aufgaben, Shop, Pass, Einstellungen) mit **roten Zahlen-Badges**, wo etwas Neues wartet. Darüber ein großer grüner „Spielen“-Button und ein roter Hinweis „Schalte deine neue Waffe jetzt frei!“. Countdown bis zur neuen Map groß auf dem Boden der Welt.
+- **Prinzip zum Übernehmen:** Ein Haupt-Button (Spielen) klar hervorgehoben, alles andere klein in einer Leiste. Rote Badges führen den Spieler zu dem, was er als Nächstes tun soll.
+
+### Rivals – Schießen (Roblox)
+
+![[rivals-schiessen.jpg]]
+
+- **Was ist gut:** Sehr reduziertes Shooter-HUD: Lebensbalken unten links (grün, mit Zahl), Waffe mit Name und Munition unten rechts, kleine Tastenhinweise ganz unten. Die Mitte gehört komplett der Waffe und dem Ziel. Die Aufgabenliste bleibt auch im Spiel links sichtbar.
+- **Prinzip zum Übernehmen:** Shooter-HUD nach dem Ecken-Prinzip; Ziele (rote Scheiben) haben eine knallige Farbe, die sich klar von der grauen Umgebung abhebt. Gut als Vorlage für [[Nachtschicht]].
+
 ## Bei uns umgesetzt
 
 -

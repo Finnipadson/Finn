@@ -48,6 +48,34 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Unbekannte Tiere als **Silhouette mit „???“**, der Hintergrund verrät aber schon die Seltenheitsfarbe → macht neugierig. Pro Gebiet eine Seite mit Gebietsbild links, Fortschrittsbalken „1/8“ und einer Belohnung fürs Vervollständigen (Geld + Tempo). Großer Button „Alle beanspruchen!“, wenn etwas abzuholen ist.
 - **Prinzip zum Übernehmen:** Sammelbuch pro Welt mit Belohnung pro Fund und für 8/8. Passt direkt zum Fisch-Index in [[Clean the Skyscraper]] und als Bestiarium pro Insel in [[Himmelsinseln]].
 
+### Rivals – Shop-Startseite (Roblox)
+
+![[rivals-shop.jpg]]
+
+- **Was ist gut:** Reiter oben als Symbol + Wort (Home, Bündel, Lackierungen, Täglich, Schlüssel, Mehr). Kisten links in einem 3×2-Raster, jede in eigener Farbe, Preis in einem gelben Schild darunter. Großes Banner für den Saison-Pass mit Auge-Button („ansehen“). Das Spezialangebot zeigt, wenn leer, ein Symbol mit „Komm später wieder!“ statt einer leeren Fläche. Punkte unten zeigen weitere Seiten an.
+- **Prinzip zum Übernehmen:** leere Zustände immer gestalten (Symbol + Satz), nie nur ein leeres Feld.
+
+### Rivals – Login-Belohnungen 7 Tage (Roblox)
+
+![[rivals-login-belohnung.jpg]]
+
+- **Was ist gut:** Tage 1–6 als kleine Kacheln in einem Raster, **Tag 7 doppelt so groß** mit „Großer Preis!“. Der heutige Tag ist hell hervorgehoben mit „Jetzt beanspruchen!“. Die Belohnungen steigen langsam (x1, x1, x3, x2, x3, x5).
+- **Prinzip zum Übernehmen:** Der letzte Tag ist das Ziel und wird visuell größer gemacht. Gibt einen Grund, jeden Tag wiederzukommen.
+
+### Rivals – Schlüssel-Pakete (Roblox)
+
+![[rivals-schluessel-pakete.jpg]]
+
+- **Was ist gut:** 5 Pakete, Menge riesig als „+10 … +1.100“, Preis klein in grünem Schild. Die Kacheln werden nach rechts unten breiter und das teuerste ist **rot statt gelb**. Oben die Bestätigung „Login-Belohnung – Du hast ×1 Schlüssel verdient!“ als Toast.
+- **Prinzip zum Übernehmen:** Die Menge ist das Wichtigste, der Preis zweitrangig. Das beste Paket bekommt eine eigene Farbe.
+
+### Rivals – Waffe mit Stufe (Roblox)
+
+![[rivals-waffen-stufe.jpg]]
+
+- **Was ist gut:** Die Waffe groß in 3D in der Mitte. Rechts eine Spalte: Name, Stufe als Balken (28), „Jetzt aufsteigen“, nächste **Belohnung auf Stufe 50** sichtbar, darunter Verträge, Überblick, Statistik. Unten Aktionen als Symbol-Buttons (Verlassen, Aussehen, Einpacken, Zauber).
+- **Prinzip zum Übernehmen:** Jede Waffe hat ihren eigenen Fortschritt mit sichtbarem nächstem Ziel. Das motiviert, eine Waffe weiterzuspielen.
+
 ## Bei uns umgesetzt
 
 -

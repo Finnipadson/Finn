@@ -25,6 +25,13 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Links Sortierung (Gewicht/Wert) und „Alle auswählen“, der aktive Sortierknopf ist grün. Unten eine feste Leiste mit dem **Gesamtwert** groß (Geldbündel-Symbol) und dem „Verkaufen“-Button rechts. Der Button bleibt grau, solange nichts ausgewählt ist.
 - **Prinzip zum Übernehmen:** Bei Massenaktionen den Gesamtwert live zeigen, bevor man bestätigt; deaktivierte Buttons grau statt versteckt.
 
+### Rivals – Waffe ausprobieren (Roblox)
+
+![[rivals-waffenwahl.jpg]]
+
+- **Was ist gut:** Im Übungsbereich darf man **jede Waffe gratis ausprobieren** („Hier kannst du eine beliebige Waffe umsonst ausprobieren!“). Raster aus Waffenbildern mit Namen, oben ein „Zufällig“-Feld. Der Hintergrund bleibt unscharf sichtbar, das Menü schwebt ohne Rahmen darüber.
+- **Prinzip zum Übernehmen:** Vor dem Kauf ausprobieren lassen, das senkt die Hemmschwelle. Für Onboarding: Übungsraum mit Zielen, bevor es ins echte Duell geht.
+
 ## Bei uns umgesetzt
 
 -
