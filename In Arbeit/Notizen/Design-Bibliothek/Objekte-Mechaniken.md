@@ -39,6 +39,23 @@ Gegenstände in der Welt, mit denen man etwas tut: Laufbänder, Gehege, Stände,
 - **Was ist gut:** Gehege der Spieler liegen **direkt nebeneinander**, nur durch einen niedrigen Holzzaun mit Lücke als Eingang getrennt. Man sieht über den Zaun die Tiere der Nachbarn → Ansporn und Ziel zum Klauen. Das Ei liegt mitten im eigenen Gehege mit Schild „Ei – Bereit!“. Im Hintergrund schon die nächsten Anlaufpunkte: Truhe mit „KOSTENLOS!“-Schild und ein Portal. Unten rechts ein Timer bis zur Nacht (Mond-Symbol).
 - **Prinzip zum Übernehmen:** Grundstücke offen und einsehbar statt abgeschottet; Gratis-Belohnungen mit Schild in Sichtweite vom Spawn.
 
+### +1 Speed Keyboard Escape – Laufbänder (Roblox)
+
+![[keyboard-laufbaender.jpg]]
+![[keyboard-laufband-nah.jpg]]
+
+- **Was es ist:** Mehrere **Laufbänder (wie im Fitnessstudio) nebeneinander** in einer Reihe. Man stellt sich drauf und rennt auf der Stelle; jeder Schritt gibt Geschwindigkeit. Jedes Band hat eine **eigene Farbe und einen eigenen Multiplikator** (braun x1, gelb x3, blau höher …) – Schild „x3 Geschwindigkeit“ schwebt darüber. Bessere Bänder sind größer und auffälliger (blau mit Kristall-Muster).
+- **Rückmeldung:** Bei jedem Schritt fliegen **lila Zahlen „+3.75T“ mit Schuh-Symbol** hoch, viele gleichzeitig → man sieht ständig, dass es vorangeht. Spieler hat eine leuchtende Aura.
+- **HUD dazu:** unten Leiste mit Stufe, aktuellem Multiplikator und Kauf-Buttons für mehr Tempo; unten rechts Button „PLATZ Laufband“ (eigenes Laufband aufstellen).
+- **Prinzip zum Übernehmen:** Die Kernaktion als stehendes Objekt in Stufen – man sieht an Farbe und Größe, welches Band besser ist, und spart auf das nächste. Jede Aktion erzeugt eine fliegende Zahl.
+
+### +1 Speed Keyboard Escape – Laufband-Skins (Roblox)
+
+![[keyboard-laufband-skins.jpg]]
+
+- **Was ist gut:** Im Inventar gibt es einen eigenen Bereich für **persönliche Laufbänder** (Standard, Gold, Diamant …) neben Spuren, Auren und Outfits. Das Objekt aus der Welt wird so zum Sammel- und Angeber-Item.
+- **Prinzip zum Übernehmen:** Das zentrale Objekt des Spiels in Skins anbieten.
+
 ## Bei uns umgesetzt
 
 -

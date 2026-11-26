@@ -89,7 +89,14 @@ Zurück: [[Design-Bibliothek]]
 ![[growagarden-saat-kaufen.jpg]]
 
 - **Was ist gut:** Oben groß der Countdown **„New seeds in 1m 31s“** und ein Button „RESTOCK“ (vermutlich sofort auffüllen gegen Robux). Jede Saat als Zeile: Bild, Name, **begrenzter Vorrat** („X9 Stock“), Preis grün, Seltenheit als Schild. Antippen klappt die Zeile auf: großer grüner Button mit Spielgeld-Preis, lila Button mit Robux-Preis, Geschenk-Button. Ist eine Saat ausverkauft, muss man auf den nächsten Restock warten.
-- **Prinzip zum Übernehmen:** Begrenzter Vorrat + Countdown bis zum Auffüllen = Grund, alle paar Minuten wieder in den Laden zu schauen. Aufklappen statt eines eigenen Kaufdialogs.
+- **Prinzip zum Übernehmen (gilt auch für den Artikel-Shop unten):** Begrenzter Vorrat + Countdown bis zum Auffüllen = Grund, alle paar Minuten wieder in den Laden zu schauen. Aufklappen statt eines eigenen Kaufdialogs.
+
+### +1 Speed Keyboard Escape – Artikel-Shop (Roblox)
+
+![[keyboard-artikel-shop.jpg]]
+
+- **Was ist gut:** 4 Karten nebeneinander, Kopfzeile in Seltenheitsfarbe (Gewöhnlich grau, Ungewöhnlich grün, Selten blau, Episch lila), dazu Vorrat („1/1“, „2/2“), der Effekt klein („+5 % Geschwindigkeit“) und zwei Preise (Trophäen gelb, Robux grün + Geschenk). Oben der Restock-Timer, beim Auffüllen eine Meldung „Artikel-Shop wieder aufgefüllt!“ quer über den Bildschirm. Die Items passen zum Welt-Thema (Karamell-Schleife, Cupcake, Milchshake, Donut-Schild).
+- **Prinzip zum Übernehmen:** Shop-Items thematisch zur aktuellen Welt; Restock wird aktiv angesagt.
 
 ## Bei uns umgesetzt
 

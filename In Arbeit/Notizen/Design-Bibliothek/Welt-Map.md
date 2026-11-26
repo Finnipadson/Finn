@@ -40,7 +40,27 @@ Wie eine Map aufgebaut ist: Spawn, Wege, Zonen, Orientierung. Schwerpunkt Roblox
 
 ## Referenzen
 
-<!-- Bilder hier einbetten: ![[datei.jpg]] + was daran gut ist. Am besten: Übersicht von oben / Spawn-Blick -->
+### +1 Speed Keyboard Escape – Hub (Roblox)
+
+![[keyboard-hub.jpg]]
+
+- **Was ist gut:** Der Hub ist eine große Halle, deren **Boden komplett aus riesigen Tastatur-Tasten** besteht – das Thema ist sofort klar und der Boden selbst ist die Deko. An der Wand **Bestenlisten** („TOP LEVEL“, „TOP WINS“) als große Tafeln. Vor dem Start ein Schild „Stufe 1“ und eine Reihe nummerierter Felder 1–8 auf dem Boden (Stufenauswahl zum Draufstellen).
+- **Prinzip zum Übernehmen:** Ein einziges starkes Bau-Motiv (hier Tasten) für Boden und Wände. Bestenlisten als Wandtafeln im Hub = sozialer Ansporn ohne Menü.
+
+### +1 Speed Keyboard Escape – Blick in die nächste Welt (Roblox)
+
+![[keyboard-fenster-naechste-welt.jpg]]
+![[keyboard-schneewelt.jpg]]
+
+- **Was ist gut:** Am Ende der Süßigkeiten-Halle ist eine **große Öffnung, durch die man die nächste Welt (Schnee) schon sieht**. Die Schneewelt nutzt dasselbe Tasten-Motiv, aber in Mint/Weiß mit Tannen – gleiche Bauweise, neue Farbe und Deko. Die Wände der Halle sind mit übergroßen Süßigkeiten beklebt (Bonbons, Lollis, Kekse), so wirkt sie voll, ohne dass Objekte im Weg stehen.
+- **Prinzip zum Übernehmen:** Nächstes Gebiet sichtbar machen (Weenie). Neue Welt = gleiche Bauteile, neue Palette + neue Deko → spart viel Bauzeit. Deko an die Wände, Lauffläche frei lassen.
+
+### +1 Speed Keyboard Escape – Welten-Portal (Roblox)
+
+![[keyboard-welten-portal.jpg]]
+
+- **Was ist gut:** Ein rosa leuchtender Torbogen mit Schild „WELTEN“ und Info zur nächsten Welt („Welt 2 benötigt Level …“), links daneben die Bestenliste, davor die nummerierten Stufenfelder. Alle Ziele liegen in einer Blickachse.
+- **Prinzip zum Übernehmen:** Portal mit Anforderung direkt auf dem Schild; das Portal in der Hauptblickrichtung vom Spawn platzieren.
 
 ## Bei uns umgesetzt
 

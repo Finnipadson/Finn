@@ -46,6 +46,13 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Läden sind echte Marktstände mit gestreiften Markisen (Blau = Samen kaufen, Rot = verkaufen) und Holzschildern, beide nebeneinander am Spawn. Beim Händler erscheinen Dialog-Optionen als nummerierte Sätze („#1 Ich möchte mein Inventar verkaufen“).
 - **Prinzip zum Übernehmen:** Orte farblich kodieren, passend zu den HUD-Reitern (Rot = Verkaufen überall). Die wichtigsten Händler direkt nebeneinander am Startpunkt.
 
+### +1 Speed Keyboard Escape – Ladebildschirm (Roblox)
+
+![[keyboard-ladebildschirm.jpg]]
+
+- **Was ist gut:** Großes Logo mit Figur und „+1“-Zahlen, ein Tipp („CHECK THE GIFT CHEST!“), dicker Ladebalken mit Prozent und unten der Name der Welt („CANDY & CHOCOLATE“). Der Hintergrund zeigt das Welt-Thema.
+- **Prinzip zum Übernehmen:** Ladezeit für einen Tipp und den Namen des Gebiets nutzen.
+
 ## Bei uns umgesetzt
 
 -
