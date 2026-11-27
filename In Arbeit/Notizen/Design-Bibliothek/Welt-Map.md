@@ -87,6 +87,17 @@ Wie eine Map aufgebaut ist: Spawn, Wege, Zonen, Orientierung. Schwerpunkt Roblox
 - **Was ist gut:** Ganz anderer Stil als Blox Fruits: **gedeckte, realistische Farben**, grauer Himmel, Nebel über dem Meer, Felsen und Holzhütten → ruhige, etwas raue Fischerdorf-Stimmung. Betritt man einen Ort, steht sein **Name oben mittig** („• Moosewood Dorf •“). Der Boden wechselt sichtbar zwischen Sand, Kies und Holzplanken, das zeigt Wege ohne Schilder. Der Steg ist der zentrale Treffpunkt, an dem alle angeln.
 - **Prinzip zum Übernehmen:** Ortsnamen beim Betreten einblenden. Stimmung über Licht, Nebel und gedeckte Farben – zeigt, dass Roblox nicht immer knallbunt sein muss. Ein zentraler Ort (Steg), an dem sich alle für die Hauptaktion treffen.
 
+### 99 Nights in the Forest – Lager in der Mitte, Nebel drumherum (Roblox)
+
+![[99nights-lagerfeuer-start.jpg]]
+![[99nights-lager.jpg]]
+![[99nights-karte-erweitert.jpg]]
+
+- **Aufbau:** Man startet an einer **leeren Feuerstelle mitten auf einer Lichtung**. Ringsum ein Wald aus einfachen Block-Bäumen, dahinter dichter **grauer Nebel**, der die Sicht begrenzt. Das Lager wächst sichtbar: gedeckter Tisch mit Stühlen, Schild „Gäste kommen in 6 Tagen“, Werkbank. Am Rand eine Tafel „Verlorene Kinder-Standorte“ mit leeren Feldern – das langfristige Ziel hängt sichtbar im Lager.
+- **Map öffnet sich:** Hat das Feuer 100 % erreicht, kommt die Meldung „Das Feuer hat 100 % erreicht. Die Karte ist …“ (erweitert) – der Nebel weicht zurück und neue Teile des Waldes (Teich, Felsen) werden erreichbar.
+- **Stil:** sehr einfache Formen (Block-Bäume, flache Wasserflächen in kräftigem Blau), aber durch Nebel und grauen Himmel trotzdem bedrohlich.
+- **Prinzip zum Übernehmen:** Ein Zentrum, um das alles kreist; die Welt wird durch Fortschritt am Zentrum größer statt durch Portale. Nebel als natürliche Grenze statt unsichtbarer Wände. Für [[Himmelsinseln]] denkbar: Leuchtfeuer auf jeder Insel, das Wolken zurückdrängt.
+
 ## Bei uns umgesetzt
 
 -

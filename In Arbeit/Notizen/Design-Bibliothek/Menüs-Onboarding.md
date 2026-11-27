@@ -67,6 +67,27 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Oben mittig ein kleiner Auftrag mit Schritt-Zähler (z. B. „Fische fangen 0/5“, darunter „Schritt 7/9“). Das Ziel ist ein **großer grün gestreifter Kreis auf dem Wasser mit Lichtsäule** und Pfeil darüber, unten der Tastenhinweis „HOLD“. Nach jedem Schritt eine kurze Meldung, was jetzt freigeschaltet ist („Du kannst jetzt die Training Rod in Moosewood kaufen!“).
 - **Prinzip zum Übernehmen:** Tutorial als Kette kleiner Aufträge mit Zähler; Ziel als leuchtende Markierung in der Welt statt Text. Passt zur Wegweiser-Linie von Grow a Garden.
 
+### 99 Nights in the Forest – Lobby mit Gruppen-Feldern (Roblox)
+
+![[99nights-lobby-gruppen.jpg]]
+
+- **Was ist gut:** In der Lobby gibt es **markierte Bodenfelder**: Wer sich draufstellt, ist in der Gruppe. Über dem Feld groß „3/5“ (Spieler) und ein roter Countdown, daneben ein roter „Ausgang“-Button. Ein leeres Feld zeigt „Erstellen…“. Kein Menü nötig – Gruppe bilden durch Hinlaufen.
+- **Prinzip zum Übernehmen:** Matchmaking in der Welt (Felder/Aufzüge) statt Menü. Für Koop-Bosse in [[Himmelsinseln]] ideal: Feld vor dem Boss-Tor.
+
+### 99 Nights in the Forest – Erster Auftrag (Roblox)
+
+![[99nights-erster-auftrag.jpg]]
+
+- **Was ist gut:** Nach dem Titel „Überlebe 99 Nächte“ steht der Spieler sofort im Wald. Ein einziger **gelber Satz mittig** sagt, was zu tun ist („Bäume fällen und dann Holz auf das Feuer legen“), gelbe Punkte markieren die Bäume. Oben nur „Tag 1“, links ein Hunger-Balken, unten 2 Werkzeug-Plätze (Beutel, Axt). Sonst nichts.
+- **Prinzip zum Übernehmen:** Extrem wenig HUD am Anfang, ein Satz als Auftrag, Markierungen in der Welt.
+
+### 99 Nights in the Forest – Verloren-Bildschirm (Roblox)
+
+![[99nights-verloren.jpg]]
+
+- **Was ist gut:** Großes rotes „DU HAST VERLOREN – Alle in deiner Gruppe sind gestorben“, Countdown „Rückkehr in 28 Sekunden“, darunter zwei Wege: „Spiele erneut mit demselben Team“ und ein grüner Button „Alle wiederbeleben“ (vermutlich gegen Robux). Die Welt läuft im Hintergrund weiter (Wolf steht daneben).
+- **Prinzip zum Übernehmen:** Nach dem Verlieren sofort einen Weg zurück anbieten, mit demselben Team.
+
 ## Bei uns umgesetzt
 
 -

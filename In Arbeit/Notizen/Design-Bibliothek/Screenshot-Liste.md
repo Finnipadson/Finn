@@ -48,7 +48,7 @@ Stand 26.11.2026. Quellen: LiveCounts (Spitzen seit 23.09.2026), RoStats (Rekord
 | ✅ +1 Speed Keyboard Escape | 3,7 Mio. (Sep. 2026) | Tempo-Simulator / Parcours | – |
 | Throw Food For Animals | 2,5 Mio. (Nov. 2026) | Simulator | Wurf-Mechanik, Tier-Reaktionen, Upgrades |
 | Murder Mystery 2 | 2,2 Mio. (Okt. 2026) | Runden-Spiel | Lobby, Rollen-Enthüllung, Map-Auswahl |
-| 99 Nights in the Forest | 2,2 Mio. (Okt. 2026) | Koop-Überleben | Lagerfeuer-Mitte, Tag/Nacht, Crafting, Wald-Map |
+| ✅ 99 Nights in the Forest | 2,2 Mio. (Okt. 2026) | Koop-Überleben | Lagerfeuer-Mitte, Tag/Nacht, Crafting, Wald-Map |
 | Adopt Me! | 1,4 Mio. (Okt. 2026) | Haustiere / Rollenspiel | Haus, Haustier-Bedürfnisse, Handel |
 | Break and Steal an Egg | 1,3 Mio. (Okt. 2026) | Ei-Klauen | Vergleich zu Steal An Egg: was ist anders? |
 | Steal a Brainrot | 1,3 Mio. (Sep. 2026), Rekord 25 Mio. (2025) | Klauen + Basis | **Fließband**, Basen, Klau-Ablauf |
@@ -74,7 +74,7 @@ Für [[Welt-Map]]: zwei handgebaute Welten (Blox Fruits, Fisch), eine, die sich 
 | Spiel | Art der Welt | Was filmen |
 |---|---|---|
 | ✅ **Blox Fruits** | handgebaut: viele Inseln in mehreren „Meeren“, jede Insel ein eigenes Thema + Level-Bereich | Ankunft auf einer neuen Insel, Übersicht von oben, Weg vom Hafen zum Boss, wie man Inseln aus der Ferne erkennt → direkt für [[Himmelsinseln]] |
-| **99 Nights in the Forest** | Wald um ein Lagerfeuer; **Nebel sperrt die Map**, jede Lagerfeuer-Stufe öffnet mehr (ab Stufe 3 Schneegebiet, Stufe 6 ganze Map) | Nebelgrenze, Moment, wenn sie zurückweicht, Lager in der Mitte, Wege zu Fundorten |
+| ✅ **99 Nights in the Forest** | Wald um ein Lagerfeuer; **Nebel sperrt die Map**, jede Lagerfeuer-Stufe öffnet mehr (ab Stufe 3 Schneegebiet, Stufe 6 ganze Map) | Nebelgrenze, Moment, wenn sie zurückweicht, Lager in der Mitte, Wege zu Fundorten |
 | ✅ **Fisch** | handgebaut: Inseln mit eigenen Biomen, Wetter und Tag/Nacht | Biom-Wechsel, Wetter-Effekte, Hafen/Händler pro Insel |
 | **Dead Rails** | laut Community **zufällig generiert**: lange Bahnstrecke, Städte und Landschaft bei jeder Runde neu | Wie Städte aus Bausteinen zusammengesetzt sind, Übergänge zwischen Abschnitten, Wiederholungen erkennen |
 | **DOORS** | **zufällig zusammengesetzte Räume** (Hotel aus Raum-Baukasten) | Wie Räume aneinanderhängen, wie sich Räume unterscheiden, Licht/Stimmung → auch für [[Nachtschicht]] |

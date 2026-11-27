@@ -65,6 +65,15 @@ Gegenstände in der Welt, mit denen man etwas tut: Laufbänder, Gehege, Stände,
 - **Was ist gut:** Jeder wichtige NPC steht in einem **leuchtenden Ring am Boden** (grün = Händler, gelb/gold = Quest). Über dem Händler ein großes grünes „$“ und „SHOP“, über dem Quest-Geber ein **riesiges gelbes „?“** mit „FRAGE“. Beim Ansprechen fährt die Kamera nah ran, unten erscheint ein Dialog mit Auswahl („Quest“, „Unbedingt“).
 - **Prinzip zum Übernehmen:** NPC-Funktion an Farbe + Symbol über dem Kopf erkennbar, schon von Weitem. Die Leuchtringe zeigen auch, wo man stehen muss.
 
+### 99 Nights in the Forest – Lagerfeuer als Fortschritts-Objekt (Roblox)
+
+![[99nights-holz-anzuenden.jpg]]
+![[99nights-feuer-fortschritt.jpg]]
+
+- **Was es ist:** Das Lagerfeuer ist das Herz des Spiels. Bäume fällen → Holzstämme liegen herum → zum Feuer tragen → anzünden. Über dem Feuer ein **dicker Fortschrittsbalken „Level 1 Fortschritt: 86/100“** (rot bei wenig, grün bei viel). Ein **gelbes Dreieck** zeigt von oben auf das Objekt, mit dem man gerade etwas tun soll; gelbe Punkte markieren Bäume zum Fällen.
+- **Rückmeldung:** Das Feuer wird sichtbar größer und heller, je weiter es ist; die Stämme liegen gut lesbar als dicke Zylinder herum.
+- **Prinzip zum Übernehmen:** Ein Objekt in der Welt, das man gemeinsam „füttert“ und das dabei wächst – mit Fortschrittsbalken direkt darüber. Funktioniert super im Koop, weil jeder sieht, was der gemeinsame Beitrag bringt.
+
 ## Bei uns umgesetzt
 
 -

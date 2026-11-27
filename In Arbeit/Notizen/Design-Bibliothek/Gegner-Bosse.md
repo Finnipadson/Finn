@@ -19,7 +19,12 @@ Zurück: [[Design-Bibliothek]]
 
 ## Referenzen
 
-<!-- Bilder hier einbetten: ![[datei.jpg]] + was daran gut ist -->
+### 99 Nights in the Forest – Wolf aus dem Nebel (Roblox)
+
+![[99nights-wolf-nebel.jpg]]
+
+- **Was ist gut:** Der Wolf ist ein simples Block-Modell, wirkt aber bedrohlich, weil er **aus dem Nebel** kommt, wo man ihn erst spät sieht. Über ihm ein kleiner grüner Lebensbalken. Gefahr steigt mit Entfernung vom Lager.
+- **Prinzip zum Übernehmen:** Bedrohung durch Sichtweite (Nebel, Dunkelheit) statt durch komplizierte Gegner – einfaches Modell reicht. Sicherer Bereich in der Mitte, Gefahr am Rand.
 
 ## Bei uns umgesetzt
 
