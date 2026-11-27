@@ -43,6 +43,35 @@ Gefilmt: **Throw Food For Animals**, **Ziehe einen Dino** und **Fische für gehe
 - **Gehege:** eingezäuntes Grundstück, Tiere laufen frei herum mit Schild ($/s). Meldung beim Ausbau: „Grundstück aufgewertet! Es beherbergt jetzt 12 Tiere“. Im Hintergrund riesige Tier-Statuen auf den Grundstücken anderer Spieler – man sieht, was andere haben.
 - **Tier-Index:** pro Welt (Taiga, Eclipse Kingdom …) ein Raster mit Silhouetten nach Seltenheit, Gesamtzähler „Freigeschaltet: 4/176“, gesperrte Welten mit „GESPERRT“.
 
+## Event „Feast“ (Throw Food For Animals, Nov. 2026)
+
+![[futter-event-koch.jpg]]
+![[futter-event-koch-text.jpg]]
+
+- **Event-NPC:** Ein riesiger **Truthahn-Koch** (Kochmütze, weiße Jacke, Block-Stil) steht an einem gedeckten Tisch mit rot-weißer Decke, Glocke, Gewürzregal; an der Wand Event-Bestenlisten. Er erklärt das Event in einem Satz: „Every half hour I ring the dinner bell for the Feast. That's when animals can bring back ingredients from all over the map!“ Vor ihm ein leuchtender Abgabe-Kreis am Boden.
+- **Rhythmus:** Das Event kommt **alle 30 Minuten** von selbst. Unten rechts ein Truthahn-Symbol mit Countdown („4:24“, „0:20“) – man weiß immer, wann das nächste Festmahl ist bzw. wie lange es noch läuft.
+
+![[futter-event-roter-himmel.jpg]]
+
+- **Die Welt verändert sich:** Während des Festmahls wird der **Himmel feuerrot-orange** und die ganze Schlucht in warmes Licht getaucht. Man sieht sofort: Jetzt ist Event.
+
+![[futter-event-zutat.jpg]]
+
+- **Event-Währung:** Gefangene Tiere bringen zusätzlich eine **Zutat** mit („+1 SWEET POTATO!“ beim Enthüllen). Oben links ein Korb-Symbol mit Zähler (1, 2, 4 …). Die Zutaten bringt man zum Koch.
+- **Prinzip zum Übernehmen:** Wiederkehrendes Kurz-Event (feste Uhrzeit-Intervalle) mit eigener Währung, eigenem NPC und sichtbarer Weltveränderung. Kostet wenig (Licht/Himmel ändern, ein NPC, ein Zähler), gibt aber einen Grund, länger online zu bleiben. Passt zu [[System-Rezepte]] „Shop mit Restock-Timer“ (gleiche Uhrzeit-Rechnung für alle Server).
+
+### Weitere Bilder aus dem Event-Video
+
+![[futter-gorilla-raetsel.jpg]]
+![[futter-gold-gorilla.jpg]]
+![[futter-flug-dschungel.jpg]]
+![[futter-neue-ausruestung.jpg]]
+
+- Enthüllung mit Chance („Glück! 1 in 28“, „Superglücklich! 1 in 51“) über dem Tier und Lückenwort („GORILL_“).
+- Varianten: „GOLT Gorilla“ ganz golden mit Glitzer, „Diamant Gorilla“ hellblau-weiß – gleiches Modell, anderes Material (siehe [[Kreaturen-Pets]]).
+- Neues Biom **Dschungel** weiter hinten in der Schlucht mit bis zu ~10,5X Glück (Bambus, Palmen, Blumen).
+- Popup „NEUE AUSRÜSTUNG! Du kannst jetzt kaufen: Obsidian-Bar“ – neue Trainings-Stange wird freigeschaltet und direkt beworben.
+
 ## Vergleich der drei Spiele
 
 | | Throw Food For Animals | Ziehe einen Dino | Fische für geheime Tiere |
