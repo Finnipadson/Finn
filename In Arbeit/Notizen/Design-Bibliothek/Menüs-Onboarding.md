@@ -60,6 +60,13 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Die allererste Entscheidung: **Piraten vs. Marines**, zwei große Karten mit Figur, Farbe (Rot gegen Blau), Name und 2–3 Sätzen, was die Seite ausmacht. Im Hintergrund schon die Stadt, in der man startet. Danach geht es direkt ins Spiel, ohne Tutorial-Text.
 - **Prinzip zum Übernehmen:** Eine einzige, spannende Wahl am Anfang gibt Identität. Für [[Himmelsinseln]] z. B. Start-Element oder Start-Begleiter wählen.
 
+### Fisch – Tutorial mit Zielkreis (Roblox)
+
+![[fisch-tutorial-zielkreis.jpg]]
+
+- **Was ist gut:** Oben mittig ein kleiner Auftrag mit Schritt-Zähler („Fange 3 Fische – Schritt 1/9“). Das Ziel ist ein **großer grün gestreifter Kreis auf dem Wasser mit Lichtsäule** und Pfeil darüber, unten der Tastenhinweis „HOLD“. Nach jedem Schritt eine kurze Meldung, was jetzt freigeschaltet ist („Du kannst jetzt die Training Rod in Moosewood kaufen!“).
+- **Prinzip zum Übernehmen:** Tutorial als Kette kleiner Aufträge mit Zähler; Ziel als leuchtende Markierung in der Welt statt Text. Passt zur Wegweiser-Linie von Grow a Garden.
+
 ## Bei uns umgesetzt
 
 -

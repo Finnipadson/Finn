@@ -58,7 +58,7 @@ Stand 26.11.2026. Quellen: LiveCounts (Spitzen seit 23.09.2026), RoStats (Rekord
 | ✅ Blox Fruits | 930k (Okt. 2026) | Insel-RPG | **Inselwelt, Quests, Bosse** → [[Himmelsinseln]] |
 | Dandy's World | 800k (Nov. 2026) | Koop-Horror | Stockwerke, Figurenauswahl, Gegner-Warnungen |
 | ✅ RIVALS | ~670k | Shooter | – |
-| Fisch | ~510k | Angel-Simulator | Angel-Minispiel, Fang-Popup, Inseln |
+| ✅ Fisch | ~510k | Angel-Simulator | Angel-Minispiel, Fang-Popup, Inseln |
 | The Hollow | ~510k | (nicht geprüft) | erst anschauen |
 
 ### Grenzfälle (aktuell 50k–150k gleichzeitig, Spitze über 500k nicht belegt)
@@ -75,7 +75,7 @@ Für [[Welt-Map]]: zwei handgebaute Welten (Blox Fruits, Fisch), eine, die sich 
 |---|---|---|
 | ✅ **Blox Fruits** | handgebaut: viele Inseln in mehreren „Meeren“, jede Insel ein eigenes Thema + Level-Bereich | Ankunft auf einer neuen Insel, Übersicht von oben, Weg vom Hafen zum Boss, wie man Inseln aus der Ferne erkennt → direkt für [[Himmelsinseln]] |
 | **99 Nights in the Forest** | Wald um ein Lagerfeuer; **Nebel sperrt die Map**, jede Lagerfeuer-Stufe öffnet mehr (ab Stufe 3 Schneegebiet, Stufe 6 ganze Map) | Nebelgrenze, Moment, wenn sie zurückweicht, Lager in der Mitte, Wege zu Fundorten |
-| **Fisch** | handgebaut: Inseln mit eigenen Biomen, Wetter und Tag/Nacht | Biom-Wechsel, Wetter-Effekte, Hafen/Händler pro Insel |
+| ✅ **Fisch** | handgebaut: Inseln mit eigenen Biomen, Wetter und Tag/Nacht | Biom-Wechsel, Wetter-Effekte, Hafen/Händler pro Insel |
 | **Dead Rails** | laut Community **zufällig generiert**: lange Bahnstrecke, Städte und Landschaft bei jeder Runde neu | Wie Städte aus Bausteinen zusammengesetzt sind, Übergänge zwischen Abschnitten, Wiederholungen erkennen |
 | **DOORS** | **zufällig zusammengesetzte Räume** (Hotel aus Raum-Baukasten) | Wie Räume aneinanderhängen, wie sich Räume unterscheiden, Licht/Stimmung → auch für [[Nachtschicht]] |
 

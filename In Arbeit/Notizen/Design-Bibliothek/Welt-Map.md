@@ -79,6 +79,14 @@ Wie eine Map aufgebaut ist: Spawn, Wege, Zonen, Orientierung. Schwerpunkt Roblox
 - **Was ist gut:** Am Inselrand ein **Holzsteg** mit Bootshändler (grüner Ring, Schild „SHOP“). Man kauft ein Segelboot und fährt **frei übers Meer** zur nächsten Insel, die schon vom Steg aus zu sehen ist. Das Wasser ist hell und flach am Ufer, dunkler weiter draußen → man sieht, wo das offene Meer beginnt.
 - **Prinzip zum Übernehmen:** Reisen zwischen Inseln als eigenes Erlebnis (Boot) statt nur Teleport. Für [[Himmelsinseln]]: Luftschiff oder fliegendes Reittier statt Boot, Wolkenmeer statt Wasser; Anlegestelle mit Händler am Inselrand.
 
+### Fisch – Dorf und Strand (Roblox)
+
+![[fisch-dorf.jpg]]
+![[fisch-strand.jpg]]
+
+- **Was ist gut:** Ganz anderer Stil als Blox Fruits: **gedeckte, realistische Farben**, grauer Himmel, Nebel über dem Meer, Felsen und Holzhütten → ruhige, etwas raue Fischerdorf-Stimmung. Betritt man einen Ort, steht sein **Name oben mittig** („• Moosewood Dorf •“). Der Boden wechselt sichtbar zwischen Sand, Kies und Holzplanken, das zeigt Wege ohne Schilder. Der Steg ist der zentrale Treffpunkt, an dem alle angeln.
+- **Prinzip zum Übernehmen:** Ortsnamen beim Betreten einblenden. Stimmung über Licht, Nebel und gedeckte Farben – zeigt, dass Roblox nicht immer knallbunt sein muss. Ein zentraler Ort (Steg), an dem sich alle für die Hauptaktion treffen.
+
 ## Bei uns umgesetzt
 
 -
