@@ -59,6 +59,21 @@ Zurück: [[Design-Bibliothek]]
 - **Ziehung:** Erst ein dunkler Bildschirm mit **schwarzer Silhouette** und „Chancen 1 in 3“, ein Wort zieht sich Buchstabe für Buchstabe zusammen, „Letzte Runde…“ in Rot. Dann die Enthüllung: Konfetti, Strahlen, Titel je nach Seltenheit („Toll! 1 in 10“, „Glück! 1 in 32“, „Super-Glück! 1 in 140“, „VERRÜCKTES GLÜCK! 1 in 430“), Stempel „★ GROSS ★“, darunter Seltenheit, Name, Einkommen „$60K/s“ und Schild „NEU!“.
 - **Prinzip zum Übernehmen:** Der Weg (Flug durch Zonen) entscheidet sichtbar über die Chance. Die Ziehung baut Spannung in Stufen auf (Silhouette → „Letzte Runde“ → Enthüllung). Die **Überschrift wächst mit der Seltenheit** – man spürt sofort, wie gut der Zug war.
 
+### Fische für geheime Tiere – Geheimes Cast, Tiefe, Enthüllung (Roblox)
+
+![[geheimtiere-slot-cast.jpg]]
+
+- **Geheimes Cast:** Ein **Glücksrad mit 3 Walzen** – „Seltenheit“ (Rare, Legendär, Mythisch), „Größe“ (Big, Huge, Unendlich) und „Mutation“ (Regenbogen, Ruby, Allmächtig). „Klicke, um zu stoppen!“, Überschrift „Was du drehst, ist das, was du fängst!“. Goldener Rahmen um den ganzen Bildschirm, solange es läuft.
+
+![[geheimtiere-tiefe.jpg]]
+
+- **Tiefe:** Nach dem Wurf sinkt der Köder ins dunkle Wasser, rechts eine **Tiefen-Skala**, auf der die Seltenheiten von oben nach unten stehen (Gewöhnlich → Uncommon → Rare → Epic → Legendär → Mythisch → Geheimnis → Divine), Meter-Anzeige „17 m“, oben die aktuelle Chance „1 in 2“. Je tiefer, desto seltener – man sieht live, wie die Chancen besser werden.
+
+![[geheimtiere-enthuellung.jpg]]
+
+- **Enthüllung:** Das Tier taucht aus dem Wasser auf, oben die Chance („1 in 3,242“), unten der Name als **Lückenwort, das sich Buchstabe für Buchstabe füllt** („_ _ _ A _“) – wie bei der Dino-Ziehung.
+- **Prinzip zum Übernehmen:** Zufall sichtbar machen (Walzen, Tiefe) statt nur auszuwürfeln – der Spieler hat das Gefühl, mitzuentscheiden. Name als Rätsel enthüllen hält die Spannung ein paar Sekunden länger.
+
 ## Bei uns umgesetzt
 
 -

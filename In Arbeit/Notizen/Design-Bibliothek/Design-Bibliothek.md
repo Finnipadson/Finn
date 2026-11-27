@@ -15,6 +15,7 @@ Bewährte Design-Muster aus erfolgreichen Spielen – als **Inspiration, nicht z
 | [[Menüs-Onboarding]] | Hauptmenü, Pause, Einstellungen, die ersten 60 Sekunden |
 | [[Welt-Map]] | Map-Aufbau: Spawn, Hub, Wege, Zonen, Grundstücke, Maßstab |
 | [[Objekte-Mechaniken]] | Objekte in der Welt: Laufbänder, Gehege, Stände, Portale, Sammelobjekte |
+| [[Kreaturen-Pets]] | Aussehen von Haustieren/Begleitern: Stil, Farben, Seltenheit am Aussehen, Varianten |
 
 Spiele zum Screenshot-Sammeln: [[Screenshot-Liste]]
 

@@ -91,6 +91,17 @@ Kreislauf: **Bankdrücken** (Kraft sammeln) → **Speer werfen** (je weiter, des
 - **Grundstück:** eingezäunt, großes Holzschild „biggfishh0's Grundstück“, darüber „8 / 10“ Dinos und das Einkommen „2.9K/s“ als riesige Zahl. Die Dinos laufen frei im Gehege herum. Ist es voll: Meldung „Dein Grundstück ist voll! Verbessere es am Schild“ – Upgrade direkt am Schild.
 - **Prinzip zum Übernehmen:** Jede Station ist ein Objekt in der Welt mit eigenem Balken und eigener Rückmeldung; das Gesammelte taucht an mehreren Stationen wieder auf (Hantel, Gehege). Ausbau-Upgrade direkt am Objekt, das ausgebaut wird.
 
+### Fische für geheime Tiere – gleiche Schleife, anderes Thema (Roblox)
+
+![[geheimtiere-klimmzug.jpg]]
+![[geheimtiere-gehege-upgrade.jpg]]
+![[geheimtiere-reiten.jpg]]
+
+- **Gleiches Muster wie „Ziehe einen Dino“:** Trainings-Station (hier **Klimmzugstange** auf rundem Feld, „Drücke STOP, wenn du fertig bist!“, „+4 XP“, „Level 1 – 36/40“) → Angel auswerfen → Tier ziehen → Tier ins Gehege. Das Erfolgsrezept wird also von mehreren Spielen kopiert – ein starkes Zeichen, dass es funktioniert.
+- **Gehege-Ausbau:** großes Holzschild „UPGRADE PEN – 6 > 8 SLOTS – $1.7K“ direkt am Gehege, daneben ein Nest-Haufen.
+- **Haustier reiten:** Gefangene Tiere kann man **reiten** und damit übers Wasser fahren (Hinweis „Sprich mit dem Fischer, um dein Haustier zu reiten“). Unten Buttons „Zurück an Land“, „Fisch“ (grün, groß), „AUTO“, darüber der aktuelle Köder („Köder: Wurm“).
+- **Prinzip zum Übernehmen:** Gesammelte Tiere bekommen eine zweite Funktion (Reittier) → mehr Wert pro Tier. Für [[Himmelsinseln]]: fliegende Begleiter als Reittier zwischen den Inseln.
+
 ## Bei uns umgesetzt
 
 -
