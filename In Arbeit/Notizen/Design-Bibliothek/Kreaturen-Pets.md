@@ -57,6 +57,25 @@ Wie Haustiere, Begleiter und sammelbare Kreaturen in Roblox-Hits **aussehen** (M
 - Frosch mit **leuchtender Laterne an einem Stab** (wie ein Anglerfisch) – bekanntes Tier + witziger Twist; Name als Lückenwort.
 - Seltener Fang (1 in 3.242): riesige **goldene Statue-Kreatur**, viel größer als normale Tiere – Seltenheit durch Größe + Gold.
 
+### Silhouetten im Index (Steal An Egg, Ziehe einen Dino)
+
+![[stealanegg-index-tempel.jpg]]
+
+- Noch nicht gefundene Tiere erscheinen als **schwarze Silhouette** – und trotzdem erkennt man Flügel, Hörner, Schwanz. Ein gutes Pet muss also **schon als Schattenriss eindeutig** sein (Test: Modell komplett schwarz einfärben – erkennt man noch, was es ist?).
+
+## Checkliste: neues Pet entwerfen
+
+1. **Basis-Tier**, das jeder kennt (Ente, Frosch, Wolf, Dino, Eule …).
+2. **Ein Twist** passend zu Element/Gebiet (Laterne, Lava-Risse, Eis-Kristalle, Krone).
+3. **Hauptfarbe + 1–2 Akzente** festlegen; Hauptfarbe darf sich nicht mit anderen Pets im selben Gebiet doppeln.
+4. **Proportionen:** Kopf ca. ⅓–½ der Gesamthöhe, große Augen, kurze Beine.
+5. **Silhouetten-Test** (schwarz einfärben) bestehen.
+6. **Blockig/Low-Poly** halten: für Roblox grob unter ~2.000 Dreiecke pro Pet anpeilen (viele gleichzeitig sichtbar). (Richtwert von uns, nicht offiziell.)
+7. **Seltenheit** über Farbe/Deko/Größe/Effekt ausdrücken (Tabelle oben), nicht nur über den Namen.
+8. **Varianten** gleich mitdenken: Gold, Regenbogen, Groß – gleiches Modell, anderes Material/Skalierung.
+9. **Name** = Element + Tier, kurz und auf Deutsch aussprechbar.
+10. Bewegung: einfaches **Hüpfen/Watscheln** beim Folgen reicht (siehe [[System-Rezepte]] „Haustier folgt“).
+
 ## Für Himmelsinseln (Ideen)
 
 - Begleiter pro Element-Insel: bekanntes Tier + Element-Twist (Lava-Salamander, Eis-Eule, Kristall-Käfer, Dschungel-Frosch).
