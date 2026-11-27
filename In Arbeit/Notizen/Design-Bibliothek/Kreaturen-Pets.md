@@ -63,6 +63,15 @@ Ablauf in ~6 Sekunden (2 Bilder pro Sekunde):
 4. Höhepunkt: Bildschirm blitzt rot/gelb mit Ring-Schockwelle, das Tier wird **türkis überblendet**, **grüne Kleeblätter regnen** über das Bild, dann Name „Mammut“, darunter „RIESIG“ in Gold und $16,1T/s.
 - **Prinzip:** Die Spannung baut sich auf, *während* man zuschaut – man weiß nicht, wie weit der Zähler noch klettert. Je seltener, desto länger läuft er und desto mehr Effekte kommen dazu.
 
+### Höchste Titel-Stufe: „Legendäres Glück!!“ (Megalodon)
+
+![[futter-megalodon-raetsel.jpg]]
+![[futter-megalodon-legendaer.jpg]]
+
+- Über „Verrücktes Glück!“ gibt es noch **„Legendäres Glück!!“** (zwei Ausrufezeichen) – hier bei 1 in 714. Hintergrund: grell weiß-grüner Strahlenkranz, Kleeblätter fliegen durchs Bild.
+- „DIAMANT MEGALODON GROSS – $25,8Qa/s“: Material + Art + Größe kombiniert. Der Hai ist hellblau-durchsichtig (Diamant-Material) und schwimmt unter Wasser durch das Bild.
+- Titel-Reihe bisher gesehen: (kein Titel) → Glück! → Superglücklich! → Verrücktes Glück! → **Legendäres Glück!!**
+
 ### Bewegung und Animation im Gehege
 
 ![[futter-gehege-bewegung.jpg]]

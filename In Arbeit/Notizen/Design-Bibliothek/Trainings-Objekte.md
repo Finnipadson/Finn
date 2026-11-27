@@ -52,6 +52,10 @@ Die Stationen, an denen man **stärker wird** (Bankdrücken, Klimmzugstange, Lau
 - Lila Stange: **+16 XP** (mit x2: „+32 XP / Reputation“ groß unten). x2 hier als lila **Hand-Symbol „x2“** zum Antippen.
 - XP pro Stufe: Stufe 11 → 6, 59 → 82, 65 → 134.
 
+![[futter-blauflammen-stab.jpg]]
+
+- **Späte Stufe „Blauflammen-Stab“:** zwei dunkelblaue Pfosten mit blauen Flammen oben, Preis **$12Qi**, Ertrag **+2,1M XP / Reputation**. Meldung beim Kauf: „Auf Blauflammen-Stab verbessert!“. Stufen-Reihe in diesem Spiel also mindestens: Holz → Lila (Violetter Bar) → Obsidian → Blauflammen.
+
 ### +1 Speed Keyboard Escape – Laufbänder
 
 ![[keyboard-laufbaender.jpg]]

@@ -72,6 +72,20 @@ Gefilmt: **Throw Food For Animals**, **Ziehe einen Dino** und **Fische für gehe
 - Neues Biom **Dschungel** weiter hinten in der Schlucht mit bis zu ~10,5X Glück (Bambus, Palmen, Blumen).
 - Popup „NEUE AUSRÜSTUNG! Du kannst jetzt kaufen: Obsidian-Bar“ – neue Trainings-Stange wird freigeschaltet und direkt beworben.
 
+## Späteres Spiel: weitere Biome und große Fänge
+
+![[futter-flug-urzeitwald.jpg]]
+![[futter-flug-tiefe-gewaesser.jpg]]
+![[futter-hai-tiefsee.jpg]]
+
+- **Biom-Reihenfolge** (Glück wächst mit der Weite, abgelesen): Wald ~2X → Savanne ~5–7X → Wüste ~7–10X → Dschungel ~10X → Gebirge ~19X → Taiga ~20X → Winter ~22X → **Urzeitlicher Wald** ~26–28X → **Tiefe Gewässer** ~30X.
+- **Jedes Biom hat seine eigenen Tiere:** Im Urzeitlichen Wald gibt es Dinosaurier (Velociraptor, Gallimimus), riesige Skelette liegen am Wegrand. In den Tiefen Gewässern ist alles **dunkelblau unter Wasser** mit leuchtend pinken Neon-Korallen, Knochen, und Haie schwimmen herbei.
+- **Prinzip:** Spätere Biome wechseln nicht nur die Farbe, sondern die **ganze Stimmung** (Unterwasser, Urzeit). Das hält Spieler, die schon lange dabei sind, neugierig.
+
+![[futter-gefangen-meldung.jpg]]
+
+- **Fang-Meldung nach der Rückkehr:** Zurück am Grundstück erscheint oben eine große Karte mit Kleeblatt: „DU HAST GEFANGEN – LARGE DIAMOND MEGALODON – 1 in 714“, mit Schild „Legendäres Glück!!“. Der seltene Fang wird also **zweimal gefeiert**: bei der Enthüllung und noch einmal zu Hause (wo andere Spieler es sehen).
+
 ## Größe und Seltenheit
 
 Tiere sind **Art × Größe × Material**: seltene Arten sind von Natur aus größer und haben mehr Animationen, „GROSS“ ist ein zusätzlicher Zufallswurf (Ziege ×4,3 Einkommen), dazu Gold/Diamant. Details mit Bildern: [[Kreaturen-Pets]] → „Größe: zwei getrennte Ebenen“.
