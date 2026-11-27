@@ -2,7 +2,7 @@
 
 Fang-und-Gehege-Spiel: Blasebalg treten → Seifenblase pusten → Blase treibt durchs Tal (8 Biome mit Glücks-Multiplikator) → Tier springt hinein → Gehege → Geld pro Sekunde. Extra: Mischkessel (3 gleiche Tiere → Gold → Diamant → Regenbogen). Enthüllung: erst Tier-Sicht (Ich-Perspektive des Tiers, Fischauge + Vignette, läuft auf die Blase zu), dann Bodenkamera an der Blase (Tier läuft vorbei hinein) – Vorbild Clip des Users vom 27.11.2026; die Blase dehnt sich für große Tiere.
 
-**Stand:** nur geplant (27.11.2026), noch nichts gebaut. Bauplan: `bubblesafari-plan.md` (Zahlen, Tierliste, Phasen).
+**Stand:** Plan vom User abgesegnet (27.11.2026), noch nichts gebaut. Als Nächstes Phase 1. Bauplan: `bubblesafari-plan.md` (Zahlen, Tierliste, Phasen).
 
 ## Arbeitsweise
 - **Vorher lesen:** `Notizen/Roblox-Wissen/Roblox-Wissen.md` (+ passende Notiz) und für das Aussehen `Notizen/Design-Bibliothek/Fang-und-Gehege.md`, `Kreaturen-Pets.md`, `Trainings-Objekte.md`.

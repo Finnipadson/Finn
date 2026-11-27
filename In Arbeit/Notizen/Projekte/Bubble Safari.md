@@ -1,6 +1,6 @@
 ---
 typ: spiel
-status: geplant
+status: Plan abgesegnet, Phase 1 offen
 technik: Roblox Studio (Luau), gebaut über Roblox-Studio-MCP
 erstellt: 2026-11-27
 ---
