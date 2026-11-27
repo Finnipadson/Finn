@@ -8,7 +8,7 @@ Gegenstände in der Welt, mit denen man etwas tut: Laufbänder, Gehege, Stände,
 
 | Objekt | Wo gesehen | Was es tut | Worauf achten |
 |---|---|---|---|
-| **Fließband** | Steal a Brainrot | Bringt Waren oder Figuren vorbei, die man kaufen/schnappen muss | Richtung sichtbar (Streifen laufen mit), Geschwindigkeit gleichmäßig, seltene Dinge leuchten schon auf dem Band |
+| **Lauf-Teppich (statt Fließband)** | Steal a Brainrot | Kaufbare Figuren laufen auf einem roten Teppich an allen Basen vorbei | Schild über jeder Figur (Name, Seltenheit, $/s, Preis), seltene größer und auffälliger (siehe unten) |
 | **Laufband (Fitness)** | +1 Speed Keyboard Escape | Auf der Stelle rennen → Werte steigen; Bänder in Stufen mit Multiplikator | Stufe an Farbe/Größe erkennbar, Multiplikator-Schild darüber, fliegende Zahlen pro Schritt (siehe unten) |
 | **Gehege / Grundstück** | Steal An Egg, Grow a Garden | Eigener Bereich für Tiere/Pflanzen, wächst mit Upgrades | Zaun + Eingang, Slots sichtbar (leer = Umriss), Besitzername darüber |
 | **Ei / Kiste zum Öffnen** | Steal An Egg, Pet-Spiele | Belohnung mit Zufall | Schild „Bereit!“, Öffnen mit Licht + Teilen (siehe [[Game-Feel]]) |
@@ -108,6 +108,21 @@ Kreislauf: **Bankdrücken** (Kraft sammeln) → **Speer werfen** (je weiter, des
 
 - **Was es ist:** Jede Zone ist **übersät mit zerbrechlichen Dingen** – Holzkisten voller Münzen, Geschenkboxen, Münzhaufen, Tresore. Man klickt eins an, und **alle eigenen Pets laufen hin und greifen es an** (Schadenszahlen über dem Objekt, kleiner Lebensbalken). Beim Zerbrechen spritzen Münzen und Diamanten heraus, ab und zu „BONUS!“. Die Dinge spawnen ständig nach.
 - **Prinzip zum Übernehmen:** Pets haben eine sichtbare Aufgabe (abbauen/kämpfen), mehr Pets = schneller. Das Feld ist nie leer, es gibt immer etwas zu tun. Für [[Himmelsinseln]]: Begleiter greifen Gegner oder Kristall-Brocken an, auf die man zeigt.
+
+### Steal a Brainrot – Lauf-Teppich, Basis, Sperre (Roblox)
+
+![[brainrot-laufteppich.jpg]]
+
+- **Das „Band“:** Ein breiter **roter Teppich** läuft quer durch die Map an allen Basen vorbei. Auf ihm laufen ständig neue Brainrots entlang, jeder mit **Schild über dem Kopf**: Name, Seltenheit, Einkommen und Kaufpreis („Noobini Pizzanini – Common – $1/s – $25“). Man läuft hin, kauft, und das Tier läuft selbst in die eigene Basis. Seltene sind an Farbe und Größe sofort zu erkennen.
+
+![[brainrot-basis-collect.jpg]]
+
+- **Basis:** Jedes Tier steht auf einem eigenen Podest, darüber Name, Seltenheit, $/s. Davor ein grünes **„Collect“-Feld mit dem gesammelten Geld** – drüberlaufen = einsammeln, auch „Offline Cash“ während man weg war.
+
+![[brainrot-basis-sperre.jpg]]
+
+- **Sperre gegen Klauen:** Am Eingang jeder Basis ein Knopf; gedrückt = **rote Laserwand** vor der Basis und Meldung „You locked your base for 210 Seconds!“. Danach ist die Basis wieder offen und andere können Tiere klauen.
+- **Prinzip zum Übernehmen:** Ein Weg, auf dem die Ware zu den Spielern kommt (statt Shop-Menü). Einsammeln durch Drüberlaufen. Schutz mit Zeitlimit erzeugt Spannung zwischen Spielern.
 
 ### Pet Simulator 99 – Riesen-Ei (Roblox)
 

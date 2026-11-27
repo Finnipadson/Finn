@@ -51,7 +51,7 @@ Stand 26.11.2026. Quellen: LiveCounts (Spitzen seit 23.09.2026), RoStats (Rekord
 | ✅ 99 Nights in the Forest | 2,2 Mio. (Okt. 2026) | Koop-Überleben | Lagerfeuer-Mitte, Tag/Nacht, Crafting, Wald-Map |
 | Adopt Me! | 1,4 Mio. (Okt. 2026) | Haustiere / Rollenspiel | Haus, Haustier-Bedürfnisse, Handel |
 | Break and Steal an Egg | 1,3 Mio. (Okt. 2026) | Ei-Klauen | Vergleich zu Steal An Egg: was ist anders? |
-| Steal a Brainrot | 1,3 Mio. (Sep. 2026), Rekord 25 Mio. (2025) | Klauen + Basis | **Fließband**, Basen, Klau-Ablauf |
+| ✅ Steal a Brainrot | 1,3 Mio. (Sep. 2026), Rekord 25 Mio. (2025) | Klauen + Basis | **Fließband**, Basen, Klau-Ablauf |
 | Brookhaven RP | ~720k, Monatsschnitt Juli 546k | Rollenspiel-Stadt | Stadt-Map, Häuser, Seitenmenü |
 | Animal Hospital | Monatsschnitt Juli 471k (Spitze sicher höher) | Koop-Horror (Nachtschicht in Tierklinik) | Untersuchen, Anomalien erkennen → spannend für [[Nachtschicht]] |
 | Grow a Garden 2 | Monatsschnitt Juli 463k (Spitze sicher höher) | Farm-Simulator | größere Map, neue Beete, Gilden |

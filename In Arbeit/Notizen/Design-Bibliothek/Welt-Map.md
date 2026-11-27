@@ -114,6 +114,15 @@ Wie eine Map aufgebaut ist: Spawn, Wege, Zonen, Orientierung. Schwerpunkt Roblox
 - **Nebenattraktionen:** In der Zone stehen Extras wie ein **Regenbogen-Portal „Klassisches Obby“** (Hindernislauf für Belohnungen) und ein Ei-Automat.
 - **Prinzip zum Übernehmen:** Lineare Zonen-Kette mit Preisschild am Tor ist die einfachste Fortschritts-Map. Jede Zone ist klein und voll, statt groß und leer.
 
+### Steal a Brainrot – Basen am Teppich, Plaza in der Mitte (Roblox)
+
+![[brainrot-your-base.jpg]]
+![[brainrot-trade-plaza.jpg]]
+
+- **Aufbau:** Die Basen der Spieler stehen in einer Reihe links und rechts des roten Lauf-Teppichs (Name auf großem Schild, „wqweryn16's Base“). Die eigene Basis hat am Eingang ein großes Schild **„YOUR BASE – $13.4B/s“**, so findet man sie sofort.
+- **Mitte:** Zwischen den Basen ein Platz mit den Extras: blaues **Trade-Plaza-Portal** (Hände-Symbol), ein grünes **Glücksrad „Hacker Wheel – Free Spin in 29s“**, ein Stand „Robux Shop“. Alles mit schwebender Beschriftung in eigener Farbe.
+- **Prinzip zum Übernehmen:** Basen entlang eines zentralen Wegs, auf dem die Action passiert; eigene Basis deutlich markiert; Extras gebündelt in der Mitte.
+
 ## Bei uns umgesetzt
 
 -

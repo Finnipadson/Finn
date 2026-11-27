@@ -68,6 +68,33 @@ Wie Haustiere, Begleiter und sammelbare Kreaturen in Roblox-Hits **aussehen** (M
 - **Extrem günstig zu bauen:** ein Grundkörper für alle Pets, nur Anbauteile und Textur wechseln. Hunderte Pets möglich.
 - Beim Schlüpfen: Name groß, kleines Symbol daneben, Schild „Neu!“ oder „Super!“. Über dem Ei-Automaten die möglichen Pets mit Prozent in kleinen Kacheln (als Sprechblase).
 
+### Steal a Brainrot – Mutationen und Traits
+
+![[brainrot-mutation-normal.jpg]]
+![[brainrot-mutation-gold.jpg]]
+![[brainrot-mutation-eclipse.jpg]]
+![[brainrot-mutation-verflucht.jpg]]
+![[brainrot-mutation-lava.jpg]]
+![[brainrot-traits.jpg]]
+
+- **Mutationen = gleiches Modell, anderes „Material“:** Der Strawberry Elephant (roter Block-Elefant mit Erdbeer-Blättern auf dem Kopf) gibt es in vielen Mutationen: **Normal, Gold, Diamond, Rainbow, Hacker, Eclipse, Crystal, Phantom, Cyber, Divine, Cursed, Radioactive, Yin Yang, Galaxy, Lava, Candy, Bloodmoon**. Jede tauscht Farbe/Textur und fügt Partikel hinzu:
+  - Gold: ganzer Körper golden, Funken
+  - Eclipse: dunkelblau-schwarz mit Sternen und goldenen Lichtpunkten
+  - Cursed: knallrot mit dunklen Flecken und roten Partikeln
+  - Lava: orange glühend, Feuerpartikel
+- **Wert und Seltenheit sichtbar:** Über dem Tier Name, Einkommen und **wie viele davon existieren** („1.274 Exist“ normal, „559“ gold, „19“ cursed, „12“ lava, „1 of 1“ bei ganz seltenen). Mutation multipliziert das Einkommen ($750M/s normal → $10,1B/s Eclipse).
+- **Traits = Zubehör obendrauf:** zusätzlich zur Mutation kleine Anbauten (Heiligenschein, Kürbis, Blitz, Sonnenbrille „Aura Shades“, Ball …), die weiteren Bonus geben.
+- **Prinzip zum Übernehmen:** Mutation (Material) × Trait (Zubehör) × Tier = riesige Sammelliste aus wenigen Modellen. Die „Exist“-Zahl macht Seltenheit greifbar.
+
+### Steal a Brainrot – Kreaturen
+
+![[brainrot-phoenix.jpg]]
+![[brainrot-drache.jpg]]
+![[brainrot-kitsune.jpg]]
+
+- Seltene Brainrots („Secret“) sind **größer und detaillierter** als die gewöhnlichen, mit eigenem Effekt: Phönix aus Flammen-Federn (rot-orange-gelb), Wasser-Drache in Hellblau mit Spritzern, Kitsune weiß-rot mit mehreren Schwänzen. Auch hier: Block-Stil, eine Hauptfarbe, Element sofort erkennbar.
+- Viele Brainrots sind absichtlich **absurd** (Elefant aus Erdbeere, Toilette mit Kopf) – Humor ist bei Kindern ein großer Teil des Reizes.
+
 ### Silhouetten im Index (Steal An Egg, Ziehe einen Dino)
 
 ![[stealanegg-index-tempel.jpg]]

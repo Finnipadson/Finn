@@ -119,6 +119,13 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Pastell-Fenster mit Konfetti; große Kacheln für Robux-Angebote („Magic Eggs!“, „Shiny Hunter!“, „Super Drops!“), jede in eigener Farbe mit Bild und Preis in einem Schild unten. Darunter „Weitere permanente Gamepasses“.
 - **Prinzip zum Übernehmen:** Angebote als bunte Kacheln mit einem Satz Nutzen; Shop wirkt festlich statt nüchtern.
 
+### Steal a Brainrot – Werkzeug-Shop (Roblox)
+
+![[brainrot-werkzeug-shop.jpg]]
+
+- **Was ist gut:** „Buy tools to protect your base and troll others!“ – Liste mit Bild, Name, **einem Satz, was es tut** („Bee Launcher: Release bees to attack your opponent and invert their controls!“, „Gold Slap: knocks enemies farther back“), grünem Preis-Button und Kästchen „Auto Buy“.
+- **Prinzip zum Übernehmen:** Werkzeuge, die mit anderen Spielern interagieren (schützen, stören), machen Begegnungen lustig. Beschreibung = Wirkung in einem Satz.
+
 ## Bei uns umgesetzt
 
 -
