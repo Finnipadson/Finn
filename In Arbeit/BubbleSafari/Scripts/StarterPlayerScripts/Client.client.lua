@@ -24,6 +24,10 @@ local rng = Random.new()
 local status = { Tiere = {}, Seife = 1, SeifenBesitz = { ["1"] = true }, Plaetze = 6, Index = {}, Blasebalg = 1 }
 local pustetGerade = false
 local versteckAb = math.huge -- Tier-IDs >= diesem Wert noch nicht zeigen (Enthuellung laeuft)
+local SB = 35 -- halbe Schluchtbreite (wie Map.lua)
+local seqOrdner = Instance.new("Folder")
+seqOrdner.Name = "LokaleSequenz"
+seqOrdner.Parent = workspace
 
 -- ===== UI-Hilfen =====
 local FONT = Enum.Font.FredokaOne
@@ -397,6 +401,10 @@ local enthInfo = text({ Size = UDim2.fromOffset(500, 34), Position = UDim2.new(0
 local enthNeu = text({ Size = UDim2.fromOffset(220, 44), Position = UDim2.new(0.5, 150, 1, -270), Rotation = 12, Text = "", TextColor3 = rgb(255, 230, 60), ZIndex = 48, Parent = enthHUD })
 local enthWeiter = text({ Size = UDim2.fromOffset(400, 28), Position = UDim2.new(0.5, -200, 1, -128), Text = "", ZIndex = 47, Parent = enthHUD })
 
+local function gross(t) -- string.upper kennt keine Umlaute
+	return (string.upper(t):gsub("ä", "Ä"):gsub("ö", "Ö"):gsub("ü", "Ü"))
+end
+
 local function titelFuer(n)
 	if n >= 5000 then return "Regenbogenglück!!", rgb(255, 120, 230) end
 	if n >= 500 then return "Blasenwahn!", rgb(80, 240, 230) end
@@ -407,7 +415,7 @@ end
 
 local function lueckenWort(name, anteil, reihenfolge)
 	local zeichen = {}
-	for _, c in utf8.codes(string.upper(name)) do table.insert(zeichen, utf8.char(c)) end
+	for _, c in utf8.codes(gross(name)) do table.insert(zeichen, utf8.char(c)) end
 	local zeigen = math.floor(#zeichen * anteil)
 	local sichtbar = {}
 	for i = 1, zeigen do sichtbar[reihenfolge[i]] = true end
@@ -419,7 +427,7 @@ local function lueckenWort(name, anteil, reihenfolge)
 end
 
 local function blaseBauen(farbe)
-	local b = neu("Part", { Name = "Blase", Shape = Enum.PartType.Ball, Size = Vector3.one * 1, Anchored = true, CanCollide = false, CanQuery = false, Material = Enum.Material.ForceField, Color = farbe, CastShadow = false, Parent = workspace })
+	local b = neu("Part", { Name = "Blase", Shape = Enum.PartType.Ball, Size = Vector3.one * 1, Anchored = true, CanCollide = false, CanQuery = false, Material = Enum.Material.ForceField, Color = farbe, CastShadow = false, Parent = seqOrdner })
 	local innen = neu("Part", { Name = "Innen", Shape = Enum.PartType.Ball, Size = Vector3.one * 0.95, Anchored = true, CanCollide = false, CanQuery = false, Material = Enum.Material.Glass, Transparency = 0.85, Color = farbe, CastShadow = false, Parent = b })
 	return b, innen
 end
@@ -475,7 +483,7 @@ local function sequenz(res, startPos)
 	-- 2) Flug
 	cam.CameraType = Enum.CameraType.Scriptable
 	flugHUD.Visible = true
-	local ziel = Vector3.new(math.clamp(startPos.X + res.drift, -160, 160), D_BLASE / 2, res.weite)
+	local ziel = Vector3.new(math.clamp(startPos.X + res.drift, -(SB - 10), SB - 10), D_BLASE / 2, res.weite)
 	local start = os.clock()
 	local letzterBiom
 	local gEnde = select(2, D.biomBei(res.weite))
@@ -483,17 +491,17 @@ local function sequenz(res, startPos)
 	while true do
 		local t = math.min((os.clock() - start) / res.dauer, 1)
 		local u = 1 - (1 - t) ^ 2.2
-		local pos = startPos:Lerp(ziel, u) + Vector3.new(math.sin(t * 9) * 1.5, math.sin(math.pi * u) * 40, 0)
+		local pos = startPos:Lerp(ziel, u) + Vector3.new(math.sin(t * 9) * 1.5, math.sin(math.pi * u) * 22, 0)
 		blaseSetzen(blase, innen, pos, D_BLASE)
 		local fwd = (ziel - startPos).Unit
 		cam.CFrame = CFrame.lookAt(pos - Vector3.new(fwd.X, 0, fwd.Z).Unit * 26 + Vector3.new(0, 10, 0), pos + Vector3.new(0, 0, 18))
 		local biom, g = D.biomBei(pos.Z)
 		flugGlueck.Text = string.gsub(string.format("%.2fX Glück", g * bonus), "%.", ",")
-		flugBiom.Text = string.upper(biom.name) .. " · " .. math.floor(pos.Z) .. " m"
+		flugBiom.Text = gross(biom.name) .. " · " .. math.floor(pos.Z) .. " m"
 		if biom.id ~= letzterBiom then
 			letzterBiom = biom.id
 			TweenService:Create(farbKorrektur, TweenInfo.new(0.6), { TintColor = BIOM_TINT[biom.id] or rgb(255, 255, 255) }):Play()
-			if pos.Z > 50 then grosserText(string.upper(biom.name), "", rgb(255, 255, 255)) end
+			if pos.Z > 50 then grosserText(gross(biom.name), "", rgb(255, 255, 255)) end
 		end
 		if t >= 1 then break end
 		RunService.RenderStepped:Wait()
@@ -528,10 +536,11 @@ local function sequenz(res, startPos)
 
 	-- 3) Tier-Sicht
 	blende(0, 0.25)
-	local winkel = math.rad(rng:NextNumber(-60, 60))
+	local winkel = math.rad(rng:NextNumber(-30, 30))
 	local dir = Vector3.new(math.sin(winkel), 0, math.cos(winkel)) -- Tier kommt von weiter hinten im Tal
 	local auge = math.max(1.3, h * 0.8)
-	local povStart = ziel + dir * 38
+	local povStart = ziel + dir * 34
+	povStart = Vector3.new(math.clamp(povStart.X, -(SB - 4), SB - 4), povStart.Y, povStart.Z)
 	local povEnde = ziel + dir * (D_BLASE / 2 + 4 + h * 0.6)
 	cam.FieldOfView = 100
 	vignette.Visible = true
@@ -560,12 +569,13 @@ local function sequenz(res, startPos)
 	local k = math.max(1, h / 3)
 	local seite = dir:Cross(Vector3.yAxis).Unit
 	local camPos = ziel + dir * (9 * k) + seite * (3 * k) + Vector3.new(0, 1.3 * k - D_BLASE / 2 + 0.5, 0)
+	camPos = Vector3.new(math.clamp(camPos.X, -(SB - 3), SB - 3), camPos.Y, camPos.Z)
 	cam.CFrame = CFrame.lookAt(camPos, ziel + Vector3.new(0, 1, 0))
 	local laufStart = camPos + dir * (5 * k) - seite * (4.5 * k)
-	laufStart = Vector3.new(laufStart.X, 0, laufStart.Z)
+	laufStart = Vector3.new(math.clamp(laufStart.X, -(SB - 3), SB - 3), 0, laufStart.Z)
 	local laufEnde = Vector3.new(ziel.X, 0, ziel.Z) + dir * (D_BLASE / 2 + h * 0.4)
 	tier:PivotTo(CFrame.new(laufStart))
-	tier.Parent = workspace
+	tier.Parent = seqOrdner
 	blende(1, 0.12)
 	local laufDauer = if kurz then 0.7 else 1.8
 	task.spawn(function()
@@ -606,7 +616,7 @@ local function sequenz(res, startPos)
 
 	-- 6) Ergebnis
 	spannung(1)
-	enthWort.Text = string.upper(res.name)
+	enthWort.Text = gross(res.name)
 	enthWort.TextColor3 = D.Seltenheit[res.selten].farbe
 	enthInfo.Text = D.Seltenheit[res.selten].name .. " · $" .. D.format(res.einkommen) .. "/s"
 	enthNeu.Text = if res.neu then "NEU!" else ""
@@ -654,12 +664,12 @@ local pustHinweis = text({ Size = UDim2.fromOffset(420, 34), Position = UDim2.ne
 
 local zeigerWert, zeigerRichtung = 0, 1
 local function aufPustplatz()
-	local _, nr = meinGrundstueck()
-	local pp = nr and Grund:FindFirstChild("Pustplatz" .. nr)
+	local wp = Map:FindFirstChild("Wurfplatz")
+	local platte = wp and wp:FindFirstChild("Platte")
 	local hrp = spieler.Character and spieler.Character:FindFirstChild("HumanoidRootPart")
-	if not pp or not hrp then return nil end
-	local d = hrp.Position - pp.Platte.Position
-	if Vector2.new(d.X, d.Z).Magnitude < 7.5 and math.abs(d.Y) < 8 then return pp end
+	if not platte or not hrp or not meinGrundstueck() then return nil end
+	local d = platte.CFrame:PointToObjectSpace(hrp.Position)
+	if math.abs(d.X) < platte.Size.X / 2 and math.abs(d.Z) < platte.Size.Z / 2 and d.Y < 8 then return wp end
 	return nil
 end
 
@@ -696,10 +706,11 @@ local function pusten()
 	grosserText(qText, if res.serie > 0 then "Serie x" .. res.serie .. " · +" .. res.serie * 10 .. "% Glück" else "", if qText == "PERFEKT!" then rgb(120, 255, 140) elseif qText == "GUT" then rgb(255, 220, 80) else rgb(255, 120, 120))
 	serieText.Text = if res.serie > 0 then "Serie x" .. res.serie else ""
 	local hrp = spieler.Character and spieler.Character:FindFirstChild("HumanoidRootPart")
-	local startPos = Vector3.new(pp.Platte.Position.X, 66, 2)
+	local startPos = Vector3.new(0, 9, -3) -- im Blasenring vorne am Wurfplatz
 	local ok2, err = pcall(sequenz, res, startPos)
 	if not ok2 then
 		warn("Sequenz-Fehler:", err)
+		seqOrdner:ClearAllChildren()
 		kameraZurueck()
 		vignette.Visible = false
 		enthHUD.Visible = false

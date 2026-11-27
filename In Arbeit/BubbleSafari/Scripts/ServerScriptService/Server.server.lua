@@ -52,7 +52,6 @@ local naechstesPusten = {}
 local serie = {}
 
 local function plot(nr) return Grund:FindFirstChild("Grundstueck" .. nr) end
-local function pustplatz(nr) return Grund:FindFirstChild("Pustplatz" .. nr) end
 
 local function anzahl(d, imGehege)
 	local n = 0
@@ -516,12 +515,14 @@ R.Pusten.OnServerInvoke = function(p, zeiger)
 	if not d or not g then return { fehler = "Noch nicht bereit." } end
 	if typeof(zeiger) ~= "number" or zeiger ~= zeiger then return { fehler = "Ungültig." } end
 	if os.clock() < (naechstesPusten[p] or 0) then return { fehler = "Warte, bis deine Blase zurück ist." } end
-	local pp = pustplatz(g:GetAttribute("Nummer"))
+	local platte = Map:FindFirstChild("Wurfplatz") and Map.Wurfplatz:FindFirstChild("Platte")
 	local char = p.Character
 	local hrp = char and char:FindFirstChild("HumanoidRootPart")
-	if not pp or not hrp then return { fehler = "Stell dich auf deinen Pustplatz." } end
-	local abstand = hrp.Position - pp.Platte.Position
-	if Vector2.new(abstand.X, abstand.Z).Magnitude > 9 then return { fehler = "Stell dich auf deinen Pustplatz." } end
+	if not platte or not hrp then return { fehler = "Stell dich auf den Wurfplatz." } end
+	local abstand = platte.CFrame:PointToObjectSpace(hrp.Position)
+	if math.abs(abstand.X) > platte.Size.X / 2 + 2 or math.abs(abstand.Z) > platte.Size.Z / 2 + 2 then
+		return { fehler = "Stell dich auf den Wurfplatz." }
+	end
 	if anzahl(d, false) >= D.RUCKSACK then
 		return { fehler = "Rucksack voll! Stelle Tiere ins Gehege oder verkaufe sie." }
 	end
@@ -553,7 +554,7 @@ R.Pusten.OnServerInvoke = function(p, zeiger)
 	return {
 		ok = true, weite = w, biom = biom.id, biomName = biom.name, glueck = glueck, art = wahl.id, name = art.name,
 		selten = art.selten, chance = math.max(1, math.floor(1 / wahl.p + 0.5)), quali = qText, serie = serie[p],
-		dauer = dauer, neu = neu, tierId = tier.id, drift = rng:NextNumber(-50, 50), einkommen = D.einkommen(tier),
+		dauer = dauer, neu = neu, tierId = tier.id, drift = rng:NextNumber(-15, 15), einkommen = D.einkommen(tier),
 		groesse = 1, material = 1,
 	}
 end

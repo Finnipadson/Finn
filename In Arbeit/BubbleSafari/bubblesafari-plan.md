@@ -14,7 +14,7 @@ Eigener Twist gegenüber den Vorbildern: kein Werfen, keine Waffe – **Seifenbl
 ## 1. Die Spielschleife
 
 1. **Trainieren** am **Blasebalg** auf dem eigenen Grundstück → XP → Stufe → **Pustkraft** steigt.
-2. **Pusten** am eigenen Pustplatz an der Talkante: senkrechter Puste-Balken, im richtigen Moment tippen → „PERFEKT!“.
+2. **Pusten** am gemeinsamen Wurfplatz in der Mitte: senkrechter Puste-Balken, im richtigen Moment tippen → „PERFEKT!“.
 3. **Flug:** Die Blase treibt mit dem Wind das Tal entlang, die Kamera fliegt mit. Oben live: Biom-Name, Weite, **Glücks-Multiplikator**.
 4. **Fang:** Die Blase landet, man sieht **durch die Augen des Tiers**, wie es auf die Blase zuläuft; dann Schnitt auf eine **Bodenkamera** an der Blase, das Tier läuft dicht an der Kamera vorbei ins Bild und springt hinein. **Enthüllung** mit hochzählender Chance und Lückenwort.
 5. **Zurück:** Die Blase mit Tier schwebt zurück (Kamera springt zurück, Blase kommt am Grundstück an) → Tier landet im **Rucksack**.
@@ -25,22 +25,23 @@ Eine Runde (pusten bis Tier im Rucksack) dauert **9–18 Sekunden** (mit „Schn
 
 ---
 
-## 2. Welt-Aufbau
+## 2. Welt-Aufbau (geändert 28.11.2026: Kessel + schmale Schlucht wie im Vorbild)
 
 ```
-          Hub (Seifenladen, Event-NPC, Bestenliste, Spawn)
-                         |
-  [G1][G2][G3][G4][G5][G6][G7][G8]   <- 8 Grundstücke in einer Reihe
-  ===P1==P2==P3==P4==P5==P6==P7==P8=== <- Talkante mit 8 Pustplätzen
-  \                                     /
-   \___ Tal, 10.400 Studs lang, 8 Biome ___  ->
+   ┌──────────── Klippen ringsum ────────────┐
+   │  [G1]   [G2]   [G3]   [G4]   Gehege     │  <- Grundstücke hinten im Kessel
+   │  Laden      Spawn       Brunnen          │
+   │          ^^^ gelbe Pfeile ^^^            │
+   │           [ WURFPLATZ ]  (Mitte)         │
+   └─────────────┐  Schlucht  ┌─────────────┘
+                 │  70 breit  │  -> Biome hintereinander
 ```
 
-- **8 Grundstücke nebeneinander** an der Talkante, jedes direkt hinter seinem Pustplatz → kein Laufweg zwischen Pusten, Gehege und Training.
-- **Hub** mittig hinter der Reihe: Spawn (schaut aufs Tal), **Seifenladen**, Event-NPC, Bestenliste, Index-Tafel. Alles in ≤ 10 s Laufweite.
-- **Tal** gerade, ~300 Studs breit, Seitenwände als Block-Klippen mit Erdschichten. Jedes Biom eigener Boden, eigene Deko, eigene Landmarke (riesiger Pilz, Kaktus, Vulkan …), Schild mit Biom-Name am Übergang.
-- Server-Max-Spieler = 8. Maßstab nach [[Welt-Map]]: Wege ≥ 12 Studs, Figur ~5 Studs.
-- **Streaming:** Tal-Biome als Modelle mit `ModelStreamingMode = Persistent` nur für Landmarken; Rest normal streamen. Kamera-Flug lädt voraus (`RequestStreamAroundAsync` am Zielpunkt beim Pusten). Siehe [[Roblox-Fallen]].
+- **Kessel:** Alle Grundstücke liegen unten in einer Senke, ringsum Block-Klippen mit Gras-Kappen (Höhe 45). Boden überall auf gleicher Höhe.
+- **Wurfplatz in der Mitte:** ein gemeinsamer, orange gekachelter Platz mit Blasenring am Eingang der Schlucht. Alle Spieler pusten von hier. Gelbe Pfeile führen vom Spawn hin.
+- **Schlucht:** schmal (70 Studs), gerade, Wände aus Voxel-Säulen. Jedes Biom eigener Boden, Deko unten und oben am Rand, Landmarke oben am Rand (Riesen-Gänseblümchen, Riesenpilz, Sumpfbaum), Bogen mit Biom-Namen über der Schlucht. Spieler kommen nicht hinein (unsichtbare Sperre).
+- Max. 4 Spieler (4 Grundstücke) in Phase 1; später mehr Grundstücke im Kessel möglich. Maßstab nach [[Welt-Map]].
+- **Streaming:** Phase 1 aus; bei langer Schlucht später `ModelStreamingMode = Persistent` für Landmarken und `RequestStreamAroundAsync` am Zielpunkt. Siehe [[Roblox-Fallen]].
 
 ---
 
@@ -69,7 +70,7 @@ Aufstufen an Ort und Stelle: Preis schwebt über dem Kreis; hineinlaufen mit gen
 
 ## 4. Pusten
 
-- Pustplatz = runde Plattform an der Talkante mit Blasenring-Gestell. Draufstellen → Figur hält einen Blasenstab, Text „Tippe zum Pusten!“.
+- Wurfplatz = orange gekachelter Platz am Schlucht-Eingang mit Blasenring-Gestell. Draufstellen → Puste-Balken erscheint, Text „Tippe, wenn der Zeiger im grünen Feld ist!“.
 - **Puste-Balken** senkrecht, Zeiger fährt hoch/runter. Zonen: Schwach (×0,7), Gut (×1,0), **PERFEKT (×1,15)** – Perfekt-Zone schmal, oben.
 - **Serie:** Jeder PERFEKT-Puster in Folge → +10 % Glück (max. +50 % bei Serie 5). Anzeige „Serie x3 · +30 % Glück“.
 - **Weite (Studs) = Pustkraft × 10 × Seifen-Weite × Pust-Qualität.**
@@ -259,7 +260,7 @@ Die Blase **passt sich immer dem Tier an** – kein Tier ist zu groß, aber gro�
 | Oben mittig | im Flug: Biom + Glück + Weite; sonst Meldungen |
 | Unten rechts | Event-Countdown, Glückstrank-Zeit |
 
-Große Knöpfe, kurze Texte, Zahlen gekürzt (K, M, B, T, Qa). Erste 60 Sekunden: Pfeil zum Blasebalg → 10 s trainieren → Pfeil zum Pustplatz → erster Puster ist garantiert ein Wiesenhase → Pfeil „Ins Gehege“ ([[Menüs-Onboarding]]).
+Große Knöpfe, kurze Texte, Zahlen gekürzt (K, M, B, T, Qa). Erste 60 Sekunden: Pfeil zum Blasebalg → 10 s trainieren → Pfeil zum Wurfplatz → erster Puster ist garantiert ein Wiesenhase → Pfeil „Ins Gehege“ ([[Menüs-Onboarding]]).
 
 ---
 
@@ -276,7 +277,7 @@ Große Knöpfe, kurze Texte, Zahlen gekürzt (K, M, B, T, Qa). Erste 60 Sekunden
 ## 13. Bauphasen
 
 **Phase 1 – spielbarer Kern** (Ziel: 15 Minuten Spielspaß) – ✅ gebaut 27.11.2026
-- Map: Hub-Platz + 4 Grundstücke + 4 Pustplätze + Tal mit Biomen 1–3 (einfach, je 1 Landmarke)
+- Map: Kessel mit 4 Grundstücken, Laden, Brunnen + Wurfplatz in der Mitte + schmale Schlucht mit Biomen 1–3 (je 1 Landmarke)
 - Blasebalg Stufe 1–3 mit XP, Stufen, fliegenden Zahlen, HALT
 - Pusten mit Balken + PERFEKT, Blasenflug mit Kamera + Flug-HUD
 - 12 Tiere (je 4 aus Wiese, Pilzwald, Sumpf), Ziehen mit Glück, Enthüllung mit Tier-Sicht + Bodenkamera (einfach: kurzer Lauf aus Tier-Augen zur Blase, Schnitt, Tier läuft vorbei in die Blase, Name + $/s)
