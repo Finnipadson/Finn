@@ -57,6 +57,17 @@ Wie Haustiere, Begleiter und sammelbare Kreaturen in Roblox-Hits **aussehen** (M
 - Frosch mit **leuchtender Laterne an einem Stab** (wie ein Anglerfisch) – bekanntes Tier + witziger Twist; Name als Lückenwort.
 - Seltener Fang (1 in 3.242): riesige **goldene Statue-Kreatur**, viel größer als normale Tiere – Seltenheit durch Größe + Gold.
 
+### Pet Simulator 99
+
+![[petsim-dalmatiner.jpg]]
+![[petsim-marienkaefer-kuh.jpg]]
+![[petsim-ei-chancen.jpg]]
+
+- **Würfel-Pets:** Fast jedes Pet ist im Kern **ein Würfel** (Kopf = Körper) mit winzigen Beinchen; das Tier entsteht nur durch Ohren, Fühler, Hörner, Muster und Gesicht. Dalmatiner = weißer Würfel mit Flecken und Schlappohren, Marienkäfer = dunkelblauer Würfel mit Fühlern und rosa Bäckchen, Kuh = weißer Würfel mit Hörnern und Flecken.
+- **Gesichter:** große glänzende Augen, kleiner Mund, oft Zunge oder Bäckchen – maximal niedlich und auf jedem Handy lesbar.
+- **Extrem günstig zu bauen:** ein Grundkörper für alle Pets, nur Anbauteile und Textur wechseln. Hunderte Pets möglich.
+- Beim Schlüpfen: Name groß, kleines Symbol daneben, Schild „Neu!“ oder „Super!“. Über dem Ei-Automaten die möglichen Pets mit Prozent in kleinen Kacheln (als Sprechblase).
+
 ### Silhouetten im Index (Steal An Egg, Ziehe einen Dino)
 
 ![[stealanegg-index-tempel.jpg]]

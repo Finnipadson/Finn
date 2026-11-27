@@ -88,6 +88,13 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Großes rotes „DU HAST VERLOREN – Alle in deiner Gruppe sind gestorben“, Countdown „Rückkehr in 28 Sekunden“, darunter zwei Wege: „Spiele erneut mit demselben Team“ und ein grüner Button „Alle wiederbeleben“ (vermutlich gegen Robux). Die Welt läuft im Hintergrund weiter (Wolf steht daneben).
 - **Prinzip zum Übernehmen:** Nach dem Verlieren sofort einen Weg zurück anbieten, mit demselben Team.
 
+### Pet Simulator 99 – Quests und Gratis-Pet als Köder (Roblox)
+
+![[petsim-gratis-pet.jpg]]
+
+- **Was ist gut:** Oben mittig immer **genau eine Quest-Karte** mit Symbol, Titel und Balken („Starter-Quest! Rüste dein Hoverboard aus! 0/1“, „Brüte neue Pets aus! Schlüpfe 2 Eier 1/2“). Rechts eine kleine Liste mit Rang-Aufgaben („Rang 1: Noob – Zerstöre 34 zerbrechliche Gegenstände 16/50“). Ein Fenster lockt mit **„Willst du ein GRATIS-Pet? Erreiche Zone 10“** und zeigt das Pet schon – man weiß, worauf man hinarbeitet.
+- **Prinzip zum Übernehmen:** Immer nur eine Hauptaufgabe groß zeigen; ein konkretes, sichtbares Geschenk als frühes Ziel.
+
 ## Bei uns umgesetzt
 
 -

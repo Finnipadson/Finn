@@ -105,6 +105,15 @@ Wie eine Map aufgebaut ist: Spawn, Wege, Zonen, Orientierung. Schwerpunkt Roblox
 - **Was ist gut:** Vom Grundstück führt eine **breite orange Straße** zur Wurf-Schlucht. Links und rechts **Marktstände mit gestreiften Markisen** und großen Schildern („Spuren“, „Harpunen“, „Verkaufen“), jeder in eigener Farbe; ein Regenbogen-Stand lockt mit Glitzer. Am Ende ein großes leuchtendes Tor mit Countdown („Christmas Update 00:21:34“). Blaue Pfeil-Kacheln auf dem Boden zeigen den Weg (Tutorial „Schritt 5/5 – Wieder werfen!“ oben).
 - **Prinzip zum Übernehmen:** Die Läden liegen **auf dem Weg** zwischen den beiden Hauptorten (Grundstück ↔ Aktion), man kommt bei jedem Durchgang daran vorbei. Event-Countdown als großes Tor in der Welt.
 
+### Pet Simulator 99 – Zonen hintereinander (Roblox)
+
+![[petsim-zonen-tor.jpg]]
+![[petsim-obby-portal.jpg]]
+
+- **Aufbau:** Die Welt ist eine **Kette von Zonen** (Räume zwischen hohen Felswänden), jede mit eigenem Thema und eigener Bodenfarbe (Herbst orange, Bauernhof gelb, Blumenwiese grün). Am Ende jeder Zone ein Tor mit **riesigem Preis „400k“ und Button „Kaufen“**, oben „Nächstes Gebiet – 400k“ mit Balken, wie weit man ist.
+- **Nebenattraktionen:** In der Zone stehen Extras wie ein **Regenbogen-Portal „Klassisches Obby“** (Hindernislauf für Belohnungen) und ein Ei-Automat.
+- **Prinzip zum Übernehmen:** Lineare Zonen-Kette mit Preisschild am Tor ist die einfachste Fortschritts-Map. Jede Zone ist klein und voll, statt groß und leer.
+
 ## Bei uns umgesetzt
 
 -

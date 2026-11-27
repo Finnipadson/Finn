@@ -112,6 +112,13 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Wie der Haustier-Index von Steal An Egg: pro Zone (z. B. „Sumpf“) eine Reihe mit Silhouetten und „???“, Kachelfarbe = Seltenheit, Fortschritt „3/8“ und Bonus fürs Vervollständigen („+10 % Geld“). Unten die Gesamtregeln in einer Zeile: „Unlocked 9/695 · Complete a zone: +10 % money · Exotics: +0 % luck“. Zweiter Reiter „Top Collectors“ als Bestenliste.
 - **Prinzip zum Übernehmen:** Sammelbuch ist inzwischen Standard in Roblox-Sammelspielen; Belohnung pro vollständiger Zone + Bestenliste für Sammler.
 
+### Pet Simulator 99 – Exklusiver Shop (Roblox)
+
+![[petsim-exklusiv-shop.jpg]]
+
+- **Was ist gut:** Pastell-Fenster mit Konfetti; große Kacheln für Robux-Angebote („Magic Eggs!“, „Shiny Hunter!“, „Super Drops!“), jede in eigener Farbe mit Bild und Preis in einem Schild unten. Darunter „Weitere permanente Gamepasses“.
+- **Prinzip zum Übernehmen:** Angebote als bunte Kacheln mit einem Satz Nutzen; Shop wirkt festlich statt nüchtern.
+
 ## Bei uns umgesetzt
 
 -

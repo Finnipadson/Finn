@@ -102,6 +102,19 @@ Kreislauf: **Bankdrücken** (Kraft sammeln) → **Speer werfen** (je weiter, des
 - **Haustier reiten:** Gefangene Tiere kann man **reiten** und damit übers Wasser fahren (Hinweis „Sprich mit dem Fischer, um dein Haustier zu reiten“). Unten Buttons „Zurück an Land“, „Fisch“ (grün, groß), „AUTO“, darüber der aktuelle Köder („Köder: Wurm“).
 - **Prinzip zum Übernehmen:** Gesammelte Tiere bekommen eine zweite Funktion (Reittier) → mehr Wert pro Tier. Für [[Himmelsinseln]]: fliegende Begleiter als Reittier zwischen den Inseln.
 
+### Pet Simulator 99 – Zerbrechliche Gegenstände, die Pets abbauen (Roblox)
+
+![[petsim-zerbrechliche.jpg]]
+
+- **Was es ist:** Jede Zone ist **übersät mit zerbrechlichen Dingen** – Holzkisten voller Münzen, Geschenkboxen, Münzhaufen, Tresore. Man klickt eins an, und **alle eigenen Pets laufen hin und greifen es an** (Schadenszahlen über dem Objekt, kleiner Lebensbalken). Beim Zerbrechen spritzen Münzen und Diamanten heraus, ab und zu „BONUS!“. Die Dinge spawnen ständig nach.
+- **Prinzip zum Übernehmen:** Pets haben eine sichtbare Aufgabe (abbauen/kämpfen), mehr Pets = schneller. Das Feld ist nie leer, es gibt immer etwas zu tun. Für [[Himmelsinseln]]: Begleiter greifen Gegner oder Kristall-Brocken an, auf die man zeigt.
+
+### Pet Simulator 99 – Riesen-Ei (Roblox)
+
+![[petsim-riesen-ei.jpg]]
+
+- **Was es ist:** Zwischendurch liegt ein **übergroßes Ei** im Feld; „Klicken zum Öffnen!“ – es blitzt weiß auf, Funken fliegen, ein Pet erscheint. Belohnung mitten in der Welt statt im Menü.
+
 ## Bei uns umgesetzt
 
 -
