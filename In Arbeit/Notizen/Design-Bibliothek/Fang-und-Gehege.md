@@ -22,7 +22,7 @@ Gefilmt: **Throw Food For Animals**, **Ziehe einen Dino** und **Fische für gehe
 ![[futter-flug-savanne.jpg]]
 
 - **Man wirft Futter, kein Werkzeug:** Banane, Orange, Käse, Brotlaib … Das Futter landet, und **das Tier läuft herbei und frisst** – freundlicher als Speer/Harpune, passt für jüngere Spieler.
-- **Futter = Ausrüstung mit Stufen:** Jedes Futter hat eine Stufe; besseres Futter fliegt weiter / lockt seltenere Tiere.
+- **Futter = Ausrüstung mit Stufen:** Jedes Futter hat eine Stufe; besseres Futter bringt vermutlich mehr Weite oder seltenere Tiere (im Video nicht eindeutig zu sehen).
 
 ![[futter-kaenguru.jpg]]
 ![[futter-loewe-raetsel.jpg]]
