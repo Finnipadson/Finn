@@ -54,7 +54,7 @@ Die Stationen, an denen man **stärker wird** (Bankdrücken, Klimmzugstange, Lau
 
 ![[futter-blauflammen-stab.jpg]]
 
-- **Späte Stufe „Blauflammen-Stab“:** zwei dunkelblaue Pfosten mit blauen Flammen oben, Preis **$12Qi**, Ertrag **+2,1M XP / Reputation**. Meldung beim Kauf: „Auf Blauflammen-Stab verbessert!“. Stufen-Reihe in diesem Spiel also mindestens: Holz → Lila (Violetter Bar) → Obsidian → Blauflammen.
+- **Späte Stufe „Blauflammen-Stab“:** zwei dunkelblaue Pfosten mit blauen Flammen oben, Preis **$12Qi**, Ertrag **+2,1M XP / Reputation**. Meldung beim Kauf: „Auf Blauflammen-Stab verbessert!“. Gesehene Stufen in diesem Spiel: Holz, Lila (Violetter Bar), Obsidian, Blauflammen (Reihenfolge von Obsidian vermutet).
 
 ### +1 Speed Keyboard Escape – Laufbänder
 
