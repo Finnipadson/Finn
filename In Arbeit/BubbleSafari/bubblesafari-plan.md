@@ -226,6 +226,7 @@ Die Blase **passt sich immer dem Tier an** – kein Tier ist zu groß, aber gro�
 **Grundstück** (gleich für alle): Zaun + Eingang, Holzschild „<Name>s Safari“, darüber schwebend **Avatar + Name + $/s** (soziale Bestenliste in der Welt). Darauf: Blasebalg, Mischkessel, Gehege-Fläche, Ausbau-Schild.
 
 - **Gehege-Plätze:** Start 6. Ausbau-Schild am Zaun „6 > 8 PLÄTZE – 1K“.
+- **Ausbau-Animation** (später, Phase 2+): Beim Kauf schäumt das Schild auf, der **Zaun fährt Stück für Stück nach außen** (Tween, ~1,5 s), neue Bodenfläche klappt mit Plopp-Geräuschen auf, neue leere Platz-Umrisse leuchten auf, Seifenblasen-Konfetti. Meldung „Grundstück vergrößert! Platz für 8 Tiere“. Ab und zu wächst auch die Deko mit (größeres Tor, mehr Blumen), damit man den Ausbau von außen sieht.
 
 | Ausbau | 6→8 | →10 | →12 | →14 | →16 | →18 | →20 |
 |---|---|---|---|---|---|---|---|
@@ -285,7 +286,7 @@ Große Knöpfe, kurze Texte, Zahlen gekürzt (K, M, B, T, Qa). Erste 60 Sekunden
 
 **Phase 2 – Sammeln macht Spaß**
 - Biome 1–3 mit allen 7 Arten, Größen GROSS/RIESIG mit sich dehnender Blase, Enthüllung mit Live-Zähler + Titeln + Silhouette + Riesen-Laufwege, Schnelle Enthüllung
-- „Meine Tiere“-Menü, Verkaufen, Beste aufstellen, Gehege-Ausbau, Index, PERFEKT-Serie, x2-Blase, Onboarding
+- „Meine Tiere“-Menü, Verkaufen, Beste aufstellen, Gehege-Ausbau mit Animation, Index, PERFEKT-Serie, x2-Blase, Onboarding
 
 **Phase 3 – Mischkessel und Mittelteil**
 - Mischkessel + Gold/Diamant/Regenbogen, Biome 4–6 mit Tieren, Seifen 4–6, Blasebalg 4–5, alle 8 Grundstücke
