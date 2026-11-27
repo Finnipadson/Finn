@@ -58,6 +58,13 @@ Alle Fenster (siehe [[Items-Loot]]) folgen einem Baukasten: Titelleiste in einer
 - **Was ist gut:** Links unten ein kompakter Block: 4 gelbe Buttons (Statistiken, Items, Schließen, Shop), darunter Geld grün, Stufe „St. 6“ mit lila XP-Balken, Leben grün, Energie blau – alles mit Zahl im Balken. Rechts unten Kampfstil-Box („KOMBAT“, Mastery-Stufe, Fähigkeiten mit Taste [Z], [X]). Statistiken-Fenster: 5 Werte (Nahkampf, Verteidigung, Schwert, Waffe, Blox Fruit) je in eigener Farbe mit „+“-Button und „Verfügbare Punkte“ – pro Level Punkte frei verteilen.
 - **Prinzip zum Übernehmen:** Pro Level Punkte verteilen = einfache, motivierende RPG-Progression. Für [[Himmelsinseln]]: Werte passend zu den Elementen (Feuer, Eis …).
 
+### The Strongest Battlegrounds – Fähigkeiten-Leiste (Roblox)
+
+![[tsb-faehigkeiten-leiste.jpg]]
+
+- **Was ist gut:** Unten mittig, sehr klein und schlicht: ein Balken für die Spezial-Fähigkeit („ERSTAUNLICHES MODE“, füllt sich rot mit Treffern), darunter **4 Kästchen mit Nummer 1–4 und Namen** („Normaler Schlag“, „Aufeinanderfolgende Schläge“, „Schieben“, „Kinnhaken“). Die gerade abklingende Fähigkeit ist rot gefüllt. Lebensbalken klein oben rechts, Kill-Liste darunter. Sonst kein HUD – die Mitte gehört komplett dem Kampf.
+- **Prinzip zum Übernehmen:** 4 Fähigkeiten auf Zahlentasten mit Klartext-Namen; Ulti-Balken, der sich durch Treffen füllt. Passt für Kampf in [[Himmelsinseln]] (Handy: 4 runde Buttons rechts unten).
+
 ## Bei uns umgesetzt
 
 -

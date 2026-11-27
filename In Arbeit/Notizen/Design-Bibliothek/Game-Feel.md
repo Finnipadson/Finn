@@ -74,6 +74,24 @@ Zurück: [[Design-Bibliothek]]
 - **Enthüllung:** Das Tier taucht aus dem Wasser auf, oben die Chance („1 in 3,242“), unten der Name als **Lückenwort, das sich Buchstabe für Buchstabe füllt** („_ _ _ A _“) – wie bei der Dino-Ziehung.
 - **Prinzip zum Übernehmen:** Zufall sichtbar machen (Walzen, Tiefe) statt nur auszuwürfeln – der Spieler hat das Gefühl, mitzuentscheiden. Name als Rätsel enthüllen hält die Spannung ein paar Sekunden länger.
 
+### The Strongest Battlegrounds – Trefferwucht im Nahkampf (Roblox) → für Bosse in [[Himmelsinseln]]
+
+![[tsb-treffer-funken.jpg]]
+![[tsb-hochschlag.jpg]]
+
+- **Treffer-Funken:** Jeder Schlag erzeugt einen **weißen Stern aus spitzen Strahlen** genau am Trefferpunkt, dazu kleine blaue Funken. Weiß auf grauem Boden ist immer sichtbar.
+- **Hochschlag:** Getroffene fliegen **als Ragdoll** (schlaffe Puppe) durch die Luft und überschlagen sich. Fähigkeiten haben eine farbige Aura (hier blaue Blitze) um den Angreifer.
+
+![[tsb-ablauf-schwerer-treffer.jpg]]
+
+- **Ablauf eines schweren Treffers (3 s, 4 Bilder pro Sekunde):** Gegner lädt mit blauer Aura auf → packt den Spieler und reißt ihn hoch → schmettert ihn in den Boden → **der Boden zerbricht in große Betonplatten**, die hochklappen und herumfliegen, Staubwolke → **roter Bildschirmrand** beim Getroffenen → Platten bleiben als Trümmer liegen.
+
+![[tsb-krater.jpg]]
+![[tsb-krater-gras.jpg]]
+
+- **Krater bleiben liegen:** Nach dem Aufprall bleibt ein **Ring aus hochgeklappten Bodenplatten** zurück (auf Gras braune Erdplatten, auf Beton graue), dazu kleine Bruchstücke ringsum. Die Arena zeigt so den Kampfverlauf.
+- **Prinzip zum Übernehmen:** Wucht = Licht am Trefferpunkt + Ragdoll-Flug + Boden reagiert. Die Bodenplatten sind einfache Blöcke in der Farbe des Untergrunds – billig zu bauen, sehr wirkungsvoll. Für den Lavadrachen: Stampfen und Meteoriten lassen Lavaboden-Platten hochklappen; roter Rand beim Spieler, wenn er getroffen wird.
+
 ## Bei uns umgesetzt
 
 -
