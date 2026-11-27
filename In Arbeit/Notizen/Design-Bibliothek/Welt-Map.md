@@ -123,6 +123,16 @@ Wie eine Map aufgebaut ist: Spawn, Wege, Zonen, Orientierung. Schwerpunkt Roblox
 - **Mitte:** Zwischen den Basen ein Platz mit den Extras: blaues **Trade-Plaza-Portal** (Hände-Symbol), ein grünes **Glücksrad „Hacker Wheel – Free Spin in 29s“**, ein Stand „Robux Shop“. Alles mit schwebender Beschriftung in eigener Farbe.
 - **Prinzip zum Übernehmen:** Basen entlang eines zentralen Wegs, auf dem die Action passiert; eigene Basis deutlich markiert; Extras gebündelt in der Mitte.
 
+### Throw Food For Animals – Grundstücke von oben (Roblox)
+
+![[futter-grundstuecke-uebersicht.jpg]]
+
+- **Aufbau:** Alle Grundstücke liegen **nebeneinander in einer großen Senke**, umgeben von Gras-Klippen mit sichtbaren Erdschichten (Block-Stil). Jedes Grundstück ist ein eingezäuntes Rechteck mit gleicher Ausstattung: Trainings-Stange mit weißem Kreis, Stand mit blau-weißer Markise, rosa Herz-Torbogen.
+- **Bestenliste in der Welt:** Über jedem Grundstück schwebt das **Avatar-Bild des Besitzers mit Name und Einkommen** („biggfishh0 $12,2T/s“, „linchen_amdeus $37M/s“, „minnilite7 $1,66M/s“, „Gerneoo $124/s“). Man sieht sofort, wer wie weit ist – ohne Menü.
+- **Die besten Tiere sind der Status:** Das RIESIGE Mammut überragt das ganze Gelände (etwa 10× so hoch wie ein Spieler), daneben Tanuki und geflügelte Caladrius. Auf den Nachbar-Grundstücken stehen kleine Tiere (Pferd, Tiger, Qualle). Wer neu ist, sieht direkt, worauf er hinarbeiten kann.
+- **Wegführung:** Gelbe Pfeil-Kacheln am Boden führen vom Wurfbereich zur eigenen Trainings-Station.
+- **Prinzip zum Übernehmen:** Grundstücke dicht nebeneinander und von überall einsehbar; Einkommen als schwebendes Schild = soziale Bestenliste; riesige seltene Tiere als Aushängeschild des Besitzers. Siehe auch [[Kreaturen-Pets]] (Größenstufen) und [[Trainings-Objekte]].
+
 ## Bei uns umgesetzt
 
 -
