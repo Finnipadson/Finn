@@ -46,7 +46,7 @@ Stand 26.11.2026. Quellen: LiveCounts (Spitzen seit 23.09.2026), RoStats (Rekord
 |---|---|---|---|
 | ✅ Steal An Egg | 13,8 Mio. (Sep. 2026) | Haustier-Sammeln + Klauen | – |
 | ✅ +1 Speed Keyboard Escape | 3,7 Mio. (Sep. 2026) | Tempo-Simulator / Parcours | – |
-| Throw Food For Animals | 2,5 Mio. (Nov. 2026) | Simulator | Wurf-Mechanik, Tier-Reaktionen, Upgrades |
+| ✅ Throw Food For Animals | 2,5 Mio. (Nov. 2026) | Simulator | Wurf-Mechanik, Tier-Reaktionen, Upgrades |
 | Murder Mystery 2 | 2,2 Mio. (Okt. 2026) | Runden-Spiel | Lobby, Rollen-Enthüllung, Map-Auswahl |
 | ✅ 99 Nights in the Forest | 2,2 Mio. (Okt. 2026) | Koop-Überleben | Lagerfeuer-Mitte, Tag/Nacht, Crafting, Wald-Map |
 | Adopt Me! | 1,4 Mio. (Okt. 2026) | Haustiere / Rollenspiel | Haus, Haustier-Bedürfnisse, Handel |
