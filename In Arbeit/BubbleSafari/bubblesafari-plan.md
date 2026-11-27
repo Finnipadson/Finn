@@ -2,7 +2,7 @@
 
 Roblox-Spiel im Genre [[Fang-und-Gehege]]: **Blasebalg treten → Riesen-Seifenblase pusten → Blase treibt durchs Tal → ein Tier springt hinein → Tier ins Gehege → Geld pro Sekunde → bessere Seife und Blasebalg kaufen → weiter pusten.**
 
-Eigener Twist gegenüber den Vorbildern: kein Werfen, keine Waffe – **Seifenblasen**. Das Tier wird nicht gefangen, sondern *schwebt in einer Blase* zum eigenen Gehege. Dazu der **Mischkessel**: zwei gleiche Tiere → eine wertvollere Variante.
+Eigener Twist gegenüber den Vorbildern: kein Werfen, keine Waffe – **Seifenblasen**. Das Tier springt – aus der Ich-Perspektive der Blase gesehen – direkt auf einen zu in die Blase und *schwebt darin* zum eigenen Gehege. Dazu der **Mischkessel**: drei gleiche Tiere → eine wertvollere Variante.
 
 - Zielgruppe: alle Altersgruppen (niedlich und bunt, aber mit Sammel-Tiefe). Handy zuerst, PC/Konsole auch.
 - Stil: Block-/Voxel-Stil, Kopf groß, Körper kurz (siehe [[Kreaturen-Pets]]). Kräftige Pastellfarben, Seifenblasen schillernd.
@@ -16,12 +16,12 @@ Eigener Twist gegenüber den Vorbildern: kein Werfen, keine Waffe – **Seifenbl
 1. **Trainieren** am **Blasebalg** auf dem eigenen Grundstück → XP → Stufe → **Pustkraft** steigt.
 2. **Pusten** am eigenen Pustplatz an der Talkante: senkrechter Puste-Balken, im richtigen Moment tippen → „PERFEKT!“.
 3. **Flug:** Die Blase treibt mit dem Wind das Tal entlang, die Kamera fliegt mit. Oben live: Biom-Name, Weite, **Glücks-Multiplikator**.
-4. **Fang:** Wo die Blase langsamer wird, springt ein Tier hinein. **Enthüllung** mit hochzählender Chance und Lückenwort.
+4. **Fang:** Die Blase landet, die Kamera wechselt **in die Blase (Ich-Perspektive)** und das Tier läuft auf einen zu und springt hinein. **Enthüllung** mit hochzählender Chance und Lückenwort.
 5. **Zurück:** Die Blase mit Tier schwebt zurück (Kamera springt zurück, Blase kommt am Grundstück an) → Tier landet im **Rucksack**.
 6. **Gehege:** Tier aufs Grundstück stellen → $/s. Oder verkaufen oder im **Mischkessel** kombinieren.
 7. Geld → bessere **Seife** (weiter + mehr Glück), besserer **Blasebalg** (mehr XP), **mehr Gehege-Plätze**.
 
-Eine Runde (pusten bis Tier im Rucksack) dauert **8–15 Sekunden**.
+Eine Runde (pusten bis Tier im Rucksack) dauert **8–17 Sekunden** (mit „Schnelle Enthüllung“ bei Gewöhnlichen kürzer).
 
 ---
 
@@ -147,11 +147,12 @@ Glück erhöht GROSS/RIESIG leicht (× √Glück, max. 25 % / 5 %). Seltene Arte
 | Material | Natürlich gefangen | Durch Mischen | Einkommen |
 |---|---|---|---|
 | Normal | Rest | – | ×1 |
-| **Gold** | 2 % | 2 × Normal | ×3 |
-| **Diamant** | 0,2 % | 2 × Gold | ×8 |
-| **Regenbogen** | nie | 2 × Diamant | ×20 |
+| **Gold** | 2 % | 3 × Normal | ×4 |
+| **Diamant** | 0,2 % | 3 × Gold | ×15 |
+| **Regenbogen** | nie | 3 × Diamant | ×50 |
 
-- **Mischkessel** auf jedem Grundstück: zwei Tiere gleicher **Art + Größe + Material** hineinlegen → 3 s Blubbern, Kessel schäumt über → eine Stufe höher. Mischen lohnt sich immer (Gold ×3 > 2 × ×1 usw.).
+- **Mischkessel** auf jedem Grundstück: **drei** Tiere gleicher **Art + Größe + Material** hineinlegen → 3 s Blubbern, Kessel schäumt über → **ein** Tier eine Stufe höher. Mischen lohnt sich immer (Gold ×4 > 3 × ×1, Diamant ×15 > 3 × ×4, Regenbogen ×50 > 3 × ×15). Ein Regenbogen-Tier kostet 27 normale – das echte Langzeit-Ziel.
+- Kessel zeigt 3 Mulden; „Mischen“-Knopf leuchtet erst, wenn alle 3 passen. Im Menü „Meine Tiere“ zeigt ein Zähler „2/3“ an jedem Tier, wie viele gleiche man schon hat.
 - Gleiches Modell, nur Material/Farbe + Partikel: Gold = golden mit Funkeln, Diamant = hellblau-durchscheinend, Regenbogen = Farbverlauf, der wandert.
 
 ### Einkommen
@@ -160,7 +161,7 @@ Glück erhöht GROSS/RIESIG leicht (× √Glück, max. 25 % / 5 %). Seltene Arte
 
 - Biom-Basis: Wiese 1 · Pilzwald 6 · Sumpf 40 · Wüste 250 · Schnee 1.600 · Vulkan 10K · Riff 65K · Wolken 400K
 - Seltenheit: Gewöhnlich ×1 · Ungewöhnlich ×2 · Selten ×5 · Episch ×12 · Legendär ×30 · Mythisch ×100
-- Beispiel: Rosenpfau (Wiese, Legendär) GROSS Gold = 1 × 30 × 4 × 3 = **360 $/s**.
+- Beispiel: Rosenpfau (Wiese, Legendär) GROSS Gold = 1 × 30 × 4 × 4 = **480 $/s**.
 
 ### Tierliste (7 pro Biom = 56 Arten)
 
@@ -185,13 +186,34 @@ Echte Tiere + Biom-Twist, Block-Stil. **Phase 1 = die ersten 4 jedes Bioms 1–3
 
 ## 8. Enthüllung
 
-Ablauf (~3 s normal, bis ~6 s bei sehr seltenen):
+### Ich-Perspektive: aus der Blase heraus
 
-1. Blase wird langsam, ein **Schatten springt hinein** – drinnen nur Silhouette. Blase **schimmert in der Seltenheitsfarbe** und wackelt (je seltener, desto stärker).
-2. Oben „1 in 5“, **der Zähler klettert live**, während sich das Lückenwort füllt („P_U_TEBL_MEN-FUCHS“).
-3. Überschrift steigert sich mit (eigene Titel): – → **„Glück!“** (orange) → **„Riesenglück!“** (pink, Strahlenkranz) → **„Blasenwahn!“** (türkis, Schaumflocken regnen) → **„Regenbogenglück!!“** (alles schillert, Ring-Schockwelle).
-4. Plopp-Effekt, Silhouette wird farbig: Name in Seltenheitsfarbe, darüber Material („GOLD“), darunter Größe („RIESIG“) und $/s. Schild **„NEU!“** (erstes Mal) oder **„NEUER BESTER!“**.
-5. Sehr seltene Fänge (ab 1 in 500) werden **zu Hause zweimal gefeiert**: große Karte oben „DU HAST GEFANGEN – …“ + Server-Meldung im Chat für alle.
+Das Herzstück des Spiels: Wenn die Blase landet, **wechselt die Kamera in die Blase** – man sieht die Welt durch die schillernde Blasenhaut und das Tier kommt **direkt auf einen zu**.
+
+Ablauf (~4 s normal, bis ~7 s bei sehr seltenen):
+
+1. **Landung:** Flug in der Verfolger-Ansicht, die Blase wird langsam und setzt weich auf dem Boden auf (federt einmal). Die Kamera gleitet in 0,4 s **in die Blase** (Ich-Perspektive auf Augenhöhe eines kleinen Tiers).
+2. **Blick aus der Blase:** Am Bildrand schillert ein Regenbogen-Rand (Blasenhaut), die Welt ist leicht verzerrt und wackelt sanft, Seifenschlieren ziehen vorbei. Leises Blubbern.
+3. **Das Tier kommt:** In der Ferne bewegt sich etwas zwischen Blumen/Pilzen/Schilf – zuerst **nur als dunkle Silhouette**. Es läuft auf die Kamera zu (Vögel fliegen, Fische schwimmen heran), wird größer. Oben „1 in 5“, **der Zähler klettert live**, während sich das Lückenwort füllt („P_U_TEBL_MEN-FUCHS“).
+4. **Sprung:** Das Tier springt **in die Kamera hinein** – Bild füllt sich mit dem Tier, die Blasenhaut dehnt sich (Rand wölbt sich nach außen), **Hit-Stop 0,1 s**, Wackeln. Je seltener, desto stärker wackelt die Blase und schimmert in der Seltenheitsfarbe.
+5. **Überschrift steigert sich mit** (eigene Titel): – → **„Glück!“** (orange) → **„Riesenglück!“** (pink, Strahlenkranz) → **„Blasenwahn!“** (türkis, Schaumflocken regnen) → **„Regenbogenglück!!“** (alles schillert, Ring-Schockwelle).
+6. **Raus aus der Blase:** Die Kamera zieht nach außen und hinten – jetzt sieht man das Tier **in der Blase sitzen**, Silhouette wird farbig. Name in Seltenheitsfarbe, darüber Material („GOLD“), darunter Größe („RIESIG“) und $/s. Schild **„NEU!“** (erstes Mal) oder **„NEUER BESTER!“**.
+7. Sehr seltene Fänge (ab 1 in 500) werden **zu Hause zweimal gefeiert**: große Karte oben „DU HAST GEFANGEN – …“ + Server-Meldung im Chat für alle.
+
+**Tempo:** Gewöhnliche Tiere, die man schon hat, laufen verkürzt ab (Schritt 3 nur 0,5 s). Einstellung „Schnelle Enthüllung“ überspringt die Ich-Perspektive bei Gewöhnlich/Ungewöhnlich ganz – die Schleife bleibt flott.
+
+**Technik:** Kamera `Scriptable`, CFrame in der Blasenmitte; Blasenhaut = ScreenGui-Bild (schillernder Ring, halbtransparent, leicht pulsierend) + `BlurEffect`/`ColorCorrectionEffect` sanft; Tier-Modell nur auf dem Client, läuft per Tween/Animation auf die Kamera zu. Gegenstände zwischen Kamera und Tier ausblenden.
+
+### Sehr große Tiere und die Blase
+
+Die Blase **passt sich immer dem Tier an** – kein Tier ist zu groß, aber große Tiere sind ein Erlebnis:
+
+- **Blase dehnt sich:** Beim Sprung bläst sich die Blase auf die Größe des Tiers auf (Durchmesser = größte Tierabmessung × 1,3). Bei GROSS/RIESIG und Legendär/Mythisch wird das zum Moment: Die Blase **wabbelt, quietscht und dehnt sich in Stößen** („Hält sie?!“) – erst dann sitzt das Tier drin.
+- **Ich-Perspektive bei Riesen:** Ein RIESIGES Tier passt nicht ins Bild. Es kommt zuerst als Schatten über den Boden (Erde bebt leicht, Schritte dröhnen), dann sieht man nur **Füße/Kopf riesig vor der Blase** – beim Sprung wird die Kamera samt Blase **mit aufgebläht und nach hinten geschoben**, bis das ganze Tier im Bild ist. So wirkt die Größe, ohne dass die Kamera im Modell steckt.
+- **Rückflug:** Die Riesen-Blase schwebt langsamer und tiefer zurück, wirft einen großen Schatten; andere Spieler sehen sie am Himmel über dem Tal (Aushängeschild).
+- **Im Gehege:** Die Blase landet auf dem Grundstück und **platzt mit Plopp + Schaumregen**, das Tier steht frei. Sehr große Tiere bleiben im Gehege so groß (ragen über den Zaun) – **keine Platzbegrenzung nach Größe**, ein Gehege-Platz = ein Tier.
+- **Rucksack/Menü:** Bilder dort immer gleich groß, Größe nur als Schild (GROSS / RIESIG).
+- **Grenze für Technik:** Blasen-Durchmesser max. ~60 Studs; ein noch größeres Tier wird in der Blase leicht „zusammengedrückt“ dargestellt (Skalierung in der Blase gedeckelt, im Gehege volle Größe).
 
 ---
 
@@ -252,13 +274,13 @@ Große Knöpfe, kurze Texte, Zahlen gekürzt (K, M, B, T, Qa). Erste 60 Sekunden
 - Map: Hub-Platz + 4 Grundstücke + 4 Pustplätze + Tal mit Biomen 1–3 (einfach, je 1 Landmarke)
 - Blasebalg Stufe 1–3 mit XP, Stufen, fliegenden Zahlen, HALT
 - Pusten mit Balken + PERFEKT, Blasenflug mit Kamera + Flug-HUD
-- 12 Tiere (je 4 aus Wiese, Pilzwald, Sumpf), Ziehen mit Glück, einfache Enthüllung (Name, $/s)
+- 12 Tiere (je 4 aus Wiese, Pilzwald, Sumpf), Ziehen mit Glück, Enthüllung in Ich-Perspektive (einfach: Kamera in die Blase, Tier läuft heran und springt, Name + $/s)
 - Rucksack + Gehege (6 Plätze) + Geld pro Sekunde; Seifen 1–3 im Laden
 - Speichern
 - **Fertig, wenn:** man vom Wiesenhasen bis in den Sumpf kommt und das Speichern hält.
 
 **Phase 2 – Sammeln macht Spaß**
-- Biome 1–3 mit allen 7 Arten, Größen GROSS/RIESIG, Enthüllung mit Live-Zähler + Titeln + Silhouette
+- Biome 1–3 mit allen 7 Arten, Größen GROSS/RIESIG mit sich dehnender Blase, Enthüllung mit Live-Zähler + Titeln + Silhouette + Blasenhaut-Effekt, Schnelle Enthüllung
 - „Meine Tiere“-Menü, Verkaufen, Beste aufstellen, Gehege-Ausbau, Index, PERFEKT-Serie, x2-Blase, Onboarding
 
 **Phase 3 – Mischkessel und Mittelteil**
