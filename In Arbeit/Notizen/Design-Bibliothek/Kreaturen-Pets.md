@@ -144,6 +144,15 @@ Ablauf in ~6 Sekunden (2 Bilder pro Sekunde):
 - **Traits = Zubehör obendrauf:** zusätzlich zur Mutation kleine Anbauten (Heiligenschein, Kürbis, Blitz, Sonnenbrille „Aura Shades“, Ball …), die weiteren Bonus geben.
 - **Prinzip zum Übernehmen:** Mutation (Material) × Trait (Zubehör) × Tier = riesige Sammelliste aus wenigen Modellen. Die „Exist“-Zahl macht Seltenheit greifbar.
 
+### Steal a Brainrot – Tiere bewegen sich auch auf dem Podest
+
+![[brainrot-podest-animation.jpg]]
+
+- 8 Bilder im Abstand von 0,25 s aus der eigenen Basis: Die Brainrots **stehen nicht still** – „Swag Soda“ (blaue Dose mit Sonnenbrille) winkt mit den Armen, die rote Figur daneben tanzt, Posen wechseln von Bild zu Bild.
+- **Ständige Partikel** um jedes Tier je nach Mutation/Trait: Glitzer-Sterne, Schneeflocken, fliegende Tacos und Münzen, grünes Glühen bei „Radioactive“.
+- **Gruppen-Brainrots:** „Los 25“ ist eine Gruppe aus vielen kleinen Figuren auf einem Podest (mit Weihnachtsmützen) – ein Sammel-Tier, das wie eine Bande aussieht.
+- **Prinzip:** Auch ausgestellte Tiere brauchen eine Idle-Animation + Partikel, sonst wirkt die Basis tot. Dazu Mutation/Trait als Partikel sichtbar machen.
+
 ### Steal a Brainrot – Kreaturen
 
 ![[brainrot-phoenix.jpg]]

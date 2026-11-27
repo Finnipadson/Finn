@@ -124,6 +124,18 @@ Kreislauf: **Bankdrücken** (Kraft sammeln) → **Speer werfen** (je weiter, des
 - **Sperre gegen Klauen:** Am Eingang jeder Basis ein Knopf; gedrückt = **rote Laserwand** vor der Basis und Meldung „You locked your base for 210 Seconds!“. Danach ist die Basis wieder offen und andere können Tiere klauen.
 - **Prinzip zum Übernehmen:** Ein Weg, auf dem die Ware zu den Spielern kommt (statt Shop-Menü). Einsammeln durch Drüberlaufen. Schutz mit Zeitlimit erzeugt Spannung zwischen Spielern.
 
+### Steal a Brainrot – eine ausgebaute Basis (eigene Basis im Video)
+
+![[brainrot-basis-gebaeude.jpg]]
+![[brainrot-collect-zone-multi.jpg]]
+![[brainrot-sperre-countdown.jpg]]
+
+- **Gebäude statt Fläche:** Die Basis ist ein **mehrstöckiges Glashaus** (3 Etagen mit Treppe innen), außen großes Schild „YOUR BASE – $13,4B/s“. Mit dem Ausbau kommen Etagen dazu → mehr Podeste.
+- **Innen:** Podeste in Reihen vor Glaswänden, jedes Tier mit eigenem grünen „Collect“-Feld davor. Über jedem Tier ein Schild-Stapel: Mutation (z. B. „Radioactive“, „Rainbow“), kleine **Trait-Symbole**, Name, Seltenheit („Secret“), $/s und Wert.
+- **Collect-Zone am Eingang:** großes grünes Feld „COLLECT ZONE“ mit **„CASH MULTI: x16“** – einmal drüberlaufen sammelt alles ein, mit Multiplikator.
+- **Sperre:** Rote Laserstäbe am Eingang; innen am Boden gelbe Knöpfe und der Countdown **„Locked: 15s“** – man sieht, wie lange der Schutz noch hält.
+- **Prinzip zum Übernehmen:** Die Basis wächst in die Höhe (Etagen) statt nur in die Breite; Sammel-Multiplikator belohnt, seltener einzusammeln; Schutz-Countdown gut sichtbar.
+
 ### Pet Simulator 99 – Riesen-Ei (Roblox)
 
 ![[petsim-riesen-ei.jpg]]
