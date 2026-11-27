@@ -52,7 +52,7 @@ Aufstufen an Ort und Stelle: Preis schwebt über dem Kreis; hineinlaufen mit gen
 
 | Stufe | Blasebalg | Preis | XP pro Tritt |
 |---|---|---|---|
-| 1 | Holz | 50 | 2 |
+| 1 | Holz | gratis | 2 |
 | 2 | Kupfer | 2.500 | 8 |
 | 3 | Lila Samt | 60K | 20 |
 | 4 | Kristall | 1,5M | 50 |
@@ -275,7 +275,7 @@ Große Knöpfe, kurze Texte, Zahlen gekürzt (K, M, B, T, Qa). Erste 60 Sekunden
 
 ## 13. Bauphasen
 
-**Phase 1 – spielbarer Kern** (Ziel: 15 Minuten Spielspaß)
+**Phase 1 – spielbarer Kern** (Ziel: 15 Minuten Spielspaß) – ✅ gebaut 27.11.2026
 - Map: Hub-Platz + 4 Grundstücke + 4 Pustplätze + Tal mit Biomen 1–3 (einfach, je 1 Landmarke)
 - Blasebalg Stufe 1–3 mit XP, Stufen, fliegenden Zahlen, HALT
 - Pusten mit Balken + PERFEKT, Blasenflug mit Kamera + Flug-HUD

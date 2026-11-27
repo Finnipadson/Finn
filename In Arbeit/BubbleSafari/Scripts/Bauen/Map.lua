@@ -376,7 +376,7 @@ laden.Parent = Hub
 
 local spawn = workspace:FindFirstChild("SpawnLocation")
 if spawn then
-	spawn.CFrame = CF(0, 60.7, -165)
+	spawn.CFrame = CF(0, 60.7, -165) * CFrame.Angles(0, math.pi, 0) -- schaut Richtung Tal
 	spawn.Size = V(8, 1, 8)
 	spawn.Transparency = 1
 	local dec = spawn:FindFirstChildOfClass("Decal")

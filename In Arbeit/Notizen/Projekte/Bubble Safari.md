@@ -1,6 +1,6 @@
 ---
 typ: spiel
-status: Plan abgesegnet, Phase 1 offen
+status: Phase 1 fertig, Phase 2 offen
 technik: Roblox Studio (Luau), gebaut über Roblox-Studio-MCP
 erstellt: 2026-11-27
 ---
@@ -20,11 +20,12 @@ Roblox-Spiel im Genre [[Fang-und-Gehege]]: Blasebalg treten, Riesen-Seifenblase 
 
 ## Offene Punkte
 
-- [ ] Phase 1 – spielbarer Kern
+- [x] Phase 1 – spielbarer Kern (27.11.2026: Welt mit 3 Biomen, Blasebalg, Pusten, Flug, Tier-Sicht-Enthüllung, 12 Tiere, Gehege, Seifenladen, Speichern)
 - [ ] Phase 2 – Sammeln (alle Arten Biom 1–3, Größen, Enthüllung, Index)
 - [ ] Phase 3 – Mischkessel + Biome 4–6
 - [ ] Phase 4 – Korallenriff, Wolkenreich, Event „Schaumparty“
 - [ ] Phase 5 – Veröffentlichen
+- [ ] In Game Settings max. 4 Spieler einstellen
 - [ ] Name „Bubble Safari“ prüfen (älteres Zynga-Spiel gleichen Namens)
 
 ## Notizen
