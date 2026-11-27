@@ -74,6 +74,23 @@ Gegenstände in der Welt, mit denen man etwas tut: Laufbänder, Gehege, Stände,
 - **Rückmeldung:** Das Feuer wird sichtbar größer und heller, je weiter es ist; die Stämme liegen gut lesbar als dicke Zylinder herum.
 - **Prinzip zum Übernehmen:** Ein Objekt in der Welt, das man gemeinsam „füttert“ und das dabei wächst – mit Fortschrittsbalken direkt darüber. Funktioniert super im Koop, weil jeder sieht, was der gemeinsame Beitrag bringt.
 
+### Ziehe einen Dino – Spielschleife aus 3 Stationen (Roblox)
+
+Kreislauf: **Bankdrücken** (Kraft sammeln) → **Speer werfen** (je weiter, desto bessere Zone und Glück) → **Dino ziehen** (Zufall mit Chancen) → Dino kommt aufs **Grundstück** und bringt Geld pro Sekunde → besserer Speer / mehr Kraft → wieder werfen.
+
+![[dino-bankdruecken.jpg]]
+
+- **Bankdrücken:** Die Hantel hat **Dinos als Gewichte** an den Enden („Heben: Compy“) – das Gesammelte wird selbst zum Trainingsgerät. Jeder Druck gibt „+1 EP“ als fliegende Zahl, unten Balken „Stufe 4 – 8/11“, Buttons „HALT“ (rot) und „AUTO 99 R$“. Bei Stufenaufstieg groß „STÄRKER! LEVELAUFSTIEG! Wurfkraft +20“; ab und zu ein „x2“-Kreis zum Anklicken.
+
+![[dino-wurfplattform.jpg]]
+
+- **Wurfplattform:** runde Plattform mit orangen Kacheln, Speer in der Hand, **senkrechter Kraftbalken** daneben (+598), Text „Klicke, um zu werfen!“. Treffer im richtigen Moment = „PERFECT!“; Serien von guten Würfen geben mehr Glück („Serie x5 · +135 % Glück“). Ein „SUPER-Wurf“ garantiert „legendär oder besser“.
+
+![[dino-grundstueck.jpg]]
+
+- **Grundstück:** eingezäunt, großes Holzschild „biggfishh0's Grundstück“, darüber „8 / 10“ Dinos und das Einkommen „2.9K/s“ als riesige Zahl. Die Dinos laufen frei im Gehege herum. Ist es voll: Meldung „Dein Grundstück ist voll! Verbessere es am Schild“ – Upgrade direkt am Schild.
+- **Prinzip zum Übernehmen:** Jede Station ist ein Objekt in der Welt mit eigenem Balken und eigener Rückmeldung; das Gesammelte taucht an mehreren Stationen wieder auf (Hantel, Gehege). Ausbau-Upgrade direkt am Objekt, das ausgebaut wird.
+
 ## Bei uns umgesetzt
 
 -

@@ -105,6 +105,13 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Kleines Fenster mitten im Spiel (Welt bleibt sichtbar). Oben 2 große Kacheln für die besten Früchte mit Bild + Preis, darunter eine Reihe kleiner Kacheln für die billigeren. Jede Frucht hat ein eigenes, sofort erkennbares Symbol mit Farbe des Elements (Flamme orange, Magma rot …).
 - **Prinzip zum Übernehmen:** Fähigkeiten als sammelbare Gegenstände mit klarer Element-Farbe – passt zu den Element-Inseln in [[Himmelsinseln]].
 
+### Ziehe einen Dino – Dino-Index (Roblox)
+
+![[dino-index.jpg]]
+
+- **Was ist gut:** Wie der Haustier-Index von Steal An Egg: pro Zone (z. B. „Sumpf“) eine Reihe mit Silhouetten und „???“, Kachelfarbe = Seltenheit, Fortschritt „3/8“ und Bonus fürs Vervollständigen („+10 % Geld“). Unten die Gesamtregeln in einer Zeile: „Unlocked 9/695 · Complete a zone: +10 % money · Exotics: +0 % luck“. Zweiter Reiter „Top Collectors“ als Bestenliste.
+- **Prinzip zum Übernehmen:** Sammelbuch ist inzwischen Standard in Roblox-Sammelspielen; Belohnung pro vollständiger Zone + Bestenliste für Sammler.
+
 ## Bei uns umgesetzt
 
 -

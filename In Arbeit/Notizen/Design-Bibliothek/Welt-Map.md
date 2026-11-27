@@ -98,6 +98,13 @@ Wie eine Map aufgebaut ist: Spawn, Wege, Zonen, Orientierung. Schwerpunkt Roblox
 - **Stil:** sehr einfache Formen (Block-Bäume, flache Wasserflächen in kräftigem Blau), aber durch Nebel und grauen Himmel trotzdem bedrohlich.
 - **Prinzip zum Übernehmen:** Ein Zentrum, um das alles kreist; die Welt wird durch Fortschritt am Zentrum größer statt durch Portale. Nebel als natürliche Grenze statt unsichtbarer Wände. Für [[Himmelsinseln]] denkbar: Leuchtfeuer auf jeder Insel, das Wolken zurückdrängt.
 
+### Ziehe einen Dino – Ladenstraße (Roblox)
+
+![[dino-ladenstrasse.jpg]]
+
+- **Was ist gut:** Vom Grundstück führt eine **breite orange Straße** zur Wurf-Schlucht. Links und rechts **Marktstände mit gestreiften Markisen** und großen Schildern („Spuren“, „Harpunen“, „Verkaufen“), jeder in eigener Farbe; ein Regenbogen-Stand lockt mit Glitzer. Am Ende ein großes leuchtendes Tor mit Countdown („Christmas Update 00:21:34“). Blaue Pfeil-Kacheln auf dem Boden zeigen den Weg (Tutorial „Schritt 5/5 – Wieder werfen!“ oben).
+- **Prinzip zum Übernehmen:** Die Läden liegen **auf dem Weg** zwischen den beiden Hauptorten (Grundstück ↔ Aktion), man kommt bei jedem Durchgang daran vorbei. Event-Countdown als großes Tor in der Welt.
+
 ## Bei uns umgesetzt
 
 -

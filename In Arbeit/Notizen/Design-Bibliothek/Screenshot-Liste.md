@@ -65,6 +65,8 @@ Stand 26.11.2026. Quellen: LiveCounts (Spitzen seit 23.09.2026), RoStats (Rekord
 
 Anime Crusaders X · Jujutsu Shenanigans · Hyper Realistic Ragdoll · Dress To Impress · Fish It! · Pet Simulator 99 · Forsaken · Dead Rails · ✅ Grow a Garden (Teil 1, inzwischen klein)
 
+**Zusätzlich gefilmt:** ✅ Ziehe einen Dino (Bankdrücken → Speerwurf → Dino-Ziehung → Grundstück)
+
 **Empfehlung zum Filmen zuerst:** Steal a Brainrot (Fließband), Blox Fruits (Inselwelt), 99 Nights (Map um ein Zentrum), Animal Hospital (Koop-Horror), Throw Food For Animals (warum so erfolgreich?).
 
 ## Roblox – 5 Spiele, in denen die Welt im Mittelpunkt steht

@@ -47,6 +47,18 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Am Steg angeln viele Spieler nebeneinander. Was jemand fängt, erscheint als **Sprechblase über seinem Kopf** („Wow, ein Sockeye-Lachs!“, „Wow! Eine Kiste“). Man sieht ständig, was es zu fangen gibt, und vergleicht sich.
 - **Prinzip zum Übernehmen:** Erfolge der anderen in der Welt sichtbar machen (nicht nur im Chat) = Ansporn + lebendige Atmosphäre.
 
+### Ziehe einen Dino – Wurf und Dino-Ziehung (Roblox)
+
+![[dino-wurf-zonen.jpg]]
+
+- **Flug:** Die Kamera fliegt mit dem Speer (rosa Leuchtspur) durch eine Schlucht. Links eine **senkrechte Zonen-Leiste** (Vulkan · Tar · Sumpf · Mud) – die aktuelle Zone leuchtet. Oben groß der Glücks-Multiplikator „36.08X“, die Zone „SWAMP I“ und die Weite „369 m“, die live mitzählen.
+
+![[dino-letzte-runde.jpg]]
+![[dino-legendaer.jpg]]
+
+- **Ziehung:** Erst ein dunkler Bildschirm mit **schwarzer Silhouette** und „Chancen 1 in 3“, ein Wort zieht sich Buchstabe für Buchstabe zusammen, „Letzte Runde…“ in Rot. Dann die Enthüllung: Konfetti, Strahlen, Titel je nach Seltenheit („Toll! 1 in 10“, „Glück! 1 in 32“, „Super-Glück! 1 in 140“, „VERRÜCKTES GLÜCK! 1 in 430“), Stempel „★ GROSS ★“, darunter Seltenheit, Name, Einkommen „$60K/s“ und Schild „NEU!“.
+- **Prinzip zum Übernehmen:** Der Weg (Flug durch Zonen) entscheidet sichtbar über die Chance. Die Ziehung baut Spannung in Stufen auf (Silhouette → „Letzte Runde“ → Enthüllung). Die **Überschrift wächst mit der Seltenheit** – man spürt sofort, wie gut der Zug war.
+
 ## Bei uns umgesetzt
 
 -
