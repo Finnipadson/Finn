@@ -42,9 +42,41 @@ Dazu kommt als **dritte Ebene das Material** (GOLT, DIAMANT, siehe unten). Ein T
 
 - Im Gehege stehen die seltenen/großen Tiere als **Riesen** zwischen den kleinen: ein weißer Drache mit ausgebreiteten Flügeln, ein grauer Block-Wolf, dessen Beine höher sind als der Spieler. So sieht jeder, der vorbeiläuft, wer die besten Tiere hat.
 
+### Drei Größenstufen: normal, GROSS, RIESIG (Mammut-Clip)
+
+![[futter-mammut-normal.jpg]]
+![[futter-mammut-riesig.jpg]]
+
+- Es gibt **noch eine Stufe über GROSS: „RIESIG“**. Mammut normal: $1,8T/s, Mammut RIESIG: **$16,1T/s (≈ ×9)**. Zum Vergleich Ziege GROSS ≈ ×4,3. Grob also: **GROSS ≈ ×4, RIESIG ≈ ×9** Einkommen.
+- Das normale Mammut ist etwa so groß wie die Spielfigur; das riesige füllt bei der Enthüllung fast das ganze Bild, die Stoßzähne allein sind länger als der Spieler.
+
+### Enthüllung, die mit der Seltenheit mitwächst
+
+![[futter-mammut-ablauf.jpg]]
+![[futter-mammut-enthuellung-1.jpg]]
+![[futter-mammut-enthuellung-2.jpg]]
+
+Ablauf in ~6 Sekunden (2 Bilder pro Sekunde):
+1. Futter liegt im Schnee, oben „1 in 5“, unten leeres Lückenwort.
+2. Das Tier läuft ins Bild, **die Chance zählt live hoch**, während sich die Buchstaben füllen: 1 in 5 → 7 → 11 → 19 → 35 → 68 → 129 („M____“ → „MA_M_“ → „MAMM_TH“).
+3. **Die Überschrift steigert sich mit:** ohne Titel → „GLÜCK!“ (orange) → „Superglücklich!“ (roter Strahlenkranz) → **„Verrücktes Glück!“** (grün-türkis).
+4. Höhepunkt: Bildschirm blitzt rot/gelb mit Ring-Schockwelle, das Tier wird **türkis überblendet**, **grüne Kleeblätter regnen** über das Bild, dann Name „Mammut“, darunter „RIESIG“ in Gold und $16,1T/s.
+- **Prinzip:** Die Spannung baut sich auf, *während* man zuschaut – man weiß nicht, wie weit der Zähler noch klettert. Je seltener, desto länger läuft er und desto mehr Effekte kommen dazu.
+
+### Bewegung und Animation im Gehege
+
+![[futter-gehege-bewegung.jpg]]
+![[futter-tanuki-riesig.jpg]]
+![[futter-caladrius-fluegel.jpg]]
+
+- **Riesige Tiere laufen frei herum:** Tanuki RIESIG ($4,02T/s) ist etwa dreimal so hoch wie der Spieler, trägt einen Strohhut und läuft durchs Gehege; das Mammut stapft im Hintergrund.
+- **Vögel (Caladrius)** fliegen über dem Gehege, die **Flügel schlagen** (auf Bildern im Abstand von 0,25 s jeweils andere Flügelstellung) und ziehen **leuchtende Lichtspuren** (gelb/blau) hinter sich her.
+- Gewöhnliche Tiere stehen oder laufen nur. Seltene haben Zusatz-Bewegung (Flügel, Spuren, Glühen) – passt zu deiner Beobachtung beim Spielen.
+
 **Für eigene Spiele:**
-- Größen-Zufall getrennt von der Art würfeln (z. B. 90 % normal, 9 % GROSS ×1,5 Skala, 1 % RIESIG ×2,5 Skala), Einkommen mit der Größe multiplizieren.
+- Größen-Zufall getrennt von der Art würfeln (z. B. 90 % normal, 9 % GROSS ×1,5 Skala, 1 % RIESIG ×2,5 Skala), Einkommen mit der Größe multiplizieren (Vorbild: GROSS ≈ ×4, RIESIG ≈ ×9).
 - Seltene Arten von Anfang an größer modellieren und ihnen 1–2 Extra-Animationen geben (Idle-Bewegung, Flügel, Brüllen). Gewöhnliche nur Laufen/Hüpfen.
+- Enthüllung mit live hochzählender Chance und Titel-Stufen (Glück → Superglücklich → Verrücktes Glück), Effekte pro Stufe mehr.
 - In Roblox: Größe per `Model:ScaleTo(faktor)` beim Erzeugen (prüfen, ob es zur aktuellen API passt), Faktor als Attribut speichern.
 
 ## Varianten statt neuer Modelle
