@@ -28,7 +28,7 @@ Die Stationen, an denen man **stärker wird** (Bankdrücken, Klimmzugstange, Lau
 ![[dino-bank-levelaufstieg.jpg]]
 
 - **x2-Blase:** Alle paar Sekunden erscheint an einer zufälligen Stelle ein großer **oranger Kreis mit Muskel-Symbol und „X2“**. Anklicken → „🔥 X2 TRAINING! 🔥“ mit kleinem Ablauf-Balken. Hält die Hände/Maus beschäftigt, obwohl das Training von selbst läuft.
-- **„Leichtes Gewicht!“** erscheint schräg neben der Hantel, wenn die Station zu leicht für die eigene Stufe ist → Hinweis, die nächste Bank zu kaufen.
+- **„Leichtes Gewicht!“** erscheint schräg neben der Hantel, vermutlich, wenn die Station zu leicht für die eigene Stufe ist → Hinweis, die nächste Bank zu kaufen (im Video nur einmal zu sehen).
 - XP pro Stufe (abgelesen): Stufe 5 → 14, 6 → 16, 13 → 34, 19 → 50, 28 → 78, 30 → 85 – also ungefähr **2,8 × Stufe**.
 
 ### Fische für geheime Tiere – Klimmzugstange
