@@ -21,6 +21,32 @@ Wie Haustiere, Begleiter und sammelbare Kreaturen in Roblox-Hits **aussehen** (M
 | Legendär | Element-Thema mit Glühen (Lava, Feuer, Kristall), Kronen, Rüstung |
 | Mythisch / Divine / Geheim | riesig, eigene Form, Aura oder Partikel, Regenbogen-Rahmen im Shop |
 
+## Größe: zwei getrennte Ebenen (Throw Food For Animals)
+
+Es gibt **zwei Arten von „groß“**, die man nicht verwechseln darf:
+
+1. **Seltenere Tierart = von Natur aus größer und aufwendiger.** Gewöhnliche Tiere (Ziege, Hase) sind klein, schlicht und bewegen sich wenig. Seltene Arten (Drache, Fenrir/Wolf, Caladrius-Vogel) sind schon in Grundgröße **viel größer als der Spieler**, detaillierter und haben **mehr Animationen** (Flügelschlagen, Schwanz, Kopfbewegungen – laut Beobachtung beim Spielen; auf Standbildern nur teilweise zu sehen).
+2. **„GROSS“ ist ein eigener Zufallswurf obendrauf.** Jedes Tier – auch eine gewöhnliche Ziege – kann zusätzlich als **GROSS** gezogen werden: gleiches Modell, nur hochskaliert, mit dem Wort „GROSS“ unter dem Namen und **deutlich mehr Einkommen** (Ziege normal $300B/s → Ziege GROSS $1,29T/s, also etwa ×4,3). Die Enthüllung ist dann aufwendiger: „GLÜCK! 1 in 36“ mit pinkem Strahlenkranz und weißem Licht-Blitz, normale Ziegen kommen ohne Glücks-Banner.
+
+![[futter-ziege-normal.jpg]]
+![[futter-ziege-gross.jpg]]
+
+Dazu kommt als **dritte Ebene das Material** (GOLT, DIAMANT, siehe unten). Ein Tier ist also **Art × Größe × Material** – aus einem Modell werden so viele Sammel-Varianten.
+
+![[futter-diamant-caladrius.jpg]]
+
+- „DIAMANT CALADRIUS“: Material-Wort hellblau über dem Namen, Name in Gold (Seltenheit der Art), „Glück! 1 in 31“. **Die Farbe des Namens zeigt die Seltenheit der Art** (Ziege lila, Caladrius gold).
+
+![[futter-riesen-im-gehege.jpg]]
+![[futter-riesen-wolf.jpg]]
+
+- Im Gehege stehen die seltenen/großen Tiere als **Riesen** zwischen den kleinen: ein weißer Drache mit ausgebreiteten Flügeln, ein grauer Block-Wolf, dessen Beine höher sind als der Spieler. So sieht jeder, der vorbeiläuft, wer die besten Tiere hat.
+
+**Für eigene Spiele:**
+- Größen-Zufall getrennt von der Art würfeln (z. B. 90 % normal, 9 % GROSS ×1,5 Skala, 1 % RIESIG ×2,5 Skala), Einkommen mit der Größe multiplizieren.
+- Seltene Arten von Anfang an größer modellieren und ihnen 1–2 Extra-Animationen geben (Idle-Bewegung, Flügel, Brüllen). Gewöhnliche nur Laufen/Hüpfen.
+- In Roblox: Größe per `Model:ScaleTo(faktor)` beim Erzeugen (prüfen, ob es zur aktuellen API passt), Faktor als Attribut speichern.
+
 ## Varianten statt neuer Modelle
 
 - **Gold-, Regenbogen-, Ruby-Varianten** desselben Tiers: gleiches Modell, nur Material/Farbe getauscht („GOLD Allosaurus“, „RAINBOW LEGENDARY Red Planet Rex“). Spart enorm viel Modellier-Arbeit und vervielfacht die Sammelliste.

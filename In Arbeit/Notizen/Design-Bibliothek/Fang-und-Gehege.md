@@ -72,6 +72,10 @@ Gefilmt: **Throw Food For Animals**, **Ziehe einen Dino** und **Fische für gehe
 - Neues Biom **Dschungel** weiter hinten in der Schlucht mit bis zu ~10,5X Glück (Bambus, Palmen, Blumen).
 - Popup „NEUE AUSRÜSTUNG! Du kannst jetzt kaufen: Obsidian-Bar“ – neue Trainings-Stange wird freigeschaltet und direkt beworben.
 
+## Größe und Seltenheit
+
+Tiere sind **Art × Größe × Material**: seltene Arten sind von Natur aus größer und haben mehr Animationen, „GROSS“ ist ein zusätzlicher Zufallswurf (Ziege ×4,3 Einkommen), dazu Gold/Diamant. Details mit Bildern: [[Kreaturen-Pets]] → „Größe: zwei getrennte Ebenen“.
+
 ## Vergleich der drei Spiele
 
 | | Throw Food For Animals | Ziehe einen Dino | Fische für geheime Tiere |
