@@ -367,28 +367,7 @@ for i, cx in XS do
 	local c = CF(cx, 0, -150) -- Mitte, +Z Richtung Schlucht
 	local function L(x, y, z) return c * CF(x, y, z) end
 	P(g, "Boden", V(66, 1, 80), L(0, 0.05, 0), rgb(235, 225, 195))
-	local geh = P(g, "GehegeFlaeche", V(32, 0.4, 66), L(-15, 0.7, -2), rgb(120, 205, 90))
-	geh.CanCollide = true
-	local zaun = ordner("Zaun", g)
-	local function zaunStueck(a, b)
-		local dd = (b - a)
-		local n = math.max(1, math.floor(dd.Magnitude / 5))
-		for k = 0, n do
-			deko(zaun, "Pfosten", V(0.8, 4, 0.8), CF(a + dd * (k / n) + V(0, 2, 0)), rgb(250, 250, 250))
-		end
-		local mitte = (a + b) / 2
-		for _, h in { 1.6, 3.2 } do
-			deko(zaun, "Latte", V(0.4, 0.5, dd.Magnitude), CF(mitte + V(0, h, 0), mitte + V(0, h, 0) + dd.Unit), rgb(250, 250, 250))
-		end
-	end
-	local y = 0.7
-	local x1, x2 = cx - 31, cx + 1
-	local z1, z2 = -150 - 35, -150 + 31
-	zaunStueck(V(x1, y, z1), V(x2, y, z1))
-	zaunStueck(V(x1, y, z2), V(x2, y, z2))
-	zaunStueck(V(x1, y, z1), V(x1, y, z2))
-	zaunStueck(V(x2, y, z1), V(x2, y, -155))
-	zaunStueck(V(x2, y, -145), V(x2, y, z2))
+	-- Gehege (Flaeche + Zaun) baut der Server je nach Ausbaustufe
 	deko(g, "TrainKreis", V(0.3, 15, 15), L(17, 0.65, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(255, 255, 255), nil,
 		{ Shape = Enum.PartType.Cylinder, Transparency = 0.35 })
 	deko(g, "BlasebalgAnker", V(1, 1, 1), L(17, 0.65, -14), rgb(255, 255, 255), nil, { Transparency = 1 })

@@ -20,6 +20,9 @@ local STANDARD = {
 	Index = {},
 	NaechsteId = 1,
 	ErsterFang = false,
+	Tutorial = 1, -- 1 Blasebalg, 2 Pusten, 3 Gehege, 4 fertig
+	Einstellungen = { Schnell = false },
+	IndexBelohnt = {},
 }
 
 local store

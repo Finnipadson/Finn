@@ -11,7 +11,7 @@ local D = require(RS:WaitForChild("Daten"))
 local TM = require(RS:WaitForChild("TierModelle"))
 local Remotes = RS:WaitForChild("Remotes")
 local R = {}
-for _, n in { "Pusten", "TierAktion", "BesteAufstellen", "SeifeKaufen", "SeifeAusruesten", "TrainingStop", "Status", "Meldung", "LadenOeffnen", "TrainingTick", "StufeAuf" } do
+for _, n in { "Pusten", "TierAktion", "BesteAufstellen", "SeifeKaufen", "SeifeAusruesten", "TrainingStop", "Status", "Meldung", "LadenOeffnen", "TrainingTick", "StufeAuf", "X2Angebot", "X2Nehmen", "X2Aktiv", "Einstellung" } do
 	R[n] = Remotes:WaitForChild(n)
 end
 
@@ -21,7 +21,7 @@ local Map = workspace:WaitForChild("Map")
 local Grund = Map:WaitForChild("Grundstuecke")
 local rng = Random.new()
 
-local status = { Tiere = {}, Seife = 1, SeifenBesitz = { ["1"] = true }, Plaetze = 6, Index = {}, Blasebalg = 1 }
+local status = { Tiere = {}, Seife = 1, SeifenBesitz = { ["1"] = true }, Plaetze = 6, Index = {}, Blasebalg = 1, IndexBelohnt = {}, Einstellungen = { Schnell = false } }
 local pustetGerade = false
 local versteckAb = math.huge -- Tier-IDs >= diesem Wert noch nicht zeigen (Enthuellung laeuft)
 local SB = 50 -- halbe Schluchtbreite (wie Map.lua)
@@ -153,6 +153,9 @@ local function tierKachel(tier, parent, groesse)
 		vp.CurrentCamera = vc
 	end
 	text({ Size = UDim2.new(1, -4, 0.28, 0), Position = UDim2.new(0, 2, 0.72, 0), Text = "$" .. D.format(D.einkommen(tier)) .. "/s", TextColor3 = rgb(60, 170, 70), Parent = k })
+	if (tier.groesse or 1) > 1 then
+		text({ Size = UDim2.new(0.9, 0, 0.24, 0), Position = UDim2.new(0.05, 0, 0, 2), Text = D.Groessen[tier.groesse].name, TextColor3 = rgb(255, 190, 40), ZIndex = k.ZIndex + 2, Parent = k })
+	end
 	return k
 end
 
@@ -271,12 +274,6 @@ seitenKnopf("Seifen", 0, rgb(80, 170, 255), function()
 	tierFenster.Visible = false
 end)
 
-R.Status.OnClientEvent:Connect(function(s)
-	status = s
-	rucksackZeichnen()
-	if tierFenster.Visible then tierFensterZeichnen() end
-	if seifenFenster.Visible then seifenZeichnen() end
-end)
 rucksackZeichnen()
 
 -- ===== Training =====
@@ -400,6 +397,17 @@ local enthWort = text({ Size = UDim2.fromOffset(700, 56), Position = UDim2.new(0
 local enthInfo = text({ Size = UDim2.fromOffset(500, 34), Position = UDim2.new(0.5, -250, 1, -170), Text = "", TextColor3 = rgb(140, 255, 140), ZIndex = 47, Parent = enthHUD })
 local enthNeu = text({ Size = UDim2.fromOffset(220, 44), Position = UDim2.new(0.5, 150, 1, -270), Rotation = 12, Text = "", TextColor3 = rgb(255, 230, 60), ZIndex = 48, Parent = enthHUD })
 local enthWeiter = text({ Size = UDim2.fromOffset(400, 28), Position = UDim2.new(0.5, -200, 1, -128), Text = "", ZIndex = 47, Parent = enthHUD })
+local enthGroesse = text({ Size = UDim2.fromOffset(300, 40), Position = UDim2.new(0.5, -150, 1, -272), Text = "", TextColor3 = rgb(255, 200, 50), ZIndex = 47, RandDicke = 3, Parent = enthHUD })
+local strahlen = neu("Frame", { Size = UDim2.fromOffset(420, 420), Position = UDim2.new(0.5, -210, 0, 70 - 210), BackgroundTransparency = 1, Visible = false, ZIndex = 46, Parent = enthHUD })
+for i = 0, 11 do
+	neu("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.new(0, 24, 1, 0), Rotation = i * 15, BackgroundColor3 = rgb(255, 255, 255), BackgroundTransparency = 0.5, BorderSizePixel = 0, ZIndex = 46, Parent = strahlen }, {
+		neu("UIGradient", { Rotation = 90, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.2), NumberSequenceKeypoint.new(1, 1) }) }),
+	})
+end
+RunService.RenderStepped:Connect(function(dt)
+	if strahlen.Visible then strahlen.Rotation += dt * 25 end
+end)
+local blitz = neu("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = rgb(255, 255, 255), BackgroundTransparency = 1, ZIndex = 49, Parent = gui })
 
 local function gross(t) -- string.upper kennt keine Umlaute
 	return (string.upper(t):gsub("ä", "Ä"):gsub("ö", "Ö"):gsub("ü", "Ü"))
@@ -443,6 +451,9 @@ local function kameraZurueck()
 	local hum = spieler.Character and spieler.Character:FindFirstChildOfClass("Humanoid")
 	if hum then cam.CameraSubject = hum end
 	cam.FieldOfView = 70
+	-- Kamera hinter die Figur setzen, Blick Richtung Schlucht
+	local hrp = spieler.Character and spieler.Character:FindFirstChild("HumanoidRootPart")
+	if hrp then cam.CFrame = CFrame.lookAt(hrp.Position + Vector3.new(0, 6, -13), hrp.Position + Vector3.new(0, 2, 10)) end
 	farbKorrektur.TintColor = rgb(255, 255, 255)
 end
 
@@ -483,7 +494,7 @@ local function sequenz(res, startPos)
 	-- 2) Flug
 	cam.CameraType = Enum.CameraType.Scriptable
 	flugHUD.Visible = true
-	local ziel = Vector3.new(math.clamp(startPos.X + res.drift, -(SB - 10), SB - 10), D_BLASE / 2, res.weite)
+	local ziel = Vector3.new(math.clamp(startPos.X + res.drift, -(SB - 18), SB - 18), D_BLASE / 2, res.weite)
 	local start = os.clock()
 	local letzterBiom
 	local gEnde = select(2, D.biomBei(res.weite))
@@ -531,93 +542,154 @@ local function sequenz(res, startPos)
 		local t1, f1 = titelFuer(n)
 		enthTitel.Text = t1
 		enthTitel.TextColor3 = f1
+		strahlen.Visible = n >= 50
+		for _, s in strahlen:GetChildren() do
+			if s:IsA("Frame") then s.BackgroundColor3 = f1 end
+		end
 		enthWort.Text = lueckenWort(res.name, anteil * 0.85, reihenfolge)
 	end
 
-	-- 3) Tier-Sicht
-	blende(0, 0.25)
+	-- Silhouette: Farben merken, Tier bleibt schwarz bis zur Enthuellung
+	local farben, effekte = {}, {}
+	for _, p in tier:GetDescendants() do
+		if p:IsA("BasePart") and p.Transparency < 1 then
+			farben[p] = { p.Color, p.Material }
+			p.Color = rgb(15, 15, 25)
+			p.Material = Enum.Material.SmoothPlastic
+		elseif p:IsA("ParticleEmitter") or p:IsA("PointLight") then
+			effekte[p] = true
+			p.Enabled = false
+		end
+	end
+	local function farbeZurueck()
+		for p, f in farben do p.Color, p.Material = f[1], f[2] end
+		for e in effekte do e.Enabled = true end
+	end
+
+	local rang = D.Seltenheit[res.selten].rang
+	local schnell = status.Einstellungen and status.Einstellungen.Schnell and rang <= 2
+	local istGross = (res.groesse or 1) >= 2 or rang >= 5
+	local ausmass = tier:GetExtentsSize()
+	local endD = math.max(D_BLASE, math.max(h, ausmass.Z, ausmass.X) * 1.25)
+	local mitte = Vector3.new(ziel.X, endD / 2 - h / 2, ziel.Z)
 	local winkel = math.rad(rng:NextNumber(-30, 30))
 	local dir = Vector3.new(math.sin(winkel), 0, math.cos(winkel)) -- Tier kommt von weiter hinten im Tal
-	local auge = math.max(1.3, h * 0.8)
-	local povStart = ziel + dir * 34
-	povStart = Vector3.new(math.clamp(povStart.X, -(SB - 4), SB - 4), povStart.Y, povStart.Z)
-	local povEnde = ziel + dir * (D_BLASE / 2 + 4 + h * 0.6)
-	cam.FieldOfView = 100
-	vignette.Visible = true
-	enthHUD.Visible = true
-	enthNeu.Text, enthInfo.Text, enthWeiter.Text = "", "", ""
-	spannung(0)
-	blende(1, 0.25)
-	local povDauer = if kurz then 0.7 else 2.0
-	local schrittTempo = if h > 6 then 5 elseif h > 3 then 8 else 13
-	start = os.clock()
-	while true do
-		local t = math.min((os.clock() - start) / povDauer, 1)
-		local p = povStart:Lerp(povEnde, t)
-		local wipp = math.sin(os.clock() * schrittTempo) * 0.12 * auge
-		local seit = math.cos(os.clock() * schrittTempo * 0.5) * 0.06 * auge
-		cam.CFrame = CFrame.lookAt(Vector3.new(p.X, auge + wipp, p.Z), ziel + Vector3.new(seit, auge * 0.6, 0))
-		spannung(t * 0.45)
-		if t >= 1 then break end
-		RunService.RenderStepped:Wait()
-	end
-
-	-- 4) Schnitt: Bodenkamera, Tier laeuft vorbei in die Blase
-	blende(0, 0.12)
-	vignette.Visible = false
-	cam.FieldOfView = 75
-	local k = math.max(1, h / 3)
+	local k = math.max(1, h / 3, endD / 8)
 	local seite = dir:Cross(Vector3.yAxis).Unit
-	local camPos = ziel + dir * (9 * k) + seite * (3 * k) + Vector3.new(0, 1.3 * k - D_BLASE / 2 + 0.5, 0)
-	camPos = Vector3.new(math.clamp(camPos.X, -(SB - 3), SB - 3), camPos.Y, camPos.Z)
-	cam.CFrame = CFrame.lookAt(camPos, ziel + Vector3.new(0, 1, 0))
-	local laufStart = camPos + dir * (5 * k) - seite * (4.5 * k)
-	laufStart = Vector3.new(math.clamp(laufStart.X, -(SB - 3), SB - 3), 0, laufStart.Z)
-	local laufEnde = Vector3.new(ziel.X, 0, ziel.Z) + dir * (D_BLASE / 2 + h * 0.4)
-	tier:PivotTo(CFrame.new(laufStart))
-	tier.Parent = seqOrdner
-	blende(1, 0.12)
-	local laufDauer = if kurz then 0.7 else 1.8
-	task.spawn(function()
-		local s0 = os.clock()
-		while os.clock() - s0 < laufDauer do
-			spannung(0.45 + (os.clock() - s0) / laufDauer * 0.45)
+	if math.sign(seite.X) == math.sign(ziel.X) then seite = -seite end -- Kamera zur Schluchtmitte hin
+	local camPos = ziel + dir * (9 * k) + seite * math.min(3 * k, 8) + Vector3.new(0, 1.3 * k - D_BLASE / 2 + 0.5, 0)
+	camPos = Vector3.new(math.clamp(camPos.X, -(SB - 10), SB - 10), camPos.Y, camPos.Z)
+	enthNeu.Text, enthInfo.Text, enthWeiter.Text, enthGroesse.Text = "", "", "", ""
+
+	if schnell then
+		-- Schnelle Enthuellung: Tier ploppt direkt in die Blase
+		enthHUD.Visible = true
+		spannung(0.9)
+		cam.FieldOfView = 75
+		cam.CFrame = CFrame.lookAt(camPos, ziel + Vector3.new(0, 1, 0))
+		tier:PivotTo(CFrame.lookAt(mitte, Vector3.new(camPos.X, mitte.Y, camPos.Z)))
+		tier.Parent = seqOrdner
+		blaseSetzen(blase, innen, Vector3.new(ziel.X, endD / 2, ziel.Z), endD)
+		task.wait(0.2)
+	else
+		-- 3) Tier-Sicht: man ist das Tier und laeuft zur Blase
+		blende(0, 0.25)
+		local auge = math.max(1.3, h * 0.8)
+		local povStart = ziel + dir * (34 + endD)
+		povStart = Vector3.new(math.clamp(povStart.X, -(SB - 10), SB - 10), povStart.Y, povStart.Z)
+		local povEnde = ziel + dir * (D_BLASE / 2 + 4 + h * 0.6)
+		cam.FieldOfView = 100
+		vignette.Visible = true
+		enthHUD.Visible = true
+		spannung(0)
+		blende(1, 0.25)
+		local povDauer = if kurz then 0.7 else 2.0
+		local schrittTempo = if h > 6 then 5 elseif h > 3 then 8 else 13
+		local beben = if h > 6 then 0.25 else 0
+		local start3 = os.clock()
+		while true do
+			local t = math.min((os.clock() - start3) / povDauer, 1)
+			local p = povStart:Lerp(povEnde, t)
+			local wipp = math.sin(os.clock() * schrittTempo) * 0.12 * auge
+			local seit = math.cos(os.clock() * schrittTempo * 0.5) * 0.06 * auge
+			local stoss = if math.abs(math.sin(os.clock() * schrittTempo)) > 0.97 then rng:NextNumber(-1, 1) * beben else 0
+			cam.CFrame = CFrame.lookAt(Vector3.new(p.X + stoss, auge + wipp, p.Z), ziel + Vector3.new(seit, auge * 0.6, 0))
+			spannung(t * 0.45)
+			if t >= 1 then break end
 			RunService.RenderStepped:Wait()
 		end
-	end)
-	tierLaufen(tier, laufStart, laufEnde, laufDauer, math.min(0.6, h * 0.12))
 
-	-- 5) Sprung in die Blase + Blase dehnt sich
-	local endD = math.max(D_BLASE, math.max(h, tier:GetExtentsSize().Z) * 1.3)
-	local sprungVon = tier:GetPivot()
-	local mitte = Vector3.new(ziel.X, endD / 2 - h / 2, ziel.Z)
-	local s0 = os.clock()
-	while true do
-		local t = math.min((os.clock() - s0) / 0.4, 1)
-		local p = sprungVon.Position:Lerp(mitte, t) + Vector3.new(0, math.sin(math.pi * t) * h * 0.8, 0)
-		tier:PivotTo((sprungVon - sprungVon.Position) + p)
-		local dNow = D_BLASE + (endD - D_BLASE) * t
-		blaseSetzen(blase, innen, Vector3.new(ziel.X, dNow / 2, ziel.Z), dNow)
-		if t >= 1 then break end
-		RunService.RenderStepped:Wait()
-	end
-	-- Tier dreht sich zur Kamera
-	tier:PivotTo(CFrame.lookAt(mitte, Vector3.new(camPos.X, mitte.Y, camPos.Z)))
-	-- Hit-Stop + Wackeln
-	task.wait(0.1)
-	local wackel = if res.chance >= 50 then 0.5 elseif res.chance >= 10 then 0.3 else 0.15
-	for i = 1, 12 do
-		local f = 1 + math.sin(i * 1.3) * 0.08 * (1 - i / 12)
-		blase.Size = Vector3.new(endD * f, endD / f, endD * f)
-		cam.CFrame = CFrame.lookAt(camPos + Vector3.new(rng:NextNumber(-1, 1), rng:NextNumber(-1, 1), 0) * wackel * (1 - i / 12), ziel + Vector3.new(0, 1, 0))
-		RunService.RenderStepped:Wait()
+		-- 4) Schnitt: Bodenkamera, Tier (Silhouette) laeuft vorbei in die Blase
+		blende(0, 0.12)
+		vignette.Visible = false
+		cam.FieldOfView = 75
+		cam.CFrame = CFrame.lookAt(camPos, ziel + Vector3.new(0, 1, 0))
+		local laufStart = camPos + dir * (5 * k) - seite * math.min(4.5 * k, 12)
+		laufStart = Vector3.new(math.clamp(laufStart.X, -(SB - 10), SB - 10), 0, laufStart.Z)
+		local laufEnde = Vector3.new(ziel.X, 0, ziel.Z) + dir * (D_BLASE / 2 + h * 0.4)
+		tier:PivotTo(CFrame.new(laufStart))
+		tier.Parent = seqOrdner
+		blende(1, 0.12)
+		local laufDauer = if kurz then 0.7 else 1.8
+		task.spawn(function()
+			local s0 = os.clock()
+			while os.clock() - s0 < laufDauer do
+				spannung(0.45 + (os.clock() - s0) / laufDauer * 0.45)
+				RunService.RenderStepped:Wait()
+			end
+		end)
+		tierLaufen(tier, laufStart, laufEnde, laufDauer, math.min(0.6, h * 0.12))
+
+		-- 5) Sprung in die Blase; bei grossen Tieren dehnt sich die Blase in Stoessen
+		local sprungVon = tier:GetPivot()
+		local sprungD = if istGross then D_BLASE + (endD - D_BLASE) * 0.35 else endD
+		local s0 = os.clock()
+		while true do
+			local t = math.min((os.clock() - s0) / 0.4, 1)
+			local p = sprungVon.Position:Lerp(mitte, t) + Vector3.new(0, math.sin(math.pi * t) * h * 0.8, 0)
+			tier:PivotTo((sprungVon - sprungVon.Position) + p)
+			local dNow = D_BLASE + (sprungD - D_BLASE) * t
+			blaseSetzen(blase, innen, Vector3.new(ziel.X, dNow / 2, ziel.Z), dNow)
+			if t >= 1 then break end
+			RunService.RenderStepped:Wait()
+		end
+		tier:PivotTo(CFrame.lookAt(mitte, Vector3.new(camPos.X, mitte.Y, camPos.Z)))
+		if istGross then
+			local aktuell = sprungD
+			for stufe = 1, 3 do
+				local nach = D_BLASE + (endD - D_BLASE) * (0.35 + stufe * 0.65 / 3)
+				local s1 = os.clock()
+				while true do
+					local t = math.min((os.clock() - s1) / 0.28, 1)
+					local d = aktuell + (nach - aktuell) * t + math.sin(t * math.pi) * 0.12 * nach
+					blaseSetzen(blase, innen, Vector3.new(ziel.X, d / 2, ziel.Z), d)
+					if t >= 1 then break end
+					RunService.RenderStepped:Wait()
+				end
+				aktuell = nach
+				task.wait(0.18)
+			end
+		end
+		-- Hit-Stop + Wackeln
+		task.wait(0.1)
+		local wackel = if res.chance >= 50 then 0.5 elseif res.chance >= 10 then 0.3 else 0.15
+		for i = 1, 12 do
+			local f = 1 + math.sin(i * 1.3) * 0.08 * (1 - i / 12)
+			blase.Size = Vector3.new(endD * f, endD / f, endD * f)
+			cam.CFrame = CFrame.lookAt(camPos + Vector3.new(rng:NextNumber(-1, 1), rng:NextNumber(-1, 1), 0) * wackel * (1 - i / 12), ziel + Vector3.new(0, 1, 0))
+			RunService.RenderStepped:Wait()
+		end
 	end
 	blaseSetzen(blase, innen, Vector3.new(ziel.X, endD / 2, ziel.Z), endD)
 
-	-- 6) Ergebnis
+	-- 6) Ergebnis: weisser Blitz, Tier bekommt seine Farben
+	farbeZurueck()
+	blitz.BackgroundTransparency = 0.15
+	TweenService:Create(blitz, TweenInfo.new(0.5), { BackgroundTransparency = 1 }):Play()
 	spannung(1)
 	enthWort.Text = gross(res.name)
 	enthWort.TextColor3 = D.Seltenheit[res.selten].farbe
+	enthGroesse.Text = D.Groessen[res.groesse or 1].name
 	enthInfo.Text = D.Seltenheit[res.selten].name .. " · $" .. D.format(res.einkommen) .. "/s"
 	enthNeu.Text = if res.neu then "NEU!" else ""
 	if res.chance >= 10 then konfetti() end
@@ -625,7 +697,8 @@ local function sequenz(res, startPos)
 	TweenService:Create(cam, TweenInfo.new(0.8, Enum.EasingStyle.Quad), { CFrame = CFrame.lookAt(zurueckPos, Vector3.new(ziel.X, endD / 2, ziel.Z)) }):Play()
 	task.wait(0.5)
 	enthWeiter.Text = "Tippe zum Fortfahren"
-	warteKlickOder(if kurz then 2.5 else 6)
+	warteKlickOder(if kurz or schnell then 2.5 else 6)
+	strahlen.Visible = false
 
 	-- 7) Blase steigt auf und schwebt zurueck
 	local hoch = TweenService:Create(blase, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { CFrame = blase.CFrame + Vector3.new(0, 30, 0) })
@@ -728,48 +801,237 @@ UIS.InputBegan:Connect(function(i, verarbeitet)
 	if i.KeyCode == Enum.KeyCode.E or i.KeyCode == Enum.KeyCode.Return then pusten() end
 end)
 
--- ===== Gehege-Tiere laufen herum (nur lokal) =====
-local wandern = {} -- [model] = {ziel, tempo, warte}
-local function gehegeVon(m)
-	local g = m.Parent and m.Parent.Parent
-	return g and g:FindFirstChild("GehegeFlaeche")
+-- ===== Fenster: Tier-Index =====
+local indexFenster, indexInhalt = fenster("Tier-Index", 640, 520)
+local indexZaehler = text({ Size = UDim2.fromOffset(300, 36), Position = UDim2.new(1, -316, 1, -46), Text = "", TextColor3 = rgb(70, 140, 230), ZIndex = 21, Parent = indexFenster })
+
+local function vorschau(parent, artId, silhouette)
+	local vp = neu("ViewportFrame", { Size = UDim2.new(1, 0, 0.72, 0), BackgroundTransparency = 1, ZIndex = parent.ZIndex + 1, Parent = parent })
+	local m = TM.bauen(artId, 1, 1)
+	if not m then return end
+	if silhouette then
+		for _, p in m:GetDescendants() do
+			if p:IsA("BasePart") then
+				p.Color = rgb(25, 25, 35)
+				p.Material = Enum.Material.SmoothPlastic
+			elseif p:IsA("ParticleEmitter") or p:IsA("PointLight") then
+				p:Destroy()
+			end
+		end
+	end
+	m:PivotTo(CFrame.Angles(0, math.rad(-25), 0))
+	m.Parent = vp
+	local h = TM.hoehe(m)
+	local a = m:GetExtentsSize()
+	local vc = Instance.new("Camera")
+	vc.FieldOfView = 40
+	local dist = math.max(h, a.Z, a.X) * 1.35
+	vc.CFrame = CFrame.lookAt(Vector3.new(dist * 0.35, h * 0.75, -dist), Vector3.new(0, h * 0.45, 0))
+	vc.Parent = vp
+	vp.CurrentCamera = vc
 end
+
+local function indexZeichnen()
+	for _, c in indexInhalt:GetChildren() do
+		if c:IsA("GuiObject") then c:Destroy() end
+	end
+	local gesamt, hat = 0, 0
+	for bi, b in D.Biome do
+		local kopf = text({ Size = UDim2.new(1, -10, 0, 30), Text = b.name, TextColor3 = rgb(70, 140, 230), TextXAlignment = Enum.TextXAlignment.Left, LayoutOrder = bi * 10, ZIndex = 21, Parent = indexInhalt })
+		local reihe = neu("Frame", { Size = UDim2.new(1, -10, 0, 96), BackgroundTransparency = 1, LayoutOrder = bi * 10 + 1, ZIndex = 21, Parent = indexInhalt }, {
+			neu("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }),
+		})
+		local n, voll = 0, 0
+		for i, t in D.TierListe do
+			if t.biom == b.id then
+				voll += 1
+				local bekannt = status.Index[t.id]
+				if bekannt then n += 1 end
+				local farbe = D.Seltenheit[t.selten].farbe
+				local kachel = neu("Frame", { Size = UDim2.fromOffset(80, 92), BackgroundColor3 = if bekannt then rgb(255, 255, 255) else rgb(205, 210, 220), LayoutOrder = i, ZIndex = 22, Parent = reihe }, { ecke(10), rand(3, farbe) })
+				vorschau(kachel, t.id, not bekannt)
+				text({ Size = UDim2.new(1, -4, 0, 22), Position = UDim2.new(0, 2, 1, -24), Text = if bekannt then t.name else "???", TextColor3 = if bekannt then farbe else rgb(90, 95, 110), ZIndex = 23, Parent = kachel })
+			end
+		end
+		gesamt += voll
+		hat += n
+		kopf.Text = b.name .. "  " .. n .. "/" .. voll .. (if status.IndexBelohnt[b.id] then "  · Belohnung erhalten" else "  · Belohnung: $" .. D.format(D.IndexBelohnung[b.id] or 0))
+	end
+	indexZaehler.Text = "Freigeschaltet: " .. hat .. "/" .. gesamt
+end
+
+-- ===== Fenster: Einstellungen =====
+local optFenster, optInhalt = fenster("Einstellungen", 460, 260)
+local schnellKnopf = knopf({ Size = UDim2.new(1, -10, 0, 56), Text = "", LayoutOrder = 1, ZIndex = 22, Parent = optInhalt }, rgb(150, 150, 160))
+text({ Size = UDim2.new(1, -10, 0, 44), Text = "Überspringt die Tier-Sicht bei gewöhnlichen und ungewöhnlichen Tieren.", TextColor3 = rgb(80, 100, 130), RandDicke = 0, LayoutOrder = 2, ZIndex = 22, Parent = optInhalt })
+local function optZeichnen()
+	local an = status.Einstellungen and status.Einstellungen.Schnell
+	schnellKnopf.Text = "Schnelle Enthüllung: " .. (if an then "AN" else "AUS")
+	schnellKnopf.BackgroundColor3 = if an then rgb(90, 200, 110) else rgb(150, 150, 160)
+end
+schnellKnopf.Activated:Connect(function()
+	R.Einstellung:FireServer("Schnell", not (status.Einstellungen and status.Einstellungen.Schnell))
+end)
+optZeichnen()
+
+local function alleFensterZu()
+	tierFenster.Visible, seifenFenster.Visible, indexFenster.Visible, optFenster.Visible = false, false, false, false
+end
+seitenKnopf("Index", 70, rgb(150, 110, 230), function()
+	local war = indexFenster.Visible
+	alleFensterZu()
+	if not war then
+		indexZeichnen()
+		indexFenster.Visible = true
+	end
+end)
+seitenKnopf("Optionen", 140, rgb(120, 130, 150), function()
+	local war = optFenster.Visible
+	alleFensterZu()
+	optFenster.Visible = not war
+end)
+
+local ersterStatus = true
+R.Status.OnClientEvent:Connect(function(s)
+	local altPlaetze = status.Plaetze
+	status = s
+	status.IndexBelohnt = status.IndexBelohnt or {}
+	status.Einstellungen = status.Einstellungen or { Schnell = false }
+	rucksackZeichnen()
+	if tierFenster.Visible then tierFensterZeichnen() end
+	if seifenFenster.Visible then seifenZeichnen() end
+	if indexFenster.Visible then indexZeichnen() end
+	optZeichnen()
+	if not ersterStatus and s.Plaetze > altPlaetze then
+		task.delay(0.4, function()
+			grosserText("GEHEGE VERGRÖSSERT!", "Platz für " .. s.Plaetze .. " Tiere", rgb(140, 255, 160))
+			konfetti()
+		end)
+	end
+	ersterStatus = false
+end)
+
+-- ===== x2-Blase beim Training =====
+local x2Knopf = knopf({ Size = UDim2.fromOffset(110, 110), Text = "x2", Visible = false, ZIndex = 30, Parent = gui }, rgb(255, 140, 40))
+x2Knopf:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(1, 0)
+local x2Skala = neu("UIScale", { Parent = x2Knopf })
+local x2Version = 0
+R.X2Angebot.OnClientEvent:Connect(function()
+	x2Version += 1
+	local v = x2Version
+	x2Knopf.Position = UDim2.new(rng:NextNumber(0.25, 0.65), 0, rng:NextNumber(0.25, 0.55), 0)
+	x2Knopf.Visible = true
+	task.spawn(function()
+		while x2Knopf.Visible and v == x2Version do
+			x2Skala.Scale = 1 + math.sin(os.clock() * 8) * 0.08
+			RunService.RenderStepped:Wait()
+		end
+	end)
+	task.delay(6, function()
+		if v == x2Version then x2Knopf.Visible = false end
+	end)
+end)
+x2Knopf.Activated:Connect(function()
+	x2Knopf.Visible = false
+	R.X2Nehmen:FireServer()
+end)
+R.X2Aktiv.OnClientEvent:Connect(function(sek)
+	trainTitel.Text = "x2 TRAINING!"
+	trainTitel.TextColor3 = rgb(255, 160, 50)
+	task.delay(sek, function()
+		trainTitel.Text = "Tritt auf den Blasebalg!"
+		trainTitel.TextColor3 = rgb(255, 255, 255)
+	end)
+end)
+
+-- ===== Einfuehrung (erste Minute) =====
+local tutText = text({ Size = UDim2.fromOffset(760, 40), Position = UDim2.new(0.5, -380, 0, 160), Text = "", TextColor3 = rgb(255, 230, 80), Visible = false, RandDicke = 3, Parent = gui })
+local tutPfeil = text({ Size = UDim2.fromOffset(60, 50), Position = UDim2.new(0.5, -30, 1, -175), Text = "▼", TextColor3 = rgb(255, 220, 40), Visible = false, Parent = gui })
+local TUT_TEXT = {
+	"Stell dich in den Kreis bei deinem Blasebalg!",
+	"Geh zum Wurfplatz und puste deine erste Blase!",
+	"Klick dein Tier im Rucksack an und stell es ins Gehege!",
+}
+local a0 = Instance.new("Attachment")
+a0.Parent = workspace.Terrain
+local a1 = Instance.new("Attachment")
+a1.Parent = workspace.Terrain
+local beam = neu("Beam", { Color = ColorSequence.new(rgb(255, 220, 40)), Width0 = 0.8, Width1 = 0.8, FaceCamera = true, LightEmission = 1, Transparency = NumberSequence.new(0.25), Segments = 1, Enabled = false, Attachment0 = a0, Attachment1 = a1, Parent = workspace.Terrain })
+RunService.Heartbeat:Connect(function()
+	local schritt = spieler:GetAttribute("Tutorial") or 4
+	local aktiv = schritt < 4 and not pustetGerade
+	tutText.Visible = aktiv
+	tutPfeil.Visible = aktiv and schritt == 3
+	beam.Enabled = false
+	if not aktiv then return end
+	tutText.Text = TUT_TEXT[schritt] or ""
+	if schritt == 3 then
+		tutPfeil.Position = UDim2.new(0.5, -30, 1, -175 + math.sin(os.clock() * 6) * 6)
+		return
+	end
+	local hrp = spieler.Character and spieler.Character:FindFirstChild("HumanoidRootPart")
+	local g = meinGrundstueck()
+	local wp = Map:FindFirstChild("Wurfplatz")
+	local ziel = if schritt == 1 then (g and g:FindFirstChild("TrainKreis")) else (wp and wp:FindFirstChild("Platte"))
+	if hrp and ziel then
+		a0.WorldPosition = hrp.Position - Vector3.new(0, 2.5, 0)
+		a1.WorldPosition = ziel.Position + Vector3.new(0, 0.6, 0)
+		beam.Enabled = (hrp.Position - ziel.Position).Magnitude > 9
+	end
+end)
+
+-- ===== Gehege-Tiere laufen herum (nur lokal), Vögel schweben und schlagen mit den Flügeln =====
+local wandern = {} -- [model] = Zustand
 RunService.Heartbeat:Connect(function(dt)
 	local kp = cam.CFrame.Position
+	local zeit = os.clock()
 	for _, g in Grund:GetChildren() do
 		local ordner = g:FindFirstChild("GehegeTiere")
 		local fl = g:FindFirstChild("GehegeFlaeche")
-		if not ordner or not fl then continue end
-		if (fl.Position - kp).Magnitude > 220 then continue end
+		if not ordner or not fl or (fl.Position - kp).Magnitude > 260 then continue end
 		for _, m in ordner:GetChildren() do
 			if not m:IsA("Model") or not m.PrimaryPart then continue end
 			local w = wandern[m]
-			local pv = m:GetPivot()
 			if not w then
-				w = { ziel = nil, warte = rng:NextNumber(0, 3), tempo = rng:NextNumber(3, 5), y = pv.Position.Y, phase = rng:NextNumber(0, 6) }
+				local pv = m:GetPivot()
+				w = { pos = pv.Position, blick = pv.LookVector, warte = rng:NextNumber(0, 3), tempo = rng:NextNumber(3, 5), phase = rng:NextNumber(0, 6), schwebt = m:GetAttribute("Schwebt"), fluegel = {} }
+				for _, p in m:GetDescendants() do
+					if p:IsA("BasePart") and p.Name == "Fluegel" then w.fluegel[p] = pv:ToObjectSpace(p.CFrame) end
+				end
 				wandern[m] = w
 				m.Destroying:Once(function() wandern[m] = nil end)
 			end
+			local hop = 0
 			if w.warte > 0 then
 				w.warte -= dt
-				continue
+			else
+				if not w.ziel then
+					local s = fl.Size
+					local z = fl.CFrame * CFrame.new(rng:NextNumber(-s.X / 2 + 4, s.X / 2 - 4), 0, rng:NextNumber(-s.Z / 2 + 4, s.Z / 2 - 4))
+					w.ziel = Vector3.new(z.X, w.pos.Y, z.Z)
+				end
+				local weg = w.ziel - w.pos
+				if weg.Magnitude < 0.5 then
+					w.ziel = nil
+					w.warte = rng:NextNumber(1.5, 5)
+				else
+					w.pos += weg.Unit * math.min(weg.Magnitude, w.tempo * dt)
+					w.blick = weg.Unit
+					w.phase += dt * 10
+					hop = math.abs(math.sin(w.phase)) * 0.4
+				end
 			end
-			if not w.ziel then
-				local s = fl.Size
-				local z = fl.CFrame * CFrame.new(rng:NextNumber(-s.X / 2 + 4, s.X / 2 - 4), 0, rng:NextNumber(-s.Z / 2 + 4, s.Z / 2 - 4))
-				w.ziel = Vector3.new(z.X, w.y, z.Z)
+			if w.schwebt then hop = 2.5 + math.sin(zeit * 2 + w.phase) * 0.5 end
+			local cf = CFrame.lookAt(w.pos, w.pos + Vector3.new(w.blick.X, 0, w.blick.Z)) + Vector3.new(0, hop, 0)
+			m:PivotTo(cf)
+			if next(w.fluegel) then
+				local ang = math.sin(zeit * (if w.schwebt then 12 else 3) + w.phase) * (if w.schwebt then 0.6 else 0.15)
+				for p, off in w.fluegel do
+					local seite = if off.Position.X < 0 then -1 else 1
+					local scharnier = -seite * p.Size.X / 2
+					p.CFrame = cf * off * CFrame.new(scharnier, p.Size.Y / 2, 0) * CFrame.Angles(0, 0, seite * ang) * CFrame.new(-scharnier, -p.Size.Y / 2, 0)
+				end
 			end
-			local p = Vector3.new(pv.Position.X, w.y, pv.Position.Z)
-			local weg = w.ziel - p
-			if weg.Magnitude < 0.5 then
-				w.ziel = nil
-				w.warte = rng:NextNumber(1.5, 5)
-				m:PivotTo(CFrame.lookAt(p, p + pv.LookVector))
-				continue
-			end
-			w.phase += dt * 10
-			local neuP = p + weg.Unit * math.min(weg.Magnitude, w.tempo * dt)
-			m:PivotTo(CFrame.lookAt(neuP, neuP + Vector3.new(weg.X, 0, weg.Z)) + Vector3.new(0, math.abs(math.sin(w.phase)) * 0.4, 0))
 		end
 	end
 end)

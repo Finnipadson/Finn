@@ -29,14 +29,23 @@ D.TierListe = {
 	{ id = "Bluetenlamm", name = "Blütenlamm", biom = "Wiese", selten = "Gewoehnlich" },
 	{ id = "Blumenigel", name = "Blumenigel", biom = "Wiese", selten = "Ungewoehnlich" },
 	{ id = "Pusteblumenfuchs", name = "Pusteblumen-Fuchs", biom = "Wiese", selten = "Selten" },
+	{ id = "Bluetenhirsch", name = "Blütenhirsch", biom = "Wiese", selten = "Episch" },
+	{ id = "Rosenpfau", name = "Rosenpfau", biom = "Wiese", selten = "Legendaer" },
+	{ id = "Fruehlingseinhorn", name = "Frühlings-Einhorn", biom = "Wiese", selten = "Mythisch" },
 	{ id = "Moosmaus", name = "Moosmaus", biom = "Pilzwald", selten = "Gewoehnlich" },
 	{ id = "Fliegenpilzkroete", name = "Fliegenpilz-Kröte", biom = "Pilzwald", selten = "Gewoehnlich" },
 	{ id = "Pilzhutwaschbaer", name = "Pilzhut-Waschbär", biom = "Pilzwald", selten = "Ungewoehnlich" },
 	{ id = "Moosdachs", name = "Moos-Dachs", biom = "Pilzwald", selten = "Selten" },
+	{ id = "Glimmereule", name = "Glimmer-Eule", biom = "Pilzwald", selten = "Episch" },
+	{ id = "Pilzkoenigbaer", name = "Pilzkönig-Bär", biom = "Pilzwald", selten = "Legendaer" },
+	{ id = "Wurzelgeistelch", name = "Wurzelgeist-Elch", biom = "Pilzwald", selten = "Mythisch" },
 	{ id = "Seerosenfrosch", name = "Seerosen-Frosch", biom = "Sumpf", selten = "Gewoehnlich" },
 	{ id = "Schilfente", name = "Schilf-Ente", biom = "Sumpf", selten = "Gewoehnlich" },
 	{ id = "Moosschildkroete", name = "Moos-Schildkröte", biom = "Sumpf", selten = "Ungewoehnlich" },
 	{ id = "Nebelotter", name = "Nebelotter", biom = "Sumpf", selten = "Selten" },
+	{ id = "Seerosenkrokodil", name = "Seerosen-Krokodil", biom = "Sumpf", selten = "Episch" },
+	{ id = "Irrlichtreiher", name = "Irrlicht-Reiher", biom = "Sumpf", selten = "Legendaer" },
+	{ id = "Nebelschlange", name = "Nebelschlange", biom = "Sumpf", selten = "Mythisch" },
 }
 D.Tiere = {}
 for _, t in D.TierListe do D.Tiere[t.id] = t end
@@ -54,6 +63,37 @@ D.Blasebaelge = {
 }
 
 D.Groessen = { { name = "", skala = 1, mult = 1 }, { name = "GROSS", skala = 1.6, mult = 4 }, { name = "RIESIG", skala = 2.6, mult = 9 } }
+
+-- Groesse ist ein eigener Zufallswurf; Glueck erhoeht ihn leicht (max. 25 % / 5 %)
+function D.groessenChancen(glueck)
+	local f = math.sqrt(math.max(glueck, 1))
+	local riesig = math.min(0.015 * f, 0.05)
+	local gross = math.min(0.085 * f, 0.25)
+	return { 1 - gross - riesig, gross, riesig }
+end
+
+-- Gehege-Ausbau: Stufe i -> Plaetze + Preis
+D.Ausbau = {
+	{ plaetze = 8, preis = 1000 },
+	{ plaetze = 10, preis = 25000 },
+	{ plaetze = 12, preis = 500000 },
+	{ plaetze = 14, preis = 10e6 },
+	{ plaetze = 16, preis = 200e6 },
+	{ plaetze = 18, preis = 4e9 },
+	{ plaetze = 20, preis = 80e9 },
+}
+function D.naechsterAusbau(plaetze)
+	for _, a in D.Ausbau do
+		if a.plaetze > plaetze then return a end
+	end
+end
+-- Gehege-Tiefe (Studs) je nach Platzanzahl
+function D.gehegeTiefe(plaetze)
+	return 30 + (plaetze - 6) * 2.6
+end
+
+-- Belohnung fuer ein volles Biom im Index
+D.IndexBelohnung = { Wiese = 2500, Pilzwald = 25000, Sumpf = 250000 }
 D.Materialien = { { name = "", mult = 1 }, { name = "GOLD", mult = 4 }, { name = "DIAMANT", mult = 15 }, { name = "REGENBOGEN", mult = 50 } }
 
 function D.pustkraft(stufe)

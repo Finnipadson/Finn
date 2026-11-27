@@ -21,7 +21,7 @@ Roblox-Spiel im Genre [[Fang-und-Gehege]]: Blasebalg treten, Riesen-Seifenblase 
 ## Offene Punkte
 
 - [x] Phase 1 – spielbarer Kern (27.11.2026: Welt mit 3 Biomen, Blasebalg, Pusten, Flug, Tier-Sicht-Enthüllung, 12 Tiere, Gehege, Seifenladen, Speichern)
-- [ ] Phase 2 – Sammeln (alle Arten Biom 1–3, Größen, Enthüllung, Index)
+- [x] Phase 2 – Sammeln (28.11.2026; x2-Klick noch prüfen, Detail-Runde offen)
 - [ ] Phase 3 – Mischkessel + Biome 4–6
 - [ ] Phase 4 – Korallenriff, Wolkenreich, Event „Schaumparty“
 - [ ] Phase 5 – Veröffentlichen

@@ -189,6 +189,181 @@ S.Nebelotter = {
 	partikel = "nebel",
 }
 
+-- ===== Phase 2: Episch / Legendaer / Mythisch =====
+local GOLDTON, PINK, ROSA2 = rgb(255, 205, 60), rgb(255, 120, 170), rgb(255, 190, 215)
+
+S.Bluetenhirsch = {
+	skala = 1.4, koerper = V(1.8, 1.8, 3.2), kopf = V(1.3, 1.4, 1.5), farbe = rgb(190, 130, 80), beinFarbe = rgb(150, 100, 60),
+	bein = 1.8, dicke = 0.4,
+	extras = {
+		{ an = "kopf", g = V(0.8, 0.6, 0.6), p = V(0, -0.3, -0.9), f = rgb(215, 175, 125) },
+		{ an = "kopf", g = V(0.25, 0.2, 0.1), p = V(0, -0.12, -1.22), f = SCHWARZ },
+		{ an = "kopf", g = V(0.6, 0.3, 0.25), p = V(-0.75, 0.5, 0.2) },
+		{ an = "kopf", g = V(0.6, 0.3, 0.25), p = V(0.75, 0.5, 0.2) },
+		{ an = "kopf", g = V(0.25, 1.6, 0.25), p = V(-0.45, 1.4, 0.2), f = rgb(120, 85, 55) },
+		{ an = "kopf", g = V(0.25, 1.6, 0.25), p = V(0.45, 1.4, 0.2), f = rgb(120, 85, 55) },
+		{ an = "kopf", g = V(0.8, 0.22, 0.22), p = V(-0.75, 1.75, 0.2), f = rgb(120, 85, 55) },
+		{ an = "kopf", g = V(0.8, 0.22, 0.22), p = V(0.75, 1.75, 0.2), f = rgb(120, 85, 55) },
+		{ an = "kopf", g = V(0.55, 0.45, 0.55), p = V(-0.45, 2.25, 0.2), f = PINK },
+		{ an = "kopf", g = V(0.55, 0.45, 0.55), p = V(0.45, 2.25, 0.2), f = WEISS },
+		{ an = "kopf", g = V(0.5, 0.4, 0.5), p = V(-1.15, 1.85, 0.2), f = WEISS },
+		{ an = "kopf", g = V(0.5, 0.4, 0.5), p = V(1.15, 1.85, 0.2), f = PINK },
+		{ an = "koerper", g = V(0.35, 0.1, 0.35), p = V(-0.5, 0.91, -0.6), f = WEISS },
+		{ an = "koerper", g = V(0.35, 0.1, 0.35), p = V(0.4, 0.91, 0.3), f = WEISS },
+		{ an = "koerper", g = V(0.35, 0.1, 0.35), p = V(-0.3, 0.91, 1.0), f = WEISS },
+		{ an = "koerper", g = V(0.5, 0.6, 0.3), p = V(0, 0.5, 1.7), f = WEISS },
+	},
+	partikel = { farbe = ROSA2, groesse = 0.3, rate = 5, auftrieb = -0.6 },
+}
+
+S.Rosenpfau = {
+	skala = 1.5, koerper = V(1.4, 1.6, 2.0), kopf = V(0.9, 1.0, 1.0), farbe = rgb(40, 110, 200), beinFarbe = rgb(120, 110, 100),
+	beine = 2, bein = 1.0, dicke = 0.25, kopfY = 4.0, kopfZ = -1.0,
+	extras = {
+		{ an = "koerper", g = V(0.6, 1.6, 0.6), p = V(0, 1.4, -0.8), f = rgb(40, 110, 200) },
+		{ an = "kopf", g = V(0.3, 0.25, 0.5), p = V(0, -0.15, -0.7), f = rgb(245, 200, 40) },
+		{ an = "kopf", g = V(0.12, 0.5, 0.12), p = V(-0.2, 0.75, 0), f = rgb(40, 110, 200) },
+		{ an = "kopf", g = V(0.12, 0.5, 0.12), p = V(0, 0.8, 0), f = rgb(40, 110, 200) },
+		{ an = "kopf", g = V(0.12, 0.5, 0.12), p = V(0.2, 0.75, 0), f = rgb(40, 110, 200) },
+		{ an = "kopf", g = V(0.25, 0.25, 0.25), p = V(0, 1.1, 0), f = GOLDTON, neon = true },
+		{ an = "koerper", g = V(0.2, 1.0, 1.5), p = V(-0.8, 0.1, 0), f = rgb(30, 90, 170), name = "Fluegel" },
+		{ an = "koerper", g = V(0.2, 1.0, 1.5), p = V(0.8, 0.1, 0), f = rgb(30, 90, 170), name = "Fluegel" },
+	},
+	partikel = { farbe = GOLDTON, groesse = 0.25, rate = 6 },
+	licht = GOLDTON,
+}
+for i = 0, 8 do -- Rad aus Rosen
+	local a = math.rad(-80 + i * 20)
+	local x, y = math.sin(a) * 2.4, math.cos(a) * 2.4 + 0.6
+	table.insert(S.Rosenpfau.extras, { an = "koerper", g = V(0.9, 1.4, 0.25), p = V(x * 0.9, y - 0.4, 1.6), f = rgb(60, 150, 80) })
+	table.insert(S.Rosenpfau.extras, { an = "koerper", g = V(1.0, 1.0, 0.3), p = V(x, y, 1.4), f = if i % 2 == 0 then rgb(220, 40, 80) else PINK })
+	table.insert(S.Rosenpfau.extras, { an = "koerper", g = V(0.35, 0.35, 0.1), p = V(x, y, 1.22), f = GOLDTON, neon = true })
+end
+
+S.Fruehlingseinhorn = {
+	skala = 1.8, koerper = V(1.8, 1.8, 3.0), kopf = V(1.2, 1.4, 1.6), farbe = rgb(250, 248, 255), bein = 1.6, dicke = 0.45,
+	extras = {
+		{ an = "kopf", g = V(0.8, 0.6, 0.5), p = V(0, -0.35, -0.85), f = rgb(255, 215, 230) },
+		{ an = "kopf", g = V(0.25, 1.5, 0.25), p = V(0, 1.2, -0.4), f = GOLDTON, neon = true },
+		{ an = "kopf", g = V(0.5, 0.25, 0.3), p = V(-0.45, 0.8, 0.3) },
+		{ an = "kopf", g = V(0.5, 0.25, 0.3), p = V(0.45, 0.8, 0.3) },
+		{ an = "kopf", g = V(0.5, 0.5, 0.5), p = V(0, 0.8, 0.5), f = PINK },
+		{ an = "kopf", g = V(0.5, 0.5, 0.5), p = V(0, 0.55, 0.9), f = rgb(190, 140, 255) },
+		{ an = "koerper", g = V(0.5, 0.5, 0.5), p = V(0, 1.05, -1.2), f = rgb(255, 215, 60) },
+		{ an = "koerper", g = V(0.5, 0.5, 0.5), p = V(0, 1.05, -0.6), f = rgb(140, 220, 255) },
+		{ an = "koerper", g = V(0.6, 1.8, 0.6), p = V(0, 0.1, 1.75), f = PINK },
+		{ an = "koerper", g = V(0.5, 0.5, 0.5), p = V(0, -0.6, 1.9), f = rgb(190, 140, 255) },
+	},
+	partikel = { farbe = rgb(255, 170, 230), groesse = 0.35, rate = 10 },
+	licht = rgb(255, 150, 220),
+}
+
+S.Glimmereule = {
+	skala = 1.2, koerper = V(1.6, 1.8, 1.4), kopf = V(1.6, 1.3, 1.2), farbe = rgb(120, 90, 70), beinFarbe = rgb(230, 180, 60),
+	beine = 2, bein = 0.4, dicke = 0.3, kopfY = 2.85, kopfZ = -0.15, schwebt = true,
+	extras = {
+		{ an = "koerper", g = V(1.1, 1.3, 0.1), p = V(0, -0.1, -0.71), f = rgb(210, 185, 150) },
+		{ an = "kopf", g = V(0.3, 0.35, 0.3), p = V(0, -0.3, -0.65), f = rgb(245, 200, 40) },
+		{ an = "kopf", g = V(0.35, 0.5, 0.3), p = V(-0.55, 0.85, 0) },
+		{ an = "kopf", g = V(0.35, 0.5, 0.3), p = V(0.55, 0.85, 0) },
+		{ an = "koerper", g = V(0.3, 1.4, 1.2), p = V(-0.95, 0.1, 0), f = rgb(100, 75, 60), name = "Fluegel" },
+		{ an = "koerper", g = V(0.3, 1.4, 1.2), p = V(0.95, 0.1, 0), f = rgb(100, 75, 60), name = "Fluegel" },
+		{ an = "koerper", g = V(0.3, 0.3, 0.3), p = V(-0.6, -0.5, -0.6), f = rgb(90, 240, 255), neon = true },
+		{ an = "koerper", g = V(0.3, 0.3, 0.3), p = V(0.6, -0.4, -0.6), f = rgb(90, 240, 255), neon = true },
+	},
+	partikel = { farbe = rgb(120, 240, 255), groesse = 0.2, rate = 6 },
+}
+
+S.Pilzkoenigbaer = {
+	skala = 1.7, koerper = V(2.6, 2.2, 3.2), kopf = V(2.0, 1.8, 1.6), farbe = rgb(110, 75, 50), bein = 0.9, dicke = 0.8,
+	extras = {
+		{ an = "kopf", g = V(0.9, 0.7, 0.6), p = V(0, -0.4, -0.95), f = rgb(170, 130, 90) },
+		{ an = "kopf", g = V(0.35, 0.25, 0.1), p = V(0, -0.2, -1.3), f = SCHWARZ },
+		{ an = "kopf", g = V(0.6, 0.6, 0.3), p = V(-0.85, 0.85, 0.2) },
+		{ an = "kopf", g = V(0.6, 0.6, 0.3), p = V(0.85, 0.85, 0.2) },
+		{ an = "kopf", g = V(0.9, 0.5, 0.9), p = V(0, 1.1, 0.1), f = rgb(235, 225, 200) },
+		{ an = "kopf", g = V(2.6, 0.8, 2.4), p = V(0, 1.6, 0.1), f = rgb(210, 45, 45) },
+		{ an = "kopf", g = V(0.5, 0.12, 0.5), p = V(-0.6, 2.05, -0.3), f = WEISS },
+		{ an = "kopf", g = V(0.5, 0.12, 0.5), p = V(0.7, 2.05, 0.5), f = WEISS },
+		{ an = "kopf", g = V(0.4, 0.12, 0.4), p = V(0, 2.05, -0.8), f = WEISS },
+		{ an = "kopf", g = V(0.3, 0.5, 0.3), p = V(-1.1, 2.2, 0.1), f = GOLDTON, neon = true },
+		{ an = "kopf", g = V(0.3, 0.5, 0.3), p = V(1.1, 2.2, 0.1), f = GOLDTON, neon = true },
+		{ an = "kopf", g = V(0.3, 0.5, 0.3), p = V(0, 2.2, -1.0), f = GOLDTON, neon = true },
+		{ an = "koerper", g = V(1.8, 1.2, 0.1), p = V(0, -0.2, -1.61), f = rgb(170, 130, 90) },
+	},
+	partikel = { farbe = rgb(255, 170, 80), groesse = 0.25, rate = 6 },
+	licht = rgb(255, 190, 110),
+}
+
+S.Wurzelgeistelch = {
+	skala = 2.0, koerper = V(2.0, 2.0, 3.4), kopf = V(1.4, 1.6, 1.8), farbe = rgb(70, 95, 65), beinFarbe = rgb(90, 65, 45),
+	bein = 2.0, dicke = 0.5, transparenz = 0.08,
+	extras = {
+		{ an = "kopf", g = V(0.9, 0.7, 0.7), p = V(0, -0.4, -1.05), f = rgb(110, 130, 95) },
+		{ an = "kopf", g = V(2.4, 0.3, 0.9), p = V(-1.5, 1.2, 0.2), f = rgb(95, 70, 45) },
+		{ an = "kopf", g = V(2.4, 0.3, 0.9), p = V(1.5, 1.2, 0.2), f = rgb(95, 70, 45) },
+		{ an = "kopf", g = V(0.25, 0.9, 0.25), p = V(-2.3, 1.7, 0.2), f = rgb(95, 70, 45) },
+		{ an = "kopf", g = V(0.25, 0.9, 0.25), p = V(-1.5, 1.7, 0.4), f = rgb(95, 70, 45) },
+		{ an = "kopf", g = V(0.25, 0.9, 0.25), p = V(2.3, 1.7, 0.2), f = rgb(95, 70, 45) },
+		{ an = "kopf", g = V(0.25, 0.9, 0.25), p = V(1.5, 1.7, 0.4), f = rgb(95, 70, 45) },
+		{ an = "koerper", g = V(1.8, 0.4, 3.0), p = V(0, 1.15, 0), f = rgb(90, 160, 70), m = Enum.Material.Grass },
+		{ an = "koerper", g = V(0.4, 0.4, 0.4), p = V(-0.5, 1.5, -0.8), f = rgb(120, 255, 200), neon = true },
+		{ an = "koerper", g = V(0.4, 0.4, 0.4), p = V(0.5, 1.5, 0.6), f = rgb(120, 255, 200), neon = true },
+		{ an = "koerper", g = V(0.4, 0.8, 0.4), p = V(0, 0.4, 1.9) },
+	},
+	partikel = { farbe = rgb(130, 255, 200), groesse = 0.35, rate = 10 },
+	licht = rgb(120, 255, 190),
+}
+
+S.Seerosenkrokodil = {
+	skala = 1.3, koerper = V(2.0, 1.0, 4.0), kopf = V(1.6, 0.8, 2.2), farbe = rgb(70, 125, 60), bein = 0.4, dicke = 0.6,
+	kopfY = 0.95, kopfZ = -3.0, augen = "oben",
+	extras = {
+		{ an = "kopf", g = V(1.5, 0.15, 0.1), p = V(0, -0.35, -1.1), f = WEISS },
+		{ an = "kopf", g = V(1.9, 0.15, 1.9), p = V(0, 0.95, 0.5), f = rgb(60, 150, 70) },
+		{ an = "kopf", g = V(0.5, 0.4, 0.5), p = V(0.3, 1.15, 0.4), f = PINK },
+		{ an = "kopf", g = V(0.25, 0.3, 0.25), p = V(0.3, 1.3, 0.4), f = rgb(255, 220, 60) },
+		{ an = "koerper", g = V(1.0, 0.7, 2.6), p = V(0, -0.1, 3.2) },
+		{ an = "koerper", g = V(0.5, 0.3, 0.5), p = V(0, 0.6, -1.2), f = rgb(45, 90, 40) },
+		{ an = "koerper", g = V(0.5, 0.3, 0.5), p = V(0, 0.6, 0), f = rgb(45, 90, 40) },
+		{ an = "koerper", g = V(0.5, 0.3, 0.5), p = V(0, 0.6, 1.2), f = rgb(45, 90, 40) },
+		{ an = "koerper", g = V(1.6, 0.1, 3.6), p = V(0, -0.51, 0), f = rgb(200, 210, 150) },
+	},
+	partikel = { farbe = rgb(255, 180, 220), groesse = 0.25, rate = 4, auftrieb = -0.4 },
+}
+
+S.Irrlichtreiher = {
+	skala = 1.6, koerper = V(1.2, 1.4, 2.0), kopf = V(0.7, 0.7, 0.9), farbe = rgb(200, 210, 225), beinFarbe = rgb(230, 180, 60),
+	beine = 2, bein = 2.0, dicke = 0.2, kopfY = 5.3, kopfZ = -1.0,
+	extras = {
+		{ an = "koerper", g = V(0.4, 2.2, 0.4), p = V(0, 1.6, -0.85) },
+		{ an = "kopf", g = V(0.25, 0.25, 1.4), p = V(0, -0.05, -1.1), f = rgb(245, 200, 40) },
+		{ an = "kopf", g = V(0.15, 0.15, 0.9), p = V(0, 0.25, 0.8), f = rgb(60, 70, 90) },
+		{ an = "kopf", g = V(0.6, 0.6, 0.6), p = V(0, -0.05, -2.0), f = rgb(160, 255, 255), neon = true, form = "Ball" },
+		{ an = "koerper", g = V(0.2, 1.0, 1.8), p = V(-0.7, 0.1, 0.1), f = rgb(170, 185, 210), name = "Fluegel" },
+		{ an = "koerper", g = V(0.2, 1.0, 1.8), p = V(0.7, 0.1, 0.1), f = rgb(170, 185, 210), name = "Fluegel" },
+		{ an = "koerper", g = V(0.5, 0.5, 0.5), p = V(-1.4, 1.6, 0.6), f = rgb(160, 255, 255), neon = true, form = "Ball" },
+		{ an = "koerper", g = V(0.4, 0.4, 0.4), p = V(1.3, 2.2, -0.4), f = rgb(160, 255, 255), neon = true, form = "Ball" },
+	},
+	partikel = { farbe = rgb(160, 255, 255), groesse = 0.3, rate = 8 },
+	licht = rgb(150, 255, 255),
+}
+
+S.Nebelschlange = {
+	skala = 1.8, koerper = V(1.2, 1.0, 1.6), kopf = V(1.3, 1.0, 1.5), farbe = rgb(190, 180, 235), beine = 0, bein = 0,
+	kopfY = 1.5, kopfZ = -1.3, transparenz = 0.3,
+	extras = {
+		{ an = "kopf", g = V(0.12, 0.08, 0.7), p = V(0, -0.35, -1.0), f = rgb(230, 60, 90), t = 0 },
+		{ an = "koerper", g = V(0.9, 1.0, 0.9), p = V(0, 0.5, -0.6) },
+	},
+	partikel = { farbe = rgb(200, 190, 255), groesse = 1.2, rate = 8, auftrieb = 0.3 },
+	licht = rgb(190, 160, 255),
+}
+for i = 1, 7 do -- Koerper-Segmente im Zickzack
+	local g = 1.1 - i * 0.08
+	table.insert(S.Nebelschlange.extras, { an = "koerper", g = V(g, g * 0.9, 1.2), p = V(math.sin(i * 1.1) * 0.7, -0.5 + g * 0.45, 0.6 + i * 1.05) })
+end
+
 T.Specs = S
 
 local function teil(modell, name, groesse, cf, farbe, material, form, transp)
@@ -236,7 +411,7 @@ function T.bauen(artId, groesse, material)
 	local d = s.dicke or 0.4
 	local bf = s.beinFarbe or kFarbe
 	local bx = k.X / 2 - d / 2
-	local zs = if s.beine == 2 then { 0 } else { -(k.Z / 2 - d / 2), k.Z / 2 - d / 2 }
+	local zs = if s.beine == 0 then {} elseif s.beine == 2 then { 0 } else { -(k.Z / 2 - d / 2), k.Z / 2 - d / 2 }
 	for _, z in zs do
 		for _, x in { -bx, bx } do
 			teil(m, "Bein", V(d, bein + 0.1, d), CFrame.new(x, (bein + 0.1) / 2, z), bf, nil, nil, t)
@@ -285,6 +460,29 @@ function T.bauen(artId, groesse, material)
 		pe.SpreadAngle = Vector2.new(180, 180)
 		pe.Parent = koerper
 	end
+
+	if type(s.partikel) == "table" then
+		local pt = s.partikel
+		local pe = Instance.new("ParticleEmitter")
+		pe.Color = ColorSequence.new(pt.farbe)
+		pe.Size = NumberSequence.new(pt.groesse or 0.3, 0)
+		pe.Transparency = NumberSequence.new(0.1, 1)
+		pe.LightEmission = 0.8
+		pe.Rate = pt.rate or 6
+		pe.Lifetime = NumberRange.new(1.5, 2.5)
+		pe.Speed = NumberRange.new(0.5, 1.5)
+		pe.SpreadAngle = Vector2.new(180, 180)
+		pe.Acceleration = V(0, pt.auftrieb or 0.5, 0)
+		pe.Parent = m:FindFirstChild("Koerper")
+	end
+	if s.licht then
+		local l = Instance.new("PointLight")
+		l.Color = s.licht
+		l.Range = 12
+		l.Brightness = 1.5
+		l.Parent = m:FindFirstChild("Koerper")
+	end
+	if s.schwebt then m:SetAttribute("Schwebt", true) end
 
 	-- Material-Variante (Phase 3, schon vorbereitet)
 	material = material or 1

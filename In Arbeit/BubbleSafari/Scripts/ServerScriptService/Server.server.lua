@@ -3,6 +3,7 @@
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local D = require(RS:WaitForChild("Daten"))
 local TM = require(RS:WaitForChild("TierModelle"))
@@ -37,6 +38,10 @@ local R = {
 	LadenOeffnen = remote("LadenOeffnen"),
 	TrainingTick = remote("TrainingTick", "UnreliableRemoteEvent"),
 	StufeAuf = remote("StufeAuf"),
+	X2Angebot = remote("X2Angebot"),
+	X2Nehmen = remote("X2Nehmen"),
+	X2Aktiv = remote("X2Aktiv"),
+	Einstellung = remote("Einstellung"),
 }
 
 local function meldung(p, text, art)
@@ -72,7 +77,7 @@ local function statusSenden(p)
 	if not d then return end
 	R.Status:FireClient(p, {
 		Tiere = d.Tiere, Seife = d.Seife, SeifenBesitz = d.SeifenBesitz, Plaetze = d.Plaetze,
-		Index = d.Index, Blasebalg = d.Blasebalg,
+		Index = d.Index, Blasebalg = d.Blasebalg, IndexBelohnt = d.IndexBelohnt, Einstellungen = d.Einstellungen,
 	})
 end
 
@@ -87,6 +92,7 @@ local function attributeSetzen(p)
 	p:SetAttribute("Pustkraft", D.pustkraft(d.Stufe))
 	p:SetAttribute("Blasebalg", d.Blasebalg)
 	p:SetAttribute("Seife", d.Seife)
+	p:SetAttribute("Tutorial", d.Tutorial)
 end
 
 -- ===== Grundstueck: Anzeigen =====
@@ -225,7 +231,7 @@ local function tierAufstellen(g, tier)
 	l.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	l.Parent = bb
 	local n = zeile(bb, "Name", 0.55, D.Seltenheit[art.selten].farbe)
-	n.Text = art.name
+	n.Text = art.name .. (if (tier.groesse or 1) > 1 then " · " .. D.Groessen[tier.groesse].name else "")
 	local e = zeile(bb, "Ek", 0.45, Color3.fromRGB(120, 255, 120))
 	e.Text = "$" .. D.format(D.einkommen(tier)) .. "/s"
 	m.Parent = f
@@ -257,10 +263,89 @@ local function freiesGrundstueck()
 	end
 end
 
+-- ===== Gehege bauen / ausbauen =====
+local function gehegeMasse(g, plaetze)
+	local cx = g.Boden.Position.X
+	local z1 = g.Boden.Position.Z - 35
+	return cx, z1, D.gehegeTiefe(plaetze)
+end
+
+local function zaunBauen(g, plaetze)
+	local alt = g:FindFirstChild("Zaun")
+	if alt then alt:Destroy() end
+	local zaun = Instance.new("Folder")
+	zaun.Name = "Zaun"
+	local cx, z1, tiefe = gehegeMasse(g, plaetze)
+	local x1, x2, z2, y = cx - 31, cx + 1, z1 + tiefe, 0.7
+	local weiss = Color3.fromRGB(250, 250, 250)
+	local function stueck(a, b, name)
+		local d = b - a
+		local n = math.max(1, math.floor(d.Magnitude / 5))
+		for k = 0, n do
+			local pf = teil(zaun, name, Vector3.new(0.8, 4, 0.8), CFrame.new(a + d * (k / n) + Vector3.new(0, 2, 0)), weiss)
+			pf.CanCollide = true
+		end
+		local mitte = (a + b) / 2
+		for _, h in { 1.6, 3.2 } do
+			local l = teil(zaun, name, Vector3.new(0.4, 0.5, d.Magnitude), CFrame.lookAt(mitte + Vector3.new(0, h, 0), mitte + Vector3.new(0, h, 0) + d.Unit), weiss)
+			l.CanCollide = true
+		end
+	end
+	stueck(Vector3.new(x1, y, z1), Vector3.new(x2, y, z1), "Hinten")
+	stueck(Vector3.new(x1, y, z2), Vector3.new(x2, y, z2), "Vorne")
+	stueck(Vector3.new(x1, y, z1), Vector3.new(x1, y, z2), "Seite")
+	stueck(Vector3.new(x2, y, z1), Vector3.new(x2, y, z1 + 8), "Seite")
+	stueck(Vector3.new(x2, y, z1 + 16), Vector3.new(x2, y, z2), "Seite")
+	zaun.Parent = g
+end
+
+local function ausbauAnzeige(g, plaetze)
+	local s = g:FindFirstChild("AusbauSchild")
+	if not s then return end
+	local bb = billboard(s, "Anzeige", UDim2.fromOffset(260, 80), Vector3.new(0, 3.5, 0))
+	local n = zeile(bb, "Name", 0.5)
+	local pr = zeile(bb, "Preis", 0.5, Color3.fromRGB(255, 220, 80))
+	local a = D.naechsterAusbau(plaetze)
+	if a then
+		n.Text = "Gehege " .. plaetze .. " > " .. a.plaetze .. " Plätze"
+		pr.Text = "$" .. D.format(a.preis)
+	else
+		n.Text = "Gehege " .. plaetze .. " Plätze"
+		pr.Text = "Voll ausgebaut"
+	end
+end
+
+local function baueGehege(g, plaetze, animiert)
+	local cx, z1, tiefe = gehegeMasse(g, plaetze)
+	local cf, size = CFrame.new(cx - 15, 0.7, z1 + tiefe / 2), Vector3.new(32, 0.4, tiefe)
+	local fl = g:FindFirstChild("GehegeFlaeche")
+	if not fl then
+		fl = teil(g, "GehegeFlaeche", size, cf, Color3.fromRGB(120, 205, 90))
+		animiert = false
+	end
+	if animiert then
+		local delta = size.Z - fl.Size.Z
+		local info = TweenInfo.new(1.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		TweenService:Create(fl, info, { CFrame = cf, Size = size }):Play()
+		local zaun = g:FindFirstChild("Zaun")
+		if zaun then
+			for _, t in zaun:GetChildren() do
+				if t.Name == "Vorne" then TweenService:Create(t, info, { CFrame = t.CFrame + Vector3.new(0, 0, delta) }):Play() end
+			end
+		end
+		task.delay(1.6, function() zaunBauen(g, plaetze) end)
+	else
+		fl.CFrame, fl.Size = cf, size
+		zaunBauen(g, plaetze)
+	end
+	ausbauAnzeige(g, plaetze)
+end
+
 local function grundstueckLeeren(g)
 	g:SetAttribute("Besitzer", 0)
 	gehegeOrdner(g):ClearAllChildren()
 	baueBlasebalg(g, 1)
+	baueGehege(g, D.START_PLAETZE)
 	plotAnzeige(g, nil)
 end
 
@@ -279,7 +364,9 @@ local function spielerKommt(p)
 	g:SetAttribute("Besitzer", p.UserId)
 	plotVon[p] = g
 	p:SetAttribute("Grundstueck", g:GetAttribute("Nummer"))
+	if d.ErsterFang and d.Tutorial < 4 then d.Tutorial = 4 end
 	baueBlasebalg(g, d.Blasebalg)
+	baueGehege(g, d.Plaetze)
 	for _, t in d.Tiere do
 		if t.gehege then tierAufstellen(g, t) end
 	end
@@ -393,6 +480,10 @@ R.TierAktion.OnServerEvent:Connect(function(p, id, aktion)
 		end
 		t.gehege = true
 		tierAufstellen(g, t)
+		if d.Tutorial == 3 then
+			tutorialWeiter(p, d, 3, 4)
+			meldung(p, "Super! Dein Tier verdient jetzt Geld für dich.", "gut")
+		end
 	elseif aktion == "raus" and t.gehege then
 		if anzahl(d, false) >= D.RUCKSACK then
 			meldung(p, "Rucksack voll!", "schlecht")
@@ -437,6 +528,85 @@ R.BesteAufstellen.OnServerEvent:Connect(function(p)
 end)
 
 -- ===== Training =====
+-- ===== Einfuehrung, Index, Einstellungen =====
+local function tutorialWeiter(p, d, von, nach)
+	if d.Tutorial >= von and d.Tutorial < nach then
+		d.Tutorial = nach
+		p:SetAttribute("Tutorial", d.Tutorial)
+	end
+end
+
+local function indexPruefen(p, d, biomId, verzoegerung)
+	if d.IndexBelohnt[biomId] then return end
+	for _, t in D.TierListe do
+		if t.biom == biomId and not d.Index[t.id] then return end
+	end
+	d.IndexBelohnt[biomId] = true
+	local betrag = D.IndexBelohnung[biomId] or 0
+	d.Geld += betrag
+	local name = biomId
+	for _, b in D.Biome do if b.id == biomId then name = b.name end end
+	task.delay(verzoegerung or 0, function()
+		if p.Parent then meldung(p, "Index " .. name .. " komplett! +$" .. D.format(betrag), "gut") end
+	end)
+end
+
+R.Einstellung.OnServerEvent:Connect(function(p, schluessel, wert)
+	local d = Spieldaten.holen(p)
+	if not d or schluessel ~= "Schnell" or typeof(wert) ~= "boolean" then return end
+	d.Einstellungen.Schnell = wert
+	statusSenden(p)
+end)
+
+-- ===== Gehege vergroessern (Schild) =====
+for i = 1, 8 do
+	local g = plot(i)
+	if not g then continue end
+	local basis = g.Boden.Position
+	local schild = teil(g, "AusbauSchild", Vector3.new(7, 4, 0.5), CFrame.new(basis.X - 15, 6.5, basis.Z + 37), Color3.fromRGB(120, 85, 55))
+	teil(g, "AusbauPfosten", Vector3.new(0.8, 5, 0.8), CFrame.new(basis.X - 15, 2.5, basis.Z + 37), Color3.fromRGB(120, 85, 55))
+	ausbauAnzeige(g, D.START_PLAETZE)
+	local pr = Instance.new("ProximityPrompt")
+	pr.ActionText = "Gehege vergrößern"
+	pr.ObjectText = "Gehege"
+	pr.HoldDuration = 0
+	pr.MaxActivationDistance = 12
+	pr.RequiresLineOfSight = false
+	pr.Parent = schild
+	pr.Triggered:Connect(function(p)
+		if plotVon[p] ~= g then
+			meldung(p, "Das ist nicht dein Grundstück.", "schlecht")
+			return
+		end
+		local d = Spieldaten.holen(p)
+		local a = D.naechsterAusbau(d.Plaetze)
+		if not a then
+			meldung(p, "Dein Gehege ist schon voll ausgebaut!", "info")
+			return
+		end
+		if d.Geld < a.preis then
+			meldung(p, "Nicht genug Geld! ($" .. D.format(a.preis) .. ")", "schlecht")
+			return
+		end
+		d.Geld -= a.preis
+		d.Plaetze = a.plaetze
+		baueGehege(g, d.Plaetze, true)
+		attributeSetzen(p)
+		statusSenden(p)
+		meldung(p, "Grundstück vergrößert! Platz für " .. d.Plaetze .. " Tiere", "gut")
+	end)
+end
+
+-- ===== x2-Training =====
+local x2Bis, x2Angebot, x2Naechstes = {}, {}, {}
+R.X2Nehmen.OnServerEvent:Connect(function(p)
+	if (x2Angebot[p] or 0) > os.clock() then
+		x2Angebot[p] = 0
+		x2Bis[p] = os.clock() + 10
+		R.X2Aktiv:FireClient(p, 10)
+	end
+end)
+
 R.TrainingStop.OnServerEvent:Connect(function(p)
 	gestoppt[p] = true
 	p:SetAttribute("Trainiert", false)
@@ -466,12 +636,20 @@ RunService.Heartbeat:Connect(function(dt)
 		if p:GetAttribute("Trainiert") ~= aktiv then p:SetAttribute("Trainiert", aktiv) end
 		if not aktiv then
 			trainAcc[p] = 0
+			x2Naechstes[p] = nil
 			continue
+		end
+		local jetzt = os.clock()
+		if not x2Naechstes[p] then x2Naechstes[p] = jetzt + rng:NextNumber(12, 25) end
+		if jetzt >= x2Naechstes[p] then
+			x2Naechstes[p] = jetzt + rng:NextNumber(20, 40)
+			x2Angebot[p] = jetzt + 6
+			R.X2Angebot:FireClient(p)
 		end
 		trainAcc[p] = (trainAcc[p] or 0) + schritt
 		if trainAcc[p] >= D.WDH_ZEIT then
 			trainAcc[p] -= D.WDH_ZEIT
-			local plus = D.Blasebaelge[d.Blasebalg].xp
+			local plus = D.Blasebaelge[d.Blasebalg].xp * (if (x2Bis[p] or 0) > os.clock() then 2 else 1)
 			d.XP += plus
 			R.TrainingTick:FireClient(p, plus)
 			while d.XP >= D.xpBedarf(d.Stufe) do
@@ -480,6 +658,7 @@ RunService.Heartbeat:Connect(function(dt)
 				d.Stufe += 1
 				R.StufeAuf:FireClient(p, d.Stufe, D.pustkraft(d.Stufe) - vorher)
 			end
+			if d.Stufe >= 3 then tutorialWeiter(p, d, 1, 2) end
 			attributeSetzen(p)
 		end
 	end
@@ -542,20 +721,34 @@ R.Pusten.OnServerInvoke = function(p, zeiger)
 	else
 		wahl = ziehen(liste)
 	end
-	local tier = { id = d.NaechsteId, art = wahl.id, groesse = 1, material = 1, gehege = false }
+	local gc = D.groessenChancen(glueck)
+	local groesse = 1
+	if d.NaechsteId > 1 then
+		local r = rng:NextNumber()
+		groesse = if r < gc[3] then 3 elseif r < gc[3] + gc[2] then 2 else 1
+	end
+	if RunService:IsStudio() then -- Test-Schalter, nur in Studio: Attribute TestArt / TestGroesse am Spieler
+		local ta, tg = p:GetAttribute("TestArt"), p:GetAttribute("TestGroesse")
+		if ta and D.Tiere[ta] then wahl = { id = ta, p = 0.001 } end
+		if tg and D.Groessen[tg] then groesse = tg end
+	end
+	local tier = { id = d.NaechsteId, art = wahl.id, groesse = groesse, material = 1, gehege = false }
 	d.NaechsteId += 1
 	table.insert(d.Tiere, tier)
 	local neu = not d.Index[wahl.id]
 	d.Index[wahl.id] = true
 	local dauer = D.flugDauer(w)
 	naechstesPusten[p] = os.clock() + dauer + 4
+	tutorialWeiter(p, d, 1, 3)
+	attributeSetzen(p)
+	indexPruefen(p, d, biom.id, dauer + 6)
 	statusSenden(p)
 	local art = D.Tiere[wahl.id]
 	return {
 		ok = true, weite = w, biom = biom.id, biomName = biom.name, glueck = glueck, art = wahl.id, name = art.name,
-		selten = art.selten, chance = math.max(1, math.floor(1 / wahl.p + 0.5)), quali = qText, serie = serie[p],
+		selten = art.selten, chance = math.max(1, math.floor(1 / (wahl.p * gc[groesse]) + 0.5)), quali = qText, serie = serie[p],
 		dauer = dauer, neu = neu, tierId = tier.id, drift = rng:NextNumber(-25, 25), einkommen = D.einkommen(tier),
-		groesse = 1, material = 1,
+		groesse = groesse, material = 1,
 	}
 end
 

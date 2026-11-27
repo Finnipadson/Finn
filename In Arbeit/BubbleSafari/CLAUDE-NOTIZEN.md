@@ -2,7 +2,7 @@
 
 Fang-und-Gehege-Spiel: Blasebalg treten → Seifenblase pusten → Blase treibt durchs Tal (8 Biome mit Glücks-Multiplikator) → Tier springt hinein → Gehege → Geld pro Sekunde. Extra: Mischkessel (3 gleiche Tiere → Gold → Diamant → Regenbogen). Enthüllung: erst Tier-Sicht (Ich-Perspektive des Tiers, Fischauge + Vignette, läuft auf die Blase zu), dann Bodenkamera an der Blase (Tier läuft vorbei hinein) – Vorbild Clip des Users vom 27.11.2026; die Blase dehnt sich für große Tiere.
 
-**Stand:** Phase 1 (spielbarer Kern) gebaut und getestet am 27.11.2026. Als Nächstes Phase 2 (Sammeln: alle Arten Biom 1–3, GROSS/RIESIG, Titel-Effekte, Gehege-Ausbau mit Animation, Index, x2-Blase, Onboarding). Bauplan: `bubblesafari-plan.md` (Zahlen, Tierliste, Phasen).
+**Stand:** Phase 1 fertig (27.11.), Phase 2 weitgehend fertig (28.11.2026): 21 Tiere (je Biom 7), GROSS/RIESIG, Silhouette + Strahlenkranz + Blase dehnt sich in Stößen, Gehege-Ausbau mit Animation (Server baut Gehege), Index mit Belohnung, x2-Blase, Einführung (Wegweiser), Option „Schnelle Enthüllung“. Offen: x2-Klick im Test nicht sicher bestätigt; Test-Spielstand enthält Test-Tiere (zurücksetzen?); Detail-Runde Biome 1–3. Studio-Testschalter: Attribute TestArt/TestGroesse am Spieler (nur Studio). Als Nächstes Phase 2 (Sammeln: alle Arten Biom 1–3, GROSS/RIESIG, Titel-Effekte, Gehege-Ausbau mit Animation, Index, x2-Blase, Onboarding). Bauplan: `bubblesafari-plan.md` (Zahlen, Tierliste, Phasen).
 
 ## Arbeitsweise
 - **Vorher lesen:** `Notizen/Roblox-Wissen/Roblox-Wissen.md` (+ passende Notiz) und für das Aussehen `Notizen/Design-Bibliothek/Fang-und-Gehege.md`, `Kreaturen-Pets.md`, `Trainings-Objekte.md`.
