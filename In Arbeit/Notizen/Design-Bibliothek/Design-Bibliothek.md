@@ -15,6 +15,7 @@ Bewährte Design-Muster aus erfolgreichen Spielen – als **Inspiration, nicht z
 | [[Menüs-Onboarding]] | Hauptmenü, Pause, Einstellungen, die ersten 60 Sekunden |
 | [[Welt-Map]] | Map-Aufbau: Spawn, Hub, Wege, Zonen, Grundstücke, Maßstab |
 | [[Objekte-Mechaniken]] | Objekte in der Welt: Laufbänder, Gehege, Stände, Portale, Sammelobjekte |
+| [[Trainings-Objekte]] | Stationen zum Stärkerwerden (Bankdrücken, Klimmzug, Laufband): Aufbau, Stufen, Zahlen, Bauplan |
 | [[Fang-und-Gehege]] | Genre-Vorlage: trainieren → werfen/angeln → Tier fangen → Gehege (3 Spiele im Vergleich) |
 | [[Kreaturen-Pets]] | Aussehen von Haustieren/Begleitern: Stil, Farben, Seltenheit am Aussehen, Varianten |
 
