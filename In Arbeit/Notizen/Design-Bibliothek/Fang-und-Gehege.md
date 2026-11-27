@@ -27,6 +27,10 @@ Gefilmt: **Throw Food For Animals**, **Ziehe einen Dino** und **Fische für gehe
 ![[futter-kaenguru.jpg]]
 ![[futter-loewe-raetsel.jpg]]
 
+![[futter-tiersicht.jpg]]
+![[futter-bodenkamera.jpg]]
+
+- **Kamera bei der Enthüllung (Clip 27.11.2026, Antike Ruinen):** Nach der Landung kurz schwarz, dann **Ich-Perspektive des Tiers**: Fischauge, dunkler runder Rand, Kamera wippt beim Laufen, man läuft durchs Biom auf das Futter zu (Erdbeere wird größer) – welches Tier es ist, sieht man nicht. Dann **Schnitt auf eine Bodenkamera** am Futter: Krallen/Beine des Tiers (Microraptor) kommen seitlich ins Bild, Lückenwort füllt sich, Kamera zieht zurück auf das ganze Tier. Spannung, weil man das Tier erst *ist* und dann erst *sieht*. Bei uns umgesetzt: [[Bubble Safari]] (Tier läuft zur Blase).
 - **Enthüllung:** Tier steht auf der Landestelle in einem Lichtkreis neben dem Futter; Name farbig („KANGARU“), darunter Größe („GROSS“) und Einkommen ($78,8K/s), Schild „NEUER BESTER!“. Tiere im gleichen Block-Stil wie überall (siehe [[Kreaturen-Pets]]), Größe als Variante.
 
 ![[futter-lebensmittelgeschaeft.jpg]]

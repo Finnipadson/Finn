@@ -5,7 +5,7 @@ technik: Roblox Studio (Luau), gebaut über Roblox-Studio-MCP
 erstellt: 2026-11-27
 ---
 
-Roblox-Spiel im Genre [[Fang-und-Gehege]]: Blasebalg treten, Riesen-Seifenblase pusten, die Blase treibt durch ein Tal mit 8 Biomen, ein Tier springt hinein und kommt ins eigene Gehege (Geld pro Sekunde). Bei der Enthüllung steht die Kamera tief am Boden, und das Tier läuft dicht an ihr vorbei in die Blase. Eigener Kniff: der Mischkessel macht aus drei gleichen Tieren eine Gold-, Diamant- oder Regenbogen-Variante.
+Roblox-Spiel im Genre [[Fang-und-Gehege]]: Blasebalg treten, Riesen-Seifenblase pusten, die Blase treibt durch ein Tal mit 8 Biomen, ein Tier springt hinein und kommt ins eigene Gehege (Geld pro Sekunde). Bei der Enthüllung sieht man zuerst durch die Augen des Tiers, wie es zur Blase läuft, dann aus einer Bodenkamera, wie es hineinspringt. Eigener Kniff: der Mischkessel macht aus drei gleichen Tieren eine Gold-, Diamant- oder Regenbogen-Variante.
 
 - Datei/Ordner: `BubbleSafari/`
 - Bauplan: `BubbleSafari/bubblesafari-plan.md`

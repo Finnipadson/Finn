@@ -16,12 +16,12 @@ Eigener Twist gegenüber den Vorbildern: kein Werfen, keine Waffe – **Seifenbl
 1. **Trainieren** am **Blasebalg** auf dem eigenen Grundstück → XP → Stufe → **Pustkraft** steigt.
 2. **Pusten** am eigenen Pustplatz an der Talkante: senkrechter Puste-Balken, im richtigen Moment tippen → „PERFEKT!“.
 3. **Flug:** Die Blase treibt mit dem Wind das Tal entlang, die Kamera fliegt mit. Oben live: Biom-Name, Weite, **Glücks-Multiplikator**.
-4. **Fang:** Die Blase landet, die Kamera geht **tief an den Boden der Landestelle** und das Tier läuft dicht an der Kamera vorbei zur Blase und springt hinein. **Enthüllung** mit hochzählender Chance und Lückenwort.
+4. **Fang:** Die Blase landet, man sieht **durch die Augen des Tiers**, wie es auf die Blase zuläuft; dann Schnitt auf eine **Bodenkamera** an der Blase, das Tier läuft dicht an der Kamera vorbei ins Bild und springt hinein. **Enthüllung** mit hochzählender Chance und Lückenwort.
 5. **Zurück:** Die Blase mit Tier schwebt zurück (Kamera springt zurück, Blase kommt am Grundstück an) → Tier landet im **Rucksack**.
 6. **Gehege:** Tier aufs Grundstück stellen → $/s. Oder verkaufen oder im **Mischkessel** kombinieren.
 7. Geld → bessere **Seife** (weiter + mehr Glück), besserer **Blasebalg** (mehr XP), **mehr Gehege-Plätze**.
 
-Eine Runde (pusten bis Tier im Rucksack) dauert **8–17 Sekunden** (mit „Schnelle Enthüllung“ bei Gewöhnlichen kürzer).
+Eine Runde (pusten bis Tier im Rucksack) dauert **9–18 Sekunden** (mit „Schnelle Enthüllung“ bei Gewöhnlichen kürzer).
 
 ---
 
@@ -186,22 +186,27 @@ Echte Tiere + Biom-Twist, Block-Stil. **Phase 1 = die ersten 4 jedes Bioms 1–3
 
 ## 8. Enthüllung
 
-### Bodenkamera: das Tier läuft an dir vorbei in die Blase
+### Tier-Sicht + Bodenkamera: das Tier kommt zur Blase
 
-Wie in den gefilmten Vorbildern (Mammut-Ablauf, Löwe): Nach der Landung steht die Kamera **tief am Boden direkt an der Landestelle, auf Augenhöhe der Tiere**. Man sieht nicht mehr den eigenen Spieler, sondern ist mitten im Biom, und das Tier kommt **ganz nah an der Kamera vorbei** ins Bild und läuft zur Blase.
+Wie im Clip des Users (27.11.2026, Throw Food For Animals, Biom „Antike Ruinen“): Nach der Landung sieht man **zuerst durch die Augen des Tiers**, wie es auf das Futter zuläuft – dann Schnitt auf eine **Bodenkamera am Futter**, und das Tier läuft ins Bild. Bei uns läuft das Tier auf die **Blase** zu.
 
-Ablauf (~4 s normal, bis ~7 s bei sehr seltenen):
+Ablauf (~5 s normal, bis ~8 s bei sehr seltenen):
 
-1. **Landung:** Flug in der Verfolger-Ansicht, die Blase wird langsam und setzt weich auf dem Boden auf (federt einmal). Schnitt: Kamera **tief am Boden, 6–10 Studs vor der Blase**, leicht schräg; die Blase steht schillernd in der Bildmitte, drumherum das Biom (Blumen, Pilze, Schilf). Oben „1 in 5“, unten das leere Lückenwort „_ _ _ _“.
-2. **Das Tier kommt:** Es läuft **von hinten/seitlich an der Kamera vorbei** ins Bild – zuerst nur ein Bein, ein Ohr, ein Schweif ganz groß im Vordergrund (bei großen Tieren füllt es fast das Bild). Vögel fliegen tief über die Kamera, Fische schwimmen am Objektiv vorbei. Während es zur Blase läuft, **klettert der Zähler live** und das Lückenwort füllt sich („P_U_TEBL_MEN-FUCHS“). Die Kamera schwenkt leicht mit.
-3. **Hinein in die Blase:** Das Tier schnuppert kurz an der Blase und **springt hinein** – die Blasenhaut dehnt sich um das Tier, **Hit-Stop 0,1 s**, Wackeln. Je seltener, desto stärker wackelt die Blase und schimmert in der Seltenheitsfarbe.
-4. **Überschrift steigert sich mit** (eigene Titel): – → **„Glück!“** (orange) → **„Riesenglück!“** (pink, Strahlenkranz) → **„Blasenwahn!“** (türkis, Schaumflocken regnen) → **„Regenbogenglück!!“** (alles schillert, Ring-Schockwelle).
-5. **Ergebnis:** Kamera zieht etwas zurück, das Tier sitzt **in der Blase**. Name in Seltenheitsfarbe, darüber Material („GOLD“), darunter Größe („RIESIG“) und $/s. Schild **„NEU!“** (erstes Mal) oder **„NEUER BESTER!“**. „Zum Fortfahren tippen“ → Blase steigt auf und schwebt zurück.
-6. Sehr seltene Fänge (ab 1 in 500) werden **zu Hause zweimal gefeiert**: große Karte oben „DU HAST GEFANGEN – …“ + Server-Meldung im Chat für alle.
+1. **Landung:** Flug in der Verfolger-Ansicht, die Blase wird langsam und setzt weich auf dem Boden auf (federt einmal). Kurz **Abblende ins Schwarze** (0,3 s, wie ein Blinzeln).
+2. **Tier-Sicht (Ich-Perspektive des Tiers):** Aufblende – man **ist das Tier**. Starkes Fischauge (Sichtfeld ~100°), **dunkler, runder Rand** (Vignette wie ein Blick durch Tieraugen), die Kamera **wippt im Laufrhythmus**. Man läuft ~2 s zwischen Bäumen, Ruinen, Pilzen hindurch auf die **schillernde Blase** in der Ferne zu; sie wird größer. Das Tier selbst sieht man nicht – man weiß noch nicht, welches es ist. Oben „1 in 5“, der Zähler beginnt zu klettern.
+   - **Größe spürbar ohne Bild:** Augenhöhe = Tiergröße. Ein Hase läuft knapp über dem Gras, schnelles Trippeln; ein RIESIGES Tier sieht von weit oben herab, langsame schwere Schritte, Bildschirm bebt bei jedem Schritt. Vögel gleiten, Fische schwimmen (sanftes Schaukeln).
+3. **Schnitt auf die Bodenkamera:** Kamera **tief am Boden, 6–10 Studs vor der Blase**, die Blase groß und schillernd in der Bildmitte, unten das leere Lückenwort „_ _ _ _“.
+4. **Das Tier kommt:** Es läuft **von hinten/seitlich an der Kamera vorbei** ins Bild – zuerst nur ein Bein, ein Ohr, ein Schweif ganz groß im Vordergrund (bei großen Tieren füllt es fast das Bild). Vögel fliegen tief über die Kamera, Fische schwimmen am Objektiv vorbei. Während es zur Blase läuft, **klettert der Zähler live** und das Lückenwort füllt sich („P_U_TEBL_MEN-FUCHS“). Die Kamera schwenkt leicht mit.
+5. **Hinein in die Blase:** Das Tier schnuppert kurz an der Blase und **springt hinein** – die Blasenhaut dehnt sich um das Tier, **Hit-Stop 0,1 s**, Wackeln. Je seltener, desto stärker wackelt die Blase und schimmert in der Seltenheitsfarbe.
+6. **Überschrift steigert sich mit** (eigene Titel): – → **„Glück!“** (orange) → **„Riesenglück!“** (pink, Strahlenkranz) → **„Blasenwahn!“** (türkis, Schaumflocken regnen) → **„Regenbogenglück!!“** (alles schillert, Ring-Schockwelle).
+7. **Ergebnis:** Kamera zieht etwas zurück, das Tier sitzt **in der Blase**. Name in Seltenheitsfarbe, darüber Material („GOLD“), darunter Größe („RIESIG“) und $/s. Schild **„NEU!“** (erstes Mal) oder **„NEUER BESTER!“**. „Zum Fortfahren tippen“ → Blase steigt auf und schwebt zurück.
+8. Sehr seltene Fänge (ab 1 in 500) werden **zu Hause zweimal gefeiert**: große Karte oben „DU HAST GEFANGEN – …“ + Server-Meldung im Chat für alle.
 
-**Tempo:** Gewöhnliche Tiere, die man schon hat, laufen verkürzt ab (Schritt 2 nur 0,5 s). Einstellung „Schnelle Enthüllung“ überspringt die Bodenkamera bei Gewöhnlich/Ungewöhnlich ganz – die Schleife bleibt flott.
+**Tempo:** Gewöhnliche Tiere, die man schon hat, laufen verkürzt ab (Tier-Sicht 0,5 s, Schritt 4 nur 0,5 s). Einstellung „Schnelle Enthüllung“ überspringt Tier-Sicht und Bodenkamera bei Gewöhnlich/Ungewöhnlich ganz – die Schleife bleibt flott.
 
-**Technik:** Kamera `Scriptable`, fester CFrame tief am Boden vor der Blase (Blick leicht nach oben, weites Sichtfeld ~80°). Tier-Modell nur auf dem Client: startet hinter/neben der Kamera, Laufweg als Kurve dicht an der Kamera vorbei zur Blase (Tween + Lauf-Animation). Deko zwischen Kamera und Blase ausblenden. Pro Körperform ein eigener Laufweg (Vierbeiner, Vogel, Fisch, Schlange).
+**Technik Tier-Sicht:** Kamera `Scriptable`, fährt einen Pfad zur Blase (Start ~40 Studs davor, Hindernisse meiden), Höhe = Augenhöhe des Tiers, Wippen per `math.sin` im Schrittrhythmus, `FieldOfView` ~100, Vignette als ScreenGui-Bild (schwarzer runder Rand), kurzer Fade per Frame-Transparenz.
+
+**Technik Bodenkamera:** Kamera `Scriptable`, fester CFrame tief am Boden vor der Blase (Blick leicht nach oben, weites Sichtfeld ~80°). Tier-Modell nur auf dem Client: startet hinter/neben der Kamera, Laufweg als Kurve dicht an der Kamera vorbei zur Blase (Tween + Lauf-Animation). Deko zwischen Kamera und Blase ausblenden. Pro Körperform ein eigener Laufweg (Vierbeiner, Vogel, Fisch, Schlange).
 
 ### Sehr große Tiere und die Blase
 
@@ -273,7 +278,7 @@ Große Knöpfe, kurze Texte, Zahlen gekürzt (K, M, B, T, Qa). Erste 60 Sekunden
 - Map: Hub-Platz + 4 Grundstücke + 4 Pustplätze + Tal mit Biomen 1–3 (einfach, je 1 Landmarke)
 - Blasebalg Stufe 1–3 mit XP, Stufen, fliegenden Zahlen, HALT
 - Pusten mit Balken + PERFEKT, Blasenflug mit Kamera + Flug-HUD
-- 12 Tiere (je 4 aus Wiese, Pilzwald, Sumpf), Ziehen mit Glück, Enthüllung mit Bodenkamera (einfach: Kamera tief an der Landestelle, Tier läuft vorbei in die Blase, Name + $/s)
+- 12 Tiere (je 4 aus Wiese, Pilzwald, Sumpf), Ziehen mit Glück, Enthüllung mit Tier-Sicht + Bodenkamera (einfach: kurzer Lauf aus Tier-Augen zur Blase, Schnitt, Tier läuft vorbei in die Blase, Name + $/s)
 - Rucksack + Gehege (6 Plätze) + Geld pro Sekunde; Seifen 1–3 im Laden
 - Speichern
 - **Fertig, wenn:** man vom Wiesenhasen bis in den Sumpf kommt und das Speichern hält.

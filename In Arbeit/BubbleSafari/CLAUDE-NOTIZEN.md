@@ -1,6 +1,6 @@
 # Bubble Safari – Roblox-Spiel (Notizen für Claude)
 
-Fang-und-Gehege-Spiel: Blasebalg treten → Seifenblase pusten → Blase treibt durchs Tal (8 Biome mit Glücks-Multiplikator) → Tier springt hinein → Gehege → Geld pro Sekunde. Extra: Mischkessel (3 gleiche Tiere → Gold → Diamant → Regenbogen). Enthüllung mit tiefer Bodenkamera an der Landestelle (Tier läuft dicht an der Kamera vorbei in die Blase, wie in den gefilmten Vorbildern); die Blase dehnt sich für große Tiere.
+Fang-und-Gehege-Spiel: Blasebalg treten → Seifenblase pusten → Blase treibt durchs Tal (8 Biome mit Glücks-Multiplikator) → Tier springt hinein → Gehege → Geld pro Sekunde. Extra: Mischkessel (3 gleiche Tiere → Gold → Diamant → Regenbogen). Enthüllung: erst Tier-Sicht (Ich-Perspektive des Tiers, Fischauge + Vignette, läuft auf die Blase zu), dann Bodenkamera an der Blase (Tier läuft vorbei hinein) – Vorbild Clip des Users vom 27.11.2026; die Blase dehnt sich für große Tiere.
 
 **Stand:** nur geplant (27.11.2026), noch nichts gebaut. Bauplan: `bubblesafari-plan.md` (Zahlen, Tierliste, Phasen).
 
