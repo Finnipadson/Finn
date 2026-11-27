@@ -62,6 +62,23 @@ Wie eine Map aufgebaut ist: Spawn, Wege, Zonen, Orientierung. Schwerpunkt Roblox
 - **Was ist gut:** Ein rosa leuchtender Torbogen mit Schild „WELTEN“ und Info zur nächsten Welt („Welt 2 benötigt Level …“), links daneben die Bestenliste, davor die nummerierten Stufenfelder. Alle Ziele liegen in einer Blickachse.
 - **Prinzip zum Übernehmen:** Portal mit Anforderung direkt auf dem Schild; das Portal in der Hauptblickrichtung vom Spawn platzieren.
 
+### Blox Fruits – Startinsel (Roblox) → wichtigste Vorlage für [[Himmelsinseln]]
+
+![[bloxfruits-startinsel.jpg]]
+![[bloxfruits-kampfplatz.jpg]]
+
+- **Was ist gut:** Die Startinsel ist **klein und überschaubar**: ein Dorf mit Fachwerkhäusern und Windmühlen am Rand, in der Mitte eine **große freie Grasfläche** und ein **Sandplatz als Kampfzone**, wo die Gegner stehen. Helle Sandwege verbinden alles, Holzzäune trennen Bereiche. Vom Kampfplatz aus sieht man über das Meer schon die **nächste Insel am Horizont** (schemenhaft im Dunst).
+- **Farben:** knallig und einfach – sattes Grün, hellbrauner Sand, türkis-blaues Wasser mit weißer Schaum-Kante am Ufer, orange/rote Dächer. Wenig Details, große Flächen → läuft und liest sich gut am Handy.
+- **Prinzip zum Übernehmen:** Insel = Dorf (sicher, Händler) + offene Kampffläche + Hafen. Unten mittig steht „Sichere Zone – PvP deaktiviert“ → Zonen werden im HUD angesagt. Nächstes Ziel immer am Horizont sichtbar lassen.
+
+### Blox Fruits – Hafen und Boot (Roblox)
+
+![[bloxfruits-hafen.jpg]]
+![[bloxfruits-boot.jpg]]
+
+- **Was ist gut:** Am Inselrand ein **Holzsteg** mit Bootshändler (grüner Ring, Schild „SHOP“). Man kauft ein Segelboot und fährt **frei übers Meer** zur nächsten Insel, die schon vom Steg aus zu sehen ist. Das Wasser ist hell und flach am Ufer, dunkler weiter draußen → man sieht, wo das offene Meer beginnt.
+- **Prinzip zum Übernehmen:** Reisen zwischen Inseln als eigenes Erlebnis (Boot) statt nur Teleport. Für [[Himmelsinseln]]: Luftschiff oder fliegendes Reittier statt Boot, Wolkenmeer statt Wasser; Anlegestelle mit Händler am Inselrand.
+
 ## Bei uns umgesetzt
 
 -

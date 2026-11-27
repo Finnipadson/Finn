@@ -57,6 +57,14 @@ Gegenstände in der Welt, mit denen man etwas tut: Laufbänder, Gehege, Stände,
 - **Was ist gut:** Im Inventar gibt es einen eigenen Bereich für **persönliche Laufbänder** (Standard, Gold, Diamant …) neben Spuren, Auren und Outfits. Das Objekt aus der Welt wird so zum Sammel- und Angeber-Item.
 - **Prinzip zum Übernehmen:** Das zentrale Objekt des Spiels in Skins anbieten.
 
+### Blox Fruits – NPCs mit Leuchtring (Roblox)
+
+![[bloxfruits-npc-ring.jpg]]
+![[bloxfruits-questgeber.jpg]]
+
+- **Was ist gut:** Jeder wichtige NPC steht in einem **leuchtenden Ring am Boden** (grün = Händler, gelb/gold = Quest). Über dem Händler ein großes grünes „$“ und „SHOP“, über dem Quest-Geber ein **riesiges gelbes „?“** mit „FRAGE“. Beim Ansprechen fährt die Kamera nah ran, unten erscheint ein Dialog mit Auswahl („Quest“, „Unbedingt“).
+- **Prinzip zum Übernehmen:** NPC-Funktion an Farbe + Symbol über dem Kopf erkennbar, schon von Weitem. Die Leuchtringe zeigen auch, wo man stehen muss.
+
 ## Bei uns umgesetzt
 
 -

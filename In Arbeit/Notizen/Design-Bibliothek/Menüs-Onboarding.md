@@ -53,6 +53,13 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** Großes Logo mit Figur und „+1“-Zahlen, ein Tipp („CHECK THE GIFT CHEST!“), dicker Ladebalken mit Prozent und unten der Name der Welt („CANDY & CHOCOLATE“). Der Hintergrund zeigt das Welt-Thema.
 - **Prinzip zum Übernehmen:** Ladezeit für einen Tipp und den Namen des Gebiets nutzen.
 
+### Blox Fruits – Seite wählen (Roblox)
+
+![[bloxfruits-seite-waehlen.jpg]]
+
+- **Was ist gut:** Die allererste Entscheidung: **Piraten vs. Marines**, zwei große Karten mit Figur, Farbe (Rot gegen Blau), Name und 2–3 Sätzen, was die Seite ausmacht. Im Hintergrund schon die Stadt, in der man startet. Danach geht es direkt ins Spiel, ohne Tutorial-Text.
+- **Prinzip zum Übernehmen:** Eine einzige, spannende Wahl am Anfang gibt Identität. Für [[Himmelsinseln]] z. B. Start-Element oder Start-Begleiter wählen.
+
 ## Bei uns umgesetzt
 
 -

@@ -98,6 +98,13 @@ Zurück: [[Design-Bibliothek]]
 - **Was ist gut:** 4 Karten nebeneinander, Kopfzeile in Seltenheitsfarbe (Gewöhnlich grau, Ungewöhnlich grün, Selten blau, Episch lila), dazu Vorrat („1/1“, „2/2“), der Effekt klein („+5 % Geschwindigkeit“) und zwei Preise (Trophäen gelb, Robux grün + Geschenk). Oben der Restock-Timer, beim Auffüllen eine Meldung „Artikel-Shop wieder aufgefüllt!“ quer über den Bildschirm. Die Items passen zum Welt-Thema (Karamell-Schleife, Cupcake, Milchshake, Donut-Schild).
 - **Prinzip zum Übernehmen:** Shop-Items thematisch zur aktuellen Welt; Restock wird aktiv angesagt.
 
+### Blox Fruits – Frucht-Shop (Roblox)
+
+![[bloxfruits-frucht-shop.jpg]]
+
+- **Was ist gut:** Kleines Fenster mitten im Spiel (Welt bleibt sichtbar). Oben 2 große Kacheln für die besten Früchte mit Bild + Preis, darunter eine Reihe kleiner Kacheln für die billigeren. Jede Frucht hat ein eigenes, sofort erkennbares Symbol mit Farbe des Elements (Flamme orange, Magma rot …).
+- **Prinzip zum Übernehmen:** Fähigkeiten als sammelbare Gegenstände mit klarer Element-Farbe – passt zu den Element-Inseln in [[Himmelsinseln]].
+
 ## Bei uns umgesetzt
 
 -

@@ -51,6 +51,13 @@ Alle Fenster (siehe [[Items-Loot]]) folgen einem Baukasten: Titelleiste in einer
 - **Was ist gut:** Oben mittig 3 große Reiter **Samen · GARTEN · VERKAUFEN** – das sind Teleports zu den 3 wichtigsten Orten, nicht Menüs. Jeder in eigener Farbe (Blau, Holzbraun, Rot). Links 3 Buttons (Geschäft, Handel, Pass) mit Symbol. Unten links Geld („20¢“) und „Freund-Boost +0 %“ mit Plus-Button (lädt zum Einladen ein). Pfeile auf dem Boden zeigen, wohin es geht.
 - **Prinzip zum Übernehmen:** Die Kern-Schleife des Spiels (kaufen → anbauen → verkaufen) steht als 3 Teleport-Buttons oben. In [[Himmelsinseln]] ginge das als Hub · Insel · Händler.
 
+### Blox Fruits – RPG-HUD und Statistiken (Roblox)
+
+![[bloxfruits-statistiken.jpg]]
+
+- **Was ist gut:** Links unten ein kompakter Block: 4 gelbe Buttons (Statistiken, Items, Schließen, Shop), darunter Geld grün, Stufe „St. 6“ mit lila XP-Balken, Leben grün, Energie blau – alles mit Zahl im Balken. Rechts unten Kampfstil-Box („KOMBAT“, Mastery-Stufe, Fähigkeiten mit Taste [Z], [X]). Statistiken-Fenster: 5 Werte (Nahkampf, Verteidigung, Schwert, Waffe, Blox Fruit) je in eigener Farbe mit „+“-Button und „Verfügbare Punkte“ – pro Level Punkte frei verteilen.
+- **Prinzip zum Übernehmen:** Pro Level Punkte verteilen = einfache, motivierende RPG-Progression. Für [[Himmelsinseln]]: Werte passend zu den Elementen (Feuer, Eis …).
+
 ## Bei uns umgesetzt
 
 -
