@@ -2,13 +2,13 @@
 -- Aufbau wie ein Kessel mit Schlucht: Boden ueberall Y=0, Klippen Y=0..RAND ringsum.
 --   Kessel (Grundstuecke, Spawn, Laden): X -150..150, Z -200..0
 --   Wurfplatz in der Mitte am Schlucht-Eingang (0, 0, -12)
---   Schlucht: X -35..35, Z 0..2420 (+Z = Flugrichtung), Biome hintereinander
+--   Schlucht: X -50..50, Z 0..2420 (+Z = Flugrichtung), Biome hintereinander
 local rng = Random.new(42)
 local V, CF = Vector3.new, CFrame.new
 local function rgb(r, g, b) return Color3.fromRGB(r, g, b) end
 
 local RAND = 45 -- Hoehe der Klippen-Oberkante
-local SB = 35 -- halbe Schluchtbreite
+local SB = 50 -- halbe Schluchtbreite (Schlucht 100 breit)
 local KX, KZ = 150, -200 -- Kessel: X -KX..KX, Z KZ..0
 local ENDE = 2420
 
@@ -134,14 +134,14 @@ local BIOME = {
 	{ id = "Sumpf", name = "SUMPF", von = 1400, bis = ENDE, b1 = rgb(100, 115, 72), b2 = rgb(88, 103, 64) },
 }
 local Tal = ordner("Tal")
-local KACHEL = 14
+local KACHEL = 20
 for _, b in BIOME do
 	local f = ordner(b.id, Tal)
 	local boden = ordner("Boden", f)
 	local zi = 0
 	for z = b.von, b.bis - KACHEL, KACHEL do
 		zi += 1
-		for xi = 0, 4 do
+		for xi = 0, (2 * SB) / KACHEL - 1 do
 			local c = if (xi + zi) % 2 == 0 then b.b1 else b.b2
 			P(boden, "Boden", V(KACHEL, 1, KACHEL), CF(-SB + xi * KACHEL + KACHEL / 2, -0.5, z + KACHEL / 2), c)
 		end

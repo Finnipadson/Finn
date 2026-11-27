@@ -24,7 +24,7 @@ local rng = Random.new()
 local status = { Tiere = {}, Seife = 1, SeifenBesitz = { ["1"] = true }, Plaetze = 6, Index = {}, Blasebalg = 1 }
 local pustetGerade = false
 local versteckAb = math.huge -- Tier-IDs >= diesem Wert noch nicht zeigen (Enthuellung laeuft)
-local SB = 35 -- halbe Schluchtbreite (wie Map.lua)
+local SB = 50 -- halbe Schluchtbreite (wie Map.lua)
 local seqOrdner = Instance.new("Folder")
 seqOrdner.Name = "LokaleSequenz"
 seqOrdner.Parent = workspace

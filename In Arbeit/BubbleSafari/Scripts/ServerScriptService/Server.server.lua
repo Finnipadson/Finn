@@ -554,7 +554,7 @@ R.Pusten.OnServerInvoke = function(p, zeiger)
 	return {
 		ok = true, weite = w, biom = biom.id, biomName = biom.name, glueck = glueck, art = wahl.id, name = art.name,
 		selten = art.selten, chance = math.max(1, math.floor(1 / wahl.p + 0.5)), quali = qText, serie = serie[p],
-		dauer = dauer, neu = neu, tierId = tier.id, drift = rng:NextNumber(-15, 15), einkommen = D.einkommen(tier),
+		dauer = dauer, neu = neu, tierId = tier.id, drift = rng:NextNumber(-25, 25), einkommen = D.einkommen(tier),
 		groesse = 1, material = 1,
 	}
 end

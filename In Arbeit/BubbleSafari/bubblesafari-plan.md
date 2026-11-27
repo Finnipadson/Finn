@@ -34,12 +34,12 @@ Eine Runde (pusten bis Tier im Rucksack) dauert **9–18 Sekunden** (mit „Schn
    │          ^^^ gelbe Pfeile ^^^            │
    │           [ WURFPLATZ ]  (Mitte)         │
    └─────────────┐  Schlucht  ┌─────────────┘
-                 │  70 breit  │  -> Biome hintereinander
+                 │ 100 breit  │  -> Biome hintereinander
 ```
 
 - **Kessel:** Alle Grundstücke liegen unten in einer Senke, ringsum Block-Klippen mit Gras-Kappen (Höhe 45). Boden überall auf gleicher Höhe.
 - **Wurfplatz in der Mitte:** ein gemeinsamer, orange gekachelter Platz mit Blasenring am Eingang der Schlucht. Alle Spieler pusten von hier. Gelbe Pfeile führen vom Spawn hin.
-- **Schlucht:** schmal (70 Studs), gerade, Wände aus Voxel-Säulen. Jedes Biom eigener Boden, Deko unten und oben am Rand, Landmarke oben am Rand (Riesen-Gänseblümchen, Riesenpilz, Sumpfbaum), Bogen mit Biom-Namen über der Schlucht. Spieler kommen nicht hinein (unsichtbare Sperre).
+- **Schlucht:** schmal (100 Studs), gerade, Wände aus Voxel-Säulen. Jedes Biom eigener Boden, Deko unten und oben am Rand, Landmarke oben am Rand (Riesen-Gänseblümchen, Riesenpilz, Sumpfbaum), Bogen mit Biom-Namen über der Schlucht. Spieler kommen nicht hinein (unsichtbare Sperre).
 - Max. 4 Spieler (4 Grundstücke) in Phase 1; später mehr Grundstücke im Kessel möglich. Maßstab nach [[Welt-Map]].
 - **Streaming:** Phase 1 aus; bei langer Schlucht später `ModelStreamingMode = Persistent` für Landmarken und `RequestStreamAroundAsync` am Zielpunkt. Siehe [[Roblox-Fallen]].
 

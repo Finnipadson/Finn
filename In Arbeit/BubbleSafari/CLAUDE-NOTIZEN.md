@@ -28,7 +28,7 @@ Fang-und-Gehege-Spiel: Blasebalg treten → Seifenblase pusten → Blase treibt 
 - Welt neu bauen: gleich mit `Bauen/Map.lua` (löscht `Workspace/Map` und baut neu).
 
 ## Aufbau (Phase 1)
-- Kessel + Schlucht (seit 28.11.2026), Boden überall Y=0, Klippen bis Y=45: Kessel X −150…150, Z −200…0; Grundstücke X −108/−36/36/108 bei Z −150 (66×80); Spawn (0, −85); Laden (−70, −60), Brunnen (70, −60); **Wurfplatz** `Map/Wurfplatz/Platte` bei (0, −12), 26×18; Schlucht X −35…35, Z 0…2420 (Wiese 0–600, Pilzwald 600–1400, Sumpf 1400–2420); unsichtbare Sperre bei Z 2. Client-Konstante `SB = 35` muss zu `Map.lua` passen.
+- Kessel + Schlucht (seit 28.11.2026), Boden überall Y=0, Klippen bis Y=45: Kessel X −150…150, Z −200…0; Grundstücke X −108/−36/36/108 bei Z −150 (66×80); Spawn (0, −85); Laden (−70, −60), Brunnen (70, −60); **Wurfplatz** `Map/Wurfplatz/Platte` bei (0, −12), 26×18; Schlucht X −50…50 (100 breit), Z 0…2420 (Wiese 0–600, Pilzwald 600–1400, Sumpf 1400–2420); unsichtbare Sperre bei Z 2. Client-Konstante `SB = 50` muss zu `Map.lua` passen.
 - Grundstück: `GehegeFlaeche`, `TrainKreis`, `BlasebalgAnker` (Server baut `Blasebalg`), `AufwertenSchild` (ProximityPrompt), `SchildAnker` (Name + $/s), `GehegeTiere` (Server legt Modelle an, Client lässt sie herumlaufen).
 - Server entscheidet beim Pusten sofort Weite/Biom/Glück/Tier und speichert; Client spielt Flug → Tier-Sicht → Bodenkamera → Ergebnis ab und versteckt das neue Tier bis dahin im Rucksack (`versteckAb`).
 - Speichern: eigener UpdateAsync + Session-Lock (`Spieldaten.lua`), Store `BubbleSafari_v1`. `SeifenBesitz` mit String-Schlüsseln (DataStore mag keine Lücken in Arrays).
