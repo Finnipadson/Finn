@@ -162,7 +162,8 @@ local function plotAnzeige(g, p)
 end
 
 local function aufwertenAnzeige(g, stufe)
-	local s = g.AufwertenSchild
+	local s = g:FindFirstChild("AufwertenSchild")
+	if not s then return end
 	local bb = billboard(s, "Anzeige", UDim2.fromOffset(240, 80), Vector3.new(0, 3.5, 0))
 	bb.MaxDistance = 70 -- erst aus der Naehe sichtbar
 	local n = zeile(bb, "Name", 0.5)
@@ -196,6 +197,7 @@ local function baueBlasebalg(g, stufe)
 	local alt = g:FindFirstChild("Blasebalg")
 	if alt then alt:Destroy() end
 	local b = D.Blasebaelge[stufe]
+	if not g:FindFirstChild("BlasebalgAnker") then return end
 	local m = Instance.new("Model")
 	m.Name = "Blasebalg"
 	m:SetAttribute("Stufe", stufe)
@@ -284,21 +286,14 @@ local function freiesGrundstueck()
 end
 
 -- ===== Gehege bauen / ausbauen =====
-local function gehegeMasse(g, plaetze)
-	local cx = g.Boden.Position.X
-	local z1 = g.Boden.Position.Z - 35
-	return cx, z1, D.gehegeTiefe(plaetze)
-end
-
 local function zaunBauen(g, plaetze)
 	local alt = g:FindFirstChild("Zaun")
 	if alt then alt:Destroy() end
 	local zaun = Instance.new("Folder")
 	zaun.Name = "Zaun"
-	local cx, z1, tiefe = gehegeMasse(g, plaetze)
-	local x1, x2, z2, y = cx - 31, cx + 1, z1 + tiefe, 0.7
 	local pfostenFarbe, latteFarbe = Color3.fromRGB(95, 60, 35), Color3.fromRGB(150, 98, 58)
-	local function stueck(a, b, name)
+	for _, st in D.zaunStuecke(g.Boden.Position.X, g.Boden.Position.Z, plaetze) do
+		local a, b, name = st[1], st[2], st[3]
 		local d = b - a
 		local n = math.max(1, math.floor(d.Magnitude / 5))
 		for k = 0, n do
@@ -311,11 +306,6 @@ local function zaunBauen(g, plaetze)
 			l.CanCollide = true
 		end
 	end
-	stueck(Vector3.new(x1, y, z1), Vector3.new(x2, y, z1), "Hinten")
-	stueck(Vector3.new(x1, y, z2), Vector3.new(x2, y, z2), "Vorne")
-	stueck(Vector3.new(x1, y, z1), Vector3.new(x1, y, z2), "Seite")
-	stueck(Vector3.new(x2, y, z1), Vector3.new(x2, y, z1 + 8), "Seite")
-	stueck(Vector3.new(x2, y, z1 + 16), Vector3.new(x2, y, z2), "Seite")
 	zaun.Parent = g
 end
 
@@ -337,8 +327,8 @@ local function ausbauAnzeige(g, plaetze)
 end
 
 local function baueGehege(g, plaetze, animiert)
-	local cx, z1, tiefe = gehegeMasse(g, plaetze)
-	local cf, size = CFrame.new(cx - 15, 0.7, z1 + tiefe / 2), Vector3.new(32, 0.4, tiefe)
+	local x1, x2, zh, zv = D.gehegeRahmen(g.Boden.Position.X, g.Boden.Position.Z, plaetze)
+	local cf, size = CFrame.new((x1 + x2) / 2, 0.7, (zh + zv) / 2), Vector3.new(x2 - x1, 0.4, zv - zh)
 	local fl = g:FindFirstChild("GehegeFlaeche")
 	if not fl then
 		fl = teil(g, "GehegeFlaeche", size, cf, Color3.fromRGB(120, 205, 90))
@@ -351,7 +341,7 @@ local function baueGehege(g, plaetze, animiert)
 		local zaun = g:FindFirstChild("Zaun")
 		if zaun then
 			for _, t in zaun:GetChildren() do
-				if t.Name == "Vorne" then TweenService:Create(t, info, { CFrame = t.CFrame + Vector3.new(0, 0, delta) }):Play() end
+				if t.Name == "Hinten" then TweenService:Create(t, info, { CFrame = t.CFrame - Vector3.new(0, 0, delta) }):Play() end
 			end
 		end
 		task.delay(1.6, function() zaunBauen(g, plaetze) end)
@@ -417,7 +407,7 @@ end
 -- ===== Blasebalg aufwerten (Schild) =====
 for i = 1, 8 do
 	local g = plot(i)
-	if not g then continue end
+	if not g or not g:FindFirstChild("AufwertenSchild") then continue end
 	local pr = Instance.new("ProximityPrompt")
 	pr.ActionText = "Aufwerten"
 	pr.ObjectText = "Blasebalg"
@@ -689,8 +679,9 @@ end)
 local function imKreis(p, g)
 	local char = p.Character
 	local hrp = char and char:FindFirstChild("HumanoidRootPart")
-	if not hrp then return false end
-	local k = g.TrainKreis.Position
+	local kreis = g:FindFirstChild("TrainKreis")
+	if not hrp or not kreis then return false end
+	local k = kreis.Position
 	local d = hrp.Position - k
 	return Vector2.new(d.X, d.Z).Magnitude < 7.5 and d.Y > -2 and d.Y < 9
 end

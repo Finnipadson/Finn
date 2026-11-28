@@ -87,9 +87,30 @@ function D.naechsterAusbau(plaetze)
 		if a.plaetze > plaetze then return a end
 	end
 end
--- Gehege-Tiefe (Studs) je nach Platzanzahl
+-- Gehege-Tiefe (Studs) je nach Platzanzahl; das Gehege waechst nach hinten (vorne bleibt am Torbogen)
 function D.gehegeTiefe(plaetze)
-	return 30 + (plaetze - 6) * 2.6
+	return 40 + (plaetze - 6) * 2
+end
+-- Gehege-Rahmen relativ zur Grundstuecks-Mitte (cx, cz): Map.lua und Server bauen damit gleich.
+-- Mitte X = Torbogen (cx + 8), 48 breit, Zaun vorne 34 Studs vor der Mitte, Tor 10 breit.
+D.GEHEGE = { versatz = 8, breite = 48, vorne = 34, tor = 10 }
+function D.gehegeRahmen(cx, cz, plaetze)
+	local G = D.GEHEGE
+	local mx = cx + G.versatz
+	local zv = cz + G.vorne
+	return mx - G.breite / 2, mx + G.breite / 2, zv - D.gehegeTiefe(plaetze), zv, mx
+end
+-- Zaunstuecke { von, bis, name } (y = 0.7, Tor vorne mittig)
+function D.zaunStuecke(cx, cz, plaetze)
+	local x1, x2, zh, zv, mx = D.gehegeRahmen(cx, cz, plaetze)
+	local t, y = D.GEHEGE.tor / 2, 0.7
+	return {
+		{ Vector3.new(x1, y, zh), Vector3.new(x2, y, zh), "Hinten" },
+		{ Vector3.new(x1, y, zv), Vector3.new(mx - t, y, zv), "Vorne" },
+		{ Vector3.new(mx + t, y, zv), Vector3.new(x2, y, zv), "Vorne" },
+		{ Vector3.new(x1, y, zh), Vector3.new(x1, y, zv), "Seite" },
+		{ Vector3.new(x2, y, zh), Vector3.new(x2, y, zv), "Seite" },
+	}
 end
 
 -- Belohnung fuer ein volles Biom im Index

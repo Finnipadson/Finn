@@ -1,6 +1,6 @@
 -- Bubble Safari: Welt bauen (per execute_luau: loadstring(GetAsync(".../Bauen/Map.lua"))())
 -- Aufbau wie ein Kessel mit Schlucht: Boden ueberall Y=0, Klippen Y=0..RAND ringsum.
---   Kessel (Grundstuecke, Spawn, Laden): X -150..150, Z -200..0
+--   Kessel (Grundstuecke, Spawn, Laden): X -150..150, Z -190..0
 --   Wurfplatz in der Mitte am Schlucht-Eingang (0, 0, -12)
 --   Schlucht: X -50..50, Z 0..2420 (+Z = Flugrichtung), Biome hintereinander
 local rng = Random.new(42)
@@ -9,7 +9,8 @@ local function rgb(r, g, b) return Color3.fromRGB(r, g, b) end
 
 local RAND = 81 -- Hoehe der Klippen-Oberkante (3 Stufen a 27)
 local SB = 50 -- halbe Schluchtbreite (Schlucht 100 breit)
-local KX, KZ = 150, -200 -- Kessel: X -KX..KX, Z KZ..0
+local DATEN = require(game:GetService("ReplicatedStorage"):WaitForChild("Daten"):Clone())
+local KX, KZ = 150, -190 -- Kessel: X -KX..KX, Z KZ..0 (hinten 6 Studs hinter dem voll ausgebauten Gehege)
 local ENDE = 2420
 
 local alt = workspace:FindFirstChild("Map")
@@ -795,14 +796,14 @@ for i, cx in XS do
 	local c = CF(cx, 0, -150) -- Mitte, +Z Richtung Schlucht
 	local function L(x, y, z) return c * CF(x, y, z) end
 	P(g, "Boden", V(66, 1, 80), L(0, 0.05, 0), rgb(130, 225, 85), nil, { Transparency = 1, CanCollide = false, CanQuery = false }) -- nur Bezugspunkt
-	-- Gehege in Startgroesse (6 Plaetze, Tiefe 30) schon in der Map, damit es auch im Studio/Editor zu sehen ist.
-	-- Der Server uebernimmt die Flaeche und baut den Zaun je nach Ausbaustufe neu (gleiche Masse wie zaunBauen).
+	-- Gehege in Startgroesse schon in der Map (im Editor sichtbar); Masse aus Daten.lua, der Server baut es je Ausbaustufe neu.
+	-- Kein Trainingsplatz mehr auf dem Grundstueck (zieht spaeter zum Tier-Index).
 	do
-		local z1, tiefe = -185, 30
-		P(g, "GehegeFlaeche", V(32, 0.4, tiefe), CF(cx - 15, 0.7, z1 + tiefe / 2), rgb(120, 205, 90))
+		local x1, x2, zh, zv = DATEN.gehegeRahmen(cx, -150, DATEN.START_PLAETZE)
+		P(g, "GehegeFlaeche", V(x2 - x1, 0.4, zv - zh), CF((x1 + x2) / 2, 0.7, (zh + zv) / 2), rgb(120, 205, 90))
 		local zaun = ordner("Zaun", g)
-		local x1, x2, z2 = cx - 31, cx + 1, z1 + tiefe
-		local function stueck(a, b, name)
+		for _, st in DATEN.zaunStuecke(cx, -150, DATEN.START_PLAETZE) do
+			local a, b, name = st[1], st[2], st[3]
 			local d = b - a
 			local n = math.max(1, math.floor(d.Magnitude / 5))
 			for k = 0, n do
@@ -813,24 +814,7 @@ for i, cx in XS do
 				P(zaun, name, V(0.6, 0.8, d.Magnitude), CFrame.lookAt(mitte + V(0, h, 0), mitte + V(0, h, 0) + d.Unit), rgb(150, 98, 58), Enum.Material.Wood)
 			end
 		end
-		stueck(V(x1, 0.7, z1), V(x2, 0.7, z1), "Hinten")
-		stueck(V(x1, 0.7, z2), V(x2, 0.7, z2), "Vorne")
-		stueck(V(x1, 0.7, z1), V(x1, 0.7, z2), "Seite")
-		stueck(V(x2, 0.7, z1), V(x2, 0.7, z1 + 8), "Seite")
-		stueck(V(x2, 0.7, z1 + 16), V(x2, 0.7, z2), "Seite")
 	end
-	-- Trainingsplatz: Steinmatte, Holzteller mit Zackenring
-	P(g, "Steinmatte", V(20, 0.3, 20), L(15, 0.65, -14), rgb(150, 150, 158), Enum.Material.Slate)
-	deko(g, "TrainKreis", V(0.4, 14, 14), L(17, 0.85, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(150, 100, 60), Enum.Material.Wood,
-		{ Shape = Enum.PartType.Cylinder })
-	for k = 0, 19 do
-		local a = k / 20 * math.pi * 2
-		deko(g, "Zacke", V(1.3, 0.5, 1.3), L(17 + math.cos(a) * 7.4, 0.95, -14 + math.sin(a) * 7.4) * CFrame.Angles(0, -a, 0), if k % 2 == 0 then rgb(255, 170, 205) else rgb(255, 255, 255))
-	end
-	deko(g, "BlasebalgAnker", V(1, 1, 1), L(17, 1, -14), rgb(255, 255, 255), nil, { Transparency = 1 })
-	-- gelbe Aufwerten-Scheibe neben dem Trainingsplatz
-	deko(g, "ScheibenRand", V(0.3, 8, 8), L(29.5, 0.7, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(60, 45, 35), nil, { Shape = Enum.PartType.Cylinder })
-	P(g, "AufwertenSchild", V(0.35, 7, 7), L(29.5, 0.8, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(255, 210, 55), nil, { Shape = Enum.PartType.Cylinder })
 	local tor = DEKO and DEKO:FindFirstChild("Torbogen")
 	if tor then
 		-- Torbogen am Eingang (Vorlage: Konzepte/weg-gehege.webp), Name des Besitzers auf dem Schild
@@ -861,7 +845,7 @@ for i, cx in XS do
 		local ns = P(g, "NamensSchild", V(15, 5, 0.8), CFrame.lookAt(L(12, 6.5, 37).Position, L(12, 6.5, 37).Position + V(0, 0, 1)) * CFrame.Angles(0, 0, math.rad(-4)), HOLZ, Enum.Material.WoodPlanks)
 		ns.CanCollide = false
 	end
-	deko(g, "SchildAnker", V(1, 1, 1), L(-15, 24, 22), rgb(255, 255, 255), nil, { Transparency = 1 })
+	deko(g, "SchildAnker", V(1, 1, 1), CF(cx + 8, 20, -128), rgb(255, 255, 255), nil, { Transparency = 1 }) -- Anzeige ueber dem Gehege
 	g.Parent = Grund
 	task.wait()
 end
