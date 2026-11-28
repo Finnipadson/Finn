@@ -162,10 +162,25 @@ local function zufallsDeko(f, pos)
 	end
 end
 
+-- Pixel-Erdtextur (Variante B "Schichten", Texturen/erde_varianten.py) auf die Seitenflaechen der Erdbloecke.
+-- Bloecke laufen am Stueck durch (Laenge Vielfaches von 16 = Kachelbreite), damit die Baender ohne Versatz/Fugen weiterlaufen.
+local WAND_TEXTUR = "rbxassetid://116301489467986"
+local function erdTextur(p)
+	for _, face in { Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right } do
+		local t = Instance.new("Texture")
+		t.Name = "ErdTextur"
+		t.Texture = WAND_TEXTUR
+		t.Face = face
+		t.StudsPerTileU = 16
+		t.StudsPerTileV = 32
+		t.Parent = p
+	end
+end
+
 -- Hochebene ganz aussen: Erde + 3 Studs dicke Noppen-Grasdecke
 local function hochebene(x1, x2, z1, z2)
 	local mx, mz = (x1 + x2) / 2, (z1 + z2) / 2
-	P(Gelaende, "Hochebene", V(x2 - x1, RAND, z2 - z1), CF(mx, RAND / 2, mz), ERDE[1])
+	erdTextur(P(Gelaende, "Hochebene", V(x2 - x1, RAND, z2 - z1), CF(mx, RAND / 2, mz), ERDE[1]))
 	noppen(P(Gelaende, "HochGras", V(x2 - x1, 3, z2 - z1), CF(mx, RAND + 1.5, mz), GRUEN[1]))
 end
 
@@ -186,11 +201,21 @@ local function terrasse(x1, x2, z1, z2, h0, innen, wackeln, stil, trimA, trimB)
 	local stueck = laenge / n
 	local mx, mz = (x1 + x2) / 2, (z1 + z2) / 2
 	local seite = if entlangX then V(1, 0, 0) else V(0, 0, 1)
+	do -- Erde am Stueck (max. 1600 Studs je Teil)
+		local start, rest = (if entlangX then x1 else z1), laenge
+		while rest > 0.01 do
+			local len = math.min(rest, 1600)
+			local a = start + len / 2
+			local c = if entlangX then V(a, 0, mz) else V(mx, 0, a)
+			erdTextur(P(Gelaende, "Terrasse", if entlangX then V(len, h0, tiefe) else V(tiefe, h0, len), CF(c + V(0, h0 / 2, 0)), ERDE[1]))
+			start += len
+			rest -= len
+		end
+	end
 	for i = 0, n - 1 do
 		local a = (if entlangX then x1 else z1) + (i + 0.5) * stueck
 		local c = if entlangX then V(a, 0, mz) else V(mx, 0, a)
-		local h = h0 + (if wackeln then rng:NextInteger(-1, 1) else 0)
-		P(Gelaende, "Terrasse", if entlangX then V(stueck, h, tiefe) else V(tiefe, h, stueck), CF(c + V(0, h / 2, 0)), zufall(ERDE))
+		local h = h0
 		local farbe = zufall(gr)
 		noppen(P(Gelaende, "TerrasseGras", if entlangX then V(stueck, 3, tiefe) else V(tiefe, 3, stueck), CF(c + V(0, h + 1.5, 0)), farbe))
 		local kante = c + innen * (tiefe / 2)
@@ -209,17 +234,6 @@ local function terrasse(x1, x2, z1, z2, h0, innen, wackeln, stil, trimA, trimB)
 				local lh = rng:NextInteger(1, 3) * 1.5
 				deko(Gelaende, "Tropfen", V(2, lh, 2), CF(kante + innen + seite * q + V(0, h - lh / 2, 0)), farbe)
 			end
-		end
-		-- Pixel-Flecken: jede in eigener Hoehen-Zeile, ganz innerhalb des Blocks
-		local zeilen = 3 + math.floor(h / 20)
-		local abstand = (h - 4) / zeilen
-		for k = 1, zeilen do
-			local w = rng:NextInteger(1, 3) * 2 + (if h > 20 then 2 else 0)
-			w = math.min(w, stueck - 2)
-			local y = 2 + (k - 0.5) * abstand
-			deko(Gelaende, "Fleck", if entlangX then V(w, 2, 0.4) else V(0.4, 2, w),
-				CF(kante + innen * 0.15 + seite * rng:NextNumber(-stueck / 2 + w / 2 + 0.5, stueck / 2 - w / 2 - 0.5) + V(0, y, 0)),
-				if k % 3 == 1 then rgb(105, 66, 38) else rgb(165, 115, 72))
 		end
 	end
 	-- Deko oben auf der Stufe
