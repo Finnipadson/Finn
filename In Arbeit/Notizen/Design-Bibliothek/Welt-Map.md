@@ -210,6 +210,15 @@ Bilder: `Bilder/Welt-Map/stufen-*.jpg` (TVA: pilze-boden, pilze-wand, wiese-inse
 - **Schwebende Inseln** mit Palme oder Pilz oben, Erd-Pyramide unten, auf mehreren Höhen über der Schlucht.
 - **n1tro:** große kantige Würfel-Kronen mit Noppen, ein Baum mit leuchtenden Augen (Gesicht im Stamm), Wand als braun/rotes Schachbrett; Gras-Kappe stark überhängend.
 
+### Shops im TVA-Video (Standbilder 28.11.2026, Video bei 6–11 s)
+
+Bilder: `Bilder/Welt-Map/shop-tva-*.jpg` (uebersicht, dice-shop, dice-shop-nah, enchanter-a/b). Collage `BubbleSafari/Probe-Bilder/vorbild-shops.jpg`.
+
+- **Kleines Häuschen im Voxel-Stil**, ca. 2 Spielerhöhen, auf einem **leuchtenden Kreis am Boden** (Dice Shop gelb-orange, Enchanter hellblau) – zeigt „hier ist ein Laden“ schon von weitem.
+- **Dice Shop:** dunkelrotes Ziegeldach, darauf **drei große weiße Würfel** (Ware als Dachschmuck), Holzschild mit Pixel-Schrift „DICE SHOP“, rot-gelb gestreifte Markise, dunkelblaue Steinwände, weitere Würfel neben dem Eingang, kleine Fackeln am Dachrand.
+- **Enchanter:** blaues Dach mit hellen Türmchen an den Ecken, Pixel-Schild „ENCHANTER“ mit orangem Rahmen, Ornament (Kristall/Rune) über der Tür und am Boden davor. **Über dem Dach schwebt ein leuchtender weißer Würfel**, umkreist von kleinen lila Würfeln + Glitzer/Nebel (animiert: dreht/schwebt, Partikel).
+- **Prinzip zum Übernehmen:** Laden = Mini-Gebäude mit dem, was er verkauft, groß als Dachschmuck; ein animiertes Objekt (schwebend/drehend + Partikel) als Blickfang; farbiger Bodenring als Eingangszone.
+
 ## Bei uns umgesetzt
 
 - Bubble Safari (28.11.2026): 3 Terrassen à 27 Studs (Kessel + Schlucht), Noppen-Boden, Voxel-Bäume/Pilze/Sonnenblumen, Biom-Farben je Abschnitt, schwebende Inseln (`Bauen/Map.lua`, `terrasse()`).
