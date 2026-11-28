@@ -130,15 +130,32 @@ local function zeile(bb, name, hoehe, farbe)
 end
 
 local function plotAnzeige(g, p)
-	local bb = billboard(g.SchildAnker, "Anzeige", UDim2.fromOffset(320, 90))
-	local n = zeile(bb, "Name", 0.55)
-	local e = zeile(bb, "Einkommen", 0.45, Color3.fromRGB(120, 255, 120))
-	if p then
-		n.Text = p.DisplayName .. "s Safari"
+	local bb = billboard(g.SchildAnker, "Anzeige", UDim2.fromOffset(380, 150))
+	bb.MaxDistance = 320
+	local z = zeile(bb, "Zahl", 0.48)
+	local e = zeile(bb, "Einkommen", 0.42, Color3.fromRGB(120, 255, 120))
+	local d = p and Spieldaten.holen(p)
+	if p and d then
+		z.Text = anzahl(d, true) .. " / " .. d.Plaetze
 		e.Text = "$" .. D.format(einkommen[p] or 0) .. "/s"
 	else
-		n.Text = "Freies Grundstück"
-		e.Text = ""
+		z.Text, e.Text = "", ""
+	end
+	local ns = g:FindFirstChild("NamensSchild")
+	if ns then
+		local sg = ns:FindFirstChild("Text")
+		if not sg then
+			sg = Instance.new("SurfaceGui")
+			sg.Name = "Text"
+			sg.Face = Enum.NormalId.Front
+			sg.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+			sg.PixelsPerStud = 30
+			sg.Parent = ns
+			local t = zeile(sg, "Zeile", 1, Color3.fromRGB(255, 245, 220))
+			t.Size = UDim2.fromScale(0.94, 0.9)
+			t.Position = UDim2.fromScale(0.03, 0.05)
+		end
+		sg.Zeile.Text = if p then p.DisplayName .. "s Safari" else "Freies Grundstück"
 	end
 end
 
@@ -277,17 +294,17 @@ local function zaunBauen(g, plaetze)
 	zaun.Name = "Zaun"
 	local cx, z1, tiefe = gehegeMasse(g, plaetze)
 	local x1, x2, z2, y = cx - 31, cx + 1, z1 + tiefe, 0.7
-	local weiss = Color3.fromRGB(250, 250, 250)
+	local pfostenFarbe, latteFarbe = Color3.fromRGB(95, 60, 35), Color3.fromRGB(150, 98, 58)
 	local function stueck(a, b, name)
 		local d = b - a
 		local n = math.max(1, math.floor(d.Magnitude / 5))
 		for k = 0, n do
-			local pf = teil(zaun, name, Vector3.new(0.8, 4, 0.8), CFrame.new(a + d * (k / n) + Vector3.new(0, 2, 0)), weiss)
+			local pf = teil(zaun, name, Vector3.new(1.2, 4.6, 1.2), CFrame.new(a + d * (k / n) + Vector3.new(0, 2.3, 0)), pfostenFarbe, Enum.Material.Wood)
 			pf.CanCollide = true
 		end
 		local mitte = (a + b) / 2
-		for _, h in { 1.6, 3.2 } do
-			local l = teil(zaun, name, Vector3.new(0.4, 0.5, d.Magnitude), CFrame.lookAt(mitte + Vector3.new(0, h, 0), mitte + Vector3.new(0, h, 0) + d.Unit), weiss)
+		for _, h in { 1.6, 3.5 } do
+			local l = teil(zaun, name, Vector3.new(0.6, 0.8, d.Magnitude), CFrame.lookAt(mitte + Vector3.new(0, h, 0), mitte + Vector3.new(0, h, 0) + d.Unit), latteFarbe, Enum.Material.Wood)
 			l.CanCollide = true
 		end
 	end
@@ -441,6 +458,56 @@ do
 	pr.Triggered:Connect(function(p) R.LadenOeffnen:FireClient(p) end)
 end
 
+for standName, art in { VerkaufStand = "tiere", IndexStand = "index" } do
+	local st = Map.Hub:FindFirstChild(standName)
+	if st then
+		local pr = Instance.new("ProximityPrompt")
+		pr.ActionText = if art == "tiere" then "Tiere verkaufen" else "Index ansehen"
+		pr.ObjectText = if art == "tiere" then "Verkaufen" else "Tier-Index"
+		pr.HoldDuration = 0
+		pr.MaxActivationDistance = 14
+		pr.RequiresLineOfSight = false
+		pr.Parent = st.Theke
+		pr.Triggered:Connect(function(p) R.LadenOeffnen:FireClient(p, art) end)
+	end
+end
+
+do -- Bestenliste mit den hoechsten Einkommen auf diesem Server
+	local bl = Map.Hub:FindFirstChild("Bestenliste")
+	local tafel = bl and bl:FindFirstChild("Tafel")
+	if tafel then
+		local sg = Instance.new("SurfaceGui")
+		sg.Face = Enum.NormalId.Front
+		sg.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+		sg.PixelsPerStud = 30
+		sg.Parent = tafel
+		local liste = Instance.new("UIListLayout")
+		liste.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		liste.Padding = UDim.new(0.02, 0)
+		liste.Parent = sg
+		zeile(sg, "Titel", 0.2, Color3.fromRGB(255, 215, 60)).Text = "TOP-SAFARIS"
+		local reihen = {}
+		for i = 1, 5 do
+			local r = zeile(sg, "Platz" .. i, 0.14)
+			r.Size = UDim2.fromScale(0.92, 0.14)
+			r.TextXAlignment = Enum.TextXAlignment.Left
+			reihen[i] = r
+		end
+		task.spawn(function()
+			while true do
+				local l = {}
+				for p in plotVon do table.insert(l, p) end
+				table.sort(l, function(a, b) return (einkommen[a] or 0) > (einkommen[b] or 0) end)
+				for i = 1, 5 do
+					local p = l[i]
+					reihen[i].Text = if p then i .. ". " .. p.DisplayName .. "  $" .. D.format(einkommen[p] or 0) .. "/s" else ""
+				end
+				task.wait(5)
+			end
+		end)
+	end
+end
+
 R.SeifeKaufen.OnServerEvent:Connect(function(p, i)
 	local d = Spieldaten.holen(p)
 	if not d or typeof(i) ~= "number" then return end
@@ -563,8 +630,9 @@ for i = 1, 8 do
 	local g = plot(i)
 	if not g then continue end
 	local basis = g.Boden.Position
-	local schild = teil(g, "AusbauSchild", Vector3.new(7, 4, 0.5), CFrame.new(basis.X - 15, 6.5, basis.Z + 37), Color3.fromRGB(120, 85, 55))
-	teil(g, "AusbauPfosten", Vector3.new(0.8, 5, 0.8), CFrame.new(basis.X - 15, 2.5, basis.Z + 37), Color3.fromRGB(120, 85, 55))
+	local schild = teil(g, "AusbauSchild", Vector3.new(7, 3.2, 0.6), CFrame.new(basis.X - 15, 6.2, basis.Z + 37), Color3.fromRGB(160, 105, 62), Enum.Material.WoodPlanks)
+	teil(g, "AusbauPfeil", Vector3.new(2.3, 2.3, 0.6), CFrame.new(basis.X - 11.3, 6.2, basis.Z + 37) * CFrame.Angles(0, 0, math.rad(45)), Color3.fromRGB(160, 105, 62), Enum.Material.WoodPlanks)
+	teil(g, "AusbauPfosten", Vector3.new(1, 5, 1), CFrame.new(basis.X - 15, 2.5, basis.Z + 37), Color3.fromRGB(95, 60, 35), Enum.Material.Wood)
 	ausbauAnzeige(g, D.START_PLAETZE)
 	local pr = Instance.new("ProximityPrompt")
 	pr.ActionText = "Gehege vergrößern"
@@ -591,6 +659,7 @@ for i = 1, 8 do
 		d.Geld -= a.preis
 		d.Plaetze = a.plaetze
 		baueGehege(g, d.Plaetze, true)
+		plotAnzeige(g, p)
 		attributeSetzen(p)
 		statusSenden(p)
 		meldung(p, "Grundstück vergrößert! Platz für " .. d.Plaetze .. " Tiere", "gut")

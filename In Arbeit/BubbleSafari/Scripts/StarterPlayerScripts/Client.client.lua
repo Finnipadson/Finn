@@ -251,7 +251,8 @@ spieler:GetAttributeChangedSignal("Geld"):Connect(function()
 		if seifenFenster.Visible then seifenZeichnen() end
 	end
 end)
-R.LadenOeffnen.OnClientEvent:Connect(function()
+R.LadenOeffnen.OnClientEvent:Connect(function(art)
+	if art and art ~= "seifen" then return end -- Tiere/Index oeffnet der Handler weiter unten
 	seifenZeichnen()
 	seifenFenster.Visible = true
 	tierFenster.Visible = false
@@ -387,6 +388,26 @@ local BIOM_TINT = { Wiese = rgb(255, 255, 255), Pilzwald = rgb(215, 205, 255), S
 -- Flug-HUD
 local flugHUD = neu("Frame", { Size = UDim2.fromOffset(460, 100), Position = UDim2.new(0.5, -230, 0, 50), BackgroundTransparency = 1, Visible = false, Parent = gui })
 local flugGlueck = text({ Size = UDim2.new(1, 0, 0.55, 0), Text = "", TextColor3 = rgb(140, 255, 160), RandDicke = 3, Parent = flugHUD })
+local function gross(t) -- string.upper kennt keine Umlaute
+	return (string.upper(t):gsub("ä", "Ä"):gsub("ö", "Ö"):gsub("ü", "Ü"))
+end
+local zonenFrame = neu("Frame", { Size = UDim2.fromOffset(190, 320), Position = UDim2.new(0, 140, 0.5, -160), BackgroundTransparency = 1, Visible = false, Parent = gui }, {
+	neu("UIListLayout", { Padding = UDim.new(0, 6), VerticalAlignment = Enum.VerticalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder }),
+})
+local BIOM_FARBE = { Wiese = rgb(120, 215, 90), Pilzwald = rgb(170, 110, 230), Sumpf = rgb(110, 150, 110) }
+local function zonenLeiste(aktiv)
+	zonenFrame.Visible = true
+	for _, c in zonenFrame:GetChildren() do
+		if c:IsA("GuiObject") then c:Destroy() end
+	end
+	for i = #D.Biome, 1, -1 do -- weiteste Zone oben
+		local b = D.Biome[i]
+		local an = b.id == aktiv
+		local z = neu("Frame", { Size = UDim2.fromOffset(if an then 190 else 150, if an then 64 else 46), BackgroundTransparency = 1, LayoutOrder = #D.Biome - i, Parent = zonenFrame })
+		neu("Frame", { Size = UDim2.fromOffset(if an then 58 else 40, if an then 58 else 40), BackgroundColor3 = BIOM_FARBE[b.id] or rgb(200, 200, 200), Parent = z }, { ecke(10), rand(if an then 4 else 2, if an then rgb(255, 255, 255) else rgb(40, 40, 70)) })
+		text({ Size = UDim2.new(1, if an then -66 else -48, 0.8, 0), Position = UDim2.new(0, if an then 66 else 48, 0.1, 0), Text = gross(b.name), TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = if an then rgb(255, 255, 255) else rgb(220, 225, 235), Parent = z })
+	end
+end
 local flugBiom = text({ Size = UDim2.new(1, 0, 0.4, 0), Position = UDim2.fromScale(0, 0.58), Text = "", Parent = flugHUD })
 
 -- Enthuellungs-HUD
@@ -409,9 +430,6 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 local blitz = neu("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = rgb(255, 255, 255), BackgroundTransparency = 1, ZIndex = 49, Parent = gui })
 
-local function gross(t) -- string.upper kennt keine Umlaute
-	return (string.upper(t):gsub("ä", "Ä"):gsub("ö", "Ö"):gsub("ü", "Ü"))
-end
 
 local function titelFuer(n)
 	if n >= 5000 then return "Regenbogenglück!!", rgb(255, 120, 230) end
@@ -511,6 +529,7 @@ local function sequenz(res, startPos)
 		flugBiom.Text = gross(biom.name) .. " · " .. math.floor(pos.Z) .. " m"
 		if biom.id ~= letzterBiom then
 			letzterBiom = biom.id
+			zonenLeiste(biom.id)
 			TweenService:Create(farbKorrektur, TweenInfo.new(0.6), { TintColor = BIOM_TINT[biom.id] or rgb(255, 255, 255) }):Play()
 			if pos.Z > 50 then grosserText(gross(biom.name), "", rgb(255, 255, 255)) end
 		end
@@ -522,6 +541,7 @@ local function sequenz(res, startPos)
 	task.wait(0.35)
 	blaseSetzen(blase, innen, ziel, D_BLASE)
 	flugHUD.Visible = false
+	zonenFrame.Visible = false
 
 	-- Tier vorbereiten
 	local tier = TM.bauen(res.art, res.groesse, res.material)
@@ -779,7 +799,7 @@ local function pusten()
 	grosserText(qText, if res.serie > 0 then "Serie x" .. res.serie .. " · +" .. res.serie * 10 .. "% Glück" else "", if qText == "PERFEKT!" then rgb(120, 255, 140) elseif qText == "GUT" then rgb(255, 220, 80) else rgb(255, 120, 120))
 	serieText.Text = if res.serie > 0 then "Serie x" .. res.serie else ""
 	local hrp = spieler.Character and spieler.Character:FindFirstChild("HumanoidRootPart")
-	local startPos = Vector3.new(0, 9, -3) -- im Blasenring vorne am Wurfplatz
+	local startPos = Vector3.new(0, 9, 0) -- im Blasenring vorne am Wurfdeck
 	local ok2, err = pcall(sequenz, res, startPos)
 	if not ok2 then
 		warn("Sequenz-Fehler:", err)
@@ -889,6 +909,18 @@ seitenKnopf("Optionen", 140, rgb(120, 130, 150), function()
 	local war = optFenster.Visible
 	alleFensterZu()
 	optFenster.Visible = not war
+end)
+
+R.LadenOeffnen.OnClientEvent:Connect(function(art)
+	if art == "tiere" then
+		alleFensterZu()
+		tierFensterZeichnen()
+		tierFenster.Visible = true
+	elseif art == "index" then
+		alleFensterZu()
+		indexZeichnen()
+		indexFenster.Visible = true
+	end
 end)
 
 local ersterStatus = true

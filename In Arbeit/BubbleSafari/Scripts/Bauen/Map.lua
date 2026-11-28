@@ -72,8 +72,8 @@ local function schildText(part, text, farbe, seite)
 	t.Parent = sg
 end
 
-local GRAS1, GRAS2 = rgb(110, 200, 80), rgb(98, 186, 70)
-local ERDE1, ERDE2 = rgb(150, 105, 65), rgb(136, 94, 58)
+local GRAS1, GRAS2 = rgb(105, 215, 65), rgb(88, 198, 55) -- kraeftiges Spielzeug-Gruen
+local ERDE1, ERDE2 = rgb(172, 96, 64), rgb(156, 86, 57) -- rotbraune Felsen
 
 -- ===== Gelaende: Hochebene rundherum (Bloecke 0..RAND) =====
 local Gelaende = ordner("Gelaende")
@@ -103,6 +103,11 @@ local function wandReihe(a, b, innen, breite)
 		local erde = if i % 2 == 0 then ERDE1 else ERDE2
 		P(Gelaende, "Klippe", V(d, h - 5, breite), cf * CF(0, (h - 5) / 2, 0), erde)
 		P(Gelaende, "KlippeGras", V(d + 1.5, 5, breite), cf * CF(0, h - 2.5, 0), if i % 2 == 0 then GRAS1 else GRAS2)
+		if rng:NextNumber() < 0.45 then -- runder Felsbrocken in der Wand
+			local r = rng:NextNumber(4, 9)
+			local y = rng:NextNumber(6, h - 12)
+			deko(Gelaende, "Brocken", V(r, r * 0.8, r), CF(mitte + innen * (d + r * 0.15) + V(0, y, 0) + richtung * rng:NextNumber(-breite / 3, breite / 3)), rgb(185, 108, 74), nil, { Shape = Enum.PartType.Ball })
+		end
 		if i % 10 == 9 then task.wait() end
 	end
 end
@@ -117,11 +122,12 @@ task.wait()
 
 -- Kessel-Boden (Schachbrett)
 local KB = ordner("KesselBoden", Gelaende)
-for x = -KX, KX - 20, 20 do
-	for z = KZ, -20, 20 do
-		local c = if ((x + KX) / 20 + (z - KZ) / 20) % 2 == 0 then GRAS1 else GRAS2
-		P(KB, "Boden", V(20, 1, 20), CF(x + 10, -0.5, z + 10), c)
+for x = -KX, KX - 10, 10 do
+	for z = KZ, -10, 10 do
+		local c = if ((x + KX) / 10 + (z - KZ) / 10) % 2 == 0 then GRAS1 else GRAS2
+		P(KB, "Boden", V(10, 1, 10), CF(x + 5, -0.5, z + 5), c)
 	end
+	task.wait()
 end
 -- Unsichtbare Sperre am Schlucht-Eingang (Spieler bleiben im Kessel)
 P(Gelaende, "Absperrung", V(SB * 2, 30, 1), CF(0, 15, 2), rgb(255, 255, 255), nil, { Transparency = 1 })
@@ -162,6 +168,20 @@ end
 local function zufallsPos(b, rand)
 	return rng:NextNumber(-SB + 5, SB - 5), rng:NextNumber(b.von + (rand or 10), b.bis - (rand or 10))
 end
+for _, b in BIOME do
+	local f = ordner("Kleinkram", Tal[b.id])
+	for i = 1, math.floor((b.bis - b.von) / 40) do
+		local x, z = rng:NextNumber(-SB + 6, SB - 6), rng:NextNumber(b.von + 10, b.bis - 10)
+		if i % 2 == 0 then
+			local l = rng:NextNumber(5, 9)
+			deko(f, "Stamm", V(l, 1.8, 1.8), CF(x, 0.9, z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0), rgb(130, 85, 50), Enum.Material.Wood, { Shape = Enum.PartType.Cylinder })
+			deko(f, "Moos", V(l * 0.5, 0.3, 1.2), CF(x, 1.85, z), rgb(110, 190, 70))
+		else
+			local r = rng:NextNumber(2, 4.5)
+			deko(f, "Stein", V(r * 1.3, r * 0.8, r), CF(x, r * 0.3, z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0), rgb(150, 150, 160), nil, { Shape = Enum.PartType.Ball })
+		end
+	end
+end
 -- Position oben am Schluchtrand (links oder rechts)
 local function randPos(b)
 	local s = if rng:NextNumber() < 0.5 then -1 else 1
@@ -201,7 +221,10 @@ do
 			local h = rng:NextNumber(10, 16)
 			deko(d, "Stamm", V(2, h, 2), CF(x, RAND + h / 2, z), rgb(120, 85, 55))
 			local k = rng:NextNumber(9, 13)
-			deko(d, "Krone", V(k, k * 0.65, k), CF(x, RAND + h + k * 0.15, z), if i % 2 == 0 then rgb(255, 180, 210) else rgb(255, 225, 235))
+			local farbe = if i % 2 == 0 then rgb(255, 180, 210) else rgb(120, 210, 90)
+			deko(d, "Krone", V(k, k * 0.8, k), CF(x, RAND + h + k * 0.15, z), farbe, nil, { Shape = Enum.PartType.Ball })
+			deko(d, "Krone", V(k * 0.7, k * 0.6, k * 0.7), CF(x + k * 0.35, RAND + h - k * 0.05, z + k * 0.1), farbe, nil, { Shape = Enum.PartType.Ball })
+			deko(d, "Krone", V(k * 0.6, k * 0.5, k * 0.6), CF(x - k * 0.3, RAND + h + k * 0.05, z - k * 0.2), farbe, nil, { Shape = Enum.PartType.Ball })
 		else
 			blumenFeld(x, z, RAND + 1, 5)
 		end
@@ -328,33 +351,86 @@ do
 	task.wait()
 end
 
--- ===== Wurfplatz in der Mitte =====
+-- ===== Wurfdeck in der Mitte (Holzdeck mit Treppe, Gelaender, gelber Scheibe) =====
+local HOLZ, HOLZ_DUNKEL, HOLZ_HELL = rgb(160, 105, 62), rgb(95, 60, 35), rgb(185, 128, 78)
 local wurf = Instance.new("Model")
 wurf.Name = "Wurfplatz"
-local platte = P(wurf, "Platte", V(26, 0.6, 18), CF(0, 0.3, -12), rgb(255, 170, 40))
+local platte = P(wurf, "Platte", V(28, 2.6, 24), CF(0, 1.3, -12), HOLZ, Enum.Material.WoodPlanks)
 wurf.PrimaryPart = platte
-for xi = 0, 5 do
-	for zi = 0, 3 do
-		deko(wurf, "Kachel", V(3.6, 0.1, 3.6), CF(-11 + xi * 4.4, 0.65, -18 + zi * 4.4 - 0.5), if (xi + zi) % 2 == 0 then rgb(255, 205, 70) else rgb(255, 140, 40))
+for i = 0, 9 do -- Plankenfugen
+	deko(wurf, "Fuge", V(28, 0.05, 0.25), CF(0, 2.62, -23 + i * 2.4), HOLZ_DUNKEL)
+end
+for k = 1, 3 do -- Treppe Richtung Kessel
+	P(wurf, "Stufe", V(14, 2.6 * (1 - (k - 1) / 3), 2.2), CF(0, 1.3 * (1 - (k - 1) / 3), -24 - (k - 0.5) * 2.2), HOLZ_HELL, Enum.Material.WoodPlanks)
+end
+local function gelaender(a, b)
+	local d = b - a
+	local n = math.max(1, math.floor(d.Magnitude / 4))
+	for k = 0, n do
+		P(wurf, "Pfosten", V(1.1, 3.4, 1.1), CF(a + d * (k / n) + V(0, 1.7, 0)), HOLZ_DUNKEL, Enum.Material.Wood)
+	end
+	local m = (a + b) / 2
+	for _, h in { 1.3, 2.8 } do
+		P(wurf, "Latte", V(0.7, 0.6, d.Magnitude), CF(m + V(0, h, 0), m + V(0, h, 0) + d.Unit), HOLZ_DUNKEL, Enum.Material.Wood)
 	end
 end
--- Blasenring-Gestell vorne
-for k = 0, 13 do
-	local a = k / 14 * math.pi * 2
-	deko(wurf, "Ring", V(0.9, 0.9, 0.9), CF(math.cos(a) * 3, 9 + math.sin(a) * 3, -3), rgb(255, 255, 255))
+gelaender(V(-13.5, 2.6, -23.5), V(-13.5, 2.6, -0.5))
+gelaender(V(13.5, 2.6, -23.5), V(13.5, 2.6, -0.5))
+gelaender(V(-13.5, 2.6, -23.5), V(-7.5, 2.6, -23.5))
+gelaender(V(7.5, 2.6, -23.5), V(13.5, 2.6, -23.5))
+deko(wurf, "Scheibe", V(0.3, 10, 10), CF(0, 2.75, -9) * CFrame.Angles(0, 0, math.rad(90)), rgb(255, 210, 55), nil, { Shape = Enum.PartType.Cylinder })
+for k = 0, 15 do -- gestrichelter Ring aus orangen Kacheln
+	local a = k / 16 * math.pi * 2
+	local pos = V(math.cos(a) * 6.6, 2.7, -9 + math.sin(a) * 6.6)
+	deko(wurf, "Ringkachel", V(1.8, 0.2, 0.9), CF(pos, pos + V(-math.sin(a), 0, math.cos(a))), rgb(255, 130, 35))
+end
+-- Blasenring-Gestell vorne am Deck
+for k = 0, 15 do
+	local a = k / 16 * math.pi * 2
+	deko(wurf, "Ring", V(0.9, 0.9, 0.9), CF(math.cos(a) * 3, 9 + math.sin(a) * 3, -1), rgb(255, 255, 255))
 end
 for _, s in { -1, 1 } do
-	deko(wurf, "Stange", V(0.6, 9, 0.6), CF(s * 3.2, 4.5, -3), rgb(255, 255, 255))
+	deko(wurf, "Stange", V(0.6, 6.4, 0.6), CF(s * 3.2, 5.8, -1), rgb(255, 255, 255))
 end
+-- schwebende Schrift
+local hinweis = deko(wurf, "HinweisAnker", V(1, 1, 1), CF(0, 12, -9), rgb(255, 255, 255), nil, { Transparency = 1 })
+local hbb = Instance.new("BillboardGui")
+hbb.Size = UDim2.fromOffset(420, 80)
+hbb.MaxDistance = 160
+hbb.LightInfluence = 0
+hbb.Parent = hinweis
+local ht = Instance.new("TextLabel")
+ht.Size = UDim2.fromScale(1, 1)
+ht.BackgroundTransparency = 1
+ht.Text = "HIER PUSTEN!"
+ht.TextScaled = true
+ht.Font = Enum.Font.FredokaOne
+ht.TextColor3 = rgb(255, 215, 50)
+local hst = Instance.new("UIStroke")
+hst.Thickness = 4
+hst.Color = rgb(120, 60, 20)
+hst.Parent = ht
+ht.Parent = hbb
 wurf.Parent = Map
 
--- Gelbe Pfeile vom Spawn zum Wurfplatz
-local Pfeile = ordner("Pfeile")
-for z = -70, -26, 6 do
-	for _, s in { -1, 1 } do
-		deko(Pfeile, "Pfeil", V(0.4, 0.15, 2.4), CF(s * 0.8, 0.1, z) * CFrame.Angles(0, math.rad(-s * 40), 0), rgb(255, 220, 40), Enum.Material.Neon)
+-- ===== Orange Kachelwege =====
+local Wege = ordner("Wege")
+local OR1, OR2, ORRAND = rgb(255, 150, 40), rgb(255, 185, 70), rgb(225, 110, 30)
+local function kachelWeg(x1, x2, z1, z2, kachel)
+	local nx, nz = math.floor((x2 - x1) / kachel), math.floor((z2 - z1) / kachel)
+	for ix = 0, nx - 1 do
+		for iz = 0, nz - 1 do
+			P(Wege, "Kachel", V(kachel, 0.3, kachel), CF(x1 + (ix + 0.5) * kachel, 0.15, z1 + (iz + 0.5) * kachel), if (ix + iz) % 2 == 0 then OR1 else OR2)
+		end
 	end
 end
+kachelWeg(-6, 6, -104, -32, 4) -- Hauptweg zum Deck
+kachelWeg(-140, 140, -110, -100, 5) -- Querweg vor den Grundstuecken
+for _, s in { -1, 1 } do
+	P(Wege, "Rand", V(1, 0.35, 72), CF(s * 6.5, 0.17, -68), ORRAND)
+end
+P(Wege, "RandQuer", V(280, 0.35, 1), CF(0, 0.17, -99.5), ORRAND)
+task.wait()
 
 -- ===== Grundstuecke hinten im Kessel =====
 local Grund = ordner("Grundstuecke")
@@ -366,67 +442,140 @@ for i, cx in XS do
 	g:SetAttribute("Besitzer", 0)
 	local c = CF(cx, 0, -150) -- Mitte, +Z Richtung Schlucht
 	local function L(x, y, z) return c * CF(x, y, z) end
-	P(g, "Boden", V(66, 1, 80), L(0, 0.05, 0), rgb(235, 225, 195))
+	P(g, "Boden", V(66, 1, 80), L(0, 0.05, 0), rgb(130, 225, 85))
 	-- Gehege (Flaeche + Zaun) baut der Server je nach Ausbaustufe
-	deko(g, "TrainKreis", V(0.3, 15, 15), L(17, 0.65, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(255, 255, 255), nil,
-		{ Shape = Enum.PartType.Cylinder, Transparency = 0.35 })
-	deko(g, "BlasebalgAnker", V(1, 1, 1), L(17, 0.65, -14), rgb(255, 255, 255), nil, { Transparency = 1 })
-	deko(g, "SchildPfosten", V(0.8, 6, 0.8), L(26, 3.5, -26), rgb(120, 85, 55))
-	P(g, "AufwertenSchild", V(7, 4, 0.5), L(26, 7, -26), rgb(120, 85, 55))
-	deko(g, "SchildAnker", V(1, 1, 1), L(-15, 24, -30), rgb(255, 255, 255), nil, { Transparency = 1 })
+	-- Trainingsplatz: Steinmatte, Holzteller mit Zackenring
+	P(g, "Steinmatte", V(20, 0.3, 20), L(15, 0.65, -14), rgb(150, 150, 158), Enum.Material.Slate)
+	deko(g, "TrainKreis", V(0.4, 14, 14), L(17, 0.85, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(150, 100, 60), Enum.Material.Wood,
+		{ Shape = Enum.PartType.Cylinder })
+	for k = 0, 19 do
+		local a = k / 20 * math.pi * 2
+		deko(g, "Zacke", V(1.3, 0.5, 1.3), L(17 + math.cos(a) * 7.4, 0.95, -14 + math.sin(a) * 7.4) * CFrame.Angles(0, -a, 0), if k % 2 == 0 then rgb(255, 170, 205) else rgb(255, 255, 255))
+	end
+	deko(g, "BlasebalgAnker", V(1, 1, 1), L(17, 1, -14), rgb(255, 255, 255), nil, { Transparency = 1 })
+	-- gelbe Aufwerten-Scheibe neben dem Trainingsplatz
+	deko(g, "ScheibenRand", V(0.3, 8, 8), L(29.5, 0.7, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(60, 45, 35), nil, { Shape = Enum.PartType.Cylinder })
+	P(g, "AufwertenSchild", V(0.35, 7, 7), L(29.5, 0.8, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(255, 210, 55), nil, { Shape = Enum.PartType.Cylinder })
+	-- grosses Holz-Namensschild vorne
+	for _, s in { -1, 1 } do
+		deko(g, "SchildPfosten", V(1, 7, 1), L(12 + s * 6, 3.5, 37), HOLZ_DUNKEL, Enum.Material.Wood)
+	end
+	local ns = P(g, "NamensSchild", V(15, 5, 0.8), CFrame.lookAt(L(12, 6.5, 37).Position, L(12, 6.5, 37).Position + V(0, 0, 1)) * CFrame.Angles(0, 0, math.rad(-4)), HOLZ, Enum.Material.WoodPlanks)
+	ns.CanCollide = false
+	deko(g, "SchildAnker", V(1, 1, 1), L(-15, 15, 22), rgb(255, 255, 255), nil, { Transparency = 1 })
 	g.Parent = Grund
 	task.wait()
 end
 
--- ===== Spawn, Laden, Brunnen (vorne im Kessel) =====
+-- ===== Ladenstrasse am Hauptweg =====
 local Hub = ordner("Hub")
-P(Hub, "Weg", V(12, 0.2, 60), CF(0, 0.1, -80), rgb(215, 205, 180))
-P(Hub, "WegQuer", V(260, 0.2, 10), CF(0, 0.1, -105), rgb(215, 205, 180))
-P(Hub, "Becken", V(3, 18, 18), CF(70, 1.5, -60) * CFrame.Angles(0, 0, math.rad(90)), rgb(190, 200, 215), nil, { Shape = Enum.PartType.Cylinder })
-local wasser = deko(Hub, "Wasser", V(0.4, 16, 16), CF(70, 3, -60) * CFrame.Angles(0, 0, math.rad(90)), rgb(120, 200, 255), Enum.Material.Glass,
-	{ Shape = Enum.PartType.Cylinder, Transparency = 0.3 })
-local pe = Instance.new("ParticleEmitter")
-pe.Color = ColorSequence.new(rgb(200, 235, 255), rgb(255, 200, 240))
-pe.Size = NumberSequence.new(0.8, 1.6)
-pe.Transparency = NumberSequence.new(0.3, 0.8)
-pe.LightEmission = 0.4
-pe.Rate = 8
-pe.Lifetime = NumberRange.new(3, 5)
-pe.Speed = NumberRange.new(2, 4)
-pe.SpreadAngle = Vector2.new(30, 30)
-pe.EmissionDirection = Enum.NormalId.Right
-pe.Parent = wasser
-local laden = Instance.new("Model")
-laden.Name = "Seifenladen"
-local theke = P(laden, "Theke", V(18, 4, 5), CF(-70, 2, -60) * CFrame.Angles(0, math.rad(-90), 0), rgb(240, 240, 250))
-for k = -1, 1, 2 do
-	deko(laden, "Pfosten", V(1, 12, 1), theke.CFrame * CF(k * 8.5, 4, 3), rgb(255, 255, 255))
+local function stand(name, pos, blick, markise, schild, schildFarbe)
+	local m = Instance.new("Model")
+	m.Name = name
+	local cf = CFrame.lookAt(pos, pos + blick)
+	local theke = P(m, "Theke", V(12, 3.5, 4), cf * CF(0, 1.75, 0), rgb(250, 248, 240))
+	P(m, "ThekeRand", V(12.4, 0.5, 4.4), cf * CF(0, 3.6, 0), schildFarbe)
+	P(m, "Rueckwand", V(12, 9, 0.8), cf * CF(0, 4.5, 4.5), rgb(240, 235, 225))
+	for _, s in { -1, 1 } do
+		P(m, "Pfosten", V(0.9, 11, 0.9), cf * CF(s * 5.8, 5.5, -1.6), rgb(255, 255, 255))
+	end
+	for k = 0, 5 do
+		deko(m, "Markise", V(2.05, 0.5, 7), cf * CF(-5.1 + k * 2.05, 10.4, 0.6) * CFrame.Angles(math.rad(-14), 0, 0), if k % 2 == 0 then markise else rgb(255, 255, 255))
+	end
+	local sc = deko(m, "Schild", V(13, 3.6, 0.6), cf * CF(0, 13.4, 0.8), schildFarbe)
+	schildText(sc, schild, rgb(255, 255, 255), Enum.NormalId.Front)
+	m.PrimaryPart = theke
+	m.Parent = Hub
+	return m
 end
-for k = 0, 5 do
-	deko(laden, "Markise", V(3.2, 0.6, 8), theke.CFrame * CF(-7.5 + k * 3, 10, 0.5) * CFrame.Angles(math.rad(-12), 0, 0),
-		if k % 2 == 0 then rgb(80, 170, 255) else rgb(255, 255, 255))
-end
-local ls = deko(laden, "LadenSchild", V(14, 3.5, 0.5), theke.CFrame * CF(0, 12.2, 3.6), rgb(80, 170, 255))
-schildText(ls, "SEIFENLADEN", rgb(255, 255, 255), Enum.NormalId.Back)
+local laden = stand("Seifenladen", V(-21, 0, -62), V(1, 0, 0), rgb(70, 160, 255), "SEIFENLADEN", rgb(70, 160, 255))
 for k = -2, 2 do
-	deko(laden, "Seife", V(1.6, 1, 1.2), theke.CFrame * CF(k * 3, 2.5, 0), ({ rgb(235, 245, 255), rgb(255, 200, 70), rgb(110, 240, 190), rgb(255, 150, 200), rgb(190, 140, 255) })[k + 3])
+	deko(laden, "Seife", V(1.6, 1, 1.2), laden.Theke.CFrame * CF(k * 2.2, 2.3, 0), ({ rgb(235, 245, 255), rgb(255, 200, 70), rgb(110, 240, 190), rgb(255, 150, 200), rgb(190, 140, 255) })[k + 3])
 end
-laden.PrimaryPart = theke
-laden.Parent = Hub
+stand("VerkaufStand", V(-21, 0, -86), V(1, 0, 0), rgb(235, 60, 60), "VERKAUFEN", rgb(235, 60, 60))
+stand("IndexStand", V(21, 0, -62), V(-1, 0, 0), rgb(150, 100, 230), "TIER-INDEX", rgb(150, 100, 230))
+-- Bestenliste mit Krone
+do
+	local m = Instance.new("Model")
+	m.Name = "Bestenliste"
+	local cf = CFrame.lookAt(V(21, 0, -86), V(20, 0, -86))
+	for _, s in { -1, 1 } do
+		P(m, "Pfosten", V(1, 13, 1), cf * CF(s * 6.5, 6.5, 0), HOLZ_DUNKEL, Enum.Material.Wood)
+	end
+	P(m, "Rahmen", V(13.5, 10, 0.8), cf * CF(0, 7.5, 0.1), HOLZ, Enum.Material.Wood)
+	local tafel = P(m, "Tafel", V(12, 8.6, 0.3), cf * CF(0, 7.5, -0.4), rgb(40, 60, 45))
+	for k = -1, 1 do
+		deko(m, "Krone", V(1.6, if k == 0 then 3 else 2.2, 1), cf * CF(k * 1.8, 13.6 + (if k == 0 then 0.4 else 0), 0), rgb(255, 205, 40), Enum.Material.Neon)
+	end
+	deko(m, "KroneBasis", V(6, 1, 1.2), cf * CF(0, 12.6, 0), rgb(255, 190, 30))
+	m.PrimaryPart = tafel
+	m.Parent = Hub
+end
+-- Holz-Laternen am Weg
+for z = -96, -36, 15 do
+	for _, s in { -1, 1 } do
+		P(Hub, "Laterne", V(0.9, 6, 0.9), CF(s * 8.5, 3, z), HOLZ_DUNKEL, Enum.Material.Wood)
+		local lampe = deko(Hub, "Lampe", V(1.6, 1.6, 1.6), CF(s * 8.5, 6.6, z), rgb(255, 220, 110), Enum.Material.Neon)
+		local l = Instance.new("PointLight")
+		l.Color = rgb(255, 210, 120)
+		l.Range = 14
+		l.Brightness = 1
+		l.Parent = lampe
+	end
+end
+-- Wahrzeichen: Riesen-Blasenstab mit schwebenden Blasen
+do
+	local m = Instance.new("Model")
+	m.Name = "Blasenstab"
+	local basis = V(72, 0, -58)
+	P(m, "Sockel", V(10, 2, 10), CF(basis + V(0, 1, 0)), rgb(250, 248, 240))
+	local griff = deko(m, "Griff", V(2.4, 22, 2.4), CF(basis + V(0, 12, 0)) * CFrame.Angles(0, 0, math.rad(-12)), rgb(255, 120, 180))
+	local spitze = (griff.CFrame * CF(0, 11, 0)).Position
+	for k = 0, 19 do
+		local a = k / 20 * math.pi * 2
+		deko(m, "Ring", V(1.6, 1.6, 1.6), CF(spitze + V(math.cos(a) * 7, 7 + math.sin(a) * 7, 0)), rgb(120, 200, 255))
+	end
+	for k, gr in { 9, 6, 4.5 } do
+		deko(m, "Blase", V(gr, gr, gr), CF(spitze + V(-6 - k * 7, 10 + k * 4, k * 3)), rgb(200, 230, 255), Enum.Material.ForceField, { Shape = Enum.PartType.Ball })
+	end
+	m.Parent = Hub
+end
+-- Riesen-Seifenflasche auf der anderen Seite
+do
+	local basis = V(-74, 0, -58)
+	deko(Hub, "Flasche", V(16, 11, 11), CF(basis + V(0, 8, 0)) * CFrame.Angles(0, 0, math.rad(90)), rgb(120, 210, 255), Enum.Material.Glass, { Shape = Enum.PartType.Cylinder, Transparency = 0.25 })
+	deko(Hub, "Etikett", V(16.5, 5, 0.2), CF(basis + V(0, 8, 0)) * CF(0, 0, 0), rgb(255, 255, 255))
+	deko(Hub, "Hals", V(4, 4, 4), CF(basis + V(0, 18, 0)), rgb(255, 255, 255))
+	deko(Hub, "Pumpe", V(1.2, 4, 1.2), CF(basis + V(0, 22, 0)), rgb(255, 120, 180))
+	deko(Hub, "Duese", V(5, 1.2, 1.2), CF(basis + V(2, 24, 0)), rgb(255, 120, 180))
+end
 
 local spawn = workspace:FindFirstChild("SpawnLocation")
 if spawn then
-	spawn.CFrame = CF(0, 0.7, -85) * CFrame.Angles(0, math.pi, 0) -- schaut zur Schlucht
+	spawn.CFrame = CF(0, 0.7, -95) * CFrame.Angles(0, math.pi, 0) -- schaut zum Wurfdeck
 	spawn.Size = V(8, 1, 8)
 	spawn.Transparency = 1
 	local dec = spawn:FindFirstChildOfClass("Decal")
 	if dec then dec:Destroy() end
 end
 
+-- Licht: sonnig, warm, kraeftige Farben
 local Lt = game:GetService("Lighting")
-Lt.ClockTime = 14
-Lt.Brightness = 2.5
+Lt.ClockTime = 13.5
+Lt.Brightness = 3
+Lt.OutdoorAmbient = rgb(150, 140, 130)
 local atm = Lt:FindFirstChildOfClass("Atmosphere")
-if atm then atm.Density = 0.18; atm.Haze = 0.6 end
+if atm then atm.Density = 0.22; atm.Haze = 0.8; atm.Color = rgb(200, 225, 255) end
+local bloom = Lt:FindFirstChildOfClass("BloomEffect")
+if bloom then bloom.Intensity = 0.6; bloom.Size = 24; bloom.Threshold = 0.95 end
+local sun = Lt:FindFirstChildOfClass("SunRaysEffect")
+if sun then sun.Intensity = 0.06 end
+local dof = Lt:FindFirstChildOfClass("DepthOfFieldEffect")
+if dof then dof.Enabled = false end
+local cc = Lt:FindFirstChild("Grundfarbe") or Instance.new("ColorCorrectionEffect")
+cc.Name = "Grundfarbe"
+cc.Saturation = 0.15
+cc.Contrast = 0.05
+cc.Parent = Lt
 workspace.StreamingEnabled = false -- Phase 1: Welt ist klein genug; spaeter Streaming + Persistent pruefen
 return "Map fertig"
