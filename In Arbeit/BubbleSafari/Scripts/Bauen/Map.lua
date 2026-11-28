@@ -142,8 +142,12 @@ end
 
 -- Eine Terrassenstufe: Erdbloecke mit Pixel-Flecken, Graskappe mit Ueberhang, Gras-Tropfen, Deko oben
 -- innen = Richtung zum Kessel (Einheitsvektor entlang X oder Z)
-local function terrasse(x1, x2, z1, z2, h0, innen, wackeln, stil)
+-- Gegen Flackern (Z-Fighting): nichts darf sich mit gleich hoher/gleich tiefer Flaeche ueberlappen.
+--   Flecken bekommen eigene Zeilen, Tropfen eigene 4er-Plaetze, und der Gras-Ueberhang laesst
+--   an den Enden (trimA/trimB) die Ecken frei, wo eine quer laufende Stufe gleicher Hoehe steht.
+local function terrasse(x1, x2, z1, z2, h0, innen, wackeln, stil, trimA, trimB)
 	stil = stil or {}
+	trimA, trimB = trimA or 0, trimB or 0
 	local gr = stil.gruen or GRUEN
 	local dekoOrdner = stil.ordner or KDeko
 	local entlangX = innen.X == 0
@@ -158,17 +162,35 @@ local function terrasse(x1, x2, z1, z2, h0, innen, wackeln, stil)
 		local c = if entlangX then V(a, 0, mz) else V(mx, 0, a)
 		local h = h0 + (if wackeln then rng:NextInteger(-1, 1) else 0)
 		P(Gelaende, "Terrasse", if entlangX then V(stueck, h, tiefe) else V(tiefe, h, stueck), CF(c + V(0, h / 2, 0)), zufall(ERDE))
-		noppen(P(Gelaende, "TerrasseGras", if entlangX then V(stueck, 3, tiefe + 2) else V(tiefe + 2, 3, stueck), CF(c + innen + V(0, h + 1.5, 0)), zufall(gr)))
+		local farbe = zufall(gr)
+		noppen(P(Gelaende, "TerrasseGras", if entlangX then V(stueck, 3, tiefe) else V(tiefe, 3, stueck), CF(c + V(0, h + 1.5, 0)), farbe))
 		local kante = c + innen * (tiefe / 2)
-		for k = 1, 3 + math.floor(h / 20) do
-			local w = rng:NextInteger(1, 3) * 2 + (if h > 20 then 2 else 0)
-			deko(Gelaende, "Fleck", if entlangX then V(w, 2, 0.4) else V(0.4, 2, w),
-				CF(kante + innen * 0.15 + seite * rng:NextNumber(-stueck / 2 + 2, stueck / 2 - 2) + V(0, rng:NextNumber(2, math.max(2.5, h - 3)), 0)),
-				if k == 1 then rgb(105, 66, 38) else rgb(165, 115, 72))
+		-- Ueberhang (2 Studs zur Schlucht), an den Enden ggf. gekuerzt
+		local L0 = (if entlangX then x1 else z1)
+		local s0 = math.max(a - stueck / 2, L0 + trimA)
+		local s1 = math.min(a + stueck / 2, L0 + laenge - trimB)
+		if s1 - s0 > 0.5 then
+			local m = (s0 + s1) / 2 - a
+			noppen(P(Gelaende, "TerrasseGras", if entlangX then V(s1 - s0, 3, 2) else V(2, 3, s1 - s0), CF(kante + innen + seite * m + V(0, h + 1.5, 0)), farbe))
+			-- Tropfen auf getrennten 4-Stud-Plaetzen
+			local plaetze = {}
+			for q = s0 + 2, s1 - 2, 4 do table.insert(plaetze, q - a) end
+			for _ = 1, math.min(#plaetze, rng:NextInteger(2, 4)) do
+				local q = table.remove(plaetze, rng:NextInteger(1, #plaetze))
+				local lh = rng:NextInteger(1, 3) * 1.5
+				deko(Gelaende, "Tropfen", V(2, lh, 2), CF(kante + innen + seite * q + V(0, h - lh / 2, 0)), farbe)
+			end
 		end
-		for k = 1, rng:NextInteger(2, 4) do
-			local lh = rng:NextInteger(1, 3) * 1.5
-			deko(Gelaende, "Tropfen", V(2, lh, 2), CF(kante + innen + seite * rng:NextNumber(-stueck / 2 + 1, stueck / 2 - 1) + V(0, h - lh / 2, 0)), zufall(gr))
+		-- Pixel-Flecken: jede in eigener Hoehen-Zeile, ganz innerhalb des Blocks
+		local zeilen = 3 + math.floor(h / 20)
+		local abstand = (h - 4) / zeilen
+		for k = 1, zeilen do
+			local w = rng:NextInteger(1, 3) * 2 + (if h > 20 then 2 else 0)
+			w = math.min(w, stueck - 2)
+			local y = 2 + (k - 0.5) * abstand
+			deko(Gelaende, "Fleck", if entlangX then V(w, 2, 0.4) else V(0.4, 2, w),
+				CF(kante + innen * 0.15 + seite * rng:NextNumber(-stueck / 2 + w / 2 + 0.5, stueck / 2 - w / 2 - 0.5) + V(0, y, 0)),
+				if k % 3 == 1 then rgb(105, 66, 38) else rgb(165, 115, 72))
 		end
 	end
 	-- Deko oben auf der Stufe
@@ -193,11 +215,11 @@ for k = 0, STUFEN - 1 do
 	local h = math.floor(RAND * (k + 1) / STUFEN) -- 27, 54, 81
 	local w = k < STUFEN - 1
 	local a, b = k * T, (k + 1) * T
-	terrasse(-KX - b, KX + b, KZ - b, KZ - a, h, V(0, 0, 1), w) -- hinten
-	terrasse(-KX - b, -KX - a, KZ - a, a, h, V(1, 0, 0), w) -- links
-	terrasse(KX + a, KX + b, KZ - a, a, h, V(-1, 0, 0), w) -- rechts
-	terrasse(-KX - b, -SB - b, a, b, h, V(0, 0, -1), w) -- vorne links (Ecke gehoert zur Schlucht-Terrasse)
-	terrasse(SB + b, KX + b, a, b, h, V(0, 0, -1), w) -- vorne rechts
+	terrasse(-KX - b, KX + b, KZ - b, KZ - a, h, V(0, 0, 1), w, nil, T, T) -- hinten (Ecken frei)
+	terrasse(-KX - b, -KX - a, KZ - a, a, h, V(1, 0, 0), w, nil, 2, 2) -- links (Innenecken gehoeren dem Querueberhang)
+	terrasse(KX + a, KX + b, KZ - a, a, h, V(-1, 0, 0), w, nil, 2, 2) -- rechts
+	terrasse(-KX - b, -SB - b, a, b, h, V(0, 0, -1), w, nil, T, 0) -- vorne links (Ecke gehoert zur Schlucht-Terrasse)
+	terrasse(SB + b, KX + b, a, b, h, V(0, 0, -1), w, nil, 0, T) -- vorne rechts
 	task.wait()
 end
 hochebene(-KX - AUSSEN - 110, KX + AUSSEN + 110, KZ - AUSSEN - 110, KZ - AUSSEN) -- hinten
