@@ -87,7 +87,17 @@ end
 local Gelaende = ordner("Gelaende")
 local KDeko = ordner("KesselDeko", Gelaende)
 
+-- Blender-Baeume (ServerStorage.BS_Deko, je 1 MeshPart mit Paletten-Textur; Quelle Blender/VoxelBaum)
+local DEKO = game:GetService("ServerStorage"):FindFirstChild("BS_Deko")
+local BAUM_VORLAGEN = DEKO and { DEKO:FindFirstChild("Baum_Rund"), DEKO:FindFirstChild("Baum_Hoch"), DEKO:FindFirstChild("Baum_Breit") }
 local function voxelBaum(f, pos, s, gruen)
+	if BAUM_VORLAGEN and BAUM_VORLAGEN[1] and not gruen then -- Wiesen-Gruen: Mesh-Baum
+		local b = BAUM_VORLAGEN[rng:NextInteger(1, #BAUM_VORLAGEN)]:Clone()
+		b.Size = b.Size * (s * 1.05)
+		b.CFrame = CF(pos + V(0, b.Size.Y / 2 - 0.2, 0)) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
+		b.Parent = f
+		return
+	end
 	local stamm = rng:NextNumber(3, 6) * s
 	deko(f, "Stamm", V(2, stamm, 2) * s ^ 0.5, CF(pos + V(0, stamm / 2, 0)), rgb(115, 75, 42))
 	local mitte = pos + V(0, stamm + 3 * s, 0)
