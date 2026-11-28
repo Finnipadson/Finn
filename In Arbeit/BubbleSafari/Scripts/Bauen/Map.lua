@@ -93,7 +93,7 @@ local BAUM_VORLAGEN = DEKO and { DEKO:FindFirstChild("Baum_Rund"), DEKO:FindFirs
 local function voxelBaum(f, pos, s, gruen)
 	if BAUM_VORLAGEN and BAUM_VORLAGEN[1] and not gruen then -- Wiesen-Gruen: Mesh-Baum
 		local b = BAUM_VORLAGEN[rng:NextInteger(1, #BAUM_VORLAGEN)]:Clone()
-		b.Size = b.Size * (s * 1.05)
+		b.Size = b.Size * (s * 1.5)
 		b.CFrame = CF(pos + V(0, b.Size.Y / 2 - 0.2, 0)) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
 		b.Parent = f
 		return

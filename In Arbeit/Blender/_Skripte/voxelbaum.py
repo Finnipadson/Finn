@@ -2,7 +2,7 @@
 # 1 Blender-Einheit = 1 Roblox-Stud. Ein Mesh, Farben ueber eine kleine Paletten-Textur (8x8 px,
 # jede Wuerfelflaeche zeigt auf ein Paletten-Pixel) -> in Roblox als 1 MeshPart + 1 Textur nutzbar.
 # Spaeter fuer andere Biome: nur PALETTEN-Eintrag tauschen (Herbst, Schnee, Pilzwald ...).
-# Headless: blender -b --factory-startup --python voxelbaum.py -- <ausgabeordner> [biom] [rund|hoch|breit]
+# Headless: blender -b --factory-startup --python voxelbaum.py -- <ausgabeordner> [biom] [rund|hoch|breit] [fein|grob]
 import bpy, bmesh, math, sys, os
 from mathutils import Vector
 
@@ -10,7 +10,8 @@ ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 OUT = ARGS[0] if ARGS else r"C:\Users\finns\OneDrive\Desktop\Claude\Games\In Arbeit\Blender\VoxelBaum"
 BIOM = ARGS[1] if len(ARGS) > 1 else "wiese"
 VARIANTE = ARGS[2] if len(ARGS) > 2 else "rund"  # rund | hoch | breit
-V = 0.5  # Wuerfel-Kantenlaenge in Studs (TVA-Feinheit)
+GROB = len(ARGS) > 3 and ARGS[3] == "grob"  # gröbere Version: 1,5x so große Würfel, ruhigere Farben
+V = 0.75 if GROB else 0.5  # Wuerfel-Kantenlaenge in Studs
 D = bpy.data
 os.makedirs(os.path.join(OUT, "Renders"), exist_ok=True)
 
@@ -111,7 +112,7 @@ def sd_krone(p):
     d = 1e9
     for c, r in KRONE:
         d = smin(d, sd_ell(p, c, r), 1.4)
-    d += (wert_rauschen(p, 0.45) - 0.5) * 1.6 + (wert_rauschen(p, 1.1) - 0.5) * 0.6
+    d += (wert_rauschen(p, 0.45) - 0.5) * (1.4 if GROB else 1.6) + (0 if GROB else (wert_rauschen(p, 1.1) - 0.5) * 0.6)
     return d
 
 # ---------------------------------------------------------------- Faerbung
@@ -120,8 +121,8 @@ def farbe_laub(p, nrm, idx):
     hell = 0.5 + 0.5 * nrm.z
     hoehe = (p.z - K_UNTEN) / (K_OBEN - K_UNTEN)
     r = hsh(*idx, 1)
-    s = hell * 0.65 + hoehe * 0.35 + (r - 0.5) * 0.55
-    if r > 0.93: s += 0.35                       # einzelne helle Blatt-Pixel
+    s = hell * 0.65 + hoehe * 0.35 + (r - 0.5) * (0.3 if GROB else 0.55)
+    if r > (0.97 if GROB else 0.93): s += 0.35                       # einzelne helle Blatt-Pixel
     return max(0, min(4, int(s * 5)))
 
 def farbe_rinde(p, nrm, idx):
@@ -229,7 +230,7 @@ def foto(co, pos, ziel, datei):
 
 if __name__ == "__main__":
     for o in list(D.objects): D.objects.remove(o)
-    NAME = f"{BIOM}_{VARIANTE}"
+    NAME = f"{BIOM}_{VARIANTE}" + ("_grob" if GROB else "")
     baum, n, flaechen = baue_baum("VoxelBaum_" + NAME)
     baum.data.materials.append(paletten_material())
     print(f"BAUM voxel={n} flaechen={flaechen} dreiecke={flaechen * 2}")
