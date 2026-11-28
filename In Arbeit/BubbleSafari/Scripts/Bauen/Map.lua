@@ -75,22 +75,135 @@ end
 local GRAS1, GRAS2 = rgb(105, 215, 65), rgb(88, 198, 55) -- kraeftiges Spielzeug-Gruen
 local ERDE1, ERDE2 = rgb(172, 96, 64), rgb(156, 86, 57) -- rotbraune Felsen
 
--- ===== Gelaende: Hochebene rundherum (Bloecke 0..RAND) =====
+-- ===== Voxel-Stil (Vorlage: Probe.lua / TVA-Video) =====
+local GRUEN = { rgb(86, 200, 60), rgb(70, 180, 50), rgb(110, 215, 75) }
+local ERDE = { rgb(140, 92, 55), rgb(122, 78, 46), rgb(158, 106, 64) }
+local function zufall(t) return t[rng:NextInteger(1, #t)] end
+local function noppen(p) -- Roblox-Noppen wie bei Bausteinen
+	p.Material = Enum.Material.Plastic
+	p.TopSurface = Enum.SurfaceType.Studs
+	return p
+end
 local Gelaende = ordner("Gelaende")
+local KDeko = ordner("KesselDeko", Gelaende)
+
+local function voxelBaum(f, pos, s)
+	local stamm = rng:NextNumber(3, 6) * s
+	deko(f, "Stamm", V(2, stamm, 2) * s ^ 0.5, CF(pos + V(0, stamm / 2, 0)), rgb(115, 75, 42))
+	local mitte = pos + V(0, stamm + 3 * s, 0)
+	for i = 1, rng:NextInteger(8, 12) do
+		local r = rng:NextNumber(2.4, 4) * s
+		local off = V(rng:NextNumber(-3, 3), rng:NextNumber(-1.5, 2.5), rng:NextNumber(-3, 3)) * s
+		deko(f, "Laub", V(r, r, r), CF(mitte + off) * CFrame.Angles(0, rng:NextNumber(0, 1.5), 0), zufall(GRUEN))
+	end
+end
+local function voxelPilz(f, pos, s)
+	deko(f, "Stiel", V(1.2, 2.2, 1.2) * s, CF(pos + V(0, 1.1 * s, 0)), rgb(245, 235, 215))
+	deko(f, "Kappe", V(3.2, 1.4, 3.2) * s, CF(pos + V(0, 2.6 * s, 0)), rgb(225, 45, 45))
+	deko(f, "Kappe", V(2.2, 0.6, 2.2) * s, CF(pos + V(0, 3.4 * s, 0)), rgb(225, 45, 45))
+	for _, o in { V(-0.9, 3.35, 0.6), V(0.8, 3.35, -0.5), V(0.2, 3.75, 0.2), V(-0.5, 2.6, -1.5) } do
+		deko(f, "Punkt", V(0.6, 0.4, 0.6) * s, CF(pos + o * s), rgb(255, 255, 255))
+	end
+end
+local function sonnenblume(f, pos)
+	local h = rng:NextNumber(5, 8)
+	deko(f, "Stiel", V(0.6, h, 0.6), CF(pos + V(0, h / 2, 0)), rgb(70, 150, 50))
+	deko(f, "Blatt", V(1.6, 0.4, 0.8), CF(pos + V(0.8, h * 0.45, 0)), rgb(80, 170, 55))
+	local k = pos + V(0, h + 0.5, 0)
+	for i = 0, 7 do
+		local w = i / 8 * math.pi * 2
+		deko(f, "Bluete", V(1, 1, 0.5), CF(k + V(math.cos(w) * 1.3, math.sin(w) * 1.3, 0)), rgb(255, 205, 30))
+	end
+	deko(f, "Mitte", V(1.6, 1.6, 0.6), CF(k), rgb(110, 70, 35))
+end
+local BLUMEN = { rgb(255, 110, 160), rgb(255, 225, 60), rgb(180, 120, 255), rgb(255, 255, 255), rgb(255, 140, 60) }
+local function blume(f, pos)
+	deko(f, "Stiel", V(0.35, 1.2, 0.35), CF(pos + V(0, 0.6, 0)), rgb(70, 150, 50))
+	deko(f, "Bluete", V(1, 0.6, 1), CF(pos + V(0, 1.4, 0)), zufall(BLUMEN))
+end
+local function zufallsDeko(f, pos)
+	local r = rng:NextNumber()
+	if r < 0.55 then
+		voxelBaum(f, pos, rng:NextNumber(0.8, 1.2))
+	elseif r < 0.75 then
+		voxelPilz(f, pos, rng:NextNumber(0.8, 1.3))
+	elseif r < 0.88 then
+		sonnenblume(f, pos)
+	end
+end
+
+-- Hochebene ganz aussen: Erde + 3 Studs dicke Noppen-Grasdecke
 local function hochebene(x1, x2, z1, z2)
 	local mx, mz = (x1 + x2) / 2, (z1 + z2) / 2
-	P(Gelaende, "Hochebene", V(x2 - x1, RAND, z2 - z1), CF(mx, RAND / 2, mz), ERDE1)
-	P(Gelaende, "HochGras", V(x2 - x1, 1, z2 - z1), CF(mx, RAND + 0.5, mz), GRAS1)
+	P(Gelaende, "Hochebene", V(x2 - x1, RAND, z2 - z1), CF(mx, RAND / 2, mz), ERDE[1])
+	noppen(P(Gelaende, "HochGras", V(x2 - x1, 3, z2 - z1), CF(mx, RAND + 1.5, mz), GRUEN[1]))
 end
-hochebene(-KX - 110, KX + 110, KZ - 110, KZ) -- hinten
-hochebene(-KX - 110, -KX, KZ, 0) -- links neben Kessel
-hochebene(KX, KX + 110, KZ, 0) -- rechts neben Kessel
-hochebene(-KX - 110, -SB, 0, ENDE + 40) -- links der Schlucht (inkl. Kessel-Vorderwand)
-hochebene(SB, KX + 110, 0, ENDE + 40) -- rechts der Schlucht
+
+-- Eine Terrassenstufe: Erdbloecke mit Pixel-Flecken, Graskappe mit Ueberhang, Gras-Tropfen, Deko oben
+-- innen = Richtung zum Kessel (Einheitsvektor entlang X oder Z)
+local function terrasse(x1, x2, z1, z2, h0, innen, wackeln)
+	local entlangX = innen.X == 0
+	local laenge = if entlangX then x2 - x1 else z2 - z1
+	local tiefe = if entlangX then z2 - z1 else x2 - x1
+	local n = math.max(1, math.round(laenge / 16))
+	local stueck = laenge / n
+	local mx, mz = (x1 + x2) / 2, (z1 + z2) / 2
+	local seite = if entlangX then V(1, 0, 0) else V(0, 0, 1)
+	for i = 0, n - 1 do
+		local a = (if entlangX then x1 else z1) + (i + 0.5) * stueck
+		local c = if entlangX then V(a, 0, mz) else V(mx, 0, a)
+		local h = h0 + (if wackeln then rng:NextInteger(-1, 1) else 0)
+		P(Gelaende, "Terrasse", if entlangX then V(stueck, h, tiefe) else V(tiefe, h, stueck), CF(c + V(0, h / 2, 0)), zufall(ERDE))
+		noppen(P(Gelaende, "TerrasseGras", if entlangX then V(stueck, 3, tiefe + 2) else V(tiefe + 2, 3, stueck), CF(c + innen + V(0, h + 1.5, 0)), zufall(GRUEN)))
+		local kante = c + innen * (tiefe / 2)
+		for k = 1, 3 do
+			local w = rng:NextInteger(1, 3) * 2
+			deko(Gelaende, "Fleck", if entlangX then V(w, 2, 0.4) else V(0.4, 2, w),
+				CF(kante + innen * 0.15 + seite * rng:NextNumber(-stueck / 2 + 2, stueck / 2 - 2) + V(0, rng:NextNumber(2, math.max(2.5, h - 3)), 0)),
+				if k == 1 then rgb(105, 66, 38) else rgb(165, 115, 72))
+		end
+		for k = 1, rng:NextInteger(2, 4) do
+			local lh = rng:NextInteger(1, 3) * 1.5
+			deko(Gelaende, "Tropfen", V(2, lh, 2), CF(kante + innen + seite * rng:NextNumber(-stueck / 2 + 1, stueck / 2 - 1) + V(0, h - lh / 2, 0)), zufall(GRUEN))
+		end
+	end
+	-- Deko oben auf der Stufe
+	local y = h0 + 3
+	local mittig = if entlangX then V(0, 0, mz) else V(mx, 0, 0)
+	for t = 6, laenge - 6, 14 do
+		local entlang = (if entlangX then x1 else z1) + t + rng:NextNumber(-3, 3)
+		local quer = rng:NextNumber(-tiefe / 2 + 3, tiefe / 2 - 3)
+		local pos = mittig + seite * entlang + innen * quer + V(0, y, 0)
+		zufallsDeko(KDeko, pos)
+		for k = 1, 2 do
+			blume(KDeko, mittig + seite * (entlang + rng:NextNumber(-6, 6)) + innen * rng:NextNumber(-tiefe / 2 + 1, tiefe / 2 - 1) + V(0, y, 0))
+		end
+	end
+end
+
+-- Kessel-Rand: 5 Stufen nach aussen, oberste = Hochebenen-Hoehe
+local T, STUFEN = 14, 5
+local AUSSEN = T * STUFEN -- 70
+for k = 0, STUFEN - 1 do
+	local h = math.floor(RAND * (k + 1) / STUFEN) -- 9, 18, 27, 36, 45
+	local w = k < STUFEN - 1
+	local a, b = k * T, (k + 1) * T
+	terrasse(-KX - b, KX + b, KZ - b, KZ - a, h, V(0, 0, 1), w) -- hinten
+	terrasse(-KX - b, -KX - a, KZ - a, a, h, V(1, 0, 0), w) -- links
+	terrasse(KX + a, KX + b, KZ - a, a, h, V(-1, 0, 0), w) -- rechts
+	terrasse(-KX - b, -SB, a, b, h, V(0, 0, -1), w) -- vorne links (Stufen-Seite zur Schlucht sichtbar)
+	terrasse(SB, KX + b, a, b, h, V(0, 0, -1), w) -- vorne rechts
+	task.wait()
+end
+hochebene(-KX - AUSSEN - 110, KX + AUSSEN + 110, KZ - AUSSEN - 110, KZ - AUSSEN) -- hinten
+hochebene(-KX - AUSSEN - 110, -KX - AUSSEN, KZ - AUSSEN, AUSSEN) -- links neben Kessel
+hochebene(KX + AUSSEN, KX + AUSSEN + 110, KZ - AUSSEN, AUSSEN) -- rechts neben Kessel
+hochebene(-KX - AUSSEN - 110, -SB, AUSSEN, ENDE + 40) -- links der Schlucht
+hochebene(SB, KX + AUSSEN + 110, AUSSEN, ENDE + 40) -- rechts der Schlucht
 hochebene(-SB, SB, ENDE, ENDE + 40) -- Schlucht-Ende
 task.wait()
 
--- Voxel-Klippen: Saeulen an den Innenwaenden, mit Gras-Kappe (Ueberhang wie im Vorbild)
+-- Klippen der Schlucht (noch alter Stil, kommt beim Schlucht-Umbau dran)
 local function wandReihe(a, b, innen, breite)
 	local laenge = (b - a).Magnitude
 	local richtung = (b - a).Unit
@@ -111,23 +224,47 @@ local function wandReihe(a, b, innen, breite)
 		if i % 10 == 9 then task.wait() end
 	end
 end
-wandReihe(V(-KX, 0, KZ), V(KX, 0, KZ), V(0, 0, 1), 16) -- Kessel hinten
-wandReihe(V(-KX, 0, KZ), V(-KX, 0, 0), V(1, 0, 0), 16) -- Kessel links
-wandReihe(V(KX, 0, KZ), V(KX, 0, 0), V(-1, 0, 0), 16) -- Kessel rechts
-wandReihe(V(-KX, 0, 0), V(-SB, 0, 0), V(0, 0, -1), 16) -- Kessel vorne links
-wandReihe(V(SB, 0, 0), V(KX, 0, 0), V(0, 0, -1), 16) -- Kessel vorne rechts
-wandReihe(V(-SB, 0, 0), V(-SB, 0, ENDE), V(1, 0, 0), 14) -- Schlucht links
-wandReihe(V(SB, 0, 0), V(SB, 0, ENDE), V(-1, 0, 0), 14) -- Schlucht rechts
+wandReihe(V(-SB, 0, AUSSEN), V(-SB, 0, ENDE), V(1, 0, 0), 14) -- Schlucht links
+wandReihe(V(SB, 0, AUSSEN), V(SB, 0, ENDE), V(-1, 0, 0), 14) -- Schlucht rechts
 task.wait()
 
--- Kessel-Boden (Schachbrett)
+-- Kessel-Boden: Noppen-Schachbrett
 local KB = ordner("KesselBoden", Gelaende)
 for x = -KX, KX - 10, 10 do
 	for z = KZ, -10, 10 do
-		local c = if ((x + KX) / 10 + (z - KZ) / 10) % 2 == 0 then GRAS1 else GRAS2
-		P(KB, "Boden", V(10, 1, 10), CF(x + 5, -0.5, z + 5), c)
+		local c = if ((x + KX) / 10 + (z - KZ) / 10) % 2 == 0 then rgb(120, 220, 80) else rgb(100, 205, 65)
+		noppen(P(KB, "Boden", V(10, 1, 10), CF(x + 5, -0.5, z + 5), c))
 	end
 	task.wait()
+end
+-- Deko unten am Kesselrand (nur wo keine Grundstuecke/Staende sind)
+for z = -100, -8, 11 do
+	for _, sx in { -1, 1 } do
+		local pos = V(sx * rng:NextNumber(KX - 8, KX - 4), 0, z + rng:NextNumber(-3, 3))
+		if rng:NextNumber() < 0.6 then voxelBaum(KDeko, pos, 0.8) else voxelPilz(KDeko, pos, 0.9) end
+		blume(KDeko, pos + V(-sx * 3, 0, 2))
+	end
+end
+for x = 58, KX - 6, 11 do
+	for _, sx in { -1, 1 } do
+		local pos = V(sx * x, 0, -rng:NextNumber(4, 8))
+		if rng:NextNumber() < 0.6 then voxelBaum(KDeko, pos, 0.8) else voxelPilz(KDeko, pos, 0.9) end
+		blume(KDeko, pos + V(0, 0, -3))
+	end
+end
+-- Schwebende Inseln rund um den Kessel
+for i = 1, 9 do
+	local w = i / 9 * math.pi * 2
+	local c = V(math.cos(w) * rng:NextNumber(150, 210), rng:NextNumber(80, 120), -100 + math.sin(w) * rng:NextNumber(130, 170))
+	local g = rng:NextNumber(10, 18)
+	noppen(deko(KDeko, "Insel", V(g, 2.5, g), CF(c), zufall(GRUEN)))
+	local y, bb = c.Y - 2.5, g
+	while bb > 3 do -- umgedrehte Erd-Pyramide
+		bb -= rng:NextNumber(2.5, 4)
+		deko(KDeko, "InselErde", V(bb, 2.5, bb), CF(c.X, y, c.Z), zufall(ERDE))
+		y -= 2.5
+	end
+	if rng:NextNumber() < 0.6 then voxelBaum(KDeko, c + V(0, 1.25, 0), 0.7) else voxelPilz(KDeko, c + V(0, 1.25, 0), 0.8) end
 end
 -- Unsichtbare Sperre am Schlucht-Eingang (Spieler bleiben im Kessel)
 P(Gelaende, "Absperrung", V(SB * 2, 30, 1), CF(0, 15, 2), rgb(255, 255, 255), nil, { Transparency = 1 })
@@ -420,7 +557,7 @@ local function kachelWeg(x1, x2, z1, z2, kachel)
 	local nx, nz = math.floor((x2 - x1) / kachel), math.floor((z2 - z1) / kachel)
 	for ix = 0, nx - 1 do
 		for iz = 0, nz - 1 do
-			P(Wege, "Kachel", V(kachel, 0.3, kachel), CF(x1 + (ix + 0.5) * kachel, 0.15, z1 + (iz + 0.5) * kachel), if (ix + iz) % 2 == 0 then OR1 else OR2)
+			noppen(P(Wege, "Kachel", V(kachel, 0.3, kachel), CF(x1 + (ix + 0.5) * kachel, 0.15, z1 + (iz + 0.5) * kachel), if (ix + iz) % 2 == 0 then OR1 else OR2))
 		end
 	end
 end
