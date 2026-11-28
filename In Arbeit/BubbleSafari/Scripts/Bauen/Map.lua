@@ -87,20 +87,21 @@ end
 local Gelaende = ordner("Gelaende")
 local KDeko = ordner("KesselDeko", Gelaende)
 
-local function voxelBaum(f, pos, s)
+local function voxelBaum(f, pos, s, gruen)
 	local stamm = rng:NextNumber(3, 6) * s
 	deko(f, "Stamm", V(2, stamm, 2) * s ^ 0.5, CF(pos + V(0, stamm / 2, 0)), rgb(115, 75, 42))
 	local mitte = pos + V(0, stamm + 3 * s, 0)
 	for i = 1, rng:NextInteger(8, 12) do
 		local r = rng:NextNumber(2.4, 4) * s
 		local off = V(rng:NextNumber(-3, 3), rng:NextNumber(-1.5, 2.5), rng:NextNumber(-3, 3)) * s
-		deko(f, "Laub", V(r, r, r), CF(mitte + off) * CFrame.Angles(0, rng:NextNumber(0, 1.5), 0), zufall(GRUEN))
+		deko(f, "Laub", V(r, r, r), CF(mitte + off) * CFrame.Angles(0, rng:NextNumber(0, 1.5), 0), zufall(gruen or GRUEN))
 	end
 end
-local function voxelPilz(f, pos, s)
+local function voxelPilz(f, pos, s, farbe)
+	farbe = farbe or rgb(225, 45, 45)
 	deko(f, "Stiel", V(1.2, 2.2, 1.2) * s, CF(pos + V(0, 1.1 * s, 0)), rgb(245, 235, 215))
-	deko(f, "Kappe", V(3.2, 1.4, 3.2) * s, CF(pos + V(0, 2.6 * s, 0)), rgb(225, 45, 45))
-	deko(f, "Kappe", V(2.2, 0.6, 2.2) * s, CF(pos + V(0, 3.4 * s, 0)), rgb(225, 45, 45))
+	deko(f, "Kappe", V(3.2, 1.4, 3.2) * s, CF(pos + V(0, 2.6 * s, 0)), farbe)
+	deko(f, "Kappe", V(2.2, 0.6, 2.2) * s, CF(pos + V(0, 3.4 * s, 0)), farbe)
 	for _, o in { V(-0.9, 3.35, 0.6), V(0.8, 3.35, -0.5), V(0.2, 3.75, 0.2), V(-0.5, 2.6, -1.5) } do
 		deko(f, "Punkt", V(0.6, 0.4, 0.6) * s, CF(pos + o * s), rgb(255, 255, 255))
 	end
@@ -141,7 +142,10 @@ end
 
 -- Eine Terrassenstufe: Erdbloecke mit Pixel-Flecken, Graskappe mit Ueberhang, Gras-Tropfen, Deko oben
 -- innen = Richtung zum Kessel (Einheitsvektor entlang X oder Z)
-local function terrasse(x1, x2, z1, z2, h0, innen, wackeln)
+local function terrasse(x1, x2, z1, z2, h0, innen, wackeln, stil)
+	stil = stil or {}
+	local gr = stil.gruen or GRUEN
+	local dekoOrdner = stil.ordner or KDeko
 	local entlangX = innen.X == 0
 	local laenge = if entlangX then x2 - x1 else z2 - z1
 	local tiefe = if entlangX then z2 - z1 else x2 - x1
@@ -154,78 +158,54 @@ local function terrasse(x1, x2, z1, z2, h0, innen, wackeln)
 		local c = if entlangX then V(a, 0, mz) else V(mx, 0, a)
 		local h = h0 + (if wackeln then rng:NextInteger(-1, 1) else 0)
 		P(Gelaende, "Terrasse", if entlangX then V(stueck, h, tiefe) else V(tiefe, h, stueck), CF(c + V(0, h / 2, 0)), zufall(ERDE))
-		noppen(P(Gelaende, "TerrasseGras", if entlangX then V(stueck, 3, tiefe + 2) else V(tiefe + 2, 3, stueck), CF(c + innen + V(0, h + 1.5, 0)), zufall(GRUEN)))
+		noppen(P(Gelaende, "TerrasseGras", if entlangX then V(stueck, 3, tiefe + 2) else V(tiefe + 2, 3, stueck), CF(c + innen + V(0, h + 1.5, 0)), zufall(gr)))
 		local kante = c + innen * (tiefe / 2)
 		for k = 1, 3 do
-			local w = rng:NextInteger(1, 3) * 2
+			local w = rng:NextInteger(1, 3) * 2 + (if h > 20 then 2 else 0)
 			deko(Gelaende, "Fleck", if entlangX then V(w, 2, 0.4) else V(0.4, 2, w),
 				CF(kante + innen * 0.15 + seite * rng:NextNumber(-stueck / 2 + 2, stueck / 2 - 2) + V(0, rng:NextNumber(2, math.max(2.5, h - 3)), 0)),
 				if k == 1 then rgb(105, 66, 38) else rgb(165, 115, 72))
 		end
 		for k = 1, rng:NextInteger(2, 4) do
 			local lh = rng:NextInteger(1, 3) * 1.5
-			deko(Gelaende, "Tropfen", V(2, lh, 2), CF(kante + innen + seite * rng:NextNumber(-stueck / 2 + 1, stueck / 2 - 1) + V(0, h - lh / 2, 0)), zufall(GRUEN))
+			deko(Gelaende, "Tropfen", V(2, lh, 2), CF(kante + innen + seite * rng:NextNumber(-stueck / 2 + 1, stueck / 2 - 1) + V(0, h - lh / 2, 0)), zufall(gr))
 		end
 	end
 	-- Deko oben auf der Stufe
 	local y = h0 + 3
 	local mittig = if entlangX then V(0, 0, mz) else V(mx, 0, 0)
-	for t = 6, laenge - 6, 14 do
+	for t = 6, laenge - 6, stil.abstand or 14 do
 		local entlang = (if entlangX then x1 else z1) + t + rng:NextNumber(-3, 3)
 		local quer = rng:NextNumber(-tiefe / 2 + 3, tiefe / 2 - 3)
 		local pos = mittig + seite * entlang + innen * quer + V(0, y, 0)
-		zufallsDeko(KDeko, pos)
-		for k = 1, 2 do
-			blume(KDeko, mittig + seite * (entlang + rng:NextNumber(-6, 6)) + innen * rng:NextNumber(-tiefe / 2 + 1, tiefe / 2 - 1) + V(0, y, 0))
+		local dk = stil.deko or zufallsDeko
+		dk(dekoOrdner, pos)
+		for k = 1, stil.blumen or 2 do
+			blume(dekoOrdner, mittig + seite * (entlang + rng:NextNumber(-6, 6)) + innen * rng:NextNumber(-tiefe / 2 + 1, tiefe / 2 - 1) + V(0, y, 0))
 		end
 	end
 end
 
 -- Kessel-Rand: 5 Stufen nach aussen, oberste = Hochebenen-Hoehe
-local T, STUFEN = 14, 5
-local AUSSEN = T * STUFEN -- 70
+local T, STUFEN = 16, 3
+local AUSSEN = T * STUFEN -- 48
 for k = 0, STUFEN - 1 do
-	local h = math.floor(RAND * (k + 1) / STUFEN) -- 9, 18, 27, 36, 45
+	local h = math.floor(RAND * (k + 1) / STUFEN) -- 15, 30, 45
 	local w = k < STUFEN - 1
 	local a, b = k * T, (k + 1) * T
 	terrasse(-KX - b, KX + b, KZ - b, KZ - a, h, V(0, 0, 1), w) -- hinten
 	terrasse(-KX - b, -KX - a, KZ - a, a, h, V(1, 0, 0), w) -- links
 	terrasse(KX + a, KX + b, KZ - a, a, h, V(-1, 0, 0), w) -- rechts
-	terrasse(-KX - b, -SB, a, b, h, V(0, 0, -1), w) -- vorne links (Stufen-Seite zur Schlucht sichtbar)
-	terrasse(SB, KX + b, a, b, h, V(0, 0, -1), w) -- vorne rechts
+	terrasse(-KX - b, -SB - b, a, b, h, V(0, 0, -1), w) -- vorne links (Ecke gehoert zur Schlucht-Terrasse)
+	terrasse(SB + b, KX + b, a, b, h, V(0, 0, -1), w) -- vorne rechts
 	task.wait()
 end
 hochebene(-KX - AUSSEN - 110, KX + AUSSEN + 110, KZ - AUSSEN - 110, KZ - AUSSEN) -- hinten
 hochebene(-KX - AUSSEN - 110, -KX - AUSSEN, KZ - AUSSEN, AUSSEN) -- links neben Kessel
 hochebene(KX + AUSSEN, KX + AUSSEN + 110, KZ - AUSSEN, AUSSEN) -- rechts neben Kessel
-hochebene(-KX - AUSSEN - 110, -SB, AUSSEN, ENDE + 40) -- links der Schlucht
-hochebene(SB, KX + AUSSEN + 110, AUSSEN, ENDE + 40) -- rechts der Schlucht
+hochebene(-KX - AUSSEN - 110, -SB - AUSSEN, AUSSEN, ENDE + 40) -- links der Schlucht
+hochebene(SB + AUSSEN, KX + AUSSEN + 110, AUSSEN, ENDE + 40) -- rechts der Schlucht
 hochebene(-SB, SB, ENDE, ENDE + 40) -- Schlucht-Ende
-task.wait()
-
--- Klippen der Schlucht (noch alter Stil, kommt beim Schlucht-Umbau dran)
-local function wandReihe(a, b, innen, breite)
-	local laenge = (b - a).Magnitude
-	local richtung = (b - a).Unit
-	local n = math.floor(laenge / breite)
-	for i = 0, n - 1 do
-		local mitte = a + richtung * (i + 0.5) * breite
-		local d = rng:NextNumber(2, 7)
-		local h = RAND + rng:NextInteger(-6, 4)
-		local cf = CFrame.lookAt(mitte + innen * (d / 2), mitte + innen * (d / 2) + richtung)
-		local erde = if i % 2 == 0 then ERDE1 else ERDE2
-		P(Gelaende, "Klippe", V(d, h - 5, breite), cf * CF(0, (h - 5) / 2, 0), erde)
-		P(Gelaende, "KlippeGras", V(d + 1.5, 5, breite), cf * CF(0, h - 2.5, 0), if i % 2 == 0 then GRAS1 else GRAS2)
-		if rng:NextNumber() < 0.45 then -- runder Felsbrocken in der Wand
-			local r = rng:NextNumber(4, 9)
-			local y = rng:NextNumber(6, h - 12)
-			deko(Gelaende, "Brocken", V(r, r * 0.8, r), CF(mitte + innen * (d + r * 0.15) + V(0, y, 0) + richtung * rng:NextNumber(-breite / 3, breite / 3)), rgb(185, 108, 74), nil, { Shape = Enum.PartType.Ball })
-		end
-		if i % 10 == 9 then task.wait() end
-	end
-end
-wandReihe(V(-SB, 0, AUSSEN), V(-SB, 0, ENDE), V(1, 0, 0), 14) -- Schlucht links
-wandReihe(V(SB, 0, AUSSEN), V(SB, 0, ENDE), V(-1, 0, 0), 14) -- Schlucht rechts
 task.wait()
 
 -- Kessel-Boden: Noppen-Schachbrett
@@ -286,14 +266,14 @@ for _, b in BIOME do
 		zi += 1
 		for xi = 0, (2 * SB) / KACHEL - 1 do
 			local c = if (xi + zi) % 2 == 0 then b.b1 else b.b2
-			P(boden, "Boden", V(KACHEL, 1, KACHEL), CF(-SB + xi * KACHEL + KACHEL / 2, -0.5, z + KACHEL / 2), c)
+			noppen(P(boden, "Boden", V(KACHEL, 1, KACHEL), CF(-SB + xi * KACHEL + KACHEL / 2, -0.5, z + KACHEL / 2), c))
 		end
 		if zi % 40 == 0 then task.wait() end
 	end
 	-- Bogen mit Biom-Namen ueber der Schlucht
 	if b.von > 0 then
 		for _, s in { -1, 1 } do
-			P(f, "BogenPfosten", V(3, 14, 3), CF(s * (SB + 3), RAND + 7, b.von), rgb(120, 85, 55))
+			P(f, "BogenPfosten", V(3, RAND + 14, 3), CF(s * (SB + 3), (RAND + 14) / 2, b.von), rgb(120, 85, 55))
 		end
 		local balken = P(f, "BiomBogen", V(SB * 2 + 12, 8, 1.5), CF(0, RAND + 12, b.von), rgb(120, 85, 55))
 		schildText(balken, b.name, rgb(255, 255, 255), Enum.NormalId.Front)
@@ -322,7 +302,7 @@ end
 -- Position oben am Schluchtrand (links oder rechts)
 local function randPos(b)
 	local s = if rng:NextNumber() < 0.5 then -1 else 1
-	return s * rng:NextNumber(SB + 8, SB + 90), rng:NextNumber(b.von + 5, b.bis - 5)
+	return s * rng:NextNumber(SB + AUSSEN + 5, SB + AUSSEN + 70), rng:NextNumber(b.von + 5, b.bis - 5)
 end
 
 -- Blumenwiese
@@ -368,7 +348,7 @@ do
 	end
 	-- Landmarke: Riesen-Gaensebluemchen am Rand
 	local lm = ordner("Landmarke", f)
-	local lx, lz = 62, 380
+	local lx, lz = SB + AUSSEN + 18, 380
 	deko(lm, "Stiel", V(4, 60, 4), CF(lx, RAND + 30, lz), rgb(70, 160, 60))
 	for i = 0, 11 do
 		local a = i / 12 * math.pi * 2
@@ -411,7 +391,7 @@ do
 		if i % 20 == 0 then task.wait() end
 	end
 	local lm = ordner("Landmarke", f)
-	local lx, lz = -70, 1100
+	local lx, lz = -(SB + AUSSEN + 32), 1100
 	deko(lm, "Stiel", V(12, 60, 12), CF(lx, RAND + 30, lz), rgb(235, 225, 210))
 	deko(lm, "Kappe", V(60, 16, 60), CF(lx, RAND + 66, lz), rgb(170, 90, 230))
 	deko(lm, "Kappe", V(42, 8, 42), CF(lx, RAND + 78, lz), rgb(185, 110, 240))
@@ -474,7 +454,7 @@ do
 		if i % 20 == 0 then task.wait() end
 	end
 	local lm = ordner("Landmarke", f)
-	local pos = V(68, RAND, 2000)
+	local pos = V(SB + AUSSEN + 25, RAND, 2000)
 	for i = 1, 6 do
 		local seg = deko(lm, "Stamm", V(12 - i, 16, 12 - i), CF(pos + V(0, 8, 0)) * CFrame.Angles(0, 0, math.rad((i % 2 == 0) and 12 or -12)), rgb(80, 70, 55))
 		pos = (seg.CFrame * CF(0, 8, 0)).Position
@@ -486,6 +466,50 @@ do
 		deko(lm, "Moos", V(1.2, 16, 1.2), CF(pos + V(math.cos(a) * 26, -6, math.sin(a) * 26)), rgb(120, 140, 90))
 	end
 	task.wait()
+end
+
+-- ===== Schlucht-Waende: Terrassen je Biom =====
+do
+	local PILZ_KAPPEN = { rgb(225, 45, 45), rgb(160, 80, 220), rgb(70, 140, 235) }
+	local stile = {
+		Wiese = { gruen = GRUEN, abstand = 20, blumen = 1 },
+		Pilzwald = {
+			gruen = { rgb(60, 150, 85), rgb(50, 135, 75), rgb(75, 165, 95) }, abstand = 20, blumen = 1,
+			deko = function(f, pos)
+				if rng:NextNumber() < 0.6 then
+					voxelPilz(f, pos, rng:NextNumber(1, 1.8), PILZ_KAPPEN[rng:NextInteger(1, #PILZ_KAPPEN)])
+				else
+					voxelBaum(f, pos, rng:NextNumber(0.9, 1.2), { rgb(40, 110, 70), rgb(50, 125, 80) })
+				end
+			end,
+		},
+		Sumpf = {
+			gruen = { rgb(115, 145, 70), rgb(100, 130, 62), rgb(125, 155, 80) }, abstand = 22, blumen = 0,
+			deko = function(f, pos)
+				if rng:NextNumber() < 0.7 then
+					voxelBaum(f, pos, rng:NextNumber(0.9, 1.3), { rgb(95, 125, 65), rgb(110, 135, 72) })
+				else
+					for j = 1, 3 do
+						local hh = rng:NextNumber(3, 6)
+						deko(f, "Schilf", V(0.4, hh, 0.4), CF(pos + V(rng:NextNumber(-1.5, 1.5), hh / 2, rng:NextNumber(-1.5, 1.5))), rgb(110, 150, 60))
+					end
+				end
+			end,
+		},
+	}
+	for _, bm in BIOME do
+		local stil = table.clone(stile[bm.id])
+		stil.ordner = Tal[bm.id]:FindFirstChild("Deko") or ordner("Deko", Tal[bm.id])
+		for k = 0, STUFEN - 1 do
+			local h = math.floor(RAND * (k + 1) / STUFEN)
+			local a, b = k * T, (k + 1) * T
+			local z1 = math.max(bm.von, a)
+			local z2 = if bm.bis >= ENDE then ENDE + 40 else bm.bis
+			terrasse(-SB - b, -SB - a, z1, z2, h, V(1, 0, 0), k < STUFEN - 1, stil) -- links
+			terrasse(SB + a, SB + b, z1, z2, h, V(-1, 0, 0), k < STUFEN - 1, stil) -- rechts
+			task.wait()
+		end
+	end
 end
 
 -- ===== Wurfdeck in der Mitte (Holzdeck mit Treppe, Gelaender, gelber Scheibe) =====
