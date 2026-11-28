@@ -442,7 +442,7 @@ for i, cx in XS do
 	g:SetAttribute("Besitzer", 0)
 	local c = CF(cx, 0, -150) -- Mitte, +Z Richtung Schlucht
 	local function L(x, y, z) return c * CF(x, y, z) end
-	P(g, "Boden", V(66, 1, 80), L(0, 0.05, 0), rgb(130, 225, 85))
+	P(g, "Boden", V(66, 1, 80), L(0, 0.05, 0), rgb(130, 225, 85), nil, { Transparency = 1, CanCollide = false, CanQuery = false }) -- nur Bezugspunkt
 	-- Gehege (Flaeche + Zaun) baut der Server je nach Ausbaustufe
 	-- Trainingsplatz: Steinmatte, Holzteller mit Zackenring
 	P(g, "Steinmatte", V(20, 0.3, 20), L(15, 0.65, -14), rgb(150, 150, 158), Enum.Material.Slate)
@@ -462,7 +462,7 @@ for i, cx in XS do
 	end
 	local ns = P(g, "NamensSchild", V(15, 5, 0.8), CFrame.lookAt(L(12, 6.5, 37).Position, L(12, 6.5, 37).Position + V(0, 0, 1)) * CFrame.Angles(0, 0, math.rad(-4)), HOLZ, Enum.Material.WoodPlanks)
 	ns.CanCollide = false
-	deko(g, "SchildAnker", V(1, 1, 1), L(-15, 15, 22), rgb(255, 255, 255), nil, { Transparency = 1 })
+	deko(g, "SchildAnker", V(1, 1, 1), L(-15, 24, 22), rgb(255, 255, 255), nil, { Transparency = 1 })
 	g.Parent = Grund
 	task.wait()
 end
@@ -485,15 +485,17 @@ local function stand(name, pos, blick, markise, schild, schildFarbe)
 	local sc = deko(m, "Schild", V(13, 3.6, 0.6), cf * CF(0, 13.4, 0.8), schildFarbe)
 	schildText(sc, schild, rgb(255, 255, 255), Enum.NormalId.Front)
 	m.PrimaryPart = theke
+	m:ScaleTo(1.4)
+	m:PivotTo(m:GetPivot() + V(0, 0.7, 0)) -- nach dem Skalieren wieder auf den Boden
 	m.Parent = Hub
 	return m
 end
-local laden = stand("Seifenladen", V(-21, 0, -62), V(1, 0, 0), rgb(70, 160, 255), "SEIFENLADEN", rgb(70, 160, 255))
+local laden = stand("Seifenladen", V(-24, 0, -62), V(1, 0, -0.6), rgb(70, 160, 255), "SEIFENLADEN", rgb(70, 160, 255))
 for k = -2, 2 do
 	deko(laden, "Seife", V(1.6, 1, 1.2), laden.Theke.CFrame * CF(k * 2.2, 2.3, 0), ({ rgb(235, 245, 255), rgb(255, 200, 70), rgb(110, 240, 190), rgb(255, 150, 200), rgb(190, 140, 255) })[k + 3])
 end
-stand("VerkaufStand", V(-21, 0, -86), V(1, 0, 0), rgb(235, 60, 60), "VERKAUFEN", rgb(235, 60, 60))
-stand("IndexStand", V(21, 0, -62), V(-1, 0, 0), rgb(150, 100, 230), "TIER-INDEX", rgb(150, 100, 230))
+stand("VerkaufStand", V(-24, 0, -88), V(1, 0, -0.6), rgb(235, 60, 60), "VERKAUFEN", rgb(235, 60, 60))
+stand("IndexStand", V(24, 0, -62), V(-1, 0, -0.6), rgb(150, 100, 230), "TIER-INDEX", rgb(150, 100, 230))
 -- Bestenliste mit Krone
 do
 	local m = Instance.new("Model")

@@ -38,3 +38,11 @@ Fang-und-Gehege-Spiel: Blasebalg treten → Seifenblase pusten → Blase treibt 
 - `screen_capture` ist verkleinert: Viewport war 2092×1153, Bild 1920×1058 → Klick-Koordinaten über `AbsolutePosition` des Knopfs ermitteln, nicht aus dem Bild ablesen.
 - `require` in `execute_luau` lädt eine eigene Modul-Kopie → Spielerdaten des laufenden Servers sind darüber nicht erreichbar.
 - ProximityPrompts sind auf `screen_capture`-Bildern nicht zu sehen; Auslösen per `user_keyboard_input` E klappt.
+
+## Phase 2b (28.11.2026): Karte im Stil der Vorbild-Karte
+- Vorlage: `Notizen/Design-Bibliothek/Welt-Map.md` → „Ziehe einen Dino – Stil der ganzen Karte“ (45 Standbilder ausgewertet).
+- Kessel: Grün-Schachbrett 10er-Kacheln, oranger Kachelweg (Hauptweg x −6…6, z −104…−32; Querweg z −110…−100), Holz-**Wurfdeck** `Map/Wurfplatz/Platte` (28×24, Oberkante y 2,6, Treppe Richtung Kessel), Blasen-Start (0, 9, 0).
+- Ladenstraße: `Hub/Seifenladen`, `Hub/VerkaufStand` (öffnet Tiere), `Hub/IndexStand` (öffnet Index) – je `Theke` mit ProximityPrompt; `Hub/Bestenliste/Tafel` (Server schreibt Top 5 nach $/s alle 5 s); Laternen; Wahrzeichen Blasenstab + Seifenflasche.
+- Grundstück: `Boden` ist unsichtbar (nur Bezugspunkt), `NamensSchild` (SurfaceGui vom Server), `SchildAnker` (große Zahlen „x / y“ + $/s), Trainingsplatz `Steinmatte` + Holz-`TrainKreis` mit Zackenring, `AufwertenSchild` = gelbe Scheibe; Gehege + Holzzaun baut der Server.
+- Schlucht: rotbraune Wände mit runden `Brocken`, Wolken-Bäume am Rand, Baumstämme/Steine (`Kleinkram`), Holzbogen mit Biom-Namen. Flug: Zonenleiste links (`zonenLeiste()` im Client).
+- Offen aus 2b: Tier-Details (Bewegung, Aura).

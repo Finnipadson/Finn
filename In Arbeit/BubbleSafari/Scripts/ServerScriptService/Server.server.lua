@@ -108,6 +108,7 @@ local function billboard(anker, name, groesse, offset)
 	bb.Parent = anker
 	local liste = Instance.new("UIListLayout")
 	liste.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	liste.SortOrder = Enum.SortOrder.LayoutOrder
 	liste.Parent = bb
 	return bb
 end
@@ -116,6 +117,7 @@ local function zeile(bb, name, hoehe, farbe)
 	if t then return t end
 	t = Instance.new("TextLabel")
 	t.Name = name
+	t.LayoutOrder = #bb:GetChildren() -- Reihenfolge = Erstellungsreihenfolge
 	t.Size = UDim2.new(1, 0, hoehe, 0)
 	t.BackgroundTransparency = 1
 	t.Font = Enum.Font.FredokaOne
@@ -162,6 +164,7 @@ end
 local function aufwertenAnzeige(g, stufe)
 	local s = g.AufwertenSchild
 	local bb = billboard(s, "Anzeige", UDim2.fromOffset(240, 80), Vector3.new(0, 3.5, 0))
+	bb.MaxDistance = 70 -- erst aus der Naehe sichtbar
 	local n = zeile(bb, "Name", 0.5)
 	local pr = zeile(bb, "Preis", 0.5, Color3.fromRGB(255, 220, 80))
 	local naechste = D.Blasebaelge[stufe + 1]
@@ -320,6 +323,7 @@ local function ausbauAnzeige(g, plaetze)
 	local s = g:FindFirstChild("AusbauSchild")
 	if not s then return end
 	local bb = billboard(s, "Anzeige", UDim2.fromOffset(260, 80), Vector3.new(0, 3.5, 0))
+	bb.MaxDistance = 70 -- erst aus der Naehe sichtbar
 	local n = zeile(bb, "Name", 0.5)
 	local pr = zeile(bb, "Preis", 0.5, Color3.fromRGB(255, 220, 80))
 	local a = D.naechsterAusbau(plaetze)
@@ -484,6 +488,7 @@ do -- Bestenliste mit den hoechsten Einkommen auf diesem Server
 		local liste = Instance.new("UIListLayout")
 		liste.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		liste.Padding = UDim.new(0.02, 0)
+		liste.SortOrder = Enum.SortOrder.LayoutOrder
 		liste.Parent = sg
 		zeile(sg, "Titel", 0.2, Color3.fromRGB(255, 215, 60)).Text = "TOP-SAFARIS"
 		local reihen = {}
