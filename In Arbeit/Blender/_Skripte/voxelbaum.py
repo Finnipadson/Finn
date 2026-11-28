@@ -2,13 +2,14 @@
 # 1 Blender-Einheit = 1 Roblox-Stud. Ein Mesh, Farben ueber eine kleine Paletten-Textur (8x8 px,
 # jede Wuerfelflaeche zeigt auf ein Paletten-Pixel) -> in Roblox als 1 MeshPart + 1 Textur nutzbar.
 # Spaeter fuer andere Biome: nur PALETTEN-Eintrag tauschen (Herbst, Schnee, Pilzwald ...).
-# Headless: blender -b --factory-startup --python voxelbaum.py -- <ausgabeordner> [biom]
+# Headless: blender -b --factory-startup --python voxelbaum.py -- <ausgabeordner> [biom] [rund|hoch|breit]
 import bpy, bmesh, math, sys, os
 from mathutils import Vector
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 OUT = ARGS[0] if ARGS else r"C:\Users\finns\OneDrive\Desktop\Claude\Games\In Arbeit\Blender\VoxelBaum"
 BIOM = ARGS[1] if len(ARGS) > 1 else "wiese"
+VARIANTE = ARGS[2] if len(ARGS) > 2 else "rund"  # rund | hoch | breit
 V = 0.5  # Wuerfel-Kantenlaenge in Studs (TVA-Feinheit)
 D = bpy.data
 os.makedirs(os.path.join(OUT, "Renders"), exist_ok=True)
@@ -58,13 +59,53 @@ def wert_rauschen(p, f):
     return l(l(l(g(0,0,0), g(1,0,0), tx), l(g(0,1,0), g(1,1,0), tx), ty),
              l(l(g(0,0,1), g(1,0,1), tx), l(g(0,1,1), g(1,1,1), tx), ty), tz)
 
-# Krone: mehrere Wolken-Kugeln, Haupt oben, seitliche Ballen, darunter ein kleiner Ast-Ballen
-KRONE = [((0, 0, 12.0), (5.2, 5.2, 4.4)),
-         ((3.4, 1.2, 10.4), (3.4, 3.4, 3.0)),
-         ((-3.2, -1.6, 10.8), (3.6, 3.6, 3.1)),
-         ((0.8, -3.4, 11.0), (3.2, 3.2, 2.8)),
-         ((-1.0, 2.8, 13.6), (3.2, 3.2, 2.8)),
-         ((4.6, -1.8, 7.6), (2.2, 2.2, 1.9))]   # kleiner Ballen am Seitenast
+def wurzeln(p, d, winkel, r=2.4):
+    for ang in winkel:
+        a = Vector((math.cos(ang) * r, math.sin(ang) * r, 0))
+        d = smin(d, sd_cap(p, (0, 0, 1.2), (a.x, a.y, 0.25), 0.7, 0.35), 0.6)
+    return d
+
+# Variante "rund": Wolken-Krone aus Ballen, kleiner Ballen am Seitenast
+def stamm_rund(p):
+    d = sd_cap(p, (0, 0, 0), (0.2, 0.1, 9.5), 1.25, 0.75)
+    d = min(d, sd_cap(p, (0.3, 0.1, 5.2), (4.2, -1.6, 7.4), 0.55, 0.4))      # Seitenast
+    d = min(d, sd_cap(p, (0, 0.1, 8.6), (-2.2, -1.2, 10.4), 0.5, 0.35))     # Ast in die Krone
+    return wurzeln(p, d, (0.3, 2.4, 4.3))
+
+# Variante "hoch": schlanker Baum, Krone in drei Etagen uebereinander
+def stamm_hoch(p):
+    d = sd_cap(p, (0, 0, 0), (-0.3, 0.2, 15.5), 1.0, 0.55)
+    d = min(d, sd_cap(p, (-0.1, 0.1, 6.5), (-3.0, 1.2, 8.4), 0.45, 0.3))     # tiefer Ast links
+    return wurzeln(p, d, (1.0, 3.1, 5.0), 2.0)
+
+# Variante "breit": niedriger Baum, Stamm gabelt sich, flache Schirm-Krone
+def stamm_breit(p):
+    d = sd_cap(p, (0, 0, 0), (0.8, 0.3, 5.5), 1.4, 1.0)
+    d = smin(d, sd_cap(p, (0.8, 0.3, 5.2), (-3.4, -0.6, 8.6), 0.8, 0.5), 0.5)  # Gabel links
+    d = smin(d, sd_cap(p, (0.8, 0.3, 5.2), (4.6, 1.4, 8.4), 0.8, 0.5), 0.5)    # Gabel rechts
+    return wurzeln(p, d, (0.0, 1.6, 3.3, 4.8), 2.8)
+
+VARIANTEN = {
+    "rund": (stamm_rund, [((0, 0, 12.0), (5.2, 5.2, 4.4)),
+                          ((3.4, 1.2, 10.4), (3.4, 3.4, 3.0)),
+                          ((-3.2, -1.6, 10.8), (3.6, 3.6, 3.1)),
+                          ((0.8, -3.4, 11.0), (3.2, 3.2, 2.8)),
+                          ((-1.0, 2.8, 13.6), (3.2, 3.2, 2.8)),
+                          ((4.6, -1.8, 7.6), (2.2, 2.2, 1.9))]),
+    "hoch": (stamm_hoch, [((0.2, 0, 10.6), (4.4, 4.4, 3.2)),
+                          ((-0.4, 0.3, 14.6), (3.6, 3.6, 2.9)),
+                          ((-0.3, 0.2, 18.2), (2.6, 2.6, 2.4)),
+                          ((-0.3, 0.2, 20.4), (1.4, 1.4, 1.4)),
+                          ((-3.6, 1.4, 8.6), (2.0, 2.0, 1.7))]),
+    "breit": (stamm_breit, [((0.4, 0.3, 10.2), (6.6, 5.8, 2.8)),
+                            ((-4.6, -0.8, 9.4), (3.8, 3.6, 2.5)),
+                            ((5.4, 1.6, 9.2), (3.8, 3.6, 2.4)),
+                            ((0.0, -3.6, 9.6), (3.4, 3.0, 2.3)),
+                            ((-0.8, 3.4, 11.0), (3.4, 3.2, 2.4))]),
+}
+sd_stamm, KRONE = VARIANTEN[VARIANTE]
+K_UNTEN = min(c[2] - r[2] for c, r in KRONE)
+K_OBEN = max(c[2] + r[2] for c, r in KRONE)
 
 def sd_krone(p):
     d = 1e9
@@ -73,20 +114,11 @@ def sd_krone(p):
     d += (wert_rauschen(p, 0.45) - 0.5) * 1.6 + (wert_rauschen(p, 1.1) - 0.5) * 0.6
     return d
 
-def sd_stamm(p):
-    d = sd_cap(p, (0, 0, 0), (0.2, 0.1, 9.5), 1.25, 0.75)
-    d = min(d, sd_cap(p, (0.3, 0.1, 5.2), (4.2, -1.6, 7.4), 0.55, 0.4))      # Seitenast
-    d = min(d, sd_cap(p, (0, 0.1, 8.6), (-2.2, -1.2, 10.4), 0.5, 0.35))     # Ast in die Krone
-    for ang in (0.3, 2.4, 4.3):                                               # Wurzeln
-        a = Vector((math.cos(ang) * 2.4, math.sin(ang) * 2.4, 0))
-        d = smin(d, sd_cap(p, (0, 0, 1.2), (a.x, a.y, 0.25), 0.7, 0.35), 0.6)
-    return d
-
 # ---------------------------------------------------------------- Faerbung
 def farbe_laub(p, nrm, idx):
     # oben/aussen hell, unten dunkel, Pixel-Streuung wie im Vorbild
     hell = 0.5 + 0.5 * nrm.z
-    hoehe = (p.z - 7.0) / 9.0
+    hoehe = (p.z - K_UNTEN) / (K_OBEN - K_UNTEN)
     r = hsh(*idx, 1)
     s = hell * 0.65 + hoehe * 0.35 + (r - 0.5) * 0.55
     if r > 0.93: s += 0.35                       # einzelne helle Blatt-Pixel
@@ -105,7 +137,7 @@ FACES = {(1, 0, 0): [(1, 0, 0), (1, 1, 0), (1, 1, 1), (1, 0, 1)], (-1, 0, 0): [(
 
 def baue_baum(name):
     zellen = {}
-    lo, hi = (-9, -9, -1), (9, 9, 19)
+    lo, hi = (-11, -11, -1), (11, 11, 23)
     for ix in range(int(lo[0] / V), int(hi[0] / V) + 1):
         for iy in range(int(lo[1] / V), int(hi[1] / V) + 1):
             for iz in range(0, int(hi[2] / V) + 1):
@@ -197,15 +229,16 @@ def foto(co, pos, ziel, datei):
 
 if __name__ == "__main__":
     for o in list(D.objects): D.objects.remove(o)
-    baum, n, flaechen = baue_baum("VoxelBaum_" + BIOM)
+    NAME = f"{BIOM}_{VARIANTE}"
+    baum, n, flaechen = baue_baum("VoxelBaum_" + NAME)
     baum.data.materials.append(paletten_material())
     print(f"BAUM voxel={n} flaechen={flaechen} dreiecke={flaechen * 2}")
     co = szene(baum)
-    foto(co, (24, -30, 14), (0, 0, 8), f"baum_{BIOM}_schraeg.png")
-    foto(co, (0, -34, 4), (0, 0, 8.5), f"baum_{BIOM}_vorne.png")
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, f"voxelbaum_{BIOM}.blend"))
+    foto(co, (24, -30, 14), (0, 0, 8), f"baum_{NAME}_schraeg.png")
+    foto(co, (0, -34, 4), (0, 0, 8.5), f"baum_{NAME}_vorne.png")
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, f"voxelbaum_{NAME}.blend"))
     # FBX fuer Roblox (nur der Baum)
     bpy.ops.object.select_all(action="DESELECT"); baum.select_set(True); bpy.context.view_layer.objects.active = baum
-    bpy.ops.export_scene.fbx(filepath=os.path.join(OUT, f"voxelbaum_{BIOM}.fbx"), use_selection=True,
+    bpy.ops.export_scene.fbx(filepath=os.path.join(OUT, f"voxelbaum_{NAME}.fbx"), use_selection=True,
                              apply_scale_options="FBX_SCALE_UNITS", axis_forward="-Z", axis_up="Y", path_mode="COPY", embed_textures=True)
     print("FERTIG")
