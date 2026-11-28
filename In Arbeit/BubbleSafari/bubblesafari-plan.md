@@ -289,6 +289,14 @@ Große Knöpfe, kurze Texte, Zahlen gekürzt (K, M, B, T, Qa). Erste 60 Sekunden
 - Biome 1–3 mit allen 7 Arten, Größen GROSS/RIESIG mit sich dehnender Blase, Enthüllung mit Live-Zähler + Titeln + Silhouette + Riesen-Laufwege, Schnelle Enthüllung
 - „Meine Tiere“-Menü, Verkaufen, Beste aufstellen, Gehege-Ausbau mit Animation, Index, PERFEKT-Serie, x2-Blase, Onboarding
 
+**Phase 2b – Detail-Runde im Stil der Vorbild-Karte** (Vorlage: [[Welt-Map]] → „Ziehe einen Dino – Stil der ganzen Karte“; eigene Formen und Texte)
+- Kessel: kräftiges Grün-Schachbrett, **orange Kachelweg** von den Grundstücken über eine **Ladenstraße** zum **Holz-Wurfdeck** (Treppe, Geländer, gelbe Scheibe mit Kachelring, schwebend „HIER PUSTEN!“)
+- Ladenstraße: Seifenladen, Verkaufs-Stand, Index-Stand, Bestenliste mit Krone, Holz-Laternen; Wahrzeichen Riesen-Blasenstab
+- Grundstücke: braune Holzzäune, großes Holz-Namensschild, riesige schwebende Zahlen „6 / 8“ und „$/s“, Trainingsplatz mit Zackenring auf Steinmatte, gelbe Aufwerten-Scheibe
+- Schlucht: rotbraune Felswände mit runden Brocken, runde Wolken-Bäume am Rand, Baumstämme/Steine unten
+- Flug: Zonenleiste links mit allen Biomen; Licht sonnig mit Bloom
+- Tiere: kleine Bewegungen (Ohren/Schwanz), seltene mit Aura (Rest der Detail-Runde nach dem Karten-Umbau)
+
 **Phase 3 – Mischkessel und Mittelteil**
 - Mischkessel + Gold/Diamant/Regenbogen, Biome 4–6 mit Tieren, Seifen 4–6, Blasebalg 4–5, alle 8 Grundstücke
 

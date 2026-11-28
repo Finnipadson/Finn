@@ -105,6 +105,25 @@ Wie eine Map aufgebaut ist: Spawn, Wege, Zonen, Orientierung. Schwerpunkt Roblox
 - **Was ist gut:** Vom Grundstück führt eine **breite orange Straße** zur Wurf-Schlucht. Links und rechts **Marktstände mit gestreiften Markisen** und großen Schildern („Spuren“, „Harpunen“, „Verkaufen“), jeder in eigener Farbe; ein Regenbogen-Stand lockt mit Glitzer. Am Ende ein großes leuchtendes Tor mit Countdown („Christmas Update 00:21:34“). Blaue Pfeil-Kacheln auf dem Boden zeigen den Weg (Tutorial „Schritt 5/5 – Wieder werfen!“ oben).
 - **Prinzip zum Übernehmen:** Die Läden liegen **auf dem Weg** zwischen den beiden Hauptorten (Grundstück ↔ Aktion), man kommt bei jedem Durchgang daran vorbei. Event-Countdown als großes Tor in der Welt.
 
+### Ziehe einen Dino – Stil der ganzen Karte (Auswertung von 45 Standbildern, 28.11.2026)
+
+![[dino-weg-zum-deck.jpg]]
+![[dino-wurfdeck.jpg]]
+![[dino-ladenstrasse-2.jpg]]
+![[dino-hub-tor.jpg]]
+![[dino-training-platz.jpg]]
+
+- **Boden:** sattes, helles Grün als großes Schachbrett (zwei Grüntöne, Kacheln ~8 Studs), ganz glatt, kein Gras-Material. Wirkt sauber und spielzeughaft.
+- **Hauptweg:** breiter **orange-gelber Kachelweg** (Schachbrett Orange/Hellorange, dunklerer Randstreifen) vom Grundstück über die Ladenstraße bis zur Wurfplattform. Man folgt ihm automatisch.
+- **Ladenstraße am Weg:** Stände mit gestreiften Markisen (Blau/Weiß, Rot/Weiß), riesige bunte Schilder in eigener Schriftfarbe, ein Stand mit Regenbogen-Bogen und Wolken. Dazwischen **Holz-Laternen** (Pfosten mit gelb leuchtendem Würfel), Bestenlisten-Tafeln im Holzrahmen mit **gelber Krone** obendrauf, Glücksrad, Event-Tor mit Countdown am Ende.
+- **Wurfplattform:** erhöhtes **Holzdeck aus Planken** mit Treppe davor, dicken dunkelbraunen Holzgeländern links/rechts, in der Mitte eine **gelbe runde Scheibe** mit gestricheltem Ring aus orangen Kacheln, darüber schwebend „HIER WERFEN!“ in Gelb.
+- **Schlucht:** rotbraune Felswände mit **runden Felsbrocken** (Kugeln) darin, oben Grasrand mit **runden Wolken-Bäumen** (mehrere Kugeln), unten Baumstämme, Steine, Knochen. Jede Zone eigener Boden/Nebel (Sumpf: grünlicher Nebel, Pilze, Rohrkolben, Baumstümpfe, Seerosen-Teiche).
+- **Zonenleiste im Flug:** links senkrecht Symbole aller Zonen (Mud → Sumpf → Tar → Vulkan), die aktuelle groß mit Rahmen und Unterstufen „I II III“; oben groß Glück + Zonenname + Meter.
+- **Grundstück:** **braune Holzzäune** (dicke Pfosten, zwei Latten), großes schräges Holzschild „Name's Grundstück“, riesige Zahlen „8 / 10“ und „$2.9K/s“ schweben über dem Eingang, Avatar-Kopf daneben; Ausbau-Pfeilschild „10 ▶ 11 – $2.5K“ am Zaun.
+- **Training:** Gerät auf rundem Holz-/Blau-Teller mit **Zackenring** (rosa/weiße Zähne) auf grauer Steinmatte; daneben gelbe runde Kauf-Scheibe; darüber schwebend „$600K – Nächstes: … – +12 XP / Rep“.
+- **Licht:** sonnig, warm, leichte Überstrahlung (Bloom), kräftige Sättigung.
+- **Prinzip zum Übernehmen:** Alles ist **ein Spielplatz aus einfachen, sauberen Formen in kräftigen Farben**; Holz für alles „Gebaute“ (Zäune, Deck, Schilder, Laternen), Orange für den Weg, Grün-Schachbrett für den Rest. Wichtiges hat riesige schwebende Schrift. **Bei uns umgesetzt:** [[Bubble Safari]] Phase 2b (eigene Formen und Texte, kein Nachbau).
+
 ### Pet Simulator 99 – Zonen hintereinander (Roblox)
 
 ![[petsim-zonen-tor.jpg]]
