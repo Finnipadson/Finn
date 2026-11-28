@@ -124,6 +124,24 @@ Wie eine Map aufgebaut ist: Spawn, Wege, Zonen, Orientierung. Schwerpunkt Roblox
 - **Licht:** sonnig, warm, leichte Überstrahlung (Bloom), kräftige Sättigung.
 - **Prinzip zum Übernehmen:** Alles ist **ein Spielplatz aus einfachen, sauberen Formen in kräftigen Farben**; Holz für alles „Gebaute“ (Zäune, Deck, Schilder, Laternen), Orange für den Weg, Grün-Schachbrett für den Rest. Wichtiges hat riesige schwebende Schrift. **Bei uns umgesetzt:** [[Bubble Safari]] Phase 2b (eigene Formen und Texte, kein Nachbau).
 
+### Voxel-Wurfspiel von „TVA Studios“ (TikTok-Teaser, 28.11.2026) – Zielbild für Bubble Safari
+
+![[tva-terrassen-schlucht.jpg]]
+![[tva-wurf-start.jpg]]
+![[tva-schwebende-inseln.jpg]]
+![[tva-hub-training.jpg]]
+![[tva-kristall-biom.jpg]]
+![[tva-neon-biom.jpg]]
+
+Warum das „echt“ wirkt und unser erster Versuch nach „KI-Einheitsbrei“ aussah:
+- **Terrassen statt Wand:** Die Schlucht steigt in **3–5 Stufen** nach außen an, jede Stufe mit Gras-Kante und Erdschicht. Dadurch Tiefe und Staffelung; eine glatte senkrechte Wand wirkt billig.
+- **Pixel-Textur überall:** Erde, Gras und Holz haben ein **Voxel-/Pixelmuster** (helle und dunkle Würfelchen), der Boden hat Noppen-Kacheln. Glatte einfarbige Flächen (SmoothPlastic) sind das Hauptproblem.
+- **Sehr viel kleine Deko:** buschige **Voxel-Bäume aus vielen Würfeln**, rote Pilze mit Punkten, Sonnenblumen, Blumen, Zuckerstangen – auf **jeder** Terrasse, dicht an dicht.
+- **Himmel lebt:** **schwebende Inseln** mit Gras und Erde unten, Wolken, ein leuchtender Ring am Ende der Strecke; Dunst Richtung Horizont.
+- **Biome wechseln die ganze Welt:** Kristall-Biom (lila Wände, leuchtende Kristalle, Glitzer), Neon-Stadt (Hochhäuser mit Leuchtstreifen) – nicht nur andere Bodenfarbe.
+- **Objekte als Pixel-Kunst:** Trainings-Gerät, Shop, Verzauberer sind aus vielen kleinen Würfeln mit Muster gebaut, mit Leuchtteilen.
+- **Licht:** starke Sättigung, Bloom, weiche Schatten.
+
 ### Pet Simulator 99 – Zonen hintereinander (Roblox)
 
 ![[petsim-zonen-tor.jpg]]
