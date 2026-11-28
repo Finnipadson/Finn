@@ -194,6 +194,22 @@ Warum das „echt“ wirkt und unser erster Versuch nach „KI-Einheitsbrei“ a
 - **Wegführung:** Gelbe Pfeil-Kacheln am Boden führen vom Wurfbereich zur eigenen Trainings-Station.
 - **Prinzip zum Übernehmen:** Grundstücke dicht nebeneinander und von überall einsehbar; Einkommen als schwebendes Schild = soziale Bestenliste; riesige seltene Tiere als Aushängeschild des Besitzers. Siehe auch [[Kreaturen-Pets]] (Größenstufen) und [[Trainings-Objekte]].
 
+### Was auf den Terrassen steht (TVA + n1tro, Nahaufnahmen 28.11.2026)
+
+Bilder: `Bilder/Welt-Map/stufen-*.jpg` (TVA: pilze-boden, pilze-wand, wiese-inseln, dschungel-herbst, schnee, wueste, kristall, uebersicht; n1tro: wald). Collagen in `BubbleSafari/Probe-Bilder/vorbild-stufen-1/2.jpg`.
+
+- **Viele schmale Stufen statt weniger hoher:** TVA hat 5–7 Stufen, jede nur etwa 1,5–3 Spielerhöhen hoch und leicht zurückversetzt. Die Wand wirkt dadurch wie ein Hang.
+- **Erde mit feiner Pixel-Struktur:** dunkle Einzelpixel und waagrechte Farbbänder (dunkelbraun/rotbraun), dazu einzelne grüne Moos-Pixel mitten in der Wand. Keine großen Flecken.
+- **Gras-Kante:** dünne Grasdecke, darunter unregelmäßig herabhängende Gras-Pixel in vielen Längen, sehr dicht.
+- **Deko auf jeder Stufe, dicht und groß:**
+  - **Riesen-Fliegenpilze** (rot mit weißen Pixel-Punkten, runde gestufte Kappe, dicker heller Stiel), oft größer als Bäume. Einige braune Pilze dazwischen.
+  - **Runde Voxel-Bäume:** Krone wie eine Kugel aus Würfeln (nicht lose Würfel), dazu Palmen mit Fächerblättern weiter hinten.
+  - **Goldene Ringe / Sonnenblumen** als Sammel-Optik, kleine Blumen (blau, lila, rot) und Kakteen-artige Pflanzen am Boden.
+  - Am Schluchtboden vor der Wand: kleine Bäume, Pilze, Steine mit Moos.
+- **Biom-Wechsel nur über Farben + Deko:** Wüste (Sand-/Orangebänder, Kakteen, Sonnenschirme), Schnee (blau-weiße Wand, Tannen mit Schnee, Schneemänner), Herbst/Dschungel (Laubbäume orange/gelb/rot, Palmen), Kristall (lila Wand, Kristallspitzen). Form der Terrassen bleibt gleich.
+- **Schwebende Inseln** mit Palme oder Pilz oben, Erd-Pyramide unten, auf mehreren Höhen über der Schlucht.
+- **n1tro:** große kantige Würfel-Kronen mit Noppen, ein Baum mit leuchtenden Augen (Gesicht im Stamm), Wand als braun/rotes Schachbrett; Gras-Kappe stark überhängend.
+
 ## Bei uns umgesetzt
 
--
+- Bubble Safari (28.11.2026): 3 Terrassen à 27 Studs (Kessel + Schlucht), Noppen-Boden, Voxel-Bäume/Pilze/Sonnenblumen, Biom-Farben je Abschnitt, schwebende Inseln (`Bauen/Map.lua`, `terrasse()`).
