@@ -9,6 +9,7 @@ local liste = {
 	{ "ServerScriptService/Spieldaten.lua", "ModuleScript", game.ServerScriptService, "Spieldaten" },
 	{ "ServerScriptService/Server.server.lua", "Script", game.ServerScriptService, "Server" },
 	{ "StarterPlayerScripts/Client.client.lua", "LocalScript", game.StarterPlayer.StarterPlayerScripts, "Client" },
+	{ "StarterPlayerScripts/LadenAnimation.client.lua", "LocalScript", game.StarterPlayer.StarterPlayerScripts, "LadenAnimation" },
 }
 local out = {}
 for _, e in liste do

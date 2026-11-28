@@ -738,9 +738,82 @@ local function stand(name, pos, blick, markise, schild, schildFarbe)
 	m.Parent = Hub
 	return m
 end
-local laden = stand("Seifenladen", V(-24, 0, -62), V(1, 0, -0.6), rgb(70, 160, 255), "SEIFENLADEN", rgb(70, 160, 255))
-for k = -2, 2 do
-	deko(laden, "Seife", V(1.6, 1, 1.2), laden.Theke.CFrame * CF(k * 2.2, 2.3, 0), ({ rgb(235, 245, 255), rgb(255, 200, 70), rgb(110, 240, 190), rgb(255, 150, 200), rgb(190, 140, 255) })[k + 3])
+-- Voxel-Seifenladen aus Blender (ServerStorage.BS_Deko.Seifenladen, Vorlage am Ursprung, Vorderseite -Z, Boden y=0).
+-- Quelle: Blender/_Skripte/voxelladen_seife.py; Animation (Pumpe, drehende Seife, Blasen) macht LadenAnimation.client.lua.
+local BLASE_TEXTUR = "rbxassetid://93711487994021"
+local function seifenladenVoxel(pos, blick)
+	local vorlage = DEKO and DEKO:FindFirstChild("Seifenladen")
+	if not vorlage then return nil end
+	local m = vorlage:Clone()
+	-- unsichtbare Theke (ProximityPrompt vom Server) + Kollision fuer den Hauskoerper
+	P(m, "Theke", V(8, 4.5, 2.5), CF(-2.5, 2.25, -3.25), rgb(255, 255, 255), nil, { Transparency = 1 })
+	P(m, "Kollision", V(16, 14, 7), CF(0, 7, 1.75), rgb(255, 255, 255), nil, { Transparency = 1, CanQuery = false })
+	-- Schrift auf dem Holzschild
+	local st = deko(m, "SchildText", V(7.6, 3.6, 0.1), CF(-2.75, 12, -5.06), rgb(255, 255, 255), nil, { Transparency = 1 })
+	schildText(st, "SEIFEN", rgb(255, 255, 255), Enum.NormalId.Front)
+	st.SurfaceGui.PixelsPerStud = 30
+	-- Lichter in den Laternen
+	for _, l in { V(2, 7, -5), V(-7.5, 7, -5), V(9, 8, -2.5), V(-8.5, 8, -2.5) } do
+		local lp = deko(m, "Laternenlicht", V(0.5, 0.5, 0.5), CF(l), rgb(255, 220, 120), nil, { Transparency = 1 })
+		local pl = Instance.new("PointLight")
+		pl.Color = rgb(255, 210, 120)
+		pl.Range = 12
+		pl.Brightness = 1.2
+		pl.Parent = lp
+	end
+	-- Duese der Pumpe (Blasen) und Schornstein (Rauch)
+	local duese = Instance.new("Attachment")
+	duese.Name = "Duese"
+	duese.Parent = m.Laden_Pumpe
+	duese.WorldPosition = V(-6.4, 24.25, 2.25)
+	local blasen = Instance.new("ParticleEmitter")
+	blasen.Name = "Blasen"
+	blasen.Texture = BLASE_TEXTUR
+	blasen.Rate = 2
+	blasen.Lifetime = NumberRange.new(2.5, 4)
+	blasen.Speed = NumberRange.new(3, 6)
+	blasen.SpreadAngle = Vector2.new(25, 25)
+	blasen.EmissionDirection = Enum.NormalId.Left
+	blasen.Acceleration = V(0, 2.5, 0)
+	blasen.Drag = 1
+	blasen.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.6), NumberSequenceKeypoint.new(0.2, 1.4, 0.6), NumberSequenceKeypoint.new(1, 1.8, 0.8) })
+	blasen.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.1), NumberSequenceKeypoint.new(0.85, 0.15), NumberSequenceKeypoint.new(1, 1) })
+	blasen.RotSpeed = NumberRange.new(-30, 30)
+	blasen.LightEmission = 0.2
+	blasen.Parent = duese
+	local kamin = Instance.new("Attachment")
+	kamin.Name = "Kamin"
+	kamin.Parent = m.Laden_Haus
+	kamin.WorldPosition = V(5.75, 20, 3.5)
+	local rauch = Instance.new("ParticleEmitter")
+	rauch.Name = "Rauch"
+	rauch.Rate = 3
+	rauch.Lifetime = NumberRange.new(2, 3)
+	rauch.Speed = NumberRange.new(2, 3)
+	rauch.SpreadAngle = Vector2.new(10, 10)
+	rauch.EmissionDirection = Enum.NormalId.Top
+	rauch.Color = ColorSequence.new(rgb(245, 245, 250))
+	rauch.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.8), NumberSequenceKeypoint.new(1, 2.5) })
+	rauch.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(1, 1) })
+	rauch.Parent = kamin
+	-- leuchtender Ring am Boden
+	for k = 0, 47 do
+		local w = k / 48 * math.pi * 2
+		deko(m, "Ring", V(1.9, 0.12, 0.5), CF(math.cos(w) * 13, 0.06, -1 + math.sin(w) * 13) * CFrame.Angles(0, -w + math.pi / 2, 0), rgb(120, 210, 255), Enum.Material.Neon, { Transparency = 0.15 })
+	end
+	m.WorldPivot = CFrame.new()
+	m:ScaleTo(1.3)
+	m:PivotTo(CFrame.lookAt(pos, pos + blick))
+	m.Name = "Seifenladen"
+	m.Parent = Hub
+	return m
+end
+local laden = seifenladenVoxel(V(-32, 0, -50), V(1, 0, -0.25))
+if not laden then
+	laden = stand("Seifenladen", V(-24, 0, -62), V(1, 0, -0.6), rgb(70, 160, 255), "SEIFENLADEN", rgb(70, 160, 255))
+	for k = -2, 2 do
+		deko(laden, "Seife", V(1.6, 1, 1.2), laden.Theke.CFrame * CF(k * 2.2, 2.3, 0), ({ rgb(235, 245, 255), rgb(255, 200, 70), rgb(110, 240, 190), rgb(255, 150, 200), rgb(190, 140, 255) })[k + 3])
+	end
 end
 stand("VerkaufStand", V(-24, 0, -88), V(1, 0, -0.6), rgb(235, 60, 60), "VERKAUFEN", rgb(235, 60, 60))
 stand("IndexStand", V(24, 0, -62), V(-1, 0, -0.6), rgb(150, 100, 230), "TIER-INDEX", rgb(150, 100, 230))
