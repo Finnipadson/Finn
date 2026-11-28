@@ -808,15 +808,118 @@ local function seifenladenVoxel(pos, blick)
 	m.Parent = Hub
 	return m
 end
-local laden = seifenladenVoxel(V(-32, 0, -50), V(1, 0, -0.25))
+local laden = seifenladenVoxel(V(-32, 0, -40), V(1, 0, -0.25))
 if not laden then
 	laden = stand("Seifenladen", V(-24, 0, -62), V(1, 0, -0.6), rgb(70, 160, 255), "SEIFENLADEN", rgb(70, 160, 255))
 	for k = -2, 2 do
 		deko(laden, "Seife", V(1.6, 1, 1.2), laden.Theke.CFrame * CF(k * 2.2, 2.3, 0), ({ rgb(235, 245, 255), rgb(255, 200, 70), rgb(110, 240, 190), rgb(255, 150, 200), rgb(190, 140, 255) })[k + 3])
 	end
 end
-stand("VerkaufStand", V(-24, 0, -88), V(1, 0, -0.6), rgb(235, 60, 60), "VERKAUFEN", rgb(235, 60, 60))
-stand("IndexStand", V(24, 0, -62), V(-1, 0, -0.6), rgb(150, 100, 230), "TIER-INDEX", rgb(150, 100, 230))
+-- Gemeinsame Ausstattung der Voxel-Laeden (Vorlage am Ursprung, Front -Z, Boden y=0)
+-- cfg: theke {pos,size}, kollision {pos,size}, schild {pos,size,text}, lichter {...}, ring {mitte, farbe}
+local function ladenVoxel(vorlagenName, modellName, pos, blick, cfg)
+	local vorlage = DEKO and DEKO:FindFirstChild(vorlagenName)
+	if not vorlage then return nil end
+	local m = vorlage:Clone()
+	P(m, "Theke", cfg.theke[2], CF(cfg.theke[1]), rgb(255, 255, 255), nil, { Transparency = 1 })
+	P(m, "Kollision", cfg.kollision[2], CF(cfg.kollision[1]), rgb(255, 255, 255), nil, { Transparency = 1, CanQuery = false })
+	local st = deko(m, "SchildText", cfg.schild[2], CF(cfg.schild[1]), rgb(255, 255, 255), nil, { Transparency = 1 })
+	schildText(st, cfg.schild[3], rgb(255, 255, 255), Enum.NormalId.Front)
+	st.SurfaceGui.PixelsPerStud = 30
+	for _, l in cfg.lichter do
+		local lp = deko(m, "Laternenlicht", V(0.5, 0.5, 0.5), CF(l), rgb(255, 220, 120), nil, { Transparency = 1 })
+		local pl = Instance.new("PointLight")
+		pl.Color = rgb(255, 210, 120)
+		pl.Range = 12
+		pl.Brightness = 1.2
+		pl.Parent = lp
+	end
+	for k = 0, 47 do
+		local w = k / 48 * math.pi * 2
+		deko(m, "Ring", V(1.9, 0.12, 0.5), CF(cfg.ring[1] + V(math.cos(w) * 13, 0.06, math.sin(w) * 13)) * CFrame.Angles(0, -w + math.pi / 2, 0), cfg.ring[2], Enum.Material.Neon, { Transparency = 0.15 })
+	end
+	if cfg.extra then cfg.extra(m) end
+	m.WorldPivot = CFrame.new()
+	m:ScaleTo(1.3)
+	m:PivotTo(CFrame.lookAt(pos, pos + blick))
+	m.Name = modellName
+	m.Parent = Hub
+	return m
+end
+
+-- Tier-Index (Sternwarte): Teleskop dreht sich, darueber kreist ein Karussell aus Blasen mit Tieren
+local indexLaden = ladenVoxel("IndexLaden", "IndexStand", V(32, 0, -40), V(-1, 0, -0.25), {
+	theke = { V(1.75, 2.5, -2.75), V(5, 5, 1.5) },
+	kollision = { V(-1, 5.5, 1.75), V(14, 11, 7) },
+	schild = { V(-1, 13.25, -3.8), V(9.6, 2.4, 0.1), "TIER-INDEX" },
+	lichter = { V(6.25, 8.5, -3), V(-8.25, 8.5, -3) },
+	ring = { V(-1, 0, 0), rgb(190, 150, 255) },
+	extra = function(m)
+		deko(m, "TeleskopAchse", V(0.4, 0.4, 0.4), CF(-1, 18, 2.75), rgb(255, 255, 255), nil, { Transparency = 1 })
+		local kar = Instance.new("Model")
+		kar.Name = "Karussell"
+		deko(kar, "Mitte", V(0.4, 0.4, 0.4), CF(-1, 22.5, 2.75), rgb(255, 255, 255), nil, { Transparency = 1 })
+		local ok, TM = pcall(require, game:GetService("ReplicatedStorage"):WaitForChild("TierModelle"))
+		local tiere = { "Wiesenhase", "Bluetenhirsch", "Seerosenfrosch", "Glimmereule", "Pusteblumenfuchs" }
+		for i, art in tiere do
+			local b = Instance.new("Model")
+			b.Name = "Blase" .. i
+			local kugel = deko(b, "Kugel", V(4.2, 4.2, 4.2), CF(0, 0, 0), rgb(200, 235, 255), Enum.Material.ForceField, { Shape = Enum.PartType.Ball })
+			kugel.CastShadow = false
+			local tier = ok and TM.bauen(art, 1)
+			if tier then
+				for _, d in tier:GetDescendants() do
+					if d:IsA("BasePart") then d.Anchored = true d.CanCollide = false d.CanQuery = false d.CanTouch = false end
+				end
+				local _, gr = tier:GetBoundingBox()
+				tier:ScaleTo(tier:GetScale() * 2.4 / math.max(gr.X, gr.Y, gr.Z))
+				local bcf, bgr = tier:GetBoundingBox()
+				tier:PivotTo(tier:GetPivot() + (V(0, 0, 0) - bcf.Position))
+				tier.Parent = b
+			end
+			b.PrimaryPart = kugel
+			b:PivotTo(CF(-1 + math.cos(i / 5 * math.pi * 2) * 8, 22.5, 2.75 + math.sin(i / 5 * math.pi * 2) * 8))
+			b.Parent = kar
+		end
+		kar.Parent = m
+	end,
+})
+if not indexLaden then
+	stand("IndexStand", V(24, 0, -62), V(-1, 0, -0.6), rgb(150, 100, 230), "TIER-INDEX", rgb(150, 100, 230))
+end
+
+-- Verkaufen (Marktstand): Waage kippt, Glocke schwingt, Muenzen springen aus der Truhe
+local verkaufLaden = ladenVoxel("VerkaufLaden", "VerkaufStand", V(-34, 0, -78), V(1, 0, 0.1), {
+	theke = { V(-0.25, 2.5, -3), V(12, 5, 2) },
+	kollision = { V(-0.25, 5, 2.5), V(14, 10, 5) },
+	schild = { V(-0.25, 11.75, -3.05), V(8.6, 2.4, 0.1), "VERKAUFEN" },
+	lichter = { V(7, 7, -4.75), V(-7.5, 7, -4.75) },
+	ring = { V(-0.25, 0, -0.5), rgb(255, 190, 70) },
+	extra = function(m)
+		deko(m, "BalkenAchse", V(0.4, 0.4, 0.4), CF(-0.25, 16.75, 2.5), rgb(255, 255, 255), nil, { Transparency = 1 })
+		deko(m, "GlockenAchse", V(0.4, 0.4, 0.4), CF(-0.25, 7.5, -2.75), rgb(255, 255, 255), nil, { Transparency = 1 })
+		local blase = deko(m, "WaagenBlase", V(3.2, 3.2, 3.2), CF(5.5, 14.4 + 1.6, 2.75), rgb(200, 235, 255), Enum.Material.ForceField, { Shape = Enum.PartType.Ball })
+		blase.CastShadow = false
+		local quelle = deko(m, "MuenzQuelle", V(0.4, 0.4, 0.4), CF(-8.5, 4, -3.25), rgb(255, 255, 255), nil, { Transparency = 1 })
+		local pe = Instance.new("ParticleEmitter")
+		pe.Name = "Muenzen"
+		pe.Texture = "rbxassetid://113748923402409"
+		pe.Rate = 0
+		pe.Lifetime = NumberRange.new(1.2, 1.6)
+		pe.Speed = NumberRange.new(9, 13)
+		pe.SpreadAngle = Vector2.new(25, 25)
+		pe.EmissionDirection = Enum.NormalId.Top
+		pe.Acceleration = V(0, -22, 0)
+		pe.Size = NumberSequence.new(0.9)
+		pe.RotSpeed = NumberRange.new(-200, 200)
+		pe.Rotation = NumberRange.new(0, 360)
+		pe.LightEmission = 0.3
+		pe.Parent = quelle
+	end,
+})
+if not verkaufLaden then
+	stand("VerkaufStand", V(-24, 0, -88), V(1, 0, -0.6), rgb(235, 60, 60), "VERKAUFEN", rgb(235, 60, 60))
+end
 -- Bestenliste mit Krone
 do
 	local m = Instance.new("Model")

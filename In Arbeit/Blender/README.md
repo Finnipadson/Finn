@@ -63,6 +63,8 @@ In Blender ausführen mit `exec(open(r"...\_Skripte\<datei>.py", encoding="utf-8
 | `voxelbaum.py` | Voxel-Baum: SDF-Krone → Würfel-Mesh mit Paletten-UVs, Testszene (Terrasse) + Renders + FBX. Headless: `blender -b --factory-startup --python voxelbaum.py -- <Ordner> <wiese\|herbst\|schnee>` |
 | `voxeldeko.py` | Voxel-Deko im Baum-Stil (0,75-Würfel): Fliegenpilz, brauner Pilz, Sonnenblume, Blumenbusch, Stein, Blumen-Büschel, Baumstamm, schwebende Insel – gemeinsame Paletten-Textur, FBX je Objekt nach `VoxelBaum/deko_*.fbx` |
 | `voxelladen_seife.py` | Seifenladen für Bubble Safari als Voxel-Bau (Box-Helfer, Ziegel/Planken/Dachziegel-Färbung), 5 Teile in einer FBX (Haus, Schild, Flasche, Pumpe, Seife), gleiche Farbflächen per `dissolve_limit(delimit UV)` zusammengefasst |
+| `voxelladen_basis.py` | Gemeinsame Helfer für Voxel-Läden (box/zyl/kapsel/scheibe, Mesh mit Paletten-UVs + Flächen zusammenfassen, Export/Renders) – per `exec` in die Laden-Skripte geladen |
+| `voxelladen_index.py` / `voxelladen_verkauf.py` | Tier-Index (Sternwarte mit Teleskop) und Verkaufen (Marktstand mit Waage, Schalen, Glocke) |
 | `voxeldrache.py` | Voxel-Drache komplett: SDF-Formen → Würfel-Meshes (innere Flächen weg), Färbung pro Würfel, Klingen, Umgebung, Animation, Testrenders. Headless: `blender -b --factory-startup --python voxeldrache.py -- build <Bildordner>` |
 
 Die Skripte sind auf die Lavadrache-Namen zugeschnitten (z. B. `Schwanz_J*`, `Drachenkoerper`) –
