@@ -7,7 +7,7 @@ local rng = Random.new(42)
 local V, CF = Vector3.new, CFrame.new
 local function rgb(r, g, b) return Color3.fromRGB(r, g, b) end
 
-local RAND = 45 -- Hoehe der Klippen-Oberkante
+local RAND = 81 -- Hoehe der Klippen-Oberkante (3 Stufen a 27)
 local SB = 50 -- halbe Schluchtbreite (Schlucht 100 breit)
 local KX, KZ = 150, -200 -- Kessel: X -KX..KX, Z KZ..0
 local ENDE = 2420
@@ -160,7 +160,7 @@ local function terrasse(x1, x2, z1, z2, h0, innen, wackeln, stil)
 		P(Gelaende, "Terrasse", if entlangX then V(stueck, h, tiefe) else V(tiefe, h, stueck), CF(c + V(0, h / 2, 0)), zufall(ERDE))
 		noppen(P(Gelaende, "TerrasseGras", if entlangX then V(stueck, 3, tiefe + 2) else V(tiefe + 2, 3, stueck), CF(c + innen + V(0, h + 1.5, 0)), zufall(gr)))
 		local kante = c + innen * (tiefe / 2)
-		for k = 1, 3 do
+		for k = 1, 3 + math.floor(h / 20) do
 			local w = rng:NextInteger(1, 3) * 2 + (if h > 20 then 2 else 0)
 			deko(Gelaende, "Fleck", if entlangX then V(w, 2, 0.4) else V(0.4, 2, w),
 				CF(kante + innen * 0.15 + seite * rng:NextNumber(-stueck / 2 + 2, stueck / 2 - 2) + V(0, rng:NextNumber(2, math.max(2.5, h - 3)), 0)),
@@ -190,7 +190,7 @@ end
 local T, STUFEN = 16, 3
 local AUSSEN = T * STUFEN -- 48
 for k = 0, STUFEN - 1 do
-	local h = math.floor(RAND * (k + 1) / STUFEN) -- 15, 30, 45
+	local h = math.floor(RAND * (k + 1) / STUFEN) -- 27, 54, 81
 	local w = k < STUFEN - 1
 	local a, b = k * T, (k + 1) * T
 	terrasse(-KX - b, KX + b, KZ - b, KZ - a, h, V(0, 0, 1), w) -- hinten
@@ -235,7 +235,7 @@ end
 -- Schwebende Inseln rund um den Kessel
 for i = 1, 9 do
 	local w = i / 9 * math.pi * 2
-	local c = V(math.cos(w) * rng:NextNumber(150, 210), rng:NextNumber(80, 120), -100 + math.sin(w) * rng:NextNumber(130, 170))
+	local c = V(math.cos(w) * rng:NextNumber(150, 210), rng:NextNumber(120, 165), -100 + math.sin(w) * rng:NextNumber(130, 170))
 	local g = rng:NextNumber(10, 18)
 	noppen(deko(KDeko, "Insel", V(g, 2.5, g), CF(c), zufall(GRUEN)))
 	local y, bb = c.Y - 2.5, g
