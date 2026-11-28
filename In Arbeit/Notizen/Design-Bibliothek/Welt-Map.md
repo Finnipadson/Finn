@@ -158,6 +158,14 @@ Warum das „echt“ wirkt und unser erster Versuch nach „KI-Einheitsbrei“ a
 - **Gehege:** Noppen-Rasen, Holzzäune in Gelb/Braun, riesige Tiere mit Glitzer-Aura.
 - Gemeinsam mit dem TVA-Video: **Muster statt glatter Flächen, Staffelung/Tiefe, dichte kleine Deko, Licht/Nebel pro Biom.**
 
+### „Throw a Seed“ (TikTok von vnsaroblox, 28.11.2026) – drittes Beispiel, User findet die beiden davor besser
+
+![[vnsa-tiefsee.jpg]]
+![[vnsa-wolken-schachbrett.jpg]]
+![[vnsa-sand.jpg]]
+
+- Ebenfalls **Schachbrett-Wände** in zwei Tönen (Blau/Weiß, Sand), Burgtürme und Regenbogen aus Würfeln am Rand, Tiefsee-Biom mit Seetang. Wirkt etwas blasser/heller als TVA und n1tro – als Vorbild zweitrangig.
+
 ### Pet Simulator 99 – Zonen hintereinander (Roblox)
 
 ![[petsim-zonen-tor.jpg]]
