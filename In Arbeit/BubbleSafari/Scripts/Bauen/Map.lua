@@ -1004,7 +1004,49 @@ local verkaufLaden = ladenVoxel("VerkaufLaden", "VerkaufStand", V(-34, 0, -78), 
 if not verkaufLaden then
 	stand("VerkaufStand", V(-24, 0, -88), V(1, 0, -0.6), rgb(235, 60, 60), "VERKAUFEN", rgb(235, 60, 60))
 end
--- Bestenliste mit Krone
+-- Bestenliste: Voxel-Tafel mit Dach, Medaillen, Laternen, Truhe + schwebender Krone (Vorlage BS_Deko.Bestenliste)
+-- Die Namen schreibt der Server in die SurfaceGui der unsichtbaren "Tafel".
+local function bestenlisteVoxel()
+	local vorlage = DEKO and DEKO:FindFirstChild("Bestenliste")
+	local kroneV = DEKO and DEKO:FindFirstChild("Krone")
+	if not (vorlage and kroneV) then return false end
+	local m = vorlage:Clone()
+	m.Name = "Bestenliste"
+	local tafel = P(m, "Tafel", V(7.6, 8.4, 0.1), CF(-1.1, 7.5, -1.06), rgb(40, 60, 45), nil, { Transparency = 1, CanCollide = false })
+	P(m, "Kollision", V(15, 13, 3), CF(0, 6.5, 0), rgb(255, 255, 255), nil, { Transparency = 1, CanQuery = false })
+	local k = kroneV:Clone()
+	k.Name = "Krone"
+	k.CFrame = CF(0, 18, 0)
+	k.Parent = m
+	local glitzer = Instance.new("ParticleEmitter")
+	glitzer.Name = "Glitzer"
+	glitzer.Rate = 6
+	glitzer.Lifetime = NumberRange.new(0.8, 1.4)
+	glitzer.Speed = NumberRange.new(1, 3)
+	glitzer.SpreadAngle = Vector2.new(180, 180)
+	glitzer.Color = ColorSequence.new(rgb(255, 230, 120))
+	glitzer.LightEmission = 1
+	glitzer.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 0) })
+	glitzer.Parent = k
+	for _, x in { -9.25, 9.25 } do
+		local lp = deko(m, "Laternenlicht", V(0.5, 0.5, 0.5), CF(x, 9.25, 0.25), rgb(255, 220, 120), nil, { Transparency = 1 })
+		local pl = Instance.new("PointLight")
+		pl.Color = rgb(255, 210, 120)
+		pl.Range = 10
+		pl.Brightness = 1
+		pl.Parent = lp
+	end
+	for q = 0, 39 do
+		local w = q / 40 * math.pi * 2
+		deko(m, "Ring", V(1.9, 0.12, 0.5), CF(math.cos(w) * 11, 0.06, -1 + math.sin(w) * 11) * CFrame.Angles(0, -w + math.pi / 2, 0), rgb(255, 200, 70), Enum.Material.Neon, { Transparency = 0.15 })
+	end
+	m.WorldPivot = CFrame.new()
+	m:PivotTo(CFrame.lookAt(V(21, 0, -86), V(20, 0, -86))) -- erst drehen/setzen, dann PrimaryPart (sonst zaehlt dessen Mitte als Drehpunkt)
+	m.PrimaryPart = tafel
+	m.Parent = Hub
+	return true
+end
+if not bestenlisteVoxel() then
 do
 	local m = Instance.new("Model")
 	m.Name = "Bestenliste"
@@ -1020,6 +1062,7 @@ do
 	deko(m, "KroneBasis", V(6, 1, 1.2), cf * CF(0, 12.6, 0), rgb(255, 190, 30))
 	m.PrimaryPart = tafel
 	m.Parent = Hub
+end
 end
 -- Holz-Laternen am Weg
 for z = -96, -36, 15 do
@@ -1048,7 +1091,28 @@ for z = -96, -36, 15 do
 		l.Parent = lampe
 	end
 end
--- Wahrzeichen: Riesen-Blasenstab mit schwebenden Blasen
+-- Wahrzeichen: Voxel-Blasenstab (Vorlage BS_Deko.Blasenstab); Seifenfilm schimmert, Blasen entstehen im Ring (Client)
+local function blasenstabVoxel()
+	local vorlage = DEKO and DEKO:FindFirstChild("Blasenstab")
+	if not vorlage then return false end
+	local m = Instance.new("Model")
+	m.Name = "Blasenstab"
+	local stab = vorlage:Clone()
+	stab.Name = "Stab"
+	stab.Parent = m
+	-- Seifenfilm im Ring (Mitte lokal -2.75 | 21 | -0.25, Innenradius 3.5)
+	local film = deko(m, "Seifenfilm", V(0.15, 6.8, 6.8), CF(-2.75, 21, -0.25) * CFrame.Angles(0, math.pi / 2, 0), rgb(210, 235, 255), Enum.Material.Glass, { Shape = Enum.PartType.Cylinder, Transparency = 0.4 })
+	film.CastShadow = false
+	deko(m, "RingMitte", V(0.3, 0.3, 0.3), CF(-2.75, 21, -0.25), rgb(255, 255, 255), nil, { Transparency = 1 })
+	P(m, "Kollision", V(9, 3, 9), CF(0, 1.5, 0), rgb(255, 255, 255), nil, { Transparency = 1, CanQuery = false })
+	m.WorldPivot = CFrame.new()
+	m:ScaleTo(1.2)
+	local pos = V(72, 0, -58)
+	m:PivotTo(CFrame.lookAt(pos, pos + V(-72, 0, -37)))
+	m.Parent = Hub
+	return true
+end
+if not blasenstabVoxel() then
 do
 	local m = Instance.new("Model")
 	m.Name = "Blasenstab"
@@ -1065,14 +1129,14 @@ do
 	end
 	m.Parent = Hub
 end
--- Riesen-Seifenflasche auf der anderen Seite
+end
+-- Wo frueher die Riesen-Seifenflasche stand: kleines Waeldchen mit Blumen
 do
-	local basis = V(-74, 0, -58)
-	deko(Hub, "Flasche", V(16, 11, 11), CF(basis + V(0, 8, 0)) * CFrame.Angles(0, 0, math.rad(90)), rgb(120, 210, 255), Enum.Material.Glass, { Shape = Enum.PartType.Cylinder, Transparency = 0.25 })
-	deko(Hub, "Etikett", V(16.5, 5, 0.2), CF(basis + V(0, 8, 0)) * CF(0, 0, 0), rgb(255, 255, 255))
-	deko(Hub, "Hals", V(4, 4, 4), CF(basis + V(0, 18, 0)), rgb(255, 255, 255))
-	deko(Hub, "Pumpe", V(1.2, 4, 1.2), CF(basis + V(0, 22, 0)), rgb(255, 120, 180))
-	deko(Hub, "Duese", V(5, 1.2, 1.2), CF(basis + V(2, 24, 0)), rgb(255, 120, 180))
+	local d = ordner("Waeldchen", Hub)
+	for _, p in { V(-74, 0, -58), V(-82, 0, -66), V(-66, 0, -68), V(-86, 0, -52) } do voxelBaum(d, p, rng:NextNumber(0.9, 1.2)) end
+	for _, p in { V(-70, 0, -50), V(-78, 0, -48), V(-62, 0, -58), V(-90, 0, -62), V(-74, 0, -72) } do meshDeko("Blumenbusch", d, p, rng:NextNumber(1.2, 1.6)) end
+	voxelPilz(d, V(-68, 0, -62), 1.1)
+	meshDeko("Stein", d, V(-80, 0, -58), 1.3)
 end
 
 local spawn = workspace:FindFirstChild("SpawnLocation")

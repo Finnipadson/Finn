@@ -113,7 +113,63 @@ do
 	end)
 end
 
-for name, fn in { Seifenladen = seifenladen, IndexStand = indexLaden, VerkaufStand = verkaufLaden } do
+-- Blasenstab: Seifenfilm schimmert; alle ~3,5 s waechst eine Blase im Ring, loest sich und steigt wackelnd auf
+local function blasenstab(m)
+	local film, mitte = m:FindFirstChild("Seifenfilm"), m:FindFirstChild("RingMitte")
+	if not (film and mitte) then return end
+	local skala = m:GetScale()
+	local fliegend = {}
+	local naechste = 0
+	table.insert(schritte, function(t)
+		local h = (t * 0.08) % 1
+		film.Color = Color3.fromHSV(h, 0.45, 1)
+		film.Transparency = 0.4 + 0.12 * math.sin(t * 3)
+		if t >= naechste then
+			naechste = t + 3.5
+			local b = Instance.new("Part")
+			b.Shape = Enum.PartType.Ball
+			b.Material = Enum.Material.ForceField
+			b.Color = Color3.fromHSV(math.random(), 0.3, 1)
+			b.Anchored, b.CanCollide, b.CanQuery, b.CanTouch, b.CastShadow = true, false, false, false, false
+			b.Size = Vector3.one * 0.5
+			b.CFrame = mitte.CFrame
+			b.Parent = m
+			table.insert(fliegend, { teil = b, start = t, seite = (math.random() - 0.5) * 2 })
+		end
+		for i = #fliegend, 1, -1 do
+			local f = fliegend[i]
+			local a = t - f.start
+			local vorne = -mitte.CFrame.LookVector
+			if a < 1.4 then -- waechst im Ring und wird nach vorne gedehnt
+				local g = a / 1.4
+				f.teil.Size = Vector3.one * (0.5 + 5.5 * g) * skala
+				f.teil.CFrame = mitte.CFrame + vorne * (g * 2.5 * skala)
+			else -- steigt auf, wackelt, verblasst nach 7 s
+				local b = a - 1.4
+				local w = 1 + 0.06 * math.sin(t * 9)
+				f.teil.Size = Vector3.new(6 * w, 6 / w, 6 * w) * skala
+				f.teil.CFrame = mitte.CFrame + vorne * (2.5 * skala + b * 2) + Vector3.new(f.seite * b * 1.5, b * 3.2 + math.sin(b * 2) * 0.6, 0)
+				if b > 5.5 then f.teil.Transparency = math.min(1, (b - 5.5) / 1.5) end
+				if b > 7 then
+					f.teil:Destroy()
+					table.remove(fliegend, i)
+				end
+			end
+		end
+	end)
+end
+
+-- Bestenliste: Krone dreht sich und schwebt
+local function bestenliste(m)
+	local krone = m:FindFirstChild("Krone")
+	if not krone then return end
+	local basis = krone.CFrame
+	table.insert(schritte, function(t)
+		krone.CFrame = basis * CFrame.new(0, math.sin(t * 1.6) * 0.5, 0) * CFrame.Angles(0, t * 0.9, 0)
+	end)
+end
+
+for name, fn in { Seifenladen = seifenladen, IndexStand = indexLaden, VerkaufStand = verkaufLaden, Blasenstab = blasenstab, Bestenliste = bestenliste } do
 	local l = hub:WaitForChild(name, 30)
 	if l then fn(l) end
 end
