@@ -599,33 +599,77 @@ do
 	end
 end
 
+local BLASE_TEXTUR = "rbxassetid://93711487994021"
 -- ===== Wurfdeck in der Mitte (Holzdeck mit Treppe, Gelaender, gelber Scheibe) =====
 local HOLZ, HOLZ_DUNKEL, HOLZ_HELL = rgb(160, 105, 62), rgb(95, 60, 35), rgb(185, 128, 78)
 local wurf = Instance.new("Model")
 wurf.Name = "Wurfplatz"
-local platte = P(wurf, "Platte", V(28, 2.6, 24), CF(0, 1.3, -12), HOLZ, Enum.Material.WoodPlanks)
+local VOXEL_DECK = DEKO and DEKO:FindFirstChild("Wurfdeck")
+local unsichtbar = if VOXEL_DECK then { Transparency = 1 } else nil
+local platte = P(wurf, "Platte", V(28, 2.6, 24), CF(0, 1.3, -12), HOLZ, Enum.Material.WoodPlanks, unsichtbar)
 wurf.PrimaryPart = platte
-for i = 0, 9 do -- Plankenfugen
+for i = 0, (if VOXEL_DECK then -1 else 9) do -- Plankenfugen
 	deko(wurf, "Fuge", V(28, 0.05, 0.25), CF(0, 2.62, -23 + i * 2.4), HOLZ_DUNKEL)
 end
 for k = 1, 3 do -- Treppe Richtung Kessel
-	P(wurf, "Stufe", V(14, 2.6 * (1 - (k - 1) / 3), 2.2), CF(0, 1.3 * (1 - (k - 1) / 3), -24 - (k - 0.5) * 2.2), HOLZ_HELL, Enum.Material.WoodPlanks)
+	P(wurf, "Stufe", V(14, 2.6 * (1 - (k - 1) / 3), 2.2), CF(0, 1.3 * (1 - (k - 1) / 3), -24 - (k - 0.5) * 2.2), HOLZ_HELL, Enum.Material.WoodPlanks, unsichtbar)
 end
 local function gelaender(a, b)
 	local d = b - a
 	local n = math.max(1, math.floor(d.Magnitude / 4))
 	for k = 0, n do
-		P(wurf, "Pfosten", V(1.1, 3.4, 1.1), CF(a + d * (k / n) + V(0, 1.7, 0)), HOLZ_DUNKEL, Enum.Material.Wood)
+		P(wurf, "Pfosten", V(1.1, 3.4, 1.1), CF(a + d * (k / n) + V(0, 1.7, 0)), HOLZ_DUNKEL, Enum.Material.Wood, unsichtbar)
 	end
 	local m = (a + b) / 2
 	for _, h in { 1.3, 2.8 } do
-		P(wurf, "Latte", V(0.7, 0.6, d.Magnitude), CF(m + V(0, h, 0), m + V(0, h, 0) + d.Unit), HOLZ_DUNKEL, Enum.Material.Wood)
+		P(wurf, "Latte", V(0.7, 0.6, d.Magnitude), CF(m + V(0, h, 0), m + V(0, h, 0) + d.Unit), HOLZ_DUNKEL, Enum.Material.Wood, unsichtbar)
 	end
 end
 gelaender(V(-13.5, 2.6, -23.5), V(-13.5, 2.6, -0.5))
 gelaender(V(13.5, 2.6, -23.5), V(13.5, 2.6, -0.5))
 gelaender(V(-13.5, 2.6, -23.5), V(-7.5, 2.6, -23.5))
 gelaender(V(7.5, 2.6, -23.5), V(13.5, 2.6, -23.5))
+if VOXEL_DECK then
+	-- Voxel-Deck aus Blender (Vorlage: Plattform-Mitte am Boden, Treppe Richtung -Z)
+	local vd = VOXEL_DECK:Clone()
+	for _, t in vd:GetChildren() do t.Parent = wurf end
+	vd:Destroy()
+	local tmp = Instance.new("Model")
+	for _, n in { "Deck_Haupt", "Deck_Ring" } do wurf[n].Parent = tmp end
+	tmp.WorldPivot = CFrame.new()
+	tmp:PivotTo(CFrame.lookAt(V(0, 0, -12), V(0, 0, -13)))
+	for _, t in tmp:GetChildren() do t.Parent = wurf end
+	tmp:Destroy()
+	-- Laternenlicht auf den vier Ecksaeulen
+	for _, x in { -13, 13 } do
+		for _, z in { -23, -1 } do
+			local lp = deko(wurf, "Laternenlicht", V(0.5, 0.5, 0.5), CF(x, 7.75, z), rgb(255, 220, 120), nil, { Transparency = 1 })
+			local pl = Instance.new("PointLight")
+			pl.Color = rgb(255, 210, 120)
+			pl.Range = 12
+			pl.Brightness = 1.2
+			pl.Parent = lp
+		end
+	end
+	-- goldener Wurfkreis (Decal) + aufsteigende Blasen; pulsiert im Client (LadenAnimation)
+	local kreis = deko(wurf, "Wurfkreis", V(11, 0.05, 11), CF(0, 2.63, -9), rgb(255, 255, 255), nil, { Transparency = 1 })
+	local dc = Instance.new("Decal")
+	dc.Name = "Kreis"
+	dc.Texture = "rbxassetid://75076206160843"
+	dc.Face = Enum.NormalId.Top
+	dc.Parent = kreis
+	local blasen = Instance.new("ParticleEmitter")
+	blasen.Name = "Blasen"
+	blasen.Texture = BLASE_TEXTUR
+	blasen.Rate = 1.5
+	blasen.Lifetime = NumberRange.new(2.5, 3.5)
+	blasen.Speed = NumberRange.new(1.5, 3)
+	blasen.EmissionDirection = Enum.NormalId.Top
+	blasen.Acceleration = V(0, 1, 0)
+	blasen.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(1, 1) })
+	blasen.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(0.85, 0.3), NumberSequenceKeypoint.new(1, 1) })
+	blasen.Parent = kreis
+else
 deko(wurf, "Scheibe", V(0.3, 10, 10), CF(0, 2.75, -9) * CFrame.Angles(0, 0, math.rad(90)), rgb(255, 210, 55), nil, { Shape = Enum.PartType.Cylinder })
 for k = 0, 15 do -- gestrichelter Ring aus orangen Kacheln
 	local a = k / 16 * math.pi * 2
@@ -639,6 +683,7 @@ for k = 0, 15 do
 end
 for _, s in { -1, 1 } do
 	deko(wurf, "Stange", V(0.6, 6.4, 0.6), CF(s * 3.2, 5.8, -1), rgb(255, 255, 255))
+end
 end
 -- schwebende Schrift
 local hinweis = deko(wurf, "HinweisAnker", V(1, 1, 1), CF(0, 12, -9), rgb(255, 255, 255), nil, { Transparency = 1 })
@@ -661,6 +706,31 @@ hst.Parent = ht
 ht.Parent = hbb
 wurf.Parent = Map
 
+-- ===== Zwei kleine Wasserfaelle am Schlucht-Eingang (Textur rutscht im Client nach unten) =====
+for _, sx in { -1, 1 } do
+	local x = sx * (SB - 0.3)
+	local fall = deko(Gelaende, "Wasserfall", V(0.4, 27, 8), CF(x, 13.5, 22), rgb(90, 190, 245), Enum.Material.SmoothPlastic, { Transparency = 0.05 })
+	local t = Instance.new("Texture")
+	t.Name = "Wasser"
+	t.Texture = "rbxassetid://132648263590060"
+	t.Face = if sx < 0 then Enum.NormalId.Right else Enum.NormalId.Left
+	t.StudsPerTileU, t.StudsPerTileV = 8, 16
+	t.Parent = fall
+	local becken = deko(Gelaende, "Becken", V(7, 0.4, 12), CF(sx * (SB - 3.5), 0.2, 22), rgb(80, 175, 235), Enum.Material.Glass, { Transparency = 0.2 })
+	local gischt = Instance.new("ParticleEmitter")
+	gischt.Name = "Gischt"
+	gischt.Rate = 14
+	gischt.Lifetime = NumberRange.new(0.6, 1.1)
+	gischt.Speed = NumberRange.new(3, 6)
+	gischt.SpreadAngle = Vector2.new(50, 50)
+	gischt.EmissionDirection = Enum.NormalId.Top
+	gischt.Acceleration = V(0, -14, 0)
+	gischt.Color = ColorSequence.new(rgb(235, 248, 255))
+	gischt.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.6), NumberSequenceKeypoint.new(1, 1.4) })
+	gischt.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(1, 1) })
+	gischt.Parent = becken
+end
+
 -- ===== Orange Kachelwege =====
 local Wege = ordner("Wege")
 local OR1, OR2, ORRAND = rgb(255, 150, 40), rgb(255, 185, 70), rgb(225, 110, 30)
@@ -672,11 +742,26 @@ local function kachelWeg(x1, x2, z1, z2, kachel)
 		end
 	end
 end
-kachelWeg(-6, 6, -104, -32, 4) -- Hauptweg zum Deck
-kachelWeg(-140, 140, -110, -100, 5) -- Querweg vor den Grundstuecken
-for _, s in { -1, 1 } do
-	P(Wege, "Rand", V(1, 0.35, 72), CF(s * 6.5, 0.17, -68), ORRAND)
+-- Hauptweg zum Deck: Pixel-Pflaster (Texturen/weg_texturen.py) + helle Bordsteine
+do
+	local weg = P(Wege, "Hauptweg", V(12, 0.3, 76), CF(0, 0.15, -66), rgb(232, 200, 120))
+	local t = Instance.new("Texture")
+	t.Texture = "rbxassetid://115521599298726"
+	t.Face = Enum.NormalId.Top
+	t.StudsPerTileU, t.StudsPerTileV = 8, 8
+	t.Parent = weg
+	for _, s in { -1, 1 } do
+		local b = P(Wege, "Bordstein", V(1.5, 0.7, 76), CF(s * 6.75, 0.35, -66), rgb(214, 208, 196))
+		for _, f in { Enum.NormalId.Top, Enum.NormalId.Left, Enum.NormalId.Right, Enum.NormalId.Front, Enum.NormalId.Back } do
+			local bt = Instance.new("Texture")
+			bt.Texture = "rbxassetid://95956708570439"
+			bt.Face = f
+			bt.StudsPerTileU, bt.StudsPerTileV = 4, 4
+			bt.Parent = b
+		end
+	end
 end
+kachelWeg(-140, 140, -110, -100, 5) -- Querweg vor den Grundstuecken
 P(Wege, "RandQuer", V(280, 0.35, 1), CF(0, 0.17, -99.5), ORRAND)
 task.wait()
 
@@ -740,7 +825,6 @@ local function stand(name, pos, blick, markise, schild, schildFarbe)
 end
 -- Voxel-Seifenladen aus Blender (ServerStorage.BS_Deko.Seifenladen, Vorlage am Ursprung, Vorderseite -Z, Boden y=0).
 -- Quelle: Blender/_Skripte/voxelladen_seife.py; Animation (Pumpe, drehende Seife, Blasen) macht LadenAnimation.client.lua.
-local BLASE_TEXTUR = "rbxassetid://93711487994021"
 local function seifenladenVoxel(pos, blick)
 	local vorlage = DEKO and DEKO:FindFirstChild("Seifenladen")
 	if not vorlage then return nil end
@@ -940,8 +1024,23 @@ end
 -- Holz-Laternen am Weg
 for z = -96, -36, 15 do
 	for _, s in { -1, 1 } do
-		P(Hub, "Laterne", V(0.9, 6, 0.9), CF(s * 8.5, 3, z), HOLZ_DUNKEL, Enum.Material.Wood)
-		local lampe = deko(Hub, "Lampe", V(1.6, 1.6, 1.6), CF(s * 8.5, 6.6, z), rgb(255, 220, 110), Enum.Material.Neon)
+		local vl = DEKO and DEKO:FindFirstChild("Laterne")
+		local lampe
+		if vl then
+			local l = vl:Clone()
+			l.CFrame = CF(s * 9, l.Size.Y / 2, z)
+			l.CanCollide = true
+			l.Parent = Hub
+			lampe = deko(Hub, "Lampe", V(0.5, 0.5, 0.5), CF(s * 9, 6.25, z), rgb(255, 220, 110), nil, { Transparency = 1 })
+			if z < -40 and DEKO:FindFirstChild("Blumenfass") then
+				local f = DEKO.Blumenfass:Clone()
+				f.CFrame = CF(s * 9.5, f.Size.Y / 2, z + 7.5) * CFrame.Angles(0, z, 0)
+				f.Parent = Hub
+			end
+		else
+			P(Hub, "Laterne", V(0.9, 6, 0.9), CF(s * 8.5, 3, z), HOLZ_DUNKEL, Enum.Material.Wood)
+			lampe = deko(Hub, "Lampe", V(1.6, 1.6, 1.6), CF(s * 8.5, 6.6, z), rgb(255, 220, 110), Enum.Material.Neon)
+		end
 		local l = Instance.new("PointLight")
 		l.Color = rgb(255, 210, 120)
 		l.Range = 14

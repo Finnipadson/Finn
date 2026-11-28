@@ -91,6 +91,28 @@ local function verkaufLaden(laden)
 	end)
 end
 
+-- Wurfdeck: goldener Kreis pulsiert; Wasserfaelle: Textur rutscht nach unten
+do
+	local wurf = map:WaitForChild("Wurfplatz", 30)
+	local kreis = wurf and wurf:FindFirstChild("Wurfkreis")
+	local decal = kreis and kreis:FindFirstChild("Kreis")
+	local wasser = {}
+	local gel = map:FindFirstChild("Gelaende")
+	if gel then
+		for _, w in gel:GetChildren() do
+			if w.Name == "Wasserfall" and w:FindFirstChild("Wasser") then table.insert(wasser, w.Wasser) end
+		end
+	end
+	table.insert(schritte, function(t)
+		if decal then
+			local p = 0.5 + 0.5 * math.sin(t * 2.2)
+			decal.Transparency = 0.25 * (1 - p)
+			decal.Color3 = Color3.new(1, 0.92 + 0.08 * p, 0.75 + 0.25 * p)
+		end
+		for _, tx in wasser do tx.OffsetStudsV = (t * 9) % 16 end
+	end)
+end
+
 for name, fn in { Seifenladen = seifenladen, IndexStand = indexLaden, VerkaufStand = verkaufLaden } do
 	local l = hub:WaitForChild(name, 30)
 	if l then fn(l) end
