@@ -25,6 +25,8 @@ PAL = {
     "gelb0": "#f0a818", "gelb1": "#ffcf2a", "kern": "#5a3416",
     "grau0": "#80786e", "grau1": "#9c948a", "grau2": "#b9b1a6", "moos": "#5fb83a",
     "rosa": "#ff7ab0", "lila": "#b98bff", "blau": "#6ab4ff", "gelbblume": "#ffe14a",
+    # ab hier neu (28.11. Kleinkram) - nur anhaengen, damit alte UVs gleich bleiben
+    "erde0": "#74452a", "erde1": "#8f5a33", "erde2": "#9b6a3e", "erdeD": "#5e371d", "holzring": "#c99a5e", "orange": "#ff9a3c",
 }
 NAMEN = list(PAL.keys())
 IDX = {n: i for i, n in enumerate(NAMEN)}
@@ -140,12 +142,76 @@ def stein():
         return ["grau0", "grau1", "grau2"][max(0, min(2, int(s * 3)))]
     return teile, farbe, (-5, -4, 0), (4, 4, 4)
 
+def zellen_teile(zellen):
+    def teile(p):
+        return zellen.get((math.floor(p.x / V), math.floor(p.y / V), math.floor(p.z / V)))
+    return teile
+
+def blumen():
+    # Bueschel aus 6 kleinen Blumen: Stiel 2-4 Wuerfel, Bluete als Plus-Form mit gelber Mitte
+    z = {}
+    farben = ["rosa", "lila", "weiss", "gelbblume", "blau", "orange"]
+    for k in range(6):
+        ang = k / 6 * math.tau + hsh(k, 1, 1) * 0.8
+        r = 1.4 + hsh(k, 2, 2) * 1.8
+        cx, cy = math.floor(math.cos(ang) * r / V), math.floor(math.sin(ang) * r / V)
+        hoch = 2 + int(hsh(k, 3, 3) * 3)
+        for iz in range(hoch): z[(cx, cy, iz)] = "stiel"
+        fb = farben[int(hsh(k, 4, 4) * len(farben))]
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)): z[(cx + dx, cy + dy, hoch)] = fb
+        z[(cx, cy, hoch)] = "mitte"
+        if hsh(k, 5, 5) > 0.5: z[(cx + 1, cy, 1)] = "blatt"
+    def farbe(lab, p, n, idx):
+        if lab == "stiel": return "gruen1"
+        if lab == "blatt": return "gruen3"
+        if lab == "mitte": return "gelb1" if n.z > 0 else "gelb0"
+        return lab
+    return zellen_teile(z), farbe, (-4, -4, 0), (4, 4, 5)
+
+def baumstamm():
+    L, R = 4.2, 1.5
+    def teile(p):
+        q = math.sqrt(p.y ** 2 + (p.z - R) ** 2)
+        if abs(p.x) <= L and q <= R: return "ende" if abs(p.x) > L - V else "holz"
+        if abs(p.x) < 2.2 and abs(p.y) < 0.6 and R * 2 <= p.z < R * 2 + V and rauschen(p, 0.9, 5) > 0.45: return "moos"
+        return None
+    def farbe(lab, p, n, idx):
+        r = hsh(*idx, 8)
+        if lab == "moos": return "moos" if r > 0.3 else "gruen2"
+        if lab == "ende" and abs(n.x) > 0.5:
+            q = math.sqrt(p.y ** 2 + (p.z - R) ** 2)
+            return "rinde0" if q > R - V else ("holzring" if int(q / V) % 2 == 0 else "creme0")
+        return ["rinde0", "rinde1", "rinde2"][(idx[0] + int(r * 2)) % 3]
+    return teile, farbe, (-5, -2.5, 0), (5, 2.5, 4)
+
+def insel():
+    RAD, TIEF = 6.5, 8.0
+    def teile(p):
+        r = math.sqrt(p.x ** 2 + p.y ** 2) + (rauschen(p, 0.6, 13) - 0.5) * 1.6
+        if r > RAD: return None
+        oben = TIEF
+        if oben <= p.z < oben + 1.5: return "gras"
+        unten = oben - TIEF * (1 - r / RAD) ** 0.75 - (rauschen(p, 0.8, 17) - 0.5) * 1.5
+        if unten <= p.z < oben: return "erde"
+        return None
+    def farbe(lab, p, n, idx):
+        r = hsh(*idx, 9)
+        if lab == "gras":
+            if n.z > 0.5: return ["gruen2", "gruen3", "gruen4"][int(r * 2.4)]
+            return "gruen1" if r > 0.3 else "gruen2"
+        if r < 0.06: return "erdeD"
+        return ["erde1", "erde0", "erde2", "erde0"][int(p.z / 1.5) % 4]
+    return teile, farbe, (-8, -8, 0), (8, 8, 10)
+
 OBJEKTE = {
     "Pilz_Rot": fliegenpilz(5.0, ["rot0", "rot1", "rot2"]),
     "Pilz_Braun": fliegenpilz(3.2, ["braun0", "braun1", "braun2"], punkte=False, ring=False),
     "Sonnenblume": sonnenblume(),
     "Blumenbusch": blumenbusch(),
     "Stein": stein(),
+    "Blumen": blumen(),
+    "Baumstamm": baumstamm(),
+    "Insel": insel(),
 }
 
 # ---------------------------------------------------------------- Voxelizer
@@ -226,9 +292,10 @@ if __name__ == "__main__":
         bpy.ops.export_scene.fbx(filepath=os.path.join(OUT, ob.name.lower() + ".fbx"), use_selection=True,
                                  apply_scale_options="FBX_SCALE_UNITS", axis_forward="-Z", axis_up="Y", path_mode="COPY", embed_textures=True)
     # Aufstellung fuer das Testbild: Reihe auf einem Terrassenstueck
-    x = -20
+    x = -32
     for ob in obs:
-        ob.location = (x, 0, 0); x += 10
+        ob.location = (x, 0, 0); x += 9 if ob.name != "Deko_Insel" else 0
+        if ob.name == "Deko_Insel": ob.location = (32, 6, 4)
     box("Erde", (48, 14, 20), (0, 0, -13), lin("#8c5c37"))
     box("Gras", (48, 16, 3), (0, -1, -1.5), lin("#56c83c"))
     sonne = D.lights.new("Sonne", "SUN"); sonne.energy = 3.2
@@ -243,7 +310,8 @@ if __name__ == "__main__":
     sc.render.resolution_x, sc.render.resolution_y = 1600, 700
     cam = D.cameras.new("Kamera"); cam.lens = 40
     co = D.objects.new("Kamera", cam); sc.collection.objects.link(co); sc.camera = co
-    foto(co, (0, -44, 14), (0, 0, 3.5), "deko_reihe.png")
+    foto(co, (0, -56, 16), (0, 0, 4), "deko_reihe.png")
+    foto(co, (14, -22, 8), (26, 0, 4), "deko_kleinkram_nah.png")
     foto(co, (-22, -16, 10), (-14, 0, 4), "deko_pilze_nah.png")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "voxeldeko.blend"))
     print("FERTIG")

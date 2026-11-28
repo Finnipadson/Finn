@@ -144,6 +144,7 @@ local function sonnenblume(f, pos)
 end
 local BLUMEN = { rgb(255, 110, 160), rgb(255, 225, 60), rgb(180, 120, 255), rgb(255, 255, 255), rgb(255, 140, 60) }
 local function blume(f, pos)
+	if meshDeko("Blumen", f, pos, rng:NextNumber(0.5, 0.7)) then return end
 	deko(f, "Stiel", V(0.35, 1.2, 0.35), CF(pos + V(0, 0.6, 0)), rgb(70, 150, 50))
 	deko(f, "Bluete", V(1, 0.6, 1), CF(pos + V(0, 1.4, 0)), zufall(BLUMEN))
 end
@@ -302,12 +303,21 @@ for i = 1, 9 do
 	local w = i / 9 * math.pi * 2
 	local c = V(math.cos(w) * rng:NextNumber(150, 210), rng:NextNumber(120, 165), -100 + math.sin(w) * rng:NextNumber(130, 170))
 	local g = rng:NextNumber(10, 18)
-	noppen(deko(KDeko, "Insel", V(g, 2.5, g), CF(c), zufall(GRUEN)))
-	local y, bb = c.Y - 2.5, g
-	while bb > 3 do -- umgedrehte Erd-Pyramide
-		bb -= rng:NextNumber(2.5, 4)
-		deko(KDeko, "InselErde", V(bb, 2.5, bb), CF(c.X, y, c.Z), zufall(ERDE))
-		y -= 2.5
+	local insel = DEKO and DEKO:FindFirstChild("Insel")
+	if insel then -- Voxel-Insel aus Blender: Oberkante liegt auf Hoehe c.Y
+		local b = insel:Clone()
+		b.Size = b.Size * (g / 12)
+		b.CFrame = CF(c - V(0, b.Size.Y / 2 - 0.1, 0)) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
+		b.Parent = KDeko
+		c = c - V(0, 1.25, 0) -- Baum/Pilz unten wird bei c + 1,25 gesetzt -> steht auf der Grasoberkante
+	else
+		noppen(deko(KDeko, "Insel", V(g, 2.5, g), CF(c), zufall(GRUEN)))
+		local y, bb = c.Y - 2.5, g
+		while bb > 3 do -- umgedrehte Erd-Pyramide
+			bb -= rng:NextNumber(2.5, 4)
+			deko(KDeko, "InselErde", V(bb, 2.5, bb), CF(c.X, y, c.Z), zufall(ERDE))
+			y -= 2.5
+		end
 	end
 	if rng:NextNumber() < 0.6 then voxelBaum(KDeko, c + V(0, 1.25, 0), 0.7) else voxelPilz(KDeko, c + V(0, 1.25, 0), 0.8) end
 end
@@ -356,6 +366,7 @@ for _, b in BIOME do
 		local x, z = rng:NextNumber(-SB + 6, SB - 6), rng:NextNumber(b.von + 10, b.bis - 10)
 		if i % 2 == 0 then
 			local l = rng:NextNumber(5, 9)
+			if meshDeko("Baumstamm", f, V(x, 0, z), l / 8.4) then continue end
 			deko(f, "Stamm", V(l, 1.8, 1.8), CF(x, 0.9, z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0), rgb(130, 85, 50), Enum.Material.Wood, { Shape = Enum.PartType.Cylinder })
 			deko(f, "Moos", V(l * 0.5, 0.3, 1.2), CF(x, 1.85, z), rgb(110, 190, 70))
 		else
@@ -379,6 +390,12 @@ do
 	local farben = { rgb(255, 120, 170), rgb(255, 215, 60), rgb(190, 140, 255), rgb(255, 255, 255), rgb(255, 140, 80) }
 	local d = ordner("Deko", f)
 	local function blumenFeld(gx, gz, y, anzahl)
+		if DEKO and DEKO:FindFirstChild("Blumen") then
+			for i = 1, math.max(1, math.floor(anzahl / 3)) do
+				meshDeko("Blumen", d, V(gx + rng:NextNumber(-5, 5), y, gz + rng:NextNumber(-5, 5)), rng:NextNumber(0.8, 1.1))
+			end
+			return
+		end
 		local farbe = farben[rng:NextInteger(1, #farben)]
 		for i = 1, anzahl do
 			local x, z = gx + rng:NextNumber(-6, 6), gz + rng:NextNumber(-6, 6)
