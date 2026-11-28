@@ -61,3 +61,10 @@ Fang-und-Gehege-Spiel: Blasebalg treten → Seifenblase pusten → Blase treibt 
 - **Weg zu den Gehegen (28.11., Voxel):** Konzept `Konzepte/weg-gehege.webp`. Blender `voxel_gehegeweg.py` → Asset 110573664111207 (Palette 111162160810527): `BS_Deko.Torbogen`, `Wegweiser`, `Bank`, `Trog`. Querweg = 1 Teil mit grauem Pflaster (108485552868338, `weg_texturen.py`), Bordstein zur Spawn-Seite; Hauptweg endet jetzt bei z −100 (keine Überlappung). Je Grundstück: Torbogen bei (cx+8, −111) Skala 1,4, unsichtbare `TorPfosten`, **`NamensSchild` = unsichtbares Teil vor dem Torschild** (Server schreibt den Namen), runder Pflasterplatz (Zylinder, Textur auf `Right`). `Wege/QuerwegDeko`: Laternen, Bänke, Tröge, Blumen, Wegweiser an der Kreuzung (0,−113.5).
 - **Flacker-Falle:** Teile mit gleicher Außenfläche dürfen sich nicht überlappen (Z-Fighting). Flecken haben eigene Höhenzeilen, Tropfen eigene 4-Stud-Plätze, Gras-Überhang wird an Ecken gekürzt (`trimA/trimB`). Prüfskript: Boxen von Fleck/Tropfen/TerrasseGras paarweise auf Überlappung + gleiche Fläche testen.
 - Offen aus 2b: Tier-Details (Bewegung, Aura).
+## Geplant (vom User abgesprochen, 28.11.2026 – erst auf sein Startsignal)
+Vorlage `Konzepte/spawn-gesamt.webp` (+ `training-blasebalg.webp`, `gehege.webp`). Reihenfolge, je Schritt testen/speichern/pushen/Bild schicken:
+1. Boden + Wege: Wiesen-Inseln mit Blumen-/Heckenrand, beige Pflasterflächen, Gras in den Wegrändern, eigene Wege zu Läden + Trainingsplatz, breiter Platz vor den Gehegen. **Hauptweg zum Wurfdeck weniger grell** (gelbes Pflaster gedämpfter, Richtung Beige).
+2. Trainingsplatz rechts neben dem Index: 4 Blasebalg-„Kanonen“ (Holz/Kupfer/Lila-Samt als Paletten, Pedal/Hebel/Balg/Zeiger animiert), je eine Holzplatte mit Leuchtkreis; Training/Blasebalg-Aufwerten wieder anschließen.
+3. Gehege-Zäune im Voxel-Stil (innen LEER: kein See/Heu/Hütte/Trog), Aufwerten-Schild mit Pfeil links neben dem Tor.
+4. Teich mit Seerosen vorne links, Bäche von den Wasserfällen, niedrige Zäune/Bänke/Blumen an der Vorderkante.
+Läden bleiben an ihren jetzigen Plätzen.
