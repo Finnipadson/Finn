@@ -795,7 +795,30 @@ for i, cx in XS do
 	local c = CF(cx, 0, -150) -- Mitte, +Z Richtung Schlucht
 	local function L(x, y, z) return c * CF(x, y, z) end
 	P(g, "Boden", V(66, 1, 80), L(0, 0.05, 0), rgb(130, 225, 85), nil, { Transparency = 1, CanCollide = false, CanQuery = false }) -- nur Bezugspunkt
-	-- Gehege (Flaeche + Zaun) baut der Server je nach Ausbaustufe
+	-- Gehege in Startgroesse (6 Plaetze, Tiefe 30) schon in der Map, damit es auch im Studio/Editor zu sehen ist.
+	-- Der Server uebernimmt die Flaeche und baut den Zaun je nach Ausbaustufe neu (gleiche Masse wie zaunBauen).
+	do
+		local z1, tiefe = -185, 30
+		P(g, "GehegeFlaeche", V(32, 0.4, tiefe), CF(cx - 15, 0.7, z1 + tiefe / 2), rgb(120, 205, 90))
+		local zaun = ordner("Zaun", g)
+		local x1, x2, z2 = cx - 31, cx + 1, z1 + tiefe
+		local function stueck(a, b, name)
+			local d = b - a
+			local n = math.max(1, math.floor(d.Magnitude / 5))
+			for k = 0, n do
+				P(zaun, name, V(1.2, 4.6, 1.2), CF(a + d * (k / n) + V(0, 2.3, 0)), rgb(95, 60, 35), Enum.Material.Wood)
+			end
+			local mitte = (a + b) / 2
+			for _, h in { 1.6, 3.5 } do
+				P(zaun, name, V(0.6, 0.8, d.Magnitude), CFrame.lookAt(mitte + V(0, h, 0), mitte + V(0, h, 0) + d.Unit), rgb(150, 98, 58), Enum.Material.Wood)
+			end
+		end
+		stueck(V(x1, 0.7, z1), V(x2, 0.7, z1), "Hinten")
+		stueck(V(x1, 0.7, z2), V(x2, 0.7, z2), "Vorne")
+		stueck(V(x1, 0.7, z1), V(x1, 0.7, z2), "Seite")
+		stueck(V(x2, 0.7, z1), V(x2, 0.7, z1 + 8), "Seite")
+		stueck(V(x2, 0.7, z1 + 16), V(x2, 0.7, z2), "Seite")
+	end
 	-- Trainingsplatz: Steinmatte, Holzteller mit Zackenring
 	P(g, "Steinmatte", V(20, 0.3, 20), L(15, 0.65, -14), rgb(150, 150, 158), Enum.Material.Slate)
 	deko(g, "TrainKreis", V(0.4, 14, 14), L(17, 0.85, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(150, 100, 60), Enum.Material.Wood,
