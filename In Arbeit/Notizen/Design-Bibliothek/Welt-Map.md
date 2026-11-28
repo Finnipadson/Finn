@@ -142,6 +142,22 @@ Warum das „echt“ wirkt und unser erster Versuch nach „KI-Einheitsbrei“ a
 - **Objekte als Pixel-Kunst:** Trainings-Gerät, Shop, Verzauberer sind aus vielen kleinen Würfeln mit Muster gebaut, mit Leuchtteilen.
 - **Licht:** starke Sättigung, Bloom, weiche Schatten.
 
+### Wurfspiel von „n1tro_camdem“ (TikTok, 28.11.2026) – zweites Zielbild
+
+![[n1tro-wurf.jpg]]
+![[n1tro-wueste.jpg]]
+![[n1tro-winter.jpg]]
+![[n1tro-ruinen-lava.jpg]]
+![[n1tro-fantasy.jpg]]
+![[n1tro-gehege.jpg]]
+
+- **Wände mit Muster:** Schluchtwände als großes **Schachbrett aus zwei Steintönen** (Wüste: Sand/Beige, Ruinen: dunkelgrau mit Lava-Kante, Fantasy: Lila), oben Gras- oder Schnee-Kante mit Würfel-Überhang. Kein glattes Einfarb.
+- **Boden mit Noppen-/Kachelmuster** und kleinen Kacheln; Wurfplatz aus orangen Noppen-Kacheln.
+- **Viele kleine Voxel-Objekte am Rand:** Bäume aus Würfeln, Windrad (Wüste), Laternen, Tannen mit Schnee, tote Bäume und Feuerschalen (Ruinen), leuchtende Pilze/Blumen (Fantasy).
+- **Stimmung pro Biom über Licht und Nebel:** Winter blaugrau und neblig, Ruinen dunkel mit orangem Glühen, Fantasy lila mit dicken Comic-Wolken.
+- **Gehege:** Noppen-Rasen, Holzzäune in Gelb/Braun, riesige Tiere mit Glitzer-Aura.
+- Gemeinsam mit dem TVA-Video: **Muster statt glatter Flächen, Staffelung/Tiefe, dichte kleine Deko, Licht/Nebel pro Biom.**
+
 ### Pet Simulator 99 – Zonen hintereinander (Roblox)
 
 ![[petsim-zonen-tor.jpg]]
