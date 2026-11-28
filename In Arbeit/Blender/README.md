@@ -61,6 +61,7 @@ In Blender ausführen mit `exec(open(r"...\_Skripte\<datei>.py", encoding="utf-8
 | `skorpion_schluepfen.py` | Schlüpf-Animation: Schale zerteilen (Unterteil bleibt), Wackeln, Glühen, ballistische Stücke + Funken, Blitz, Baby = eigene Kopie aller „Skorpion“-Objekte (Bezüge umgehängt, eigene Krabbel-Drivers, Lücke im Nest); `build_hatch()` baut Ei + Animation komplett neu |
 | `skorpion_fx.py` | Skorpion: Splitter, Ketten-Ringe (Array + Curve), Nebel-Volumen, Lichter, alle Animations-Drivers |
 | `voxelbaum.py` | Voxel-Baum: SDF-Krone → Würfel-Mesh mit Paletten-UVs, Testszene (Terrasse) + Renders + FBX. Headless: `blender -b --factory-startup --python voxelbaum.py -- <Ordner> <wiese\|herbst\|schnee>` |
+| `voxeldeko.py` | Voxel-Deko im Baum-Stil (0,75-Würfel): Fliegenpilz, brauner Pilz, Sonnenblume, Blumenbusch, Stein – gemeinsame Paletten-Textur, FBX je Objekt nach `VoxelBaum/deko_*.fbx` |
 | `voxeldrache.py` | Voxel-Drache komplett: SDF-Formen → Würfel-Meshes (innere Flächen weg), Färbung pro Würfel, Klingen, Umgebung, Animation, Testrenders. Headless: `blender -b --factory-startup --python voxeldrache.py -- build <Bildordner>` |
 
 Die Skripte sind auf die Lavadrache-Namen zugeschnitten (z. B. `Schwanz_J*`, `Drachenkoerper`) –

@@ -107,7 +107,21 @@ local function voxelBaum(f, pos, s, gruen)
 		deko(f, "Laub", V(r, r, r), CF(mitte + off) * CFrame.Angles(0, rng:NextNumber(0, 1.5), 0), zufall(gruen or GRUEN))
 	end
 end
+-- Blender-Deko (Pilze, Sonnenblume, Blumenbusch, Stein; gleiche Wuerfelgroesse wie die Baeume)
+local function meshDeko(name, f, pos, skala)
+	local v = DEKO and DEKO:FindFirstChild(name)
+	if not v then return false end
+	local b = v:Clone()
+	b.Size = b.Size * skala
+	b.CFrame = CF(pos + V(0, b.Size.Y / 2 - 0.2, 0)) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
+	b.Parent = f
+	return true
+end
 local function voxelPilz(f, pos, s, farbe)
+	if not farbe then
+		local name = if rng:NextNumber() < 0.7 then "Pilz_Rot" else "Pilz_Braun"
+		if meshDeko(name, f, pos, s * 1.4) then return end
+	end
 	farbe = farbe or rgb(225, 45, 45)
 	deko(f, "Stiel", V(1.2, 2.2, 1.2) * s, CF(pos + V(0, 1.1 * s, 0)), rgb(245, 235, 215))
 	deko(f, "Kappe", V(3.2, 1.4, 3.2) * s, CF(pos + V(0, 2.6 * s, 0)), farbe)
@@ -117,6 +131,7 @@ local function voxelPilz(f, pos, s, farbe)
 	end
 end
 local function sonnenblume(f, pos)
+	if meshDeko("Sonnenblume", f, pos, rng:NextNumber(1.1, 1.5)) then return end
 	local h = rng:NextNumber(5, 8)
 	deko(f, "Stiel", V(0.6, h, 0.6), CF(pos + V(0, h / 2, 0)), rgb(70, 150, 50))
 	deko(f, "Blatt", V(1.6, 0.4, 0.8), CF(pos + V(0.8, h * 0.45, 0)), rgb(80, 170, 55))
@@ -134,12 +149,16 @@ local function blume(f, pos)
 end
 local function zufallsDeko(f, pos)
 	local r = rng:NextNumber()
-	if r < 0.55 then
+	if r < 0.45 then
 		voxelBaum(f, pos, rng:NextNumber(0.8, 1.2))
-	elseif r < 0.75 then
+	elseif r < 0.63 then
 		voxelPilz(f, pos, rng:NextNumber(0.8, 1.3))
-	elseif r < 0.88 then
+	elseif r < 0.73 then
 		sonnenblume(f, pos)
+	elseif r < 0.87 then
+		meshDeko("Blumenbusch", f, pos, rng:NextNumber(1.2, 1.6))
+	elseif r < 0.95 then
+		meshDeko("Stein", f, pos, rng:NextNumber(1.0, 1.6))
 	end
 end
 
