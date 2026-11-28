@@ -18,8 +18,11 @@ Blender/
 ├── Skorpion/
 │   ├── skorpion.blend
 │   └── Renders/
-└── VoxelDrache/
-    ├── voxeldrache.blend
+├── VoxelDrache/
+│   ├── voxeldrache.blend
+│   └── Renders/
+└── VoxelBaum/            ← Deko für Bubble Safari (1 Einheit = 1 Stud)
+    ├── voxelbaum_<biom>.blend / .fbx + palette_<biom>.png
     └── Renders/
 ```
 
@@ -33,6 +36,7 @@ Render-Ausgabe der Szene auf `<Name>/Renders/Animation/` stellen.
 | Steinwolf | Stein-/Lava-Wolf, Glüh-Risse, Spiralen, Energiebänder, Blitze | 300 Frames @ 60 fps, Atmen/Knurren, Angriffssprung |
 | Lavadrache | Lava-Drache: glatter Metaball-Körper + Skelett, Flügel-Armatures, Schuppenreihen, Stacheln, Kristallkrallen | 300 Frames @ 60 fps, Flügelschlag, Schwanzwelle, Feuerspucken (Frame ~140–246) |
 | Skorpion | Violetter Kristall-/Schatten-Skorpion: glatter Metaball-Körper + Skelett, Kristall-Sichelscheren, glühender Stachel, Panzerplatten, Ketten-Ringe, Splitter, Nebel, Runenkreis im Boden | 300 Frames @ 60 fps, Schwanz pendelt + Stich nach vorne über den Kopf (Frame ~170–250) mit Giftstrahl (207–234), Scheren-Schlag + Schockwelle im Boden (232–292), Scheren auf/zu, Beine tippeln, Ketten/Splitter kreisen. Daneben ein Ei: wackelt + Risse glühen (60–159), platzt bei Frame 160 auf (Stücke, Blitz, Funken), kleiner Skorpion (eigene Kopie `Skorpion_Baby`) hakt die Scheren über den Rand, zieht sich hoch, kippt raus und krabbelt weg |
+| VoxelBaum | Runder Voxel-Baum (TVA-Stil) für Bubble Safari: 0,5-Stud-Würfel, Wolken-Krone aus Ballen + Rauschen, Stamm mit Wurzeln/Ast; Farben über 8×8-Paletten-Textur (Biome per Palette tauschbar), FBX für Roblox | – |
 | VoxelDrache | Block-/Voxel-Drache (Roblox-Look): 7-cm-Würfel auf Raster, ein Block-Mesh pro Körperteil, Marine/Blau/Türkis, Panzerplatten, Klingen-Flossen, Kopfkamm, Krallen, gezackte Flügel, Gitterboden | 300 Frames @ 60 fps, Atmen, Flügelschlag, Schwanzpendeln, Kopf/Kiefer, Glühen pulsiert |
 
 ## Skripte (`_Skripte/`)
@@ -56,6 +60,7 @@ In Blender ausführen mit `exec(open(r"...\_Skripte\<datei>.py", encoding="utf-8
 | `skorpion_ei.py` | Skorpion-Ei neben dem Skorpion: kantige Schale (eigene Material-Kopie `Sk_Ei_Schale`), Nest aus Steinen + Kristallen, Splitter |
 | `skorpion_schluepfen.py` | Schlüpf-Animation: Schale zerteilen (Unterteil bleibt), Wackeln, Glühen, ballistische Stücke + Funken, Blitz, Baby = eigene Kopie aller „Skorpion“-Objekte (Bezüge umgehängt, eigene Krabbel-Drivers, Lücke im Nest); `build_hatch()` baut Ei + Animation komplett neu |
 | `skorpion_fx.py` | Skorpion: Splitter, Ketten-Ringe (Array + Curve), Nebel-Volumen, Lichter, alle Animations-Drivers |
+| `voxelbaum.py` | Voxel-Baum: SDF-Krone → Würfel-Mesh mit Paletten-UVs, Testszene (Terrasse) + Renders + FBX. Headless: `blender -b --factory-startup --python voxelbaum.py -- <Ordner> <wiese\|herbst\|schnee>` |
 | `voxeldrache.py` | Voxel-Drache komplett: SDF-Formen → Würfel-Meshes (innere Flächen weg), Färbung pro Würfel, Klingen, Umgebung, Animation, Testrenders. Headless: `blender -b --factory-startup --python voxeldrache.py -- build <Bildordner>` |
 
 Die Skripte sind auf die Lavadrache-Namen zugeschnitten (z. B. `Schwanz_J*`, `Drachenkoerper`) –
