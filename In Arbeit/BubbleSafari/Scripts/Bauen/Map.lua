@@ -744,14 +744,14 @@ local function kachelWeg(x1, x2, z1, z2, kachel)
 end
 -- Hauptweg zum Deck: Pixel-Pflaster (Texturen/weg_texturen.py) + helle Bordsteine
 do
-	local weg = P(Wege, "Hauptweg", V(12, 0.3, 76), CF(0, 0.15, -66), rgb(232, 200, 120))
+	local weg = P(Wege, "Hauptweg", V(12, 0.3, 72), CF(0, 0.15, -64), rgb(232, 200, 120))
 	local t = Instance.new("Texture")
 	t.Texture = "rbxassetid://115521599298726"
 	t.Face = Enum.NormalId.Top
 	t.StudsPerTileU, t.StudsPerTileV = 8, 8
 	t.Parent = weg
 	for _, s in { -1, 1 } do
-		local b = P(Wege, "Bordstein", V(1.5, 0.7, 76), CF(s * 6.75, 0.35, -66), rgb(214, 208, 196))
+		local b = P(Wege, "Bordstein", V(1.5, 0.7, 72), CF(s * 6.75, 0.35, -64), rgb(214, 208, 196))
 		for _, f in { Enum.NormalId.Top, Enum.NormalId.Left, Enum.NormalId.Right, Enum.NormalId.Front, Enum.NormalId.Back } do
 			local bt = Instance.new("Texture")
 			bt.Texture = "rbxassetid://95956708570439"
@@ -761,8 +761,27 @@ do
 		end
 	end
 end
-kachelWeg(-140, 140, -110, -100, 5) -- Querweg vor den Grundstuecken
-P(Wege, "RandQuer", V(280, 0.35, 1), CF(0, 0.17, -99.5), ORRAND)
+-- Querweg vor den Grundstuecken: graues Pflaster am Stueck, Bordstein zur Spawn-Seite (Luecke am Hauptweg)
+local GRAU_PFLASTER = "rbxassetid://108485552868338"
+local function texturiere(teil, id, kachel, flaechen)
+	for _, f in flaechen do
+		local t = Instance.new("Texture")
+		t.Texture = id
+		t.Face = f
+		t.StudsPerTileU, t.StudsPerTileV = kachel, kachel
+		t.Parent = teil
+	end
+end
+if DEKO and DEKO:FindFirstChild("Torbogen") then
+	texturiere(P(Wege, "Querweg", V(280, 0.3, 10), CF(0, 0.15, -105), rgb(200, 192, 176)), GRAU_PFLASTER, 8, { Enum.NormalId.Top })
+	for _, sx in { -1, 1 } do
+		texturiere(P(Wege, "Bordstein", V(133, 0.7, 1.5), CF(sx * 73.5, 0.35, -99.25), rgb(214, 208, 196)), "rbxassetid://95956708570439", 4,
+			{ Enum.NormalId.Top, Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right })
+	end
+else
+	kachelWeg(-140, 140, -110, -100, 5)
+	P(Wege, "RandQuer", V(280, 0.35, 1), CF(0, 0.17, -99.5), ORRAND)
+end
 task.wait()
 
 -- ===== Grundstuecke hinten im Kessel =====
@@ -789,15 +808,67 @@ for i, cx in XS do
 	-- gelbe Aufwerten-Scheibe neben dem Trainingsplatz
 	deko(g, "ScheibenRand", V(0.3, 8, 8), L(29.5, 0.7, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(60, 45, 35), nil, { Shape = Enum.PartType.Cylinder })
 	P(g, "AufwertenSchild", V(0.35, 7, 7), L(29.5, 0.8, -14) * CFrame.Angles(0, 0, math.rad(90)), rgb(255, 210, 55), nil, { Shape = Enum.PartType.Cylinder })
-	-- grosses Holz-Namensschild vorne
-	for _, s in { -1, 1 } do
-		deko(g, "SchildPfosten", V(1, 7, 1), L(12 + s * 6, 3.5, 37), HOLZ_DUNKEL, Enum.Material.Wood)
+	local tor = DEKO and DEKO:FindFirstChild("Torbogen")
+	if tor then
+		-- Torbogen am Eingang (Vorlage: Konzepte/weg-gehege.webp), Name des Besitzers auf dem Schild
+		local pos = V(cx + 8, 0, -111)
+		local t = tor:Clone()
+		t.Size = t.Size * 1.4
+		t.CFrame = CFrame.lookAt(pos, pos + V(0, 0, 1)) * CF(0, t.Size.Y / 2, 0)
+		t.Parent = g
+		for _, px in { -7, 7 } do
+			P(g, "TorPfosten", V(1.6, 13, 1.6), CF(pos + V(px, 6.5, 0)), rgb(255, 255, 255), nil, { Transparency = 1 })
+		end
+		local sp = pos + V(0, 11.55, 2.5)
+		local ns = P(g, "NamensSchild", V(9.6, 2.1, 0.1), CFrame.lookAt(sp, sp + V(0, 0, 1)), HOLZ, nil, { Transparency = 1 })
+		ns.CanCollide = false
+		-- runder Pflasterplatz vor dem Tor
+		local platz = P(g, "Platz", V(0.32, 14, 14), CF(cx + 8, 0.16, -107) * CFrame.Angles(0, 0, math.rad(90)), rgb(200, 192, 176), nil, { Shape = Enum.PartType.Cylinder })
+		local tx = Instance.new("Texture")
+		tx.Texture = GRAU_PFLASTER
+		tx.Face = Enum.NormalId.Right
+		tx.StudsPerTileU, tx.StudsPerTileV = 8, 8
+		tx.Parent = platz
+		for _, px in { -10, 10 } do meshDeko("Blumenbusch", g, V(cx + 8 + px, 0, -113), 1.3) end
+	else
+		-- grosses Holz-Namensschild vorne
+		for _, s in { -1, 1 } do
+			deko(g, "SchildPfosten", V(1, 7, 1), L(12 + s * 6, 3.5, 37), HOLZ_DUNKEL, Enum.Material.Wood)
+		end
+		local ns = P(g, "NamensSchild", V(15, 5, 0.8), CFrame.lookAt(L(12, 6.5, 37).Position, L(12, 6.5, 37).Position + V(0, 0, 1)) * CFrame.Angles(0, 0, math.rad(-4)), HOLZ, Enum.Material.WoodPlanks)
+		ns.CanCollide = false
 	end
-	local ns = P(g, "NamensSchild", V(15, 5, 0.8), CFrame.lookAt(L(12, 6.5, 37).Position, L(12, 6.5, 37).Position + V(0, 0, 1)) * CFrame.Angles(0, 0, math.rad(-4)), HOLZ, Enum.Material.WoodPlanks)
-	ns.CanCollide = false
 	deko(g, "SchildAnker", V(1, 1, 1), L(-15, 24, 22), rgb(255, 255, 255), nil, { Transparency = 1 })
 	g.Parent = Grund
 	task.wait()
+end
+
+-- Deko am Querweg: Laternen, Baenke, Troege, Wegweiser an der Kreuzung
+if DEKO and DEKO:FindFirstChild("Torbogen") then
+	local d = ordner("QuerwegDeko", Wege)
+	local function setze(name, pos, blick, skala)
+		local v = DEKO:FindFirstChild(name)
+		if not v then return end
+		local t = v:Clone()
+		t.Size = t.Size * (skala or 1)
+		t.CFrame = CFrame.lookAt(pos, pos + blick) * CF(0, t.Size.Y / 2, 0)
+		t.CanCollide = name ~= "Wegweiser"
+		t.Parent = d
+		return t
+	end
+	for _, x in { -124, -90, -56, -20, 20, 56, 90, 124 } do
+		local l = setze("Laterne", V(x, 0, -97.5), V(0, 0, -1))
+		if l then
+			local lp = deko(d, "Lampe", V(0.5, 0.5, 0.5), CF(x, 6.25, -97.5), rgb(255, 220, 110), nil, { Transparency = 1 })
+			local pl = Instance.new("PointLight")
+			pl.Color, pl.Range, pl.Brightness = rgb(255, 210, 120), 14, 1
+			pl.Parent = lp
+		end
+	end
+	for _, x in { -38, 38, -106, 106 } do setze("Bank", V(x, 0, -97), V(0, 0, -1), 1.3) end
+	for _, x in { -72, 72 } do setze("Trog", V(x, 0, -97), V(0, 0, -1), 1.3) end
+	for _, x in { -46, -30, 30, 46, -98, 98, -114, 114 } do meshDeko("Blumenbusch", d, V(x, 0, -96.5), 1.1) end
+	setze("Wegweiser", V(0, 0, -113.5), V(0, 0, 1), 1.4)
 end
 
 -- ===== Ladenstrasse am Hauptweg =====

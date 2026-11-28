@@ -67,6 +67,7 @@ In Blender ausführen mit `exec(open(r"...\_Skripte\<datei>.py", encoding="utf-8
 | `voxelladen_index.py` / `voxelladen_verkauf.py` | Tier-Index (Sternwarte mit Teleskop) und Verkaufen (Marktstand mit Waage, Schalen, Glocke) |
 | `voxel_wurfdeck.py` | Wurfdeck (Plattform, Treppe, Geländer, Laternen-Säulen, Banner), Blasenring, Wegelaterne, Blumenfass – eine FBX |
 | `voxel_spawndeko.py` | Blasenstab (Wahrzeichen), Bestenliste (Tafelhaus mit Dach, Medaillen, Laternen, Truhe), Krone – eine FBX |
+| `voxel_gehegeweg.py` | Gehege-Eingang: Torbogen mit Ranken/Pfote/leerem Schild/Laternen, Wegweiser, Bank, Trog – eine FBX |
 | `voxeldrache.py` | Voxel-Drache komplett: SDF-Formen → Würfel-Meshes (innere Flächen weg), Färbung pro Würfel, Klingen, Umgebung, Animation, Testrenders. Headless: `blender -b --factory-startup --python voxeldrache.py -- build <Bildordner>` |
 
 Die Skripte sind auf die Lavadrache-Namen zugeschnitten (z. B. `Schwanz_J*`, `Drachenkoerper`) –

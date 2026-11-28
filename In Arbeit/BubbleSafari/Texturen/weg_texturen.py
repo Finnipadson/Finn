@@ -1,4 +1,5 @@
 # Texturen fuer Hauptweg + Wurfdeck (Vorlage: Konzepte/weg-hauptweg-wurfdeck.webp)
+#   pflaster_grau.png : Pflastersteine grau/beige fuer den Weg zu den Gehegen
 #   pflaster_gelb.png : Pflastersteine gelb/creme/grau mit dunklen Fugen + Moos (32x32 px = 8x8 Studs)
 #   bordstein.png     : helle Steinquader fuer die Wegkante (16x16 px = 4x4 Studs)
 #   wurfkreis.png     : goldener Leuchtkreis mit Blasen-Symbol (transparent, als Decal)
@@ -36,6 +37,7 @@ def pflaster(name, farben, fuge, moos, seed):
     img.resize((W * 16, W * 16), Image.NEAREST).save(os.path.join(OUT, name))
 
 pflaster("pflaster_gelb.png", ["#e8c46a", "#f0d48a", "#d9b25a", "#c9c3b5", "#e2cf9e"], "#8c7a5c", "#6fae3c", 3)
+pflaster("pflaster_grau.png", ["#bdb7ab", "#cfc8b8", "#a9a399", "#d9cdb0", "#c4b89a"], "#7d776c", "#6fae3c", 5)  # Weg zu den Gehegen
 
 # Bordstein: grosse helle Quader
 W = 16; rnd = random.Random(8)
