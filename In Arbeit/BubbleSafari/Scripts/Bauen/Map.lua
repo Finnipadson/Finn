@@ -274,15 +274,24 @@ hochebene(SB + AUSSEN, KX + AUSSEN + 110, AUSSEN, ENDE + 40) -- rechts der Schlu
 hochebene(-SB, SB, ENDE, ENDE + 40) -- Schlucht-Ende
 task.wait()
 
--- Kessel-Boden: Noppen-Schachbrett
-local KB = ordner("KesselBoden", Gelaende)
-for x = -KX, KX - 10, 10 do
-	for z = KZ, -10, 10 do
-		local c = if ((x + KX) / 10 + (z - KZ) / 10) % 2 == 0 then rgb(120, 220, 80) else rgb(100, 205, 65)
-		noppen(P(KB, "Boden", V(10, 1, 10), CF(x + 5, -0.5, z + 5), c))
-	end
-	task.wait()
+-- Boden: EIN Teil je Flaeche, Schachbrett (10er-Felder) + Pixelgras + gemalte Noppen stecken in der Textur
+-- (Texturen/boden_textur.py schach). Farbe = hellere Kachelfarbe per Texture.Color3 (Textur-Grundhelligkeit 236).
+local BODEN_TEXTUR = "rbxassetid://110670065747246"
+local function bodenFlaeche(parent, x1, x2, z1, z2, hell)
+	local p = P(parent, "Boden", V(x2 - x1, 1, z2 - z1), CF((x1 + x2) / 2, -0.5, (z1 + z2) / 2), hell)
+	local t = Instance.new("Texture")
+	t.Name = "BodenTextur"
+	t.Texture = BODEN_TEXTUR
+	t.Face = Enum.NormalId.Top
+	t.StudsPerTileU = 20
+	t.StudsPerTileV = 20
+	local k = 255 / 236
+	t.Color3 = Color3.new(math.min(1, hell.R * k), math.min(1, hell.G * k), math.min(1, hell.B * k))
+	t.Parent = p
+	return p
 end
+local KB = ordner("KesselBoden", Gelaende)
+bodenFlaeche(KB, -KX, KX, KZ, 0, rgb(120, 220, 80))
 -- Deko unten am Kesselrand (nur wo keine Grundstuecke/Staende sind)
 for z = -100, -8, 11 do
 	for _, sx in { -1, 1 } do
@@ -332,19 +341,11 @@ local BIOME = {
 	{ id = "Sumpf", name = "SUMPF", von = 1400, bis = ENDE, b1 = rgb(100, 115, 72), b2 = rgb(88, 103, 64) },
 }
 local Tal = ordner("Tal")
-local KACHEL = 20
+
 for _, b in BIOME do
 	local f = ordner(b.id, Tal)
 	local boden = ordner("Boden", f)
-	local zi = 0
-	for z = b.von, b.bis - KACHEL, KACHEL do
-		zi += 1
-		for xi = 0, (2 * SB) / KACHEL - 1 do
-			local c = if (xi + zi) % 2 == 0 then b.b1 else b.b2
-			noppen(P(boden, "Boden", V(KACHEL, 1, KACHEL), CF(-SB + xi * KACHEL + KACHEL / 2, -0.5, z + KACHEL / 2), c))
-		end
-		if zi % 40 == 0 then task.wait() end
-	end
+	bodenFlaeche(boden, -SB, SB, b.von, b.bis, b.b1)
 	-- Bogen mit Biom-Namen ueber der Schlucht
 	if b.von > 0 then
 		for _, s in { -1, 1 } do
