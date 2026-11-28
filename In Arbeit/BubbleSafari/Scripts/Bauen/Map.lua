@@ -346,7 +346,9 @@ for _, b in BIOME do
 			deko(f, "Moos", V(l * 0.5, 0.3, 1.2), CF(x, 1.85, z), rgb(110, 190, 70))
 		else
 			local r = rng:NextNumber(2, 4.5)
-			deko(f, "Stein", V(r * 1.3, r * 0.8, r), CF(x, r * 0.3, z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0), rgb(150, 150, 160), nil, { Shape = Enum.PartType.Ball })
+			if not meshDeko("Stein", f, V(x, 0, z), r / 2.2) then
+				deko(f, "Stein", V(r * 1.3, r * 0.8, r), CF(x, r * 0.3, z) * CFrame.Angles(0, rng:NextNumber(0, math.pi), 0), rgb(150, 150, 160), nil, { Shape = Enum.PartType.Ball })
+			end
 		end
 	end
 end
@@ -379,22 +381,24 @@ do
 	for i = 1, 14 do
 		local x, z = zufallsPos(b)
 		local s = rng:NextNumber(3, 6)
-		deko(d, "Busch", V(s, s * 0.7, s), CF(x, s * 0.35, z), rgb(80, 170, 70))
+		if not meshDeko("Blumenbusch", d, V(x, 0, z), s / 3.5) then
+			deko(d, "Busch", V(s, s * 0.7, s), CF(x, s * 0.35, z), rgb(80, 170, 70))
+		end
 	end
 	task.wait()
 	-- oben am Rand: Bluetenbaeume + Blumen
 	for i = 1, 40 do
 		local x, z = randPos(b)
-		if i % 3 == 0 then
-			local h = rng:NextNumber(10, 16)
-			deko(d, "Stamm", V(2, h, 2), CF(x, RAND + h / 2, z), rgb(120, 85, 55))
-			local k = rng:NextNumber(9, 13)
-			local farbe = if i % 2 == 0 then rgb(255, 180, 210) else rgb(120, 210, 90)
-			deko(d, "Krone", V(k, k * 0.8, k), CF(x, RAND + h + k * 0.15, z), farbe, nil, { Shape = Enum.PartType.Ball })
-			deko(d, "Krone", V(k * 0.7, k * 0.6, k * 0.7), CF(x + k * 0.35, RAND + h - k * 0.05, z + k * 0.1), farbe, nil, { Shape = Enum.PartType.Ball })
-			deko(d, "Krone", V(k * 0.6, k * 0.5, k * 0.6), CF(x - k * 0.3, RAND + h + k * 0.05, z - k * 0.2), farbe, nil, { Shape = Enum.PartType.Ball })
+		local oben = V(x, RAND + 3, z)
+		if i % 3 == 0 then -- Kirschbaum (rosa) oder gruener Voxel-Baum
+			local kirsch = if rng:NextNumber() < 0.5 then "Baum_Kirsch_Rund" else "Baum_Kirsch_Breit"
+			if not (i % 2 == 0 and meshDeko(kirsch, d, oben, rng:NextNumber(1.2, 1.6))) then
+				voxelBaum(d, oben, rng:NextNumber(0.9, 1.2))
+			end
+		elseif i % 3 == 1 then
+			zufallsDeko(d, oben)
 		else
-			blumenFeld(x, z, RAND + 1, 5)
+			blumenFeld(x, z, RAND + 3, 5)
 		end
 	end
 	-- Landmarke: Riesen-Gaensebluemchen am Rand

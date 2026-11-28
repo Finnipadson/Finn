@@ -22,6 +22,8 @@ def srgb(h):
 PALETTEN = {
     "wiese": {"laub": ["#2f8f2a", "#3ea832", "#4fbf3a", "#66d24a", "#8ce266"],
               "rinde": ["#5e3a1f", "#74482a", "#8a5a36"], "extra": ["#ffffff"]},
+    "kirsch": {"laub": ["#cf5a8c", "#e276a6", "#f095bd", "#f8b4d2", "#ffd4e6"],
+               "rinde": ["#5e3a1f", "#74482a", "#8a5a36"], "extra": ["#ffffff"]},
     "herbst": {"laub": ["#a8381c", "#d0582a", "#e8823a", "#f2a845", "#f8cf6a"],
                "rinde": ["#4e3220", "#664229", "#7d5434"], "extra": ["#ffffff"]},
     "schnee": {"laub": ["#1f5e3a", "#2a7346", "#368553", "#e6eef7", "#ffffff"],
